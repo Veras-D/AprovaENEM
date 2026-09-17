@@ -1,11 +1,14 @@
 <div align="center">
-    <h1>📚 AprovaENEM — Open Examination & Diagnostic Engine</h1>
-    <p><strong>Democratizing high-quality ENEM preparation for Brazilian public high school students through open public data, diagnostic assessment, and resilient microservices.</strong></p>
+    <h1>📚 AprovaENEM — Open Examination & Diagnostic Platform</h1>
+    <p><strong>Democratizing high-quality ENEM preparation for Brazilian public high school students through open public data, diagnostic assessment, resilient microservices, and mobile-first accessibility.</strong></p>
 </div>
 
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![React: 18+](https://img.shields.io/badge/React-18+-20232A?logo=react&logoColor=61DAFB)](https://react.dev/)
+[![TypeScript: 5.3+](https://img.shields.io/badge/TypeScript-5.3+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS: 3.4](https://img.shields.io/badge/Tailwind%20CSS-3.4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Java: 21 LTS](https://img.shields.io/badge/Java-21%20LTS-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![Spring Boot: 3.3+](https://img.shields.io/badge/Spring%20Boot-3.3+-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![PostgreSQL: 16](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
@@ -23,31 +26,45 @@
 
 In Brazil, over 80% of secondary students attend public high schools, yet they represent a fraction of admissions to prestigious federal universities. Commercial prep platforms charge expensive subscriptions (R$ 60 to R$ 250/month) that systematically exclude low-income students from urban peripheries.
 
-**AprovaENEM** bridges this educational gap. It transforms official, public-domain exam archives from **INEP** (2010–2024) into a lightweight, high-performance REST API. Students can practice authentic exam questions, receive instant step-by-step resolution breakdowns, track diagnostic weak-spot radars, and interact with a Socratic AI study tutor — **100% free, mobile-optimized, and with zero registration barriers**.
+**AprovaENEM** is a full-stack open educational platform. It transforms official, public-domain exam archives from **INEP** (2010–2024) into an interactive, mobile-optimized learning ecosystem. Students can practice authentic exam questions on their phones, receive instant step-by-step resolution breakdowns, track diagnostic weak-spot radars, and interact with a Socratic AI study tutor — **100% free, mobile-first, and with zero registration barriers**.
 
 ---
 
 ## ✨ Features
 
-- 🎯 **Frictionless Anonymous Practice**: Students start solving questions instantly via an `X-Session-Id` header (UUID) with zero mandatory sign-up, email, or paywalls.
-- 🗄️ **Comprehensive Ingested Catalog**: Official INEP exams categorized by subject (*Mathematics, Natural Sciences, Humanities, Languages*), discipline, sub-topic, and Item Response Theory (TRI) difficulty.
-- ⚡ **Instant Assessment & Grading**: Real-time evaluation of question attempts with step-by-step pedagogical explanations and distractor rationale.
-- 📊 **Diagnostic Skill-Gap Radar**: Automated post-session analytics mapping topic mastery (`MASTERED`, `ATTENTION_NEEDED`, `CRITICAL`) to guide high-yield study sessions.
-- 🤖 **Socratic AI Study Tutor**: Powered by **Google Gemini Free Tier** with strict educational guardrails: guides the student through fundamental scientific concepts without spoiling answers.
-- 🛡️ **Edge Rate Limiting**: Built-in Token Bucket algorithm preventing scraper abuse and protecting upstream free-tier AI quotas.
-- 📈 **Datadog-Style Observability**: Complete Prometheus APM metrics, Micrometer distributed tracing (`traceId` / `spanId` MDC propagation), and trace-to-error correlation for instant bug hunting.
-- 🌐 **Bilingual Backend (i18n)**: Spring Boot `MessageSource` localized error messages for both Portuguese (`pt-BR`) and English (`en`).
-- 🏗️ **Hexagonal Architecture**: Strict decoupling of pure Java domain logic from Spring Boot frameworks and PostgreSQL persistence.
+### 📱 Student Web & Mobile Experience (`frontend/`)
+- 🎯 **Frictionless Instant Practice**: Students start solving questions immediately with zero mandatory registration, phone verification, or paywalls.
+- 📱 **Mobile-First & 3G/4G Optimized**: High-density, low-bandwidth UI built for budget smartphones and constrained mobile data plans.
+- 📊 **Interactive Diagnostic Radar**: Visual skill radar charts mapping student mastery across topics (`MASTERED`, `ATTENTION_NEEDED`, `CRITICAL`).
+- 🌙 **Obsidian Dark & High-Contrast Design**: Eye-strain-free interface optimized for late-night study sessions after work.
+- 🧮 **LaTeX & MathJax Rendering**: Flawless mathematical formula and chemical equation rendering across all question statements and options.
+
+### ⚙️ Backend & Distributed Architecture (`backend/`)
+- 🗄️ **Complete INEP Question Bank**: Past exams categorized by subject area (*Mathematics, Natural Sciences, Humanities, Languages*), discipline, sub-topic, and Item Response Theory (TRI) difficulty.
+- ⚡ **Real-Time Assessment & Grading**: Millisecond evaluation of submissions with immediate distractor analysis.
+- 🤖 **Socratic AI Study Tutor**: Powered by **Google Gemini Free Tier** with pedagogical guardrails: guides students through underlying principles without spoiling answers.
+- 🛡️ **Token Bucket Edge Rate Limiting**: Built into the API Gateway to prevent scraper abuse and protect external free-tier AI quotas.
+- 📈 **Datadog-Style Observability**: Complete Prometheus APM metrics, Micrometer distributed tracing (`traceId` / `spanId` MDC injection), and sub-minute trace-to-error bug isolation.
+- 🌐 **Bilingual Backend (i18n)**: Spring Boot `MessageSource` supporting both Portuguese (`pt-BR`) and English (`en`).
+- 🏗️ **Hexagonal Architecture**: Strict separation of pure Java domain models from Spring Boot frameworks and PostgreSQL persistence.
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Core Backend & Services
+### Frontend Application
+- **Framework**: React 18+ with TypeScript (Strict mode, zero `any`)
+- **Styling**: Tailwind CSS with custom Dark Design Tokens
+- **Icons**: Lucide React
+- **Data Visualization**: Recharts / Chart.js for diagnostic skill radars
+- **Math Rendering**: KaTeX / MathJax for scientific expressions
+- **Build Tool**: Vite 5
+
+### Backend Microservices
 - **Language**: Java 21 LTS
-- **Framework**: Spring Boot 3.3+ (Spring Web, Spring Data JPA, Spring Validation)
+- **Framework**: Spring Boot 3.3+ (Web, Data JPA, Validation, Actuator)
 - **Architecture**: Microservices with **Hexagonal Architecture (Ports and Adapters)**
-- **API Gateway**: Spring Cloud Gateway with Token Bucket Rate Limiter
+- **API Gateway**: Spring Cloud Gateway with Token Bucket Rate Limiting
 - **Reverse Proxy**: Nginx (L7 Load Balancer, SSL termination, request buffering)
 
 ### Persistence & Storage
@@ -71,30 +88,38 @@ In Brazil, over 80% of secondary students attend public high schools, yet they r
 
 ```mermaid
 graph TD
-    Client[📱 Mobile App / Web / Cursinho Client]
-    Nginx[🛡️ Nginx Reverse Proxy / Load Balancer<br/>Port 80/443]
-    Gateway[⚡ Spring Cloud API Gateway<br/>Port 8080 / Token Bucket Rate Limiter]
-
-    subgraph Microservices ["Hexagonal Microservices Layer"]
-        AuthSvc[🔐 auth-service<br/>Port 8081 / Anonymous & JWT Identity]
-        ExamSvc[📚 exam-service<br/>Port 8082 / Assessment & INEP Question Bank]
+    User([📱 Student Client / Browser])
+    
+    subgraph FrontendLayer ["Frontend Client (React 18 + TypeScript)"]
+        UI["🖥️ Web & Mobile PWA<br/>Tailwind CSS / KaTeX / Diagnostic Radar"]
     end
 
-    subgraph Persistence ["PostgreSQL 16 Layer"]
-        AuthDB[(🗄️ auth_db<br/>Port 5432)]
-        ExamDB[(🗄️ exam_db<br/>Port 5433)]
+    subgraph IngressLayer ["Perimeter & Ingress"]
+        Nginx["🛡️ Nginx Reverse Proxy / Load Balancer<br/>Port 80/443"]
+        Gateway["⚡ Spring Cloud API Gateway<br/>Port 8080 / Token Bucket Rate Limiter"]
     end
 
-    subgraph External ["External AI"]
-        Gemini[🤖 Google Gemini Free Tier<br/>gemini-1.5-flash Socratic Explanations]
+    subgraph MicroservicesLayer ["Hexagonal Microservices (Java 21 / Spring Boot)"]
+        AuthSvc["🔐 auth-service<br/>Port 8081 / Anonymous & JWT Identity"]
+        ExamSvc["📚 exam-service<br/>Port 8082 / Assessment & INEP Question Bank"]
     end
 
-    subgraph Telemetry ["Observability Stack"]
-        Prometheus[📊 Prometheus APM<br/>Port 9090]
-        Grafana[📈 Grafana Dashboard<br/>Port 3000]
+    subgraph PersistenceLayer ["PostgreSQL 16 Layer"]
+        AuthDB[("🗄️ auth_db<br/>Port 5432")]
+        ExamDB[("🗄️ exam_db<br/>Port 5433")]
     end
 
-    Client -->|HTTP / HTTPS| Nginx
+    subgraph ExternalServices ["External AI Services"]
+        Gemini["🤖 Google Gemini Free Tier<br/>gemini-1.5-flash Socratic Explanations"]
+    end
+
+    subgraph TelemetryLayer ["Observability Stack"]
+        Prometheus["📊 Prometheus APM<br/>Port 9090"]
+        Grafana["📈 Grafana Dashboard<br/>Port 3000"]
+    end
+
+    User --> UI
+    UI -->|REST / HTTPS| Nginx
     Nginx --> Gateway
     Gateway -->|/api/v1/auth/**| AuthSvc
     Gateway -->|/api/v1/exams/**<br/>/api/v1/sessions/**<br/>/api/v1/questions/**| ExamSvc
@@ -103,12 +128,13 @@ graph TD
     ExamSvc --> ExamDB
     ExamSvc -.->|Socratic Prompts| Gemini
 
-    Gateway -.->|Scrape| Prometheus
-    AuthSvc -.->|Scrape| Prometheus
-    ExamSvc -.->|Scrape| Prometheus
+    Gateway -.->|Metrics| Prometheus
+    AuthSvc -.->|Metrics| Prometheus
+    ExamSvc -.->|Metrics| Prometheus
     Prometheus --> Grafana
 
-    style Client fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff
+    style User fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff
+    style UI fill:#1e293b,stroke:#38bdf8,stroke-width:2px,color:#fff
     style Nginx fill:#1e293b,stroke:#0284c7,stroke-width:2px,color:#fff
     style Gateway fill:#0369a1,stroke:#38bdf8,stroke-width:2px,color:#fff
     style AuthSvc fill:#065f46,stroke:#34d399,stroke-width:2px,color:#fff
@@ -126,23 +152,29 @@ graph TD
 
 ```bash
 ReconectaRecode/
-├── docs/                                # Comprehensive Documentation
+├── README.md                            # Master project documentation
+├── CHANGELOG.md                         # Project changelog (Keep a Changelog standard)
+├── docs/                                # Project Specifications & Planning
 │   ├── BACKLOG.md                       # Multi-Sprint Product Backlog & Roadmap
-│   ├── README.md                        # Documentation Index & Architecture Guide
-│   └── sprint-1/                        # Sprint 1 Planning Baseline
+│   └── sprint-1/                        # Sprint 1 Deliverables
 │       ├── 01-business-and-market-strategy.md  # BMC, ICP Personas & SDG 4/10 KPIs
-│       ├── 02-project-charter.md        # Scope, Ingestion Strategy & Requirements
+│       ├── 02-project-charter.md        # Scope, INEP Ingestion & Requirements
 │       ├── 03-system-architecture.md   # C4 Containers, Ingress, Hexagonal Layout
-│       ├── 04-data-modeling.md          # PostgreSQL DDL, ER Schemas & B-Tree Indexes
+│       ├── 04-data-modeling.md          # PostgreSQL DDL, ER Schemas & B-Trees
 │       ├── 05-api-specification.md      # OpenAPI 3.0 REST Route Specifications
-│       ├── 06-observability-datadog-style.md # Prometheus, Micrometer & Error Hunting
-│       └── 07-quality-gate-ci.md        # 6-Stage CI/CD Specification
+│       ├── 06-observability-datadog-style.md # Prometheus, Micrometer & Alert Rules
+│       ├── 07-quality-gate-ci.md        # 6-Stage CI/CD Specification
+│       └── 08-sprint-backlog.md         # Sprint 1 Summary & Next Steps Index
 ├── backend/                             # Spring Boot Microservices
 │   ├── api-gateway/                     # Spring Cloud Gateway + Rate Limiting
 │   ├── auth-service/                    # Authentication & Session Service
 │   ├── exam-service/                    # Examination, Assessment & Socratic AI
 │   ├── docker-compose.yml               # Local Infrastructure Stack
 │   └── pom.xml                          # Multi-module Maven Parent POM
+├── frontend/                            # React 18 + TypeScript Application
+│   ├── src/                             # UI components, pages & state management
+│   ├── package.json                     # Frontend dependencies & scripts
+│   └── vite.config.ts                   # Vite configuration
 └── .github/
     └── workflows/
         └── quality-gate.yml             # Automated CI Verification Pipeline
@@ -150,34 +182,48 @@ ReconectaRecode/
 
 ---
 
-## 🚀 Quickstart (Docker Compose)
+## 🚀 Quickstart
 
 ### Prerequisites
 - Docker Engine 24+ & Docker Compose v2
-- Java 21 LTS (optional for host builds)
+- Node.js 20+ (for frontend development)
+- Java 21 LTS (optional for host backend compilation)
 - Google Gemini API Key (free tier from [Google AI Studio](https://aistudio.google.com/))
 
-### 1. Clone & Configure
+### 1. Clone Repository
 ```bash
 git clone https://github.com/Veras-D/ReconectaRecode.git
-cd ReconectaRecode/backend
-cp .env.example .env
+cd ReconectaRecode
 ```
-Edit `.env` and insert your Gemini API Key:
+
+### 2. Configure Environment Variables
+```bash
+cp backend/.env.example backend/.env
+```
+Edit `backend/.env` and insert your Gemini API Key:
 ```env
 GEMINI_API_KEY=AIzaSyYourFreeTierKeyHere...
 ```
 
-### 2. Launch Entire Ecosystem
+### 3. Launch Backend Infrastructure (Docker Compose)
 ```bash
+cd backend
 docker compose up -d
 ```
 
-### 3. Verify Health Endpoints
+Verify backend health endpoints:
 - **API Gateway**: `http://localhost:8080/actuator/health`
 - **Prometheus Telemetry**: `http://localhost:9090`
 - **Grafana APM**: `http://localhost:3000` (admin / admin)
 - **OpenAPI Swagger**: `http://localhost:8080/swagger-ui.html`
+
+### 4. Launch Frontend Client
+```bash
+cd ../frontend
+npm install
+npm run dev
+```
+Open `http://localhost:5173` to access the interactive student interface.
 
 ---
 
@@ -195,7 +241,7 @@ docker compose up -d
 | `GET` | `/api/v1/questions/{id}/resolution` | Fetch curated step-by-step resolution | Optional |
 | `POST` | `/api/v1/questions/{id}/ask` | Ask Socratic concept question (Gemini AI) | `X-Session-Id` |
 
-*Complete OpenAPI specification with request/response JSON schemas is available in [05-api-specification.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/sprint-1/05-api-specification.md).*
+*Complete OpenAPI specification with request/response JSON schemas is available in [docs/sprint-1/05-api-specification.md](docs/sprint-1/05-api-specification.md).*
 
 ---
 
@@ -203,12 +249,12 @@ docker compose up -d
 
 AprovaENEM adopts the strict automated quality gate standard established in [CV_Maker](https://github.com/Veras-D/CV_Maker):
 
-1. **Gate 1: Compiler Zero Warnings**: `javac` executed with `-Werror -Xlint:all`.
-2. **Gate 2: Static Analysis**: Checkstyle (Google Java Style) + PMD (Cyclomatic Complexity $\le 12$, max method lines $\le 50$).
+1. **Gate 1: Compiler Zero Warnings**: `javac` executed with `-Werror -Xlint:all` and TypeScript strict type checking.
+2. **Gate 2: Static Analysis**: Checkstyle (Google Java Style) + PMD (Cyclomatic Complexity $\le 12$, max method lines $\le 50$) + ESLint.
 3. **Gate 3: Duplication Detection**: PMD CPD enforcing duplicate token threshold $< 3\%$.
-4. **Gate 4: Security & Secret Scan**: Trivy CVE dependency scan (0 critical/high) + Gitleaks commit history scan.
+4. **Gate 4: Security & Secret Scan**: Trivy CVE dependency audit (0 critical/high) + Gitleaks commit history scan.
 5. **Gate 5: Automated Test Suite**: JUnit 5 unit & integration tests with **80%+ JaCoCo coverage**.
-6. **Gate 6: Build Verification**: Clean container builds via Docker Compose.
+6. **Gate 6: Build Verification**: Clean container builds via Docker Compose and production bundle packaging.
 
 ---
 
@@ -221,10 +267,7 @@ Contributions from educators, engineers, and students are welcome!
    - `feat: add topic filter to question repository`
    - `fix: correct scoring calculation in complete session`
    - `docs: update OpenAPI schemas`
-3. Ensure all local quality checks pass:
-   ```bash
-   mvn clean verify
-   ```
+3. Ensure all local quality checks pass before pushing.
 4. Push and open a Pull Request.
 
 ---
