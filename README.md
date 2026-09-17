@@ -36,7 +36,7 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 - 🎯 **Frictionless Instant Practice**: Students start solving questions immediately with zero mandatory registration, phone verification, or paywalls.
 - 📱 **Mobile-First & 3G/4G Optimized**: High-density, low-bandwidth UI built for budget smartphones and constrained mobile data plans.
 - 📊 **Interactive Diagnostic Radar**: Visual skill radar charts mapping student mastery across topics (`MASTERED`, `ATTENTION_NEEDED`, `CRITICAL`).
-- 🌙 **Obsidian Dark & High-Contrast Design**: Eye-strain-free interface optimized for late-night study sessions after work.
+- 🌙 **High-Contrast & Dark Mode Design**: Eye-strain-free, accessible interface optimized for long focused study marathons and battery efficiency on mobile screens.
 - 🧮 **LaTeX & MathJax Rendering**: Flawless mathematical formula and chemical equation rendering across all question statements and options.
 
 ### ⚙️ Backend & Distributed Architecture (`backend/`)

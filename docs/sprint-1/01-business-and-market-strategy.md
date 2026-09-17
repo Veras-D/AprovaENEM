@@ -73,7 +73,7 @@ card
     subtitle: "Public High School Senior — Periphery of São Luís, Maranhão"
 ```
 
-* **Demographics**: 18 years old, lives with his mother and two siblings in an urban periphery neighborhood. Attends a state public high school in the morning and works part-time at a local supermarket in the afternoon.
+* **Demographics**: 18 years old, lives with his mother and two siblings in an urban periphery neighborhood. Attends a state public high school in the morning and dedicates his afternoons and evenings to independent study and exam prep at home.
 * **Tech Access**: Budget Android smartphone (Moto G series) with a prepaid 4G data plan; accesses public school desktop computers twice a week.
 * **Goal**: Score 700+ on ENEM to earn a full PROUNI scholarship or SISU admission into Computer Science or Civil Engineering at a federal university (UFMA/IFMA).
 
