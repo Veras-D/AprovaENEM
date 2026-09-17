@@ -72,10 +72,11 @@ gantt
 
 #### `TASK-S2-02b`: Data Ingestion & Extraction Worker Pipeline
 - **Priority**: `P0` | **Estimation**: 8 pts
-- **Description**: Build the Python/CLI ingestion worker (`scripts/ingestion/`) implementing two-column layout parsing (`PyMuPDF`), diagram cropping (WebP), LaTeX normalization, and automated reconciliation with INEP `ITENS_PROVA.csv` microdados.
+- **Description**: Build the Python/CLI ingestion worker (`scripts/ingestion/`) utilizing **IBM Docling** (DocLayNet + TableFormer) for neural layout parsing, automatic two-column reading flow, built-in formula-to-LaTeX conversion, and diagram cropping (WebP), reconciled with INEP `ITENS_PROVA.csv` microdados.
 - **Acceptance Criteria**:
-  - Handles two-column PDF page layout without interleaved text.
-  - Crops diagrams at 300 DPI and outputs lossless WebP assets.
+  - Employs IBM Docling to parse two-column pages into clean Markdown without interleaved text.
+  - Converts math formulas into KaTeX-compatible LaTeX (`$...$` and `$$...$$`).
+  - Crops diagrams (`PictureItem`) at 300 DPI and outputs lossless WebP assets.
   - Reconciles extracted answers with `TX_GABARITO` with 100% concordance.
   - Injects official TRI parameters ($a, b, c$) and generates normalized seed fixtures.
 

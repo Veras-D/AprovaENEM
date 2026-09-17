@@ -24,8 +24,8 @@ flowchart TD
     end
 
     subgraph Pipeline ["4-Stage Ingestion & Extraction Pipeline"]
-        P1["Stage 1: Layout-Aware PDF Parsing & Image Cropping<br/>(PyMuPDF / pdfplumber)"]
-        P2["Stage 2: Vision & Multimodal Extraction<br/>(LaTeX & Structured Markdown)"]
+        P1["Stage 1: Document AI Layout & LaTeX Parsing<br/>(IBM Docling + DocLayNet)"]
+        P2["Stage 2: Vision & Multimodal Asset Extraction<br/>(Docling PictureItems + WebP Compression)"]
         P3["Stage 3: Ground-Truth Reconciliation<br/>(Join with ITENS_PROVA CSV & TRI Calibration)"]
         P4["Stage 4: Integrity Verification & Seed Generation<br/>(Normalized JSON Fixtures)"]
     end
@@ -88,27 +88,20 @@ ENEM examination booklets present unique layout hurdles that break standard text
 
 ## 4. The 4-Stage Extraction & Ingestion Pipeline
 
-### Stage 1: Layout-Aware Parsing & Diagram Extraction
-* **Tools**: **PyMuPDF (`fitz`)**, **`pdfplumber`**, and **`marker`**.
-* **Process**:
-  1. **Page De-noising**: Strips header banners, footer page counters, and INEP watermark borders.
-  2. **Column Boundary Detection**: Splits the printable canvas at the central gutter ($X \approx 300\text{ pt}$), sorting text blocks strictly in reading order (Column 1 top-to-bottom $\rightarrow$ Column 2 top-to-bottom).
-  3. **Visual Asset Extraction**: Detects vector and raster image bounding boxes, crops them at 300 DPI, and saves them with predictable filenames:
-     ```text
-     assets/images/enem_{year}_{edition}_{item_number}_{asset_idx}.png
-     ```
+### Stage 1: Document AI Layout Decomposition & Reading Order (IBM Docling)
+* **Core Engine**: **IBM Docling** (`docling.document_converter.DocumentConverter`) powered by the **DocLayNet** neural layout analysis model.
+* **Why Docling Replaces Manual Heuristics**:
+  1. **Automatic Reading Order Recovery**: Rather than writing brittle geometric coordinate heuristics ($X > 300\text{ pt}$) to separate columns, Docling's layout model natively segments the two-column reading flow, guaranteeing multi-column questions and full-width passages are never interleaved.
+  2. **Native Math & Formula to LaTeX**: Docling features built-in formula recognition, converting inline and block mathematical expressions directly into clean KaTeX-compatible LaTeX (`$...$` and `$$...$$`).
+  3. **TableFormer Integration**: Accurately recognizes tabular structures in Humanities and Science questions, transforming them into standard Markdown tables instead of scrambled text.
+  4. **PictureItem Extraction**: Isolates diagram and cartoon bounding boxes, exporting high-resolution crops directly.
 
-### Stage 2: Multimodal Structural Parsing & LaTeX Normalization
-* **Worker**: Vision-capable parsing script (`scripts/ingestion/extract_questions.py`) using structured LLM schemas (e.g., Gemini 1.5 Flash Vision / localized vision models).
-* **Processing Rule**:
-  - Formulas are parsed into standard LaTeX:
-    - Inline: `$E = mc^2$`
-    - Display: `$$\Delta S = \frac{Q}{T}$$`
-  - Image references are injected in Markdown format:
-    ```markdown
-    ![Esquema do circuito elétrico](https://cdn.aprovaenem.org/exams/2023/q91_circuit.png)
-    ```
-  - Alternatives A–E are extracted as discrete strings with leading labels stripped.
+### Stage 2: Visual Asset Optimization & Multimodal Fallback
+* **Worker**: `scripts/ingestion/extract_questions.py`
+* **Process**:
+  1. **Docling Picture Extraction**: Bounding boxes tagged as `PictureItem` are cropped and converted to modern lossless **WebP** (`assets/images/enem_{year}_{item}_{idx}.webp`), reducing mobile student data usage by $\approx 65\%$.
+  2. **Multimodal LLM Verification (Edge Cases)**: For complex historical documents or degraded scans in older exams (e.g., ENEM 2009–2012), cropped visual regions are verified using Gemini 1.5 Flash Vision to guarantee 100% text fidelity.
+  3. **Option Normalization**: Strips option prefixes (`a)`, `b)`, `(A)`) and structures alternatives into discrete items with Markdown support.
 
 ### Stage 3: Ground-Truth Reconciliation with Microdados
 * **Worker**: Data Reconciliation Engine (`scripts/ingestion/reconcile_with_microdados.py`).
@@ -185,3 +178,20 @@ Every ingested batch must pass an automated Python/JVM test suite (`tests/ingest
 3. **Image Link Gate**: All image URLs referenced in Markdown must return HTTP 200 from the asset storage.
 4. **Gabarito Consistency Gate**: 100% concordance with INEP's published official gabarito. Any deviation blocks the ingestion pipeline.
 5. **TRI Bounds Gate**: Parameter $a > 0$, parameter $-3.5 \le b \le 3.5$, and parameter $0 \le c \le 0.35$.
+
+---
+
+## 7. Strategic Tooling Evaluation: IBM Docling vs. PyMuPDF
+
+| Evaluation Criterion | **PyMuPDF (`fitz`)** | **IBM Docling (`docling`)** | AprovaENEM Decision |
+| :--- | :--- | :--- | :--- |
+| **Philosophy** | Low-level C library wrapper (MuPDF) | Modern Document AI Parser (DocLayNet + TableFormer) | **Docling as Primary Extractor** |
+| **Two-Column Reading Flow** | Requires manual geometric slicing ($x_0 > 300$) | Native neural reading order resolution | **Docling**: Eliminates brittle coordinate hacks |
+| **Mathematical Formulas** | Raw text / character spans; mangles formulas | Built-in LaTeX conversion (`$...$`, `$$...$$`) | **Docling**: Directly KaTeX-compatible |
+| **Tables & Data** | Unstructured text blocks | Native TableFormer converts to Markdown tables | **Docling**: Preserves table fidelity |
+| **Figure & Diagram Extraction** | Low-level pixmap extraction | Isolates `PictureItem` with captions and bounds | **Docling**: Native asset extraction |
+| **Processing Speed** | Ultra-fast (~10–50ms per page) | Moderate (~0.5–2.0s per page on CPU) | **Docling**: Batch offline pipeline (acceptable) |
+| **Runtime Footprint** | Extremely lightweight (~20MB) | PyTorch/ONNX dependencies (~500MB+) | **Docling**: Handled inside ingestion container |
+| **Utility Role** | Fast rasterization and page splitting | Primary semantic document understanding | **PyMuPDF as secondary utility** |
+
+> **Conclusion**: **IBM Docling** is adopted as our **primary extraction engine** because it inherently solves the three most failure-prone challenges of ENEM PDFs (two-column flow, formula-to-LaTeX, and table formatting) with neural accuracy, while **PyMuPDF** is retained as a lightweight utility for instantaneous pre-flight page slicing and raw DPI rendering.

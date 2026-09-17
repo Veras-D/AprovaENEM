@@ -37,7 +37,7 @@ flowchart LR
 ### Data Pipeline Specifications
 1. **Multi-Source Sourcing Strategy**:
    - **INEP Microdados (`ITENS_PROVA_*.csv`)**: Official tabular ground truth for question codes (`CO_ITEM`), answer keys (`TX_GABARITO`), skill mappings ($H_1$ to $H_{30}$), and Item Response Theory (TRI) mathematical parameters ($a, b, c$).
-   - **Official Exam PDFs (*Cadernos de Questões*)**: Question statements, reading passages, embedded diagrams, maps, and comics (*tirinhas*) extracted via two-column layout parsers.
+   - **Official Exam PDFs (*Cadernos de Questões*)**: Question statements, reading passages, embedded diagrams, maps, and comics (*tirinhas*) extracted via **IBM Docling** (DocLayNet neural layout parser with native formula-to-LaTeX conversion).
    - **Official Gabarito PDFs**: Verification of notebook color mappings (Blue, Yellow, White, Pink, Gray) and annulled items.
    - **Curated Open Academic Datasets**: Community benchmarks (e.g. Maritaca AI, Hugging Face) for historical cross-validation.
 2. **Standard Subject Taxonomy**:

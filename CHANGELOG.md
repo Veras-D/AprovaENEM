@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.1.1] - 2026-09-18
 ### 🔧 Changed
-- docs(ingestion): Architect multi-source data extraction pipeline combining INEP Microdados CSVs, layout-aware PDF parsing (PyMuPDF), WebP image extraction, and LaTeX conversion in 09-data-ingestion-pipeline.md
+- docs(ingestion): Adopt IBM Docling (DocLayNet + TableFormer) as primary Document AI parser over PyMuPDF for two-column flow, native LaTeX formulas, and WebP diagram extraction
 - docs(data): Explicitly specify Flyway database migrations and Spring Data JPA / Hibernate 6 decoupled persistence within Hexagonal Architecture
 - feat(rag): Architect Retrieval-Augmented Generation (RAG) pipeline using PostgreSQL 16 `pgvector` with HNSW cosine indexing to eliminate AI tutor hallucinations and anchor responses in official INEP curriculum guidelines
 - docs(essay): Add Phase 2 architecture for Redação with model evaluation (LLM Evals across candidate models) and INEP-aligned Dual-Evaluator + LLM-as-a-Judge arbitration
