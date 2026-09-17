@@ -679,3 +679,87 @@ Returns the question statement and options A–E.
   ]
 }
 ```
+
+---
+
+## 8. Multi-Channel Notification Endpoints (`notification-service`)
+
+> **Access Authorization**: Requires `ROLE_STUDENT` or `ROLE_PREMIUM_STUDENT` (Bearer JWT).
+
+### 8.1 Register Device Push Token (Web Push / FCM / APNs)
+* **Method**: `POST`
+* **Path**: `/api/v1/notifications/push-tokens`
+* **Headers**: `Authorization: Bearer <token>`, `Content-Type: application/json`
+
+#### Request Body
+```json
+{
+  "deviceToken": "fcm_or_web_push_subscription_token_sample",
+  "platform": "ANDROID"
+}
+```
+
+#### Response `201 Created`
+```json
+{
+  "message": "Device push token registered successfully.",
+  "platform": "ANDROID",
+  "registeredAt": "2026-09-18T01:10:00Z"
+}
+```
+
+---
+
+### 8.2 Get In-App Notifications Feed
+* **Method**: `GET`
+* **Path**: `/api/v1/notifications`
+* **Headers**: `Authorization: Bearer <token>`
+* **Query Parameters**:
+  - `status`: `ALL` | `UNREAD` (default `ALL`)
+  - `page`: `0`
+  - `size`: `20`
+
+#### Response `200 OK`
+```json
+{
+  "unreadCount": 2,
+  "notifications": [
+    {
+      "id": "99999999-aaaa-bbbb-cccc-dddddddddddd",
+      "channel": "IN_APP",
+      "templateCode": "DAILY_STREAK_REMINDER",
+      "title": "🔥 Proteja sua ofensiva!",
+      "body": "Faltam apenas 3 questões para atingir sua meta diária e manter sua ofensiva de 14 dias viva.",
+      "status": "SENT",
+      "sentAt": "2026-09-17T19:00:00Z",
+      "readAt": null
+    },
+    {
+      "id": "88888888-9999-aaaa-bbbb-cccccccccccc",
+      "channel": "IN_APP",
+      "templateCode": "WEEKLY_LEAGUE_RESULT",
+      "title": "🎉 Parabéns! Você subiu para a Liga Prata!",
+      "body": "Você terminou a semana entre os 20% melhores na Liga Bronze.",
+      "status": "SENT",
+      "sentAt": "2026-09-14T00:05:00Z",
+      "readAt": "2026-09-14T08:30:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### 8.3 Mark Notification as Read
+* **Method**: `PATCH`
+* **Path**: `/api/v1/notifications/{id}/read`
+* **Headers**: `Authorization: Bearer <token>`
+
+#### Response `200 OK`
+```json
+{
+  "id": "99999999-aaaa-bbbb-cccc-dddddddddddd",
+  "status": "READ",
+  "readAt": "2026-09-18T01:12:00Z"
+}
+```

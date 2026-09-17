@@ -203,6 +203,14 @@ gantt
   - Only alerts users with `opt_in_reminders = true` and `isCompleted = false`.
   - Dispatches Web Push payload and in-app banner alert.
 
+#### `TASK-S2-17`: Multi-Channel Notification Microservice (`notification-service`)
+- **Priority**: `P1` | **Estimation**: 5 pts
+- **Description**: Implement decoupled `notification-service` listening to domain events (`UserRegisteredEvent`, `DailyGoalReminderEvent`, `WeeklyLeagueResetEvent`, `EssayEvaluatedEvent`) via RabbitMQ / Spring Cloud Stream to dispatch transactional emails (SES/Resend) and Web/Mobile Push notifications (FCM/APNs).
+- **Acceptance Criteria**:
+  - Delivers welcome and password reset emails with localized Thymeleaf templates (pt-BR).
+  - Sends Web Push and FCM device notifications with quiet hours checks (22:00 to 07:00).
+  - Exposes `/api/v1/notifications` inbox and `/api/v1/notifications/push-tokens` registration.
+
 ---
 
 ## 4. Sprint 3: Testing, Quality Gate & Delivery (Review & Polish 🛡️)
@@ -236,3 +244,16 @@ gantt
 | **S4-03** | **Dual-Evaluator & LLM-as-a-Judge Arbitration Engine** | `P0` | 8 pts | Dual independent evaluation + LLM Judge arbitrating discrepancies $> 100$ pts total or $> 80$ pts per competency. |
 | **S4-04** | **Spring Security `ROLE_PREMIUM_STUDENT` Gate** | `P0` | 3 pts | Enforce premium role / voucher token on all `/api/v1/essays/**` endpoints. |
 | **S4-05** | **Frontend Essay Upload & Interactive Annotation Viewer** | `P1` | 8 pts | Student photo upload, transcription review, and visual radar for the 5 competencies. |
+
+---
+
+## 6. Phase 2 Roadmap: Cross-Platform Native Mobile Application (React Native / Expo)
+
+> **Context**: Enhancing accessibility for public school students with native smartphone features across Android and iOS.
+
+| Task ID | Work Item & Title | Priority | Estimation | Acceptance Criteria |
+| :--- | :--- | :---: | :---: | :--- |
+| **M1-01** | **React Native / Expo Monorepo Initialization** | `P1` | 5 pts | Setup Expo SDK 51+ project sharing TypeScript domain interfaces and API client types with frontend. |
+| **M1-02** | **Offline Question Bank (SQLite / WatermelonDB)** | `P1` | 8 pts | Local SQLite database caching question sets for study on subways/buses without active internet; syncs attempts upon reconnect. |
+| **M1-03** | **Native Document Camera Scanner for Essays** | `P1` | 8 pts | Camera view with automatic edge detection, perspective correction, and contrast enhancement for handwritten essay photo scanning. |
+| **M1-04** | **Native Push Notifications (Expo Notifications + FCM/APNs)** | `P1` | 5 pts | Lock-screen daily study reminders, streak defense alerts, and instant essay grade notifications. |

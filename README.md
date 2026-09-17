@@ -46,6 +46,7 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 - 🗄️ **Complete INEP Question Bank**: Past exams categorized by subject area (*Mathematics, Natural Sciences, Humanities, Languages*), discipline, sub-topic, and Item Response Theory (TRI) difficulty.
 - ⚡ **Real-Time Assessment & Grading**: Millisecond evaluation of submissions with immediate distractor analysis.
 - 🕹️ **Event-Driven Gamification Engine**: Evaluates domain events (`QuestionAnsweredEvent`, `SessionCompletedEvent`) to compute XP rewards, evaluate daily study goals, and calculate weekly league rankings via PostgreSQL window functions.
+- 🔔 **Multi-Channel Notification Microservice**: Decoupled `notification-service` dispatching transactional emails (SES/Resend), Web Push, and mobile notifications (FCM/APNs) for daily streak preservation at 19:00 BRT and Sunday league results.
 - 🤖 **Socratic AI Study Tutor**: Powered by **Google Gemini (gemini-1.5-flash)** with pedagogical guardrails: guides students through underlying scientific and mathematical principles without spoiling answers.
 - 🧠 **Retrieval-Augmented Generation (RAG) & Vector Search**: Grounded in official INEP curriculum matrices, verified step-by-step resolutions, and distractor catalogs via **PostgreSQL 16 `pgvector`** with HNSW semantic indexing to eliminate LLM hallucinations before student prompts are dispatched.
 - 🛡️ **Token Bucket Edge Rate Limiting**: Built into the API Gateway to prevent scraper abuse and protect upstream LLM API consumption.
@@ -53,6 +54,7 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 - 🌐 **Bilingual Backend (i18n)**: Spring Boot `MessageSource` supporting both Portuguese (`pt-BR`) and English (`en`).
 - 🏗️ **Hexagonal Architecture**: Strict separation of pure Java domain models from Spring Boot frameworks and PostgreSQL persistence.
 - 📝 **Phase 2 Premium Roadmap (*Redação Nota 1000*)**: Handwritten essay photo scanning via multimodal vision OCR and 5-competency grading (0–1,000 pts) powered by a **Provider-Agnostic AI Engine with LLM-as-a-Judge arbitration** (benchmarked via empirical evals across candidate models for lowest cost and highest scoring accuracy) under a paid plan / subsidized vouchers.
+- 📱 **Phase 2 Mobile Roadmap (React Native / Expo)**: Cross-platform native mobile app (Android & iOS) featuring offline question caching (SQLite/WatermelonDB) and a native document camera scanner for handwritten essay photo uploads.
 
 ---
 
@@ -65,6 +67,7 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 - **Data Visualization**: Recharts / Chart.js for diagnostic skill radars
 - **Math Rendering**: KaTeX / MathJax for scientific expressions
 - **Build Tool**: Vite 5
+- **Mobile Roadmap**: **React Native / Expo SDK 51+** (Offline SQLite question bank + native camera scanner)
 
 ### Backend Microservices
 - **Language**: Java 21 LTS
@@ -72,10 +75,11 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 - **Security**: **Spring Security 6.3+** (Stateless JWT, `SecurityFilterChain`, Method Security `@PreAuthorize`, RBAC for anonymous and registered students, BCrypt password hashing)
 - **Architecture**: Microservices with **Hexagonal Architecture (Ports and Adapters)**
 - **API Gateway**: Spring Cloud Gateway with Token Bucket Rate Limiting
+- **Event Bus / Messaging**: **RabbitMQ / Spring Cloud Stream** for asynchronous notification events
 - **Reverse Proxy**: Nginx (L7 Load Balancer, SSL termination, request buffering)
 
 ### Persistence & Storage
-- **Primary Database**: PostgreSQL 16 (isolated `auth_db` and `exam_db`)
+- **Primary Database**: PostgreSQL 16 (isolated `auth_db`, `exam_db`, and `notification_db`)
 - **Database Migrations**: **Flyway** (`flyway-core` + `flyway-database-postgresql`, strictly immutable SQL scripts `V1__...`, zero auto-DDL in runtime)
 - **ORM & Data Access**: **Spring Data JPA / Hibernate 6** (Jakarta Persistence), isolated within outbound adapters to preserve pure Java domain entities
 - **Vector Search Engine**: **PostgreSQL `pgvector`** extension (768-dim embeddings, HNSW cosine index `m=16, ef_construction=64`) for sub-5ms pedagogical RAG retrieval

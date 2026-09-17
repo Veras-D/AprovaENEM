@@ -453,6 +453,48 @@ CREATE TABLE knowledge_chunks (
 
 ---
 
+### 3.3 Notification Database (`notification_db`)
+
+```sql
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- User Device Push Tokens (Web Push, Android FCM, iOS APNs)
+CREATE TABLE user_device_tokens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL, -- Logical reference to auth_db.users(id)
+    device_token VARCHAR(500) NOT NULL UNIQUE,
+    platform VARCHAR(20) NOT NULL CHECK (platform IN ('WEB_PUSH', 'ANDROID', 'IOS')),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_used_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_user_device_tokens_user 
+ON user_device_tokens (user_id, is_active);
+
+-- Multi-Channel Outbound Notification Logs & In-App Feed
+CREATE TABLE notification_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    channel VARCHAR(20) NOT NULL CHECK (channel IN ('EMAIL', 'WEB_PUSH', 'MOBILE_PUSH', 'IN_APP')),
+    template_code VARCHAR(50) NOT NULL, -- 'DAILY_STREAK_REMINDER', 'WEEKLY_LEAGUE_RESULT', 'ESSAY_GRADED'
+    title VARCHAR(255) NOT NULL,
+    body TEXT NOT NULL,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING', -- 'PENDING', 'SENT', 'FAILED', 'READ'
+    sent_at TIMESTAMP WITH TIME ZONE,
+    read_at TIMESTAMP WITH TIME ZONE,
+    error_message TEXT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_notifications_user_inbox 
+ON notification_logs (user_id, status, created_at DESC);
+```
+
+---
+
 ## 4. Indexing Strategy & Performance Optimization
 
 To achieve the **`p95 < 100ms`** read requirement for quiz generation and filtering, the following specialized PostgreSQL B-Tree, GIN, and HNSW indexes are deployed:

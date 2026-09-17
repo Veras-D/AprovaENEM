@@ -86,7 +86,11 @@ flowchart LR
 - **FR-23**: The system must provide opt-in daily reminders (in-app alerts and Web Push API) scheduled at 19:00 BRT to alert students with pending daily goals to protect their streak.
 - **FR-24**: The system must compute a Weekly Reset Leaderboard resetting every Sunday at 23:59 BRT across 4 competitive leagues (Bronze, Silver, Gold, Diamond), promoting top performers and fostering community motivation.
 
-### Module 6: Future Scope — AI Essay Evaluation & OCR (*Redação Nota 1000*)
+### Module 6: Multi-Channel Notifications (`notification-service`)
+- **FR-25**: The system must dispatch transactional emails (registration welcome, email verification, password recovery, and Sunday weekly diagnostic summary) via an asynchronous notification microservice.
+- **FR-26**: The system must dispatch multi-channel push notifications (Web Push protocol for browser PWA, and Firebase Cloud Messaging FCM / Apple APNs for native mobile) to alert students about daily streak preservation, league promotions, and completed essay evaluations.
+
+### Module 7: Future Scope — AI Essay Evaluation & OCR (*Redação Nota 1000*)
 - **FR-14**: The system must accept photo uploads of handwritten student essays (`image/jpeg`, `image/png`, PDF) via `multipart/form-data`.
 - **FR-15**: The system must extract handwritten Portuguese text using a provider-agnostic multimodal vision pipeline benchmarked through an evaluation harness (`evals/`) to select the model with the highest accuracy (lowest WER/CER) and lowest cost.
 - **FR-16**: The system must evaluate transcribed essays strictly against the **5 official INEP competencies** (graded 0 to 200 points each, total 0 to 1,000) using a **Dual-Evaluator + LLM-as-a-Judge arbitration protocol** mirroring INEP's official human evaluation standard whenever score variance exceeds 100 points total or 80 points on any single competency:
@@ -121,10 +125,12 @@ flowchart LR
 - Complete PostgreSQL database schemas with B-tree indices and relational integrity.
 - Nginx Load Balancer and Spring Cloud Gateway with Token Bucket rate limiting.
 - Spring Security 6 stateless JWT authentication and dual-mode anonymous/registered RBAC.
+- Gamification Engine (XP, Levels, Daily Goals, Streak Tracking, and Weekly Leaderboards).
+- Asynchronous multi-channel Notification Microservice (`notification-service` for email and push).
 - Docker Compose environment with Prometheus and Grafana telemetry.
 - Comprehensive automated test suite (Unit, Testcontainers Integration, Frontend Vitest, Cypress E2E, Playwright, Newman Postman) with GitHub Actions CI.
 
 ### Out of Scope (Phase 2 Roadmap: After Base App Delivery)
 - **AI Essay Evaluator & Handwritten OCR (*Redação Nota 1000*)**: Multimodal vision ingestion, 5-competency grading, and paid tier billing integration.
-- Native iOS / Android compiled mobile apps (mobile users access via responsive React PWA).
+- **Native Cross-Platform Mobile Application (React Native / Expo)**: Dedicated Android and iOS apps with offline question caching (SQLite/WatermelonDB) and native camera document scanning.
 - Proprietary question licensing (strictly limited to public-domain INEP exams).

@@ -24,16 +24,23 @@ flowchart TD
 
         subgraph FrontendLayer ["Frontend Container"]
             FrontendUI["🖥️ frontend (Port 80/internal)<br/>React 18 + TypeScript PWA / Nginx Static Serve"]
+            MobileApp["📱 Native Mobile App (Roadmap)<br/>React Native / Expo (Android & iOS)"]
         end
 
         subgraph Services ["Microservices Layer (Hexagonal Architecture)"]
-            AuthSvc["🔐 Auth & Identity Service (Port 8081)<br/>• Anonymous Session Provisioning<br/>• Student JWT Registration & Login<br/>• Profile Management"]
+            AuthSvc["🔐 Auth & Identity Service (Port 8081)<br/>• Anonymous Session Provisioning<br/>• Student JWT Registration & Login<br/>• Gamification Profiles & XP"]
             ExamSvc["📚 Exam & Assessment Service (Port 8082)<br/>• Question Bank & INEP Taxonomy<br/>• Practice Session State Machine<br/>• Automated Grading & Scoring<br/>• RAG Pipeline & Vector Search (`pgvector`)<br/>• Socratic AI Resolution Engine"]
+            NotifSvc["🔔 Notification Service (Port 8083)<br/>• Transactional Email (SES/Resend)<br/>• Web Push & Mobile Push (FCM/APNs)<br/>• In-App Notifications & Streak Alerts"]
+        end
+
+        subgraph MessagingLayer ["Asynchronous Event Bus"]
+            EventBus[("📨 Message Broker / Event Bus<br/>RabbitMQ / Spring Cloud Stream")]
         end
 
         subgraph DataLayer ["Persistence & Cache Layer"]
-            PostgresAuth[("🗄️ PostgreSQL (Auth DB)<br/>Port 5432 - users, credentials")]
-            PostgresExam[("🗄️ PostgreSQL 16 + pgvector (Exam DB)<br/>Port 5433 - questions, sessions, vector embeddings")]
+            PostgresAuth[("🗄️ PostgreSQL (Auth DB)<br/>Port 5432 - users, gamification")]
+            PostgresExam[("🗄️ PostgreSQL 16 + pgvector (Exam DB)<br/>Port 5433 - questions, sessions, embeddings")]
+            PostgresNotif[("🗄️ PostgreSQL (Notification DB)<br/>Port 5434 - device tokens, notification logs")]
         end
 
         subgraph ObservabilityStack ["Observability & Diagnostics Stack"]
@@ -42,20 +49,30 @@ flowchart TD
         end
     end
 
-    subgraph ExternalAI ["External AI Intelligence"]
+    subgraph ExternalServices ["External Cloud Services"]
         GeminiAPI["🤖 Google Gemini API<br/>gemini-1.5-flash Socratic Explanations"]
+        PushGateway["📲 FCM / APNs & Email Provider<br/>Firebase, Apple APNs, Resend/SES"]
     end
 
     User -->|HTTP / HTTPS Port 80| LB
+    MobileApp -.->|Direct API Access| APIGW
     LB -->|/| FrontendUI
     LB -->|/api/**| APIGW
     
-    APIGW -->|`/api/v1/auth/**`| AuthSvc
+    APIGW -->|`/api/v1/auth/**`<br/>`/api/v1/gamification/**`| AuthSvc
     APIGW -->|`/api/v1/exams/**`<br/>`/api/v1/sessions/**`<br/>`/api/v1/questions/**`| ExamSvc
+    APIGW -->|`/api/v1/notifications/**`| NotifSvc
 
     AuthSvc --> PostgresAuth
     ExamSvc --> PostgresExam
+    NotifSvc --> PostgresNotif
+
+    AuthSvc -->|Domain Events| EventBus
+    ExamSvc -->|Domain Events| EventBus
+    EventBus -->|Consume Events| NotifSvc
+
     ExamSvc -.->|Step-by-step resolution & Socratic hints| GeminiAPI
+    NotifSvc -.->|Dispatch Emails & Push Alerts| PushGateway
 
     APIGW -.->|Metrics Scraping| Prometheus
     AuthSvc -.->|Metrics Scraping| Prometheus
@@ -471,6 +488,86 @@ Pluggable infrastructure adapters implement these ports (e.g., `GeminiVisionAdap
 3. **Competência 3 (0–200 pts)**: Thesis defense: selecting, relating, and organizing arguments logically.
 4. **Competência 4 (0–200 pts)**: Cohesion: appropriate use of inter- and intra-paragraph conjunctions and connectors.
 5. **Competência 5 (0–200 pts)**: *Proposta de Intervenção*: Detailed actionable solution addressing the 5 required elements (*Agente, Ação, Meio/Modo, Efeito, Detalhamento*) respecting human rights.
+
+---
+
+### 7.3 Multi-Channel Notification Microservice (`notification-service`)
+
+To prevent notification overhead, slow external network calls (SMTP/HTTP push gateways), and third-party rate limits from impacting core assessment APIs, all outbound notifications are decoupled into an independent **`notification-service`**:
+
+```mermaid
+flowchart TD
+    subgraph EventProducers ["Event Producers"]
+        AuthEvent["auth-service<br/>• UserRegisteredEvent<br/>• PasswordResetRequestedEvent"]
+        ExamEvent["exam-service<br/>• DailyGoalReminderEvent<br/>• StreakFreezeUsedEvent<br/>• WeeklyLeagueResetEvent"]
+        EssayEvent["essay-service (Phase 2)<br/>• EssayEvaluationCompletedEvent"]
+    end
+
+    EventBus[("Event Bus / Queue<br/>RabbitMQ / Spring Cloud Stream")]
+
+    subgraph NotifSvc ["notification-service"]
+        Listener["Asynchronous Event Consumer"]
+        TemplateEngine["Thymeleaf HTML & Push Template Engine (pt-BR)"]
+        RateThrottler["User Preference & Quiet Hours Throttler"]
+        
+        Listener --> TemplateEngine
+        TemplateEngine --> RateThrottler
+    end
+
+    subgraph DispatchAdapters ["Outbound Delivery Adapters"]
+        EmailAdapter["Email Delivery Adapter<br/>(Amazon SES / Resend / SMTP)"]
+        WebPushAdapter["Web Push Adapter<br/>(VAPID / Web Push Protocol)"]
+        MobilePushAdapter["Mobile Push Adapter<br/>(Firebase Cloud Messaging & APNs)"]
+    end
+
+    AuthEvent --> EventBus
+    ExamEvent --> EventBus
+    EssayEvent --> EventBus
+    EventBus --> Listener
+
+    RateThrottler --> EmailAdapter
+    RateThrottler --> WebPushAdapter
+    RateThrottler --> MobilePushAdapter
+```
+
+#### Key Capabilities:
+1. **Multi-Channel Dispatch**:
+   - **Transactional Email**: Account verification, password recovery, and Sunday weekly diagnostic digest (*Relatório Semanal de Desempenho*).
+   - **Web & Mobile Push**: Daily streak reminders at 19:00 BRT, league promotion alerts, and instant notification when a handwritten essay is graded.
+   - **In-App Notification Feed**: Real-time badge unlocks and system announcements.
+2. **Quiet Hours & Notification Preferences**: Respects student sleep schedules (no push alerts between 22:00 and 07:00 unless explicitly requested) and honours opt-out preferences stored in `user_gamification_profiles`.
+
+---
+
+### 7.4 Native Mobile Application Roadmap (React Native / Expo)
+
+While the initial release focuses on a responsive, zero-install React 18 PWA optimized for mobile Chrome/Safari on budget smartphones, the architectural roadmap plans a **cross-platform native mobile application built with React Native / Expo**:
+
+```mermaid
+flowchart LR
+    SharedDomain["Shared TypeScript Types & API Contracts<br/>(`packages/shared-types` or OpenAPI Spec)"]
+    
+    subgraph MobileApp ["AprovaENEM Native App (React Native / Expo SDK 51+)"]
+        UI["Native Mobile UI<br/>(Gesture Handler, Native Wind / Tailwind)"]
+        OfflineStorage["Offline SQLite / WatermelonDB<br/>(Cached Question Sets for Bus/Subway Study)"]
+        NativeCamera["Native Camera & Document Scanner<br/>(Auto-edge cropping for Handwritten Essays)"]
+        NativePush["Native Push Receiver<br/>(Expo Notifications + FCM / APNs)"]
+    end
+
+    BackendGateway["Spring Cloud Gateway (REST / WebSocket)"]
+
+    SharedDomain --> UI
+    UI --> OfflineStorage
+    UI --> NativeCamera
+    UI --> NativePush
+    UI <-->|HTTPS Bearer JWT| BackendGateway
+```
+
+#### Strategic Advantages of the Native Mobile Roadmap:
+1. **Offline Question Bank (Subway/Bus Study)**: Students in rural areas or public transit without active cellular data can pre-download 50 questions and practice completely offline; attempts sync back to `exam-service` once connectivity resumes.
+2. **Native Document Scanner for Essays**: Replaces manual mobile browser file uploads with an integrated camera scanner that auto-detects page boundaries, corrects perspective distortion, and maximizes handwritten OCR accuracy.
+3. **High-Reliability Native Push**: Avoids mobile browser background throttling, ensuring daily study streak reminders are reliably delivered on Android and iOS lock screens.
+4. **Code Reuse**: Reuses 100% of REST API endpoints, DTO contracts, authentication JWT mechanisms, and KaTeX math rendering logic.
 
 ---
 
