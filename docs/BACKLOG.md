@@ -70,6 +70,15 @@ gantt
   - Tables, foreign keys, and indexes created automatically on application boot.
   - Seed script populates initial ENEM editions and subject areas.
 
+#### `TASK-S2-02b`: Data Ingestion & Extraction Worker Pipeline
+- **Priority**: `P0` | **Estimation**: 8 pts
+- **Description**: Build the Python/CLI ingestion worker (`scripts/ingestion/`) implementing two-column layout parsing (`PyMuPDF`), diagram cropping (WebP), LaTeX normalization, and automated reconciliation with INEP `ITENS_PROVA.csv` microdados.
+- **Acceptance Criteria**:
+  - Handles two-column PDF page layout without interleaved text.
+  - Crops diagrams at 300 DPI and outputs lossless WebP assets.
+  - Reconciles extracted answers with `TX_GABARITO` with 100% concordance.
+  - Injects official TRI parameters ($a, b, c$) and generates normalized seed fixtures.
+
 #### `TASK-S2-03`: Multi-Module Maven Configuration
 - **Priority**: `P0` | **Estimation**: 3 pts
 - **Description**: Configure root `pom.xml` with Maven Compiler Plugin (`-Werror`, `-Xlint:all`), Checkstyle, PMD, and JaCoCo plugins.

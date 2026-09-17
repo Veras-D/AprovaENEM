@@ -24,23 +24,22 @@ To provide a clean, high-performance, open-access API that transforms public INE
 
 ## 2. Ingestion Strategy for INEP Open Data
 
-The platform sources 100% of its core examination data from public government releases published by INEP (*Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira*):
+The platform sources 100% of its core examination data from public government releases published by INEP (*Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira*), triangulating between **tabular Microdados**, **exam PDFs**, **answer keys**, and **open academic datasets** (see detailed specification in [`docs/sprint-1/09-data-ingestion-pipeline.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/sprint-1/09-data-ingestion-pipeline.md)):
 
 ```mermaid
 flowchart LR
-    INEP["INEP Open Datasets<br/>(PDFs, Microdados, Answer Keys)"] --> IngestionScript["Ingestion & Normalizer Worker"]
+    INEP["INEP Multi-Source Ingestion<br/>• Microdados CSVs (TRI + Gabaritos)<br/>• Exam PDFs (Layout & Images)<br/>• Official Answer Key PDFs<br/>• Curated Academic Datasets"] --> IngestionScript["Layout-Aware Parser & Ingestion Worker"]
     IngestionScript --> Sanitizer["LaTeX / Markdown Cleaner & MathJax Parser"]
-    Sanitizer --> DB[(PostgreSQL 16 + B-Tree Indexes)]
+    Sanitizer --> DB[(PostgreSQL 16 + B-Tree & Vector Indexes)]
     DB --> AssessmentService["Assessment & Question Service"]
 ```
 
 ### Data Pipeline Specifications
-1. **Raw Sources**:
-   - Official Blue/Yellow/White/Pink exam PDFs and official answer keys (spanning the modern TRI format from **2009 to 2025**).
-   - INEP Microdados catalog containing official Item Response Theory (TRI) parameters:
-     - Discrimination parameter ($a$)
-     - Difficulty parameter ($b$)
-     - Guessing parameter ($c$)
+1. **Multi-Source Sourcing Strategy**:
+   - **INEP Microdados (`ITENS_PROVA_*.csv`)**: Official tabular ground truth for question codes (`CO_ITEM`), answer keys (`TX_GABARITO`), skill mappings ($H_1$ to $H_{30}$), and Item Response Theory (TRI) mathematical parameters ($a, b, c$).
+   - **Official Exam PDFs (*Cadernos de Questões*)**: Question statements, reading passages, embedded diagrams, maps, and comics (*tirinhas*) extracted via two-column layout parsers.
+   - **Official Gabarito PDFs**: Verification of notebook color mappings (Blue, Yellow, White, Pink, Gray) and annulled items.
+   - **Curated Open Academic Datasets**: Community benchmarks (e.g. Maritaca AI, Hugging Face) for historical cross-validation.
 2. **Standard Subject Taxonomy**:
    - `MATHEMATICS` (*Matemática e suas Tecnologias*)
    - `NATURAL_SCIENCES` (*Ciências da Natureza e suas Tecnologias* - Physics, Chemistry, Biology)
@@ -49,7 +48,7 @@ flowchart LR
 3. **Question Representation Standard**:
    - Question statements are normalized to standard GitHub Flavored Markdown.
    - Mathematical formulas and chemical equations are normalized to LaTeX syntax (`$...$` and `$$...$$`).
-   - Image diagrams are stored as CDN/S3 image references with alternative accessibility text.
+   - Image diagrams are cropped at 300 DPI, converted to modern WebP format, and served via CDN/S3.
 
 ---
 
