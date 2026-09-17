@@ -133,5 +133,5 @@ flowchart LR
 
 ### Out of Scope (Phase 2 Roadmap: After Base App Delivery)
 - **AI Essay Evaluator & Handwritten OCR (*Redação Nota 1000*)**: Multimodal vision ingestion, 5-competency grading, and paid tier billing integration.
-- **Native Cross-Platform Mobile Application (React Native / Expo)**: Dedicated Android and iOS apps with offline question caching (SQLite/WatermelonDB) and native camera document scanning.
+- **Native Mobile Application (Kotlin / Java & Jetpack Compose + KMP)**: Dedicated Native Android application (with Kotlin Multiplatform for iOS parity) featuring offline question caching (Room Database / SQLite), WorkManager background sync, and CameraX edge document scanning.
 - Proprietary question licensing (strictly limited to public-domain INEP exams).

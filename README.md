@@ -54,7 +54,7 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 - 🌐 **Bilingual Backend (i18n)**: Spring Boot `MessageSource` supporting both Portuguese (`pt-BR`) and English (`en`).
 - 🏗️ **Hexagonal Architecture**: Strict separation of pure Java domain models from Spring Boot frameworks and PostgreSQL persistence.
 - 📝 **Phase 2 Premium Roadmap (*Redação Nota 1000*)**: Handwritten essay photo scanning via multimodal vision OCR and 5-competency grading (0–1,000 pts) powered by a **Provider-Agnostic AI Engine with LLM-as-a-Judge arbitration** (benchmarked via empirical evals across candidate models for lowest cost and highest scoring accuracy) under a paid plan / subsidized vouchers.
-- 📱 **Phase 2 Mobile Roadmap (React Native / Expo)**: Cross-platform native mobile app (Android & iOS) featuring offline question caching (SQLite/WatermelonDB) and a native document camera scanner for handwritten essay photo uploads.
+- 📱 **Phase 2 Mobile Roadmap (Native Android Kotlin & KMP)**: Native mobile application built with **Kotlin / Java** and **Jetpack Compose** on Android, leveraging **Room Database** for offline SQLite question caching, **CameraX** for edge document scanning of handwritten essays, and **Kotlin Multiplatform (KMP)** for cross-platform iOS expansion.
 
 ---
 
@@ -67,7 +67,7 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 - **Data Visualization**: Recharts / Chart.js for diagnostic skill radars
 - **Math Rendering**: KaTeX / MathJax for scientific expressions
 - **Build Tool**: Vite 5
-- **Mobile Roadmap**: **React Native / Expo SDK 51+** (Offline SQLite question bank + native camera scanner)
+- **Mobile Roadmap**: **Native Android (Kotlin / Java & Jetpack Compose)** + **Kotlin Multiplatform (KMP)** (Room SQLite offline question bank, CameraX essay scanner, Firebase Cloud Messaging)
 
 ### Backend Microservices
 - **Language**: Java 21 LTS

@@ -24,7 +24,7 @@ flowchart TD
 
         subgraph FrontendLayer ["Frontend Container"]
             FrontendUI["🖥️ frontend (Port 80/internal)<br/>React 18 + TypeScript PWA / Nginx Static Serve"]
-            MobileApp["📱 Native Mobile App (Roadmap)<br/>React Native / Expo (Android & iOS)"]
+            MobileApp["📱 Native Mobile App (Roadmap)<br/>Native Android (Kotlin / Jetpack Compose) & KMP"]
         end
 
         subgraph Services ["Microservices Layer (Hexagonal Architecture)"]
@@ -540,35 +540,45 @@ flowchart TD
 
 ---
 
-### 7.4 Native Mobile Application Roadmap (React Native / Expo)
+### 7.4 Native Mobile Application Roadmap (Native Android Kotlin & Kotlin Multiplatform)
 
-While the initial release focuses on a responsive, zero-install React 18 PWA optimized for mobile Chrome/Safari on budget smartphones, the architectural roadmap plans a **cross-platform native mobile application built with React Native / Expo**:
+While the initial release delivers a responsive, zero-install React 18 PWA optimized for mobile Chrome/Safari on budget smartphones, the architectural roadmap specifies a **Native Android application built with Kotlin / Java & Jetpack Compose**, designed for future cross-platform iOS expansion via **Kotlin Multiplatform (KMP)**:
 
 ```mermaid
 flowchart LR
-    SharedDomain["Shared TypeScript Types & API Contracts<br/>(`packages/shared-types` or OpenAPI Spec)"]
+    subgraph SharedCore ["KMP Shared Core (Kotlin Multiplatform)"]
+        DomainModels["Pure Domain Models & DTOs<br/>(Shared with Backend Java Contracts)"]
+        NetworkClient["Ktor / OkHttp Network Client<br/>(JWT Bearer Token Interceptor & Refresh)"]
+        OfflineSync["Sync Engine & Conflict Resolver"]
+    end
     
-    subgraph MobileApp ["AprovaENEM Native App (React Native / Expo SDK 51+)"]
-        UI["Native Mobile UI<br/>(Gesture Handler, Native Wind / Tailwind)"]
-        OfflineStorage["Offline SQLite / WatermelonDB<br/>(Cached Question Sets for Bus/Subway Study)"]
-        NativeCamera["Native Camera & Document Scanner<br/>(Auto-edge cropping for Handwritten Essays)"]
-        NativePush["Native Push Receiver<br/>(Expo Notifications + FCM / APNs)"]
+    subgraph AndroidApp ["AprovaENEM Native Android App (Kotlin / Jetpack Compose)"]
+        ComposeUI["Declarative UI: Jetpack Compose<br/>(Material Design 3 Dark Theme Tokens)"]
+        RoomDB["Offline SQLite Cache: Room ORM<br/>(50-Question Study Packs & Pending Attempts)"]
+        WorkMgr["Jetpack WorkManager<br/>(Guaranteed Battery-Aware Background Sync)"]
+        CameraX["Hardware Scanner: CameraX + ML Kit<br/>(Edge Detection & 4-Point Keystone Warp)"]
+        FCM["Native Push Receiver: Firebase (FCM)<br/>(Lock-Screen Streak Reminders & Deep Links)"]
     end
 
-    BackendGateway["Spring Cloud Gateway (REST / WebSocket)"]
+    BackendGateway["Spring Cloud Gateway (Port 8080)<br/>HTTPS REST / SSE"]
 
-    SharedDomain --> UI
-    UI --> OfflineStorage
-    UI --> NativeCamera
-    UI --> NativePush
-    UI <-->|HTTPS Bearer JWT| BackendGateway
+    SharedCore --> ComposeUI
+    ComposeUI --> RoomDB
+    ComposeUI --> CameraX
+    FCM --> ComposeUI
+    RoomDB --> WorkMgr
+    WorkMgr --> NetworkClient
+    NetworkClient <-->|HTTPS Bearer JWT| BackendGateway
 ```
 
-#### Strategic Advantages of the Native Mobile Roadmap:
-1. **Offline Question Bank (Subway/Bus Study)**: Students in rural areas or public transit without active cellular data can pre-download 50 questions and practice completely offline; attempts sync back to `exam-service` once connectivity resumes.
-2. **Native Document Scanner for Essays**: Replaces manual mobile browser file uploads with an integrated camera scanner that auto-detects page boundaries, corrects perspective distortion, and maximizes handwritten OCR accuracy.
-3. **High-Reliability Native Push**: Avoids mobile browser background throttling, ensuring daily study streak reminders are reliably delivered on Android and iOS lock screens.
-4. **Code Reuse**: Reuses 100% of REST API endpoints, DTO contracts, authentication JWT mechanisms, and KaTeX math rendering logic.
+#### Strategic Advantages of the Native Android (Kotlin / JVM) Stack:
+1. **Unified JVM Ecosystem Mastery**: Unifies the client and backend under the JVM umbrella (Java 21 Spring Boot 3 backend + Kotlin/Java Android client). Both platforms share clean architecture design patterns, compile-time type safety, and reactive paradigms (Kotlin Coroutines & Flow ↔ Java 21 CompletableFuture / Project Reactor).
+2. **True Hardware Native Performance (Zero Bridge Overhead)**: Unlike hybrid frameworks (React Native / WebView) that serialize state over a JavaScript bridge or run an embedded V8/Hermes engine, Jetpack Compose compiles directly to native Android bytecode (ART runtime). This guarantees smooth 60/120 FPS navigation, negligible memory footprint, and high responsiveness on low-cost budget smartphones (e.g., Moto E/G series, Samsung Galaxy A0x).
+3. **Offline Question Bank via Room ORM (Subway & Bus Study)**: Native Android **Room Database** provides an abstraction layer over SQLite with compile-time verified SQL queries. Students can download 50-question diagnostic exam packs before commuting; attempts are stored locally in Room tables and dispatched asynchronously.
+4. **Guaranteed Background Sync via Jetpack WorkManager**: When network connectivity is intermittent or unavailable, `WorkManager` schedules deferred background sync jobs adhering to battery-conscious constraints (`NetworkType.CONNECTED`, `BatteryNotLow`). Completed exam attempts are guaranteed to sync to `exam-service` with exponential backoff.
+5. **Edge Document Scanner for Essays (CameraX + ML Kit)**: Leverages **Android Jetpack CameraX** with an on-device `ImageAnalysis` pipeline. It automatically detects paper document boundaries, performs 4-point perspective keystone correction, optimizes contrast/grayscale for handwritten pencil text, and compresses the image locally before upload—drastically improving OCR and LLM evaluation accuracy while conserving mobile data bandwidth.
+6. **High-Reliability Native Push Notifications (FCM)**: Native Firebase Cloud Messaging background receiver wakes the app to display critical daily streak defense alerts at 19:00 BRT and notifies students the moment their handwritten essay evaluation is finalized, supporting rich deep linking into specific question resolution screens.
+7. **Future Cross-Platform Parity via KMP**: Adopting **Kotlin Multiplatform (KMP)** enables sharing 100% of domain models, validation logic, serialization (`kotlinx.serialization`), and networking with iOS (via Compose Multiplatform or native SwiftUI wrapper) without introducing JavaScript or compromising native execution.
 
 ---
 

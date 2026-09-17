@@ -250,13 +250,13 @@ gantt
 
 ---
 
-## 6. Phase 2 Roadmap: Cross-Platform Native Mobile Application (React Native / Expo)
+## 6. Phase 2 Roadmap: Native Android Application (Kotlin / Java & Jetpack Compose) & KMP
 
-> **Context**: Enhancing accessibility for public school students with native smartphone features across Android and iOS.
+> **Context**: Enhancing accessibility for public school students with native smartphone hardware features, offline study capabilities on budget Android phones, and Kotlin Multiplatform (KMP) parity.
 
 | Task ID | Work Item & Title | Priority | Estimation | Acceptance Criteria |
 | :--- | :--- | :---: | :---: | :--- |
-| **M1-01** | **React Native / Expo Monorepo Initialization** | `P1` | 5 pts | Setup Expo SDK 51+ project sharing TypeScript domain interfaces and API client types with frontend. |
-| **M1-02** | **Offline Question Bank (SQLite / WatermelonDB)** | `P1` | 8 pts | Local SQLite database caching question sets for study on subways/buses without active internet; syncs attempts upon reconnect. |
-| **M1-03** | **Native Document Camera Scanner for Essays** | `P1` | 8 pts | Camera view with automatic edge detection, perspective correction, and contrast enhancement for handwritten essay photo scanning. |
-| **M1-04** | **Native Push Notifications (Expo Notifications + FCM/APNs)** | `P1` | 5 pts | Lock-screen daily study reminders, streak defense alerts, and instant essay grade notifications. |
+| **M1-01** | **Native Android (Kotlin) & KMP Project Setup** | `P1` | 5 pts | Multi-module Gradle project with Jetpack Compose, Material 3 Dark Theme tokens, and shared Kotlin domain/network DTO models with backend. |
+| **M1-02** | **Offline Question Bank & Sync (Room SQLite + WorkManager)** | `P1` | 8 pts | Local Room database caching question packs for offline subway/bus study; Jetpack WorkManager background jobs for reliable sync upon reconnect. |
+| **M1-03** | **Native Document Camera Scanner (CameraX + ML Kit)** | `P1` | 8 pts | CameraX integration with automatic edge detection, 4-point perspective keystone correction, and contrast enhancement for handwritten essay photo scanning. |
+| **M1-04** | **Native Push Notifications (Firebase Cloud Messaging - FCM)** | `P1` | 5 pts | Native FCM receiver for lock-screen daily study reminders (19:00 BRT), streak defense alerts, and instant essay grading notifications. |
