@@ -357,6 +357,37 @@ CREATE TABLE diagnostic_summaries (
     recommended_topics JSONB NOT NULL,
     generated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Phase 2 Future Schema: Premium Essay Evaluation & OCR (Redação Nota 1000)
+CREATE TABLE essay_prompts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    year INT NOT NULL,
+    theme VARCHAR(255) NOT NULL,
+    motivating_texts JSONB NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE student_essays (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    essay_prompt_id UUID NOT NULL REFERENCES essay_prompts(id) ON DELETE RESTRICT,
+    image_storage_url VARCHAR(500) NOT NULL,
+    transcribed_text TEXT,
+    status VARCHAR(30) NOT NULL DEFAULT 'PROCESSING', -- PROCESSING, EVALUATED, FAILED
+    total_score INT CHECK (total_score BETWEEN 0 AND 1000),
+    general_feedback TEXT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE essay_competency_evaluations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    essay_id UUID NOT NULL REFERENCES student_essays(id) ON DELETE CASCADE,
+    competency_number INT NOT NULL CHECK (competency_number BETWEEN 1 AND 5),
+    score INT NOT NULL CHECK (score BETWEEN 0 AND 200 AND score % 40 = 0),
+    feedback TEXT NOT NULL,
+    actionable_tips TEXT,
+    CONSTRAINT uq_essay_competency UNIQUE (essay_id, competency_number)
+);
 ```
 
 ---

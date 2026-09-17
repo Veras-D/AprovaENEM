@@ -47,6 +47,7 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 - 📈 **Datadog-Style Observability**: Complete Prometheus APM metrics, Micrometer distributed tracing (`traceId` / `spanId` MDC injection), and sub-minute trace-to-error bug isolation.
 - 🌐 **Bilingual Backend (i18n)**: Spring Boot `MessageSource` supporting both Portuguese (`pt-BR`) and English (`en`).
 - 🏗️ **Hexagonal Architecture**: Strict separation of pure Java domain models from Spring Boot frameworks and PostgreSQL persistence.
+- 📝 **Phase 2 Premium Roadmap (*Redação Nota 1000*)**: Handwritten essay photo scanning via multimodal vision OCR and comprehensive automated grading across the 5 official INEP competencies (0–1,000 pts) powered by **Google Gemini 1.5 Pro** under a paid plan / subsidized vouchers.
 
 ---
 
@@ -244,6 +245,8 @@ docker compose up -d --build
 | `POST` | `/api/v1/sessions/{id}/complete` | Finish quiz & generate diagnostic radar | `X-Session-Id` |
 | `GET` | `/api/v1/questions/{id}/resolution` | Fetch curated step-by-step resolution | Optional |
 | `POST` | `/api/v1/questions/{id}/ask` | Ask Socratic concept question (Gemini AI) | `X-Session-Id` |
+| `POST` | `/api/v1/essays/upload` | Upload handwritten essay for OCR evaluation (Phase 2) | Bearer (`ROLE_PREMIUM_STUDENT`) |
+| `GET` | `/api/v1/essays/{id}` | Get 5-competency breakdown & thesis feedback (Phase 2) | Bearer (`ROLE_PREMIUM_STUDENT`) |
 
 *Complete OpenAPI specification with request/response JSON schemas is available in [docs/sprint-1/05-api-specification.md](docs/sprint-1/05-api-specification.md).*
 

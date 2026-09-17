@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.1.1] - 2026-09-18
 ### 🔧 Changed
+- docs(essay): Add Phase 2 architecture, schema, and API specs for AI Essay Evaluator (*Redação Nota 1000*) with multimodal vision OCR and 5-competency grading under a paid/subsidized tier
 - docs(security): Add Spring Security 6 architecture, SecurityFilterChain, stateless JWT filter, and RBAC matrix matching Alma Career / Teamio standards
 - docs(testing): Add Cypress E2E automated test suite and student journey specs in 07-quality-gate-ci.md
 - docs(testing): Add automated Postman collection execution via Newman CLI in CI quality gate

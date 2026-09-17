@@ -417,3 +417,80 @@ Returns the question statement and options A–E.
   "timestamp": "2026-09-17T19:44:00Z"
 }
 ```
+
+---
+
+## 6. Future Scope: AI Essay Evaluation & OCR Endpoints (`essay-service` — Phase 2 Premium)
+
+> **Access Authorization**: Requires `ROLE_PREMIUM_STUDENT` (Bearer JWT) or active prepaid voucher.  
+> **AI Engine**: Google Gemini 1.5 Pro Multimodal Vision (Handwritten Portuguese OCR + INEP 5-Competency Rubric).  
+
+### 6.1 Upload & Transcribe Handwritten Essay Photo
+* **Method**: `POST`
+* **Path**: `/api/v1/essays/upload`
+* **Headers**: `Authorization: Bearer <token>`, `Content-Type: multipart/form-data`
+* **Form Parameters**:
+  - `file`: Handwritten essay page image (`image/jpeg`, `image/png`, PDF max 10MB).
+  - `promptId`: UUID of the official essay theme.
+
+#### Response `202 Accepted`
+```json
+{
+  "essayId": "33333333-4444-5555-6666-777777777777",
+  "status": "PROCESSING",
+  "estimatedSeconds": 8,
+  "message": "Handwritten essay uploaded. Vision OCR and 5-competency evaluation underway."
+}
+```
+
+---
+
+### 6.2 Get Complete Essay Diagnostic Evaluation
+* **Method**: `GET`
+* **Path**: `/api/v1/essays/{id}`
+* **Headers**: `Authorization: Bearer <token>`
+
+#### Response `200 OK`
+```json
+{
+  "essayId": "33333333-4444-5555-6666-777777777777",
+  "promptTheme": "Invisibilidade e registro civil: garantia de acesso à cidadania no Brasil",
+  "status": "EVALUATED",
+  "totalScore": 880,
+  "transcribedText": "A Constituição Cidadã de 1988 assegura a todos os brasileiros o pleno exercício da cidadania...",
+  "competencyScores": [
+    {
+      "competency": 1,
+      "name": "Domínio da Norma Padrão",
+      "score": 160,
+      "feedback": "Excelente domínio sintático, com pequenos desvios de crase no 2º parágrafo.",
+      "actionableTips": "Revise a regência do verbo 'visar' no sentido de ter por objetivo."
+    },
+    {
+      "competency": 2,
+      "name": "Compreensão do Tema e Repertório Sociocultural",
+      "score": 200,
+      "feedback": "Repertório legítimo e produtivo (menção ao conceito de Cidadãos de Papel de Gilberto Dimenstein)."
+    },
+    {
+      "competency": 3,
+      "name": "Defesa de Ponto de Vista e Argumentação",
+      "score": 160,
+      "feedback": "Projeto de texto claro e articulado, com argumentação coerente."
+    },
+    {
+      "competency": 4,
+      "name": "Mecanismos Linguísticos e Coesão",
+      "score": 160,
+      "feedback": "Boa variedade de conectivos interparágrafos, sem repetições viciosas."
+    },
+    {
+      "competency": 5,
+      "name": "Proposta de Intervenção",
+      "score": 200,
+      "feedback": "Proposta completa contemplando os 5 elementos: Ministério do Desenvolvimento (Agente), mutirões cartorários (Ação), verbas orçamentárias (Meio), erradicação do sub-registro (Efeito) e detalhamento."
+    }
+  ],
+  "evaluatedAt": "2026-09-18T00:35:00Z"
+}
+```

@@ -25,7 +25,7 @@ flowchart TD
     end
 
     subgraph Core ["4. Value Propositions"]
-        VP["Value Propositions<br/>• Frictionless diagnostic exam practice<br/>• Free, high-quality question resolutions<br/>• Identification of foundational gaps<br/>• Low-bandwidth, mobile-first API<br/>• Zero paywalls or predatory ads"]
+        VP["Value Propositions<br/>• Frictionless diagnostic exam practice<br/>• Free, high-quality question resolutions<br/>• Identification of foundational gaps<br/>• Low-bandwidth, mobile-first API<br/>• Zero paywalls for core objective exams<br/>• Future Premium: Redação AI OCR Evaluator"]
     end
 
     subgraph Market ["5. Relationships & 6. Channels & 7. Segments"]
@@ -35,8 +35,8 @@ flowchart TD
     end
 
     subgraph Finance ["8. Cost Structure & 9. Revenue Streams"]
-        CST["Cost Structure<br/>• Micro-cloud / VPS hosting<br/>• Open-source CI/CD automation (GitHub Actions)<br/>• Domain & DNS maintenance"]
-        REV["Revenue & Sustainability Streams<br/>• Non-profit philanthropic grants (Tech for Good)<br/>• Corporate Social Responsibility (CSR) sponsorships<br/>• Community crowdfunding & open collective<br/>• 100% Free for all students"]
+        CST["Cost Structure<br/>• Micro-cloud / VPS hosting<br/>• Multimodal LLM Vision tokens (Redação)<br/>• Open-source CI/CD automation<br/>• Domain & DNS maintenance"]
+        REV["Revenue & Sustainability Streams<br/>• 100% Free Core Access (All objective questions)<br/>• Premium Tier (Redação AI OCR & in-depth grading)<br/>• Philanthropic grants & CSR sponsorships<br/>• Subsidized public school voucher partnerships"]
     end
 
     KP --- KA --- KR
@@ -54,12 +54,12 @@ flowchart TD
 | **1. Key Partners** | • **Community Preparatory Courses (*Cursinhos Comunitários & Populares*)**: Partner with initiatives like Educafro, Uneafro, and university student-run cursinhos.<br>• **Public School STEM Teachers**: Provide automated diagnostic reports for their classrooms.<br>• **INEP**: Public provider of open exam datasets, guidelines, and answer keys.<br>• **Open-Source Tech Community**: Developers contributing code, translations, and hosting optimizations. |
 | **2. Key Activities** | • Data extraction, cleaning, and normalization of historical ENEM exams (2009 to present).<br>• Maintaining high-availability REST APIs with sub-100ms response times.<br>• Developing adaptive diagnostic algorithms mapping skill deficiencies per topic.<br>• Ensuring 100% uptime during pre-ENEM peak traffic periods. |
 | **3. Key Resources** | • Structured relational question repository categorized by discipline, topic, and difficulty.<br>• High-performance Spring Boot Hexagonal backend with PostgreSQL.<br>• Automated deployment scripts and Docker Compose environments.<br>• Comprehensive documentation and developer guides. |
-| **4. Value Propositions** | • **Zero Financial Barrier**: Completely free, eliminating economic exclusion.<br>• **Frictionless Onboarding**: Start practicing in 1 click without mandatory sign-up or phone numbers.<br>• **Targeted Diagnostic Feedback**: Shows *why* an answer is wrong and which fundamental concept to review.<br>• **Accessible Performance**: Lightweight API designed to function seamlessly over 3G/4G mobile connections. |
+| **4. Value Propositions** | • **Zero Financial Barrier for Core Exams**: All 17 years of objective questions, answers, and Socratic hints are 100% free.<br>• **Frictionless Onboarding**: Start practicing in 1 click without mandatory sign-up or phone numbers.<br>• **Targeted Diagnostic Feedback**: Shows *why* an answer is wrong and which fundamental concept to review.<br>• **Accessible Performance**: Lightweight API designed to function seamlessly over 3G/4G mobile connections.<br>• **Future Premium Value-Add (*Redação Nota 1000*)**: Handwritten essay photo scanning (OCR) with automated grading across the 5 official INEP competencies. |
 | **5. Customer Relationships** | • Anonymous, respectful, privacy-focused interactions.<br>• Community-driven feature requests via public GitHub discussions.<br>• Transparent educational data handling (no student data selling or tracking). |
 | **6. Channels** | • Direct API integration for frontend mobile and web clients.<br>• Community outreach via student WhatsApp/Telegram study groups.<br>• Partnerships with public school computer labs and NGOs. |
 | **7. Customer Segments** | • **Primary**: Brazilian public high school seniors (ages 16–19) from low-income households.<br>• **Secondary**: Adult learners and workers studying after hours for university entry.<br>• **Tertiary**: Volunteer educators needing question sets and diagnostic tracking for their classes. |
-| **8. Cost Structure** | • Minimal infrastructure: Designed to operate comfortably on low-cost virtual private servers or cloud instances.<br>• Open-source software stack (Linux, PostgreSQL, Spring Boot, Prometheus, Docker).<br>• Zero commercial database licensing or paid third-party proprietary software fees. |
-| **9. Revenue Streams** | • Grant funding from educational foundations (e.g., Fundação Lemann, Instituto Sonho Grande).<br>• Corporate Social Responsibility (CSR) micro-grants from technology companies.<br>• Open Collective / GitHub Sponsors community donations.<br>• Strictly zero student fees or locked paywalls. |
+| **8. Cost Structure** | • Minimal infrastructure: Designed to operate comfortably on low-cost virtual private servers or cloud instances.<br>• Open-source software stack (Linux, PostgreSQL, Spring Boot, Prometheus, Docker).<br>• Upstream LLM token costs for advanced multimodal vision analysis (isolated to premium tier).<br>• Zero commercial database licensing or paid third-party proprietary software fees. |
+| **9. Revenue Streams & Sustainability** | • **Core App (100% Free)**: Objective question bank, scoring, and Socratic tutoring remain completely free for all students.<br>• **Premium Tier (*Redação Pro*)**: Affordable subscription / micro-credits for multimodal image OCR extraction and heavy LLM essay evaluations (5 INEP competencies).<br>• **Grant Funding & CSR**: Educational foundations (e.g., Fundação Lemann) and corporate tech sponsorships to fund free essay quotas for low-income public school students. |
 
 ---
 

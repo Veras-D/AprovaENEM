@@ -263,6 +263,8 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.POST, "/api/v1/questions/*/ask").hasAnyRole("ANONYMOUS_STUDENT", "STUDENT")
                 // Registered Student Account & Sync Endpoints
                 .requestMatchers("/api/v1/student/**").hasRole("STUDENT")
+                // Future Premium Essay Evaluation & OCR (Phase 2)
+                .requestMatchers("/api/v1/essays/**").hasRole("PREMIUM_STUDENT")
                 // Admin Ingestion & Taxonomy Management
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
@@ -286,6 +288,7 @@ public class SecurityConfiguration {
 | :--- | :--- | :--- |
 | `ROLE_ANONYMOUS_STUDENT` | No JWT provided (Guest student browsing or practicing). | Query catalog, generate practice quizzes, submit answers, get Socratic hints. No persistent cross-device account syncing. |
 | `ROLE_STUDENT` | Valid JWT signed by `auth-service` presented. | All anonymous operations + persistent diagnostic profile, cross-device history synchronization, saved sessions. |
+| `ROLE_PREMIUM_STUDENT` | Subscribed student or voucher holder. | All student operations + upload handwritten essay photos for multimodal OCR extraction and in-depth 5-competency grading (*Redação Nota 1000*). |
 | `ROLE_ADMIN` | Authenticated teacher/curator credentials. | Batch ingest INEP question archives, edit distractor taxonomies, monitor telemetry. |
 
 ### 4.3 Method-Level Security (`@PreAuthorize`)
@@ -362,17 +365,18 @@ flowchart LR
 
 ---
 
-## 7. Future Scaling Path: Decoupling the AI Tutor
+## 7. Future Scaling & Architecture Roadmap (Phase 2 Post-Base App)
 
+### 7.1 Decoupling the AI Tutor (`tutor-service`)
 While starting with 2 microservices (`auth-service` and `exam-service`), the Hexagonal Ports & Adapters design guarantees that extracting the Socratic AI Tutor into an independent 3rd microservice (`tutor-service`) requires **zero changes to core business logic**:
 
 ```mermaid
 flowchart LR
-    subgraph CurrentTopology ["Current Phase (Sprint 1-2)"]
+    subgraph CurrentTopology ["Current Phase (Sprint 1-3: Base App)"]
         ExamCurrent["exam-service<br/>(Questions + Sessions + Gemini Adapter)"]
     end
 
-    subgraph FutureTopology ["Future Scale (Sprint 3+)"]
+    subgraph FutureTopology ["Future Scale (Phase 2+)"]
         ExamFuture["exam-service<br/>(Questions + Sessions)"]
         TutorFuture["tutor-service<br/>(Gemini Adapter + Prompt Cache)"]
         ExamFuture -->|HTTP / gRPC Client implementing `TutorAiPort`| TutorFuture
@@ -380,4 +384,41 @@ flowchart LR
 
     CurrentTopology -. Seamless Migration .-> FutureTopology
 ```
-The outbound port `TutorAiPort` remains identical; only the infrastructure adapter swaps from a local Gemini client bean to a remote HTTP/gRPC client bean.
+
+---
+
+### 7.2 Premium AI Essay Evaluator & Multimodal Vision OCR (`essay-service`)
+
+In the Brazilian ENEM, the essay (**Redação**) accounts for **20% of the entire final score** (up to 1,000 points out of 5,000) and is often the deciding criterion in SISU university admissions. 
+
+Evaluating handwritten essays requires **multimodal vision OCR** and high-token generative reasoning models (**Google Gemini 1.5 Pro**). To safeguard infrastructure sustainability while keeping the base objective exam platform 100% free, this capability is architected as a **Phase 2 premium microservice (`essay-service`)** protected by `ROLE_PREMIUM_STUDENT` (or sponsored public school micro-vouchers):
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Student as Mobile Client
+    participant GW as API Gateway (Spring Cloud)
+    participant EssaySvc as Essay Service (Hexagonal)
+    participant S3 as Object Storage (MinIO / S3)
+    participant GeminiPro as Google Gemini 1.5 Pro (Vision)
+    participant DB as PostgreSQL (essay_db)
+
+    Student->>GW: POST /api/v1/essays/upload (multipart/form-data + Bearer JWT)
+    Note over GW: Spring Security checks ROLE_PREMIUM_STUDENT
+    GW->>EssaySvc: Forward essay image + studentId
+    EssaySvc->>S3: Store raw handwritten essay image (PNG/JPEG)
+    S3-->>EssaySvc: Image URI (s3://essays/2026/...)
+    EssaySvc->>GeminiPro: Multimodal prompt (Image + INEP 5 Competencies Rubric)
+    Note over GeminiPro: 1. Transcribes handwritten Portuguese text<br/>2. Grades Competencies 1 to 5 (0-200 pts each)<br/>3. Evaluates 'Proposta de Intervenção'
+    GeminiPro-->>EssaySvc: Structured JSON (1,000 pts total + line-by-line annotations)
+    EssaySvc->>DB: Persist essay transcription, scores, and feedback
+    EssaySvc-->>GW: 201 Created (EssayEvaluationDTO)
+    GW-->>Student: 201 Created (Full diagnostic report + visual score card)
+```
+
+#### The 5 INEP Competencies Rubric Enforced by Gemini Pro
+1. **Competência 1 (0–200 pts)**: Formal standard Portuguese syntax, concord, and spelling.
+2. **Competência 2 (0–200 pts)**: Comprehending the proposed theme and integrating multidisciplinary knowledge (sociology, history, philosophy).
+3. **Competência 3 (0–200 pts)**: Thesis defense: selecting, relating, and organizing arguments logically.
+4. **Competência 4 (0–200 pts)**: Cohesion: appropriate use of inter- and intra-paragraph conjunctions and connectors.
+5. **Competência 5 (0–200 pts)**: *Proposta de Intervenção*: Detailed actionable solution addressing the 5 required elements (*Agente, Ação, Meio/Modo, Efeito, Detalhamento*) respecting human rights.

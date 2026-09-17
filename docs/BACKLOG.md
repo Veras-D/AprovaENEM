@@ -177,3 +177,17 @@ gantt
 | **S3-11** | **OpenAPI / Swagger UI Generation** | `P0` | 3 pts | SpringDoc OpenAPI generated and accessible at `/swagger-ui.html`. |
 | **S3-12** | **Multi-Job GitHub Actions CI Verification** | `P0` | 5 pts | Multi-job workflow (`backend-quality`, `frontend-quality`, `e2e-and-contract`, `gitleaks`) 100% green. |
 | **S3-13** | **Reconecta Recode Classroom Delivery** | `P0` | 2 pts | Public GitHub repository link, student name, and email submitted to Google Classroom activity. |
+
+---
+
+## 5. Phase 2 Roadmap: AI Essay Evaluator & Multimodal OCR (*Redação Nota 1000*)
+
+> **Context**: Scheduled for delivery after the base application (Sprint 1–3). Redação accounts for 20% of the final ENEM grade (1,000 points). Operated under an affordable paid plan or subsidized public school vouchers (`ROLE_PREMIUM_STUDENT`) to sustain heavy multimodal vision OCR and Gemini 1.5 Pro inference costs.
+
+| Task ID | Work Item & Title | Priority | Estimation | Acceptance Criteria |
+| :--- | :--- | :---: | :---: | :--- |
+| **S4-01** | **Essay Photo Ingestion & Storage Adapter** | `P1` | 5 pts | Multipart image upload saving handwritten essay photos to S3/MinIO bucket. |
+| **S4-02** | **Gemini 1.5 Pro Multimodal Vision OCR Adapter** | `P1` | 8 pts | Transcribe handwritten cursive Portuguese text from photo using Gemini 1.5 Pro. |
+| **S4-03** | **INEP 5-Competency Rubric Evaluation Engine** | `P0` | 8 pts | Prompt engineering evaluating Competencies 1 to 5 (0–200 pts each) with line-by-line feedback. |
+| **S4-04** | **Spring Security `ROLE_PREMIUM_STUDENT` Gate** | `P0` | 3 pts | Enforce premium role / voucher token on all `/api/v1/essays/**` endpoints. |
+| **S4-05** | **Frontend Essay Upload & Interactive Annotation Viewer** | `P1` | 8 pts | Student photo upload, transcription review, and visual radar for the 5 competencies. |

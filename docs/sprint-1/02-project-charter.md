@@ -79,6 +79,18 @@ flowchart LR
 - **FR-12**: If authenticated via JWT, the student's practice history and diagnostic profile must be linked to their account and persisted across sessions.
 - **FR-13**: Anonymous sessions must be linkable to an account upon student registration.
 
+### Module 5: Future Scope — AI Essay Evaluation & OCR (*Redação Nota 1000*)
+- **FR-14**: The system must accept photo uploads of handwritten student essays (`image/jpeg`, `image/png`, PDF) via `multipart/form-data`.
+- **FR-15**: The system must extract handwritten Portuguese text from the uploaded photo via a multimodal vision OCR pipeline.
+- **FR-16**: The system must evaluate transcribed essays strictly against the **5 official INEP competencies** (graded 0 to 200 points each, total 0 to 1,000):
+  - *Competência 1*: Mastery of standard written Portuguese conventions.
+  - *Competência 2*: Comprehension of the theme and application of diverse fields of knowledge.
+  - *Competência 3*: Selection, relation, organization, and interpretation of arguments in defense of a point of view.
+  - *Competência 4*: Demonstration of cohesive linguistic mechanisms to structure arguments.
+  - *Competência 5*: Elaboration of an intervention proposal for the problem addressing human rights (*Proposta de Intervenção*).
+- **FR-17**: The system must provide line-by-line pedagogical annotations, spelling/grammatical corrections, and actionable advice to improve thesis strength.
+- **FR-18**: To sustain heavy multimodal OCR and high-token LLM costs, this feature will operate under a **paid/subsidized plan** (`ROLE_PREMIUM_STUDENT`), delivered in Phase 2 after the base app.
+
 ---
 
 ## 4. Non-Functional Requirements (NFR)
@@ -97,15 +109,15 @@ flowchart LR
 
 ## 5. Scope Boundaries
 
-### In Scope (Sprint 1 to Sprint 3)
-- Fully functional REST APIs for question bank, practice sessions, diagnostics, and AI resolutions.
-- PostgreSQL database schemas with B-tree indices and relational integrity.
+### In Scope (Sprint 1 to Sprint 3: The Base App)
+- Fully functional REST APIs for question bank, practice sessions, instant grading, diagnostics, and Socratic AI resolutions.
+- Complete PostgreSQL database schemas with B-tree indices and relational integrity.
 - Nginx Load Balancer and Spring Cloud Gateway with Token Bucket rate limiting.
-- Hexagonal Architecture implementation with decoupled domain layers.
+- Spring Security 6 stateless JWT authentication and dual-mode anonymous/registered RBAC.
 - Docker Compose environment with Prometheus and Grafana telemetry.
-- Comprehensive automated unit and integration test suite with GitHub Actions CI.
+- Comprehensive automated test suite (Unit, Testcontainers Integration, Frontend Vitest, Cypress E2E, Playwright, Newman Postman) with GitHub Actions CI.
 
-### Out of Scope (Future Phases)
-- Custom frontend mobile app (mobile clients will consume this public REST API).
+### Out of Scope (Phase 2 Roadmap: After Base App Delivery)
+- **AI Essay Evaluator & Handwritten OCR (*Redação Nota 1000*)**: Multimodal vision ingestion, 5-competency grading, and paid tier billing integration.
+- Native iOS / Android compiled mobile apps (mobile users access via responsive React PWA).
 - Proprietary question licensing (strictly limited to public-domain INEP exams).
-- Monolithic payment or subscription gateways (the platform is strictly non-profit).
