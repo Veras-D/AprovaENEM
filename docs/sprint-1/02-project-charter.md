@@ -81,15 +81,15 @@ flowchart LR
 
 ### Module 5: Future Scope — AI Essay Evaluation & OCR (*Redação Nota 1000*)
 - **FR-14**: The system must accept photo uploads of handwritten student essays (`image/jpeg`, `image/png`, PDF) via `multipart/form-data`.
-- **FR-15**: The system must extract handwritten Portuguese text from the uploaded photo via a multimodal vision OCR pipeline.
-- **FR-16**: The system must evaluate transcribed essays strictly against the **5 official INEP competencies** (graded 0 to 200 points each, total 0 to 1,000):
+- **FR-15**: The system must extract handwritten Portuguese text using a provider-agnostic multimodal vision pipeline benchmarked through an evaluation harness (`evals/`) to select the model with the highest accuracy (lowest WER/CER) and lowest cost.
+- **FR-16**: The system must evaluate transcribed essays strictly against the **5 official INEP competencies** (graded 0 to 200 points each, total 0 to 1,000) using a **Dual-Evaluator + LLM-as-a-Judge arbitration protocol** mirroring INEP's official human evaluation standard whenever score variance exceeds 100 points total or 80 points on any single competency:
   - *Competência 1*: Mastery of standard written Portuguese conventions.
   - *Competência 2*: Comprehension of the theme and application of diverse fields of knowledge.
   - *Competência 3*: Selection, relation, organization, and interpretation of arguments in defense of a point of view.
   - *Competência 4*: Demonstration of cohesive linguistic mechanisms to structure arguments.
   - *Competência 5*: Elaboration of an intervention proposal for the problem addressing human rights (*Proposta de Intervenção*).
 - **FR-17**: The system must provide line-by-line pedagogical annotations, spelling/grammatical corrections, and actionable advice to improve thesis strength.
-- **FR-18**: To sustain heavy multimodal OCR and high-token LLM costs, this feature will operate under a **paid/subsidized plan** (`ROLE_PREMIUM_STUDENT`), delivered in Phase 2 after the base app.
+- **FR-18**: To sustain heavy multimodal OCR and LLM evaluation costs, this feature will operate under a **paid/subsidized plan** (`ROLE_PREMIUM_STUDENT`), delivered in Phase 2 after the base app.
 
 ---
 

@@ -423,7 +423,7 @@ Returns the question statement and options A–E.
 ## 6. Future Scope: AI Essay Evaluation & OCR Endpoints (`essay-service` — Phase 2 Premium)
 
 > **Access Authorization**: Requires `ROLE_PREMIUM_STUDENT` (Bearer JWT) or active prepaid voucher.  
-> **AI Engine**: Google Gemini 1.5 Pro Multimodal Vision (Handwritten Portuguese OCR + INEP 5-Competency Rubric).  
+> **AI Architecture**: Provider-Agnostic Multimodal Vision (Portuguese OCR) + Dual Evaluator with LLM-as-a-Judge Arbitration (mirroring INEP's official scoring standard). Models selected empirically via the `evals/` benchmark harness based on cost and accuracy.  
 
 ### 6.1 Upload & Transcribe Handwritten Essay Photo
 * **Method**: `POST`
@@ -439,7 +439,7 @@ Returns the question statement and options A–E.
   "essayId": "33333333-4444-5555-6666-777777777777",
   "status": "PROCESSING",
   "estimatedSeconds": 8,
-  "message": "Handwritten essay uploaded. Vision OCR and 5-competency evaluation underway."
+  "message": "Handwritten essay uploaded. Dual-model evaluation and discrepancy check underway."
 }
 ```
 
@@ -458,6 +458,16 @@ Returns the question statement and options A–E.
   "status": "EVALUATED",
   "totalScore": 880,
   "transcribedText": "A Constituição Cidadã de 1988 assegura a todos os brasileiros o pleno exercício da cidadania...",
+  "evaluationMetadata": {
+    "evaluatorA": "candidate-eval-a",
+    "evaluatorB": "candidate-eval-b",
+    "scoreA": 920,
+    "scoreB": 800,
+    "scoreDiscrepancy": 120,
+    "llmJudgeIntervened": true,
+    "judgeModel": "candidate-judge-model",
+    "judgeRationale": "Evaluator A was overly lenient on Competência 1 minor comma splices, while Evaluator B penalized Competência 3 excessively despite consistent thesis development. Final score calibrated to 880."
+  },
   "competencyScores": [
     {
       "competency": 1,

@@ -385,38 +385,83 @@ flowchart LR
     CurrentTopology -. Seamless Migration .-> FutureTopology
 ```
 
----
-
 ### 7.2 Premium AI Essay Evaluator & Multimodal Vision OCR (`essay-service`)
 
-In the Brazilian ENEM, the essay (**Redação**) accounts for **20% of the entire final score** (up to 1,000 points out of 5,000) and is often the deciding criterion in SISU university admissions. 
+In the Brazilian ENEM, the essay (**Redação**) accounts for **20% of the entire final score** (up to 1,000 points out of 5,000) and is often the deciding criterion in SISU university admissions.
 
-Evaluating handwritten essays requires **multimodal vision OCR** and high-token generative reasoning models (**Google Gemini 1.5 Pro**). To safeguard infrastructure sustainability while keeping the base objective exam platform 100% free, this capability is architected as a **Phase 2 premium microservice (`essay-service`)** protected by `ROLE_PREMIUM_STUDENT` (or sponsored public school micro-vouchers):
+Evaluating handwritten essays requires **multimodal vision OCR** and high-token generative reasoning models. To safeguard infrastructure sustainability while keeping the base objective exam platform 100% free, this capability is architected as a **Phase 2 premium microservice (`essay-service`)** protected by `ROLE_PREMIUM_STUDENT` (or sponsored public school micro-vouchers).
+
+#### 1. Provider-Agnostic Design & Empirical Model Evaluation (LLM Evals)
+The architecture does **not hardcode a single AI provider**. Instead, the system uses an empirical **Evaluation Harness (`evals/`)** to benchmark candidate models against historical INEP human-graded ground-truth essays to select the model offering the best accuracy at the lowest cost:
+
+```mermaid
+flowchart LR
+    Dataset["Ground Truth Dataset<br/>(100 Scanned INEP Essays with official grades)"] --> EvalHarness["LLM Evaluation Harness<br/>(`evals/run_benchmarks.py`)"]
+    
+    subgraph Candidates ["Candidate Foundation Models"]
+        M1["Google Gemini (Flash / Pro)"]
+        M2["Anthropic Claude (Haiku / Sonnet)"]
+        M3["OpenAI (GPT-4o-mini / GPT-4o)"]
+        M4["Open-Weights (Llama 3.2 Vision / Qwen 2.5 VL)"]
+    end
+    
+    EvalHarness --> Candidates
+    Candidates --> Pareto["Cost vs. Quality Pareto Frontier<br/>• OCR Transcription WER / CER<br/>• Score Mean Absolute Error (MAE)<br/>• Cost per Evaluation (Cents/Essay)"]
+    Pareto --> ActiveAdapter["Selected Primary Evaluator & Judge Models"]
+```
+
+#### 2. INEP-Inspired Dual-Evaluator & LLM-as-a-Judge Protocol
+In the official INEP protocol, every essay is independently evaluated by **two human graders**. If their total scores differ by more than **100 points**, or any single competency differs by more than **80 points**, a **third arbitrator (*avaliador de desempate*)** is called. 
+
+AprovaENEM mirrors this exact rigorous protocol using **Dual Evaluators + LLM-as-a-Judge**:
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Student as Mobile Client
-    participant GW as API Gateway (Spring Cloud)
-    participant EssaySvc as Essay Service (Hexagonal)
+    participant GW as API Gateway
+    participant EssaySvc as Essay Service
     participant S3 as Object Storage (MinIO / S3)
-    participant GeminiPro as Google Gemini 1.5 Pro (Vision)
+    participant OCR as Vision OCR Adapter
+    participant Eval1 as Evaluator Model A
+    participant Eval2 as Evaluator Model B
+    participant Judge as LLM-as-a-Judge Arbitrator
     participant DB as PostgreSQL (essay_db)
 
-    Student->>GW: POST /api/v1/essays/upload (multipart/form-data + Bearer JWT)
-    Note over GW: Spring Security checks ROLE_PREMIUM_STUDENT
-    GW->>EssaySvc: Forward essay image + studentId
-    EssaySvc->>S3: Store raw handwritten essay image (PNG/JPEG)
-    S3-->>EssaySvc: Image URI (s3://essays/2026/...)
-    EssaySvc->>GeminiPro: Multimodal prompt (Image + INEP 5 Competencies Rubric)
-    Note over GeminiPro: 1. Transcribes handwritten Portuguese text<br/>2. Grades Competencies 1 to 5 (0-200 pts each)<br/>3. Evaluates 'Proposta de Intervenção'
-    GeminiPro-->>EssaySvc: Structured JSON (1,000 pts total + line-by-line annotations)
-    EssaySvc->>DB: Persist essay transcription, scores, and feedback
+    Student->>GW: POST /api/v1/essays/upload (image + Bearer JWT)
+    Note over GW: Spring Security verifies ROLE_PREMIUM_STUDENT
+    GW->>EssaySvc: Dispatch essay image
+    EssaySvc->>S3: Store raw handwritten photo
+    EssaySvc->>OCR: Extract handwritten Portuguese text
+    OCR-->>EssaySvc: Transcribed text
+    
+    par Dual Independent Evaluation
+        EssaySvc->>Eval1: Grade Competencies 1 to 5 (Prompt A)
+        EssaySvc->>Eval2: Grade Competencies 1 to 5 (Prompt B)
+    end
+    Eval1-->>EssaySvc: Score A (e.g., 840 pts)
+    Eval2-->>EssaySvc: Score B (e.g., 720 pts)
+    
+    Note over EssaySvc: Discrepancy Gate Check:<br/>|Score A - Score B| = 120 pts (> 100 pts threshold)
+    
+    EssaySvc->>Judge: Arbitrate (Essay + Scores A & B + INEP Rubric)
+    Note over Judge: LLM Judge analyzes both rationales,<br/>reconciles criteria, and assigns calibrated grade
+    Judge-->>EssaySvc: Final Score (e.g., 800 pts) + Arbitration Rationale
+    
+    EssaySvc->>DB: Persist transcription, scores, and judge notes
     EssaySvc-->>GW: 201 Created (EssayEvaluationDTO)
-    GW-->>Student: 201 Created (Full diagnostic report + visual score card)
+    GW-->>Student: 201 Created (Diagnostic Report + Competency Radar)
 ```
 
-#### The 5 INEP Competencies Rubric Enforced by Gemini Pro
+#### 3. Hexagonal Ports & Adapters Architecture
+The core domain defines three pure Java outbound ports:
+* `VisionOcrPort`: Abstracts handwritten Portuguese text extraction.
+* `EssayEvaluatorPort`: Abstracts rubric scoring across Competencies 1 to 5.
+* `LlmJudgePort`: Abstracts discrepancy arbitration and calibration.
+
+Pluggable infrastructure adapters implement these ports (e.g., `GeminiVisionAdapter`, `OpenAiVisionAdapter`, `ClaudeJudgeAdapter`), enabling zero-downtime model switching based on benchmark results and API pricing updates.
+
+#### 4. The 5 INEP Competencies Rubric
 1. **Competência 1 (0–200 pts)**: Formal standard Portuguese syntax, concord, and spelling.
 2. **Competência 2 (0–200 pts)**: Comprehending the proposed theme and integrating multidisciplinary knowledge (sociology, history, philosophy).
 3. **Competência 3 (0–200 pts)**: Thesis defense: selecting, relating, and organizing arguments logically.
