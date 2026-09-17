@@ -21,7 +21,7 @@ flowchart TD
     subgraph Infrastructure ["1. Key Partners & 2. Key Activities & 3. Key Resources"]
         KP["Key Partners<br/>• Public schools & educators<br/>• Cursinhos Populares<br/>• INEP (Open Data source)<br/>• Open Source contributors"]
         KA["Key Activities<br/>• INEP Exam Ingestion & Parsing<br/>• Diagnostic Engine Algorithms<br/>• Platform API Maintenance<br/>• Pedagogical Content Curation"]
-        KR["Key Resources<br/>• Ingested Question Bank (2010-2025)<br/>• Hexagonal Backend Microservices<br/>• Free-Tier AI Model Integration<br/>• Open Community Documentation"]
+        KR["Key Resources<br/>• Ingested Question Bank (2009-2025)<br/>• Hexagonal Backend Microservices<br/>• Socratic AI Tutor Integration (Gemini API)<br/>• Open Community Documentation"]
     end
 
     subgraph Core ["4. Value Propositions"]
@@ -35,7 +35,7 @@ flowchart TD
     end
 
     subgraph Finance ["8. Cost Structure & 9. Revenue Streams"]
-        CST["Cost Structure<br/>• Micro-cloud hosting (Oracle Free Tier / low-cost VPS)<br/>• Open-source CI/CD automation (GitHub Actions)<br/>• Domain & DNS maintenance"]
+        CST["Cost Structure<br/>• Micro-cloud / VPS hosting<br/>• Open-source CI/CD automation (GitHub Actions)<br/>• Domain & DNS maintenance"]
         REV["Revenue & Sustainability Streams<br/>• Non-profit philanthropic grants (Tech for Good)<br/>• Corporate Social Responsibility (CSR) sponsorships<br/>• Community crowdfunding & open collective<br/>• 100% Free for all students"]
     end
 
@@ -52,13 +52,13 @@ flowchart TD
 | Canvas Block | Strategy & Implementation |
 | :--- | :--- |
 | **1. Key Partners** | • **Community Preparatory Courses (*Cursinhos Comunitários & Populares*)**: Partner with initiatives like Educafro, Uneafro, and university student-run cursinhos.<br>• **Public School STEM Teachers**: Provide automated diagnostic reports for their classrooms.<br>• **INEP**: Public provider of open exam datasets, guidelines, and answer keys.<br>• **Open-Source Tech Community**: Developers contributing code, translations, and hosting optimizations. |
-| **2. Key Activities** | • Data extraction, cleaning, and normalization of historical ENEM exams (2010 to present).<br>• Maintaining high-availability REST APIs with sub-100ms response times.<br>• Developing adaptive diagnostic algorithms mapping skill deficiencies per topic.<br>• Ensuring 100% uptime during pre-ENEM peak traffic periods. |
+| **2. Key Activities** | • Data extraction, cleaning, and normalization of historical ENEM exams (2009 to present).<br>• Maintaining high-availability REST APIs with sub-100ms response times.<br>• Developing adaptive diagnostic algorithms mapping skill deficiencies per topic.<br>• Ensuring 100% uptime during pre-ENEM peak traffic periods. |
 | **3. Key Resources** | • Structured relational question repository categorized by discipline, topic, and difficulty.<br>• High-performance Spring Boot Hexagonal backend with PostgreSQL.<br>• Automated deployment scripts and Docker Compose environments.<br>• Comprehensive documentation and developer guides. |
 | **4. Value Propositions** | • **Zero Financial Barrier**: Completely free, eliminating economic exclusion.<br>• **Frictionless Onboarding**: Start practicing in 1 click without mandatory sign-up or phone numbers.<br>• **Targeted Diagnostic Feedback**: Shows *why* an answer is wrong and which fundamental concept to review.<br>• **Accessible Performance**: Lightweight API designed to function seamlessly over 3G/4G mobile connections. |
 | **5. Customer Relationships** | • Anonymous, respectful, privacy-focused interactions.<br>• Community-driven feature requests via public GitHub discussions.<br>• Transparent educational data handling (no student data selling or tracking). |
 | **6. Channels** | • Direct API integration for frontend mobile and web clients.<br>• Community outreach via student WhatsApp/Telegram study groups.<br>• Partnerships with public school computer labs and NGOs. |
 | **7. Customer Segments** | • **Primary**: Brazilian public high school seniors (ages 16–19) from low-income households.<br>• **Secondary**: Adult learners and workers studying after hours for university entry.<br>• **Tertiary**: Volunteer educators needing question sets and diagnostic tracking for their classes. |
-| **8. Cost Structure** | • Minimal infrastructure: Designed to operate comfortably on low-cost virtual private servers or free tiers.<br>• Open-source software stack (Linux, PostgreSQL, Spring Boot, Prometheus, Docker).<br>• Zero commercial database licensing or paid third-party proprietary software fees. |
+| **8. Cost Structure** | • Minimal infrastructure: Designed to operate comfortably on low-cost virtual private servers or cloud instances.<br>• Open-source software stack (Linux, PostgreSQL, Spring Boot, Prometheus, Docker).<br>• Zero commercial database licensing or paid third-party proprietary software fees. |
 | **9. Revenue Streams** | • Grant funding from educational foundations (e.g., Fundação Lemann, Instituto Sonho Grande).<br>• Corporate Social Responsibility (CSR) micro-grants from technology companies.<br>• Open Collective / GitHub Sponsors community donations.<br>• Strictly zero student fees or locked paywalls. |
 
 ---

@@ -28,7 +28,7 @@ flowchart TD
 
         subgraph Services ["Microservices Layer (Hexagonal Architecture)"]
             AuthSvc["🔐 Auth & Identity Service (Port 8081)<br/>• Anonymous Session Provisioning<br/>• Student JWT Registration & Login<br/>• Profile Management"]
-            ExamSvc["📚 Exam & Assessment Service (Port 8082)<br/>• Question Bank & INEP Taxonomy<br/>• Practice Session State Machine<br/>• Automated Grading & Scoring<br/>• Diagnostic Weak-Spot Engine<br/>• Socratic Question Resolution (Gemini Free Tier)"]
+            ExamSvc["📚 Exam & Assessment Service (Port 8082)<br/>• Question Bank & INEP Taxonomy<br/>• Practice Session State Machine<br/>• Automated Grading & Scoring<br/>• Diagnostic Weak-Spot Engine<br/>• Socratic Question Resolution (Google Gemini)"]
         end
 
         subgraph DataLayer ["Persistence & Cache Layer"]
@@ -43,7 +43,7 @@ flowchart TD
     end
 
     subgraph ExternalAI ["External AI Intelligence"]
-        GeminiAPI["🤖 Google Gemini API (Free Tier)<br/>gemini-1.5-flash Socratic Explanations"]
+        GeminiAPI["🤖 Google Gemini API<br/>gemini-1.5-flash Socratic Explanations"]
     end
 
     User -->|HTTP / HTTPS Port 80| LB
@@ -74,7 +74,7 @@ The front-facing Nginx container acts as the L7 reverse proxy, providing:
 3. **Keep-Alive Connection Pooling**: Maintains persistent upstream connections to the Spring Cloud Gateway.
 
 ### API Gateway & Token Bucket Rate Limiting
-To protect the backend from denial-of-service, aggressive question scraping, and exhaustion of the **Google Gemini Free Tier rate limits (15 RPM / 1,500 RPD)**, the Gateway enforces a **Token Bucket** rate limiting algorithm:
+To protect the backend from denial-of-service, aggressive question scraping, and exhaustion of upstream **Google Gemini API rate limits and quotas**, the Gateway enforces a **Token Bucket** rate limiting algorithm:
 
 ```mermaid
 stateDiagram-v2
@@ -97,7 +97,7 @@ stateDiagram-v2
    - Refill Rate: **1 token / second** (allows bursts up to 60 req/min).
 2. **AI Tutor Inquiries** (`POST /api/v1/questions/{id}/ask`):
    - Capacity: **10 tokens**.
-   - Refill Rate: **10 tokens / minute** (strict guardrail protecting free-tier LLM quota).
+   - Refill Rate: **10 tokens / minute** (strict guardrail protecting upstream LLM API consumption and rate limits).
 3. **HTTP 429 Payload Structure**:
    ```json
    {
@@ -138,7 +138,7 @@ flowchart TD
 
     subgraph Infrastructure_Out ["Infrastructure (Outbound Adapters)"]
         JPAAdapter["🗄️ Spring Data JPA Adapter<br/>(`PostgresQuestionRepository`)"]
-        GeminiAdapter["🤖 Gemini Free-Tier Adapter<br/>(`GeminiTutorClient`)"]
+        GeminiAdapter["🤖 Gemini AI Tutor Adapter<br/>(`GeminiTutorClient`)"]
     end
 
     RestCtrl --> DTO

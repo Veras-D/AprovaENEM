@@ -71,7 +71,7 @@ flowchart LR
 
 ### Module 3: Socratic Explanation & AI Study Assistant
 - **FR-08**: The system must allow students to request a step-by-step resolution breakdown for any specific question.
-- **FR-09**: The system must support conversational inquiries regarding a question (e.g., *"Why is alternative B wrong?"*), routing to Google Gemini Free Tier.
+- **FR-09**: The system must support conversational inquiries regarding a question (e.g., *"Why is alternative B wrong?"*), routing to the Google Gemini API (with local development compatibility with the free tier).
 - **FR-10**: The AI assistant must strictly follow Socratic educational guardrails: it must explain the underlying scientific/mathematical concept and guide the student, rather than simply stating the solution.
 
 ### Module 4: Authentication & User Accounts (Optional / Dual Mode)

@@ -52,8 +52,8 @@ flowchart TD
 
 ## 3. Production Failure Modes & Targeted Metrics
 
-### Failure Mode 1: Gemini Free-Tier Quota Exhaustion (HTTP 429)
-* **Risk**: The Google Gemini Free Tier permits up to 15 requests per minute (RPM). Traffic spikes will trigger HTTP 429 errors from Google.
+### Failure Mode 1: Gemini Upstream Rate Limit Exhaustion (HTTP 429)
+* **Risk**: Upstream Gemini API rate limits or quota boundaries. Traffic spikes can trigger HTTP 429 (Too Many Requests) from Google.
 * **Telemetry Metric**:
   - `gemini_api_requests_total{status="429"}` (Rate limit counter).
   - `gemini_api_fallback_total` (Times the system fell back to static INEP resolutions).
@@ -109,10 +109,10 @@ When a student reports an error with `X-Trace-Id: 4bf92f3577b34da6a3ce929d0e0e47
 ```text
 2026-09-17 19:45:02.105 INFO  [api-gateway,4bf92f3577b34da6,00f067aa0ba902b7] c.o.g.RouteFilter : Inbound POST /api/v1/questions/1024/ask
 2026-09-17 19:45:02.118 INFO  [exam-service,4bf92f3577b34da6,11a123bb0ca801a2] c.o.a.s.TutorService : Dispatching Socratic query to Gemini API
-2026-09-17 19:45:02.850 ERROR [exam-service,4bf92f3577b34da6,11a123bb0ca801a2] c.o.a.i.a.o.g.GeminiClient : Gemini Free Tier HTTP 429: ResourceExhausted: Quota exceeded for quota metric 'GenerateContent Requests'
+2026-09-17 19:45:02.850 ERROR [exam-service,4bf92f3577b34da6,11a123bb0ca801a2] c.o.a.i.a.o.g.GeminiClient : Gemini API HTTP 429: ResourceExhausted: Quota exceeded for quota metric 'GenerateContent Requests'
 2026-09-17 19:45:02.852 WARN  [exam-service,4bf92f3577b34da6,11a123bb0ca801a2] c.o.a.s.TutorService : Tripping CircuitBreaker [GeminiCircuitBreaker: HALF_OPEN -> OPEN]. Serving static resolution.
 ```
-2. **Diagnosis completed in 10 seconds**: Zero guesswork. The logs confirm that the student's question triggered a Gemini free-tier 429 quota exhaustion, the circuit breaker tripped, and the fallback static explanation was returned safely.
+2. **Diagnosis completed in 10 seconds**: Zero guesswork. The logs confirm that the student's question triggered an upstream Gemini API 429 rate limit exhaustion, the circuit breaker tripped, and the fallback static explanation was returned safely.
 
 ---
 
@@ -155,12 +155,12 @@ groups:
           description: "Database B-tree index or payload size regression on question queries."
 
       # Alert 4: Gemini AI Rate Limit Exhaustion
-      - alert: GeminiFreeTierQuotaBreach
+      - alert: GeminiRateLimitBreach
         expr: sum(rate(gemini_api_requests_total{status="429"}[1m])) > 0
         for: 10s
         labels:
           severity: warning
         annotations:
-          summary: "Google Gemini Free Tier Rate Limit hit (429)"
-          description: "AI Tutor endpoint is hitting the 15 RPM free tier cap. Activating fallback."
+          summary: "Google Gemini Upstream Rate Limit hit (429)"
+          description: "AI Tutor endpoint is hitting upstream rate limits. Activating fallback."
 ```

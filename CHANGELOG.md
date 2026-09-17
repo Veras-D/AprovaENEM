@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.1.1] - 2026-09-18
+### 🔧 Changed
+- docs(architecture): Refine Gemini API integration and rate limiter specifications across architecture and observability docs
+- docs(setup): Clarify Google Gemini Free Tier as local development onboarding option rather than production architectural constraint
+- docs(business): Align historical exam ingestion span to 2009-2025 across business model and system specs
+
 ## [0.1.0] - 2026-09-17
 ### 🚀 Added
 - docs(business): Add Business Model Canvas, Value Proposition, and ICP Personas in 01-business-and-market-strategy.md

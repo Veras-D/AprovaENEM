@@ -125,9 +125,9 @@ gantt
 ---
 
 ### Epic 4: Socratic AI Tutor & External Resilience
-#### `TASK-S2-10`: Google Gemini Free-Tier Client Adapter
+#### `TASK-S2-10`: Google Gemini AI Tutor Client Adapter
 - **Priority**: `P1` | **Estimation**: 5 pts
-- **Description**: Implement `GeminiTutorClientAdapter` using Google GenAI SDK / Spring AI with Socratic system prompt.
+- **Description**: Implement `GeminiTutorClientAdapter` using Google GenAI SDK / Spring AI with Socratic system prompt (compatible with local development free-tier keys and production quotas).
 - **Acceptance Criteria**:
   - Sends question context and student query to `gemini-1.5-flash`.
   - Enforces educational prompt: guide the student conceptually without spoiling the answer.

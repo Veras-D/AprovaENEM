@@ -42,8 +42,8 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 ### ⚙️ Backend & Distributed Architecture (`backend/`)
 - 🗄️ **Complete INEP Question Bank**: Past exams categorized by subject area (*Mathematics, Natural Sciences, Humanities, Languages*), discipline, sub-topic, and Item Response Theory (TRI) difficulty.
 - ⚡ **Real-Time Assessment & Grading**: Millisecond evaluation of submissions with immediate distractor analysis.
-- 🤖 **Socratic AI Study Tutor**: Powered by **Google Gemini Free Tier** with pedagogical guardrails: guides students through underlying principles without spoiling answers.
-- 🛡️ **Token Bucket Edge Rate Limiting**: Built into the API Gateway to prevent scraper abuse and protect external free-tier AI quotas.
+- 🤖 **Socratic AI Study Tutor**: Powered by **Google Gemini (gemini-1.5-flash)** with pedagogical guardrails: guides students through underlying scientific and mathematical principles without spoiling answers.
+- 🛡️ **Token Bucket Edge Rate Limiting**: Built into the API Gateway to prevent scraper abuse and protect upstream LLM API consumption.
 - 📈 **Datadog-Style Observability**: Complete Prometheus APM metrics, Micrometer distributed tracing (`traceId` / `spanId` MDC injection), and sub-minute trace-to-error bug isolation.
 - 🌐 **Bilingual Backend (i18n)**: Spring Boot `MessageSource` supporting both Portuguese (`pt-BR`) and English (`en`).
 - 🏗️ **Hexagonal Architecture**: Strict separation of pure Java domain models from Spring Boot frameworks and PostgreSQL persistence.
@@ -118,7 +118,7 @@ graph TD
     end
 
     subgraph ExternalServices ["External AI Cloud"]
-        Gemini["🤖 Google Gemini Free Tier<br/>gemini-1.5-flash Socratic Explanations"]
+        Gemini["🤖 Google Gemini API<br/>gemini-1.5-flash Socratic Explanations"]
     end
 
     User -->|HTTP / HTTPS Port 80| Nginx
@@ -193,7 +193,7 @@ The entire full-stack ecosystem (frontend, backend microservices, gateway, datab
 
 ### Prerequisites
 - Docker Engine 24+ & Docker Compose v2
-- Google Gemini API Key (free tier from [Google AI Studio](https://aistudio.google.com/))
+- Google Gemini API Key (free tier available for development from [Google AI Studio](https://aistudio.google.com/))
 
 ### 1. Clone & Configure
 ```bash
@@ -203,7 +203,7 @@ cp .env.example .env
 ```
 Edit `.env` and insert your Gemini API Key:
 ```env
-GEMINI_API_KEY=AIzaSyYourFreeTierKeyHere...
+GEMINI_API_KEY=AIzaSyYourApiKeyHere...
 ```
 
 ### 2. Launch Entire Platform
