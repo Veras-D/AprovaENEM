@@ -34,6 +34,9 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 
 ### 📱 Student Web & Mobile Experience (`frontend/`)
 - 🎯 **Frictionless Instant Practice**: Students start solving questions immediately with zero mandatory registration, phone verification, or paywalls.
+- 🎮 **Game Experience & Progression**: Experience points (XP), student levels (from *Calouro* to *Nota 1000*), celebratory level-up animations, and unlockable achievement badges for registered users.
+- 🔥 **Daily Goals & Streak Tracker**: Customizable daily question targets (5–25 questions/day), daily streak counter (*Ofensiva*), emergency monthly freeze protection, and automated study reminders.
+- 🏆 **Weekly Reset Leagues**: Competitive weekly leaderboards across 4 tiers (Bronze, Silver, Gold, Diamond) resetting every Sunday at 23:59 BRT to foster peer motivation.
 - 📱 **Mobile-First & 3G/4G Optimized**: High-density, low-bandwidth UI built for budget smartphones and constrained mobile data plans.
 - 📊 **Interactive Diagnostic Radar**: Visual skill radar charts mapping student mastery across topics (`MASTERED`, `ATTENTION_NEEDED`, `CRITICAL`).
 - 🌙 **High-Contrast & Dark Mode Design**: Eye-strain-free, accessible interface optimized for long focused study marathons and battery efficiency on mobile screens.
@@ -42,6 +45,7 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 ### ⚙️ Backend & Distributed Architecture (`backend/`)
 - 🗄️ **Complete INEP Question Bank**: Past exams categorized by subject area (*Mathematics, Natural Sciences, Humanities, Languages*), discipline, sub-topic, and Item Response Theory (TRI) difficulty.
 - ⚡ **Real-Time Assessment & Grading**: Millisecond evaluation of submissions with immediate distractor analysis.
+- 🕹️ **Event-Driven Gamification Engine**: Evaluates domain events (`QuestionAnsweredEvent`, `SessionCompletedEvent`) to compute XP rewards, evaluate daily study goals, and calculate weekly league rankings via PostgreSQL window functions.
 - 🤖 **Socratic AI Study Tutor**: Powered by **Google Gemini (gemini-1.5-flash)** with pedagogical guardrails: guides students through underlying scientific and mathematical principles without spoiling answers.
 - 🧠 **Retrieval-Augmented Generation (RAG) & Vector Search**: Grounded in official INEP curriculum matrices, verified step-by-step resolutions, and distractor catalogs via **PostgreSQL 16 `pgvector`** with HNSW semantic indexing to eliminate LLM hallucinations before student prompts are dispatched.
 - 🛡️ **Token Bucket Edge Rate Limiting**: Built into the API Gateway to prevent scraper abuse and protect upstream LLM API consumption.

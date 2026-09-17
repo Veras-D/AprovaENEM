@@ -239,6 +239,46 @@ CREATE TABLE anonymous_sessions (
 );
 
 CREATE INDEX idx_anonymous_session_uuid ON anonymous_sessions(session_uuid);
+
+-- Gamification Profiles (Level, XP, Daily Goals & Streaks)
+CREATE TABLE user_gamification_profiles (
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    current_level INT NOT NULL DEFAULT 1,
+    current_xp INT NOT NULL DEFAULT 0,
+    streak_days INT NOT NULL DEFAULT 0,
+    streak_freeze_available INT NOT NULL DEFAULT 1, -- 1 emergency streak freeze per month
+    last_activity_date DATE,
+    daily_goal_questions INT NOT NULL DEFAULT 10,
+    daily_questions_completed INT NOT NULL DEFAULT 0,
+    daily_goal_reached_at TIMESTAMP WITH TIME ZONE,
+    opt_in_reminders BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Weekly Leaderboard Tiers (Resets every Sunday at 23:59 BRT)
+CREATE TABLE weekly_leaderboards (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    week_number INT NOT NULL,
+    year INT NOT NULL,
+    league_tier VARCHAR(20) NOT NULL DEFAULT 'BRONZE', -- BRONZE, SILVER, GOLD, DIAMOND
+    weekly_xp INT NOT NULL DEFAULT 0,
+    questions_solved INT NOT NULL DEFAULT 0,
+    rank_position INT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_user_week UNIQUE (user_id, week_number, year)
+);
+
+-- Student Badges & Achievements
+CREATE TABLE user_achievements (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    badge_code VARCHAR(50) NOT NULL, -- 'STREAK_7_DAYS', 'MATH_WIZARD_50', 'FIRST_SIMULADO', 'LEVEL_10'
+    unlocked_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_user_badge UNIQUE (user_id, badge_code)
+);
 ```
 
 ---
@@ -451,6 +491,10 @@ CREATE INDEX idx_knowledge_chunks_hnsw
 ON knowledge_chunks 
 USING hnsw (embedding vector_cosine_ops) 
 WITH (m = 16, ef_construction = 64);
+
+-- 8. Weekly Leaderboard League Query (Sub-5ms Rank Filtering)
+CREATE INDEX idx_weekly_leaderboards_league_xp 
+ON weekly_leaderboards (year, week_number, league_tier, weekly_xp DESC);
 ```
 
 ---

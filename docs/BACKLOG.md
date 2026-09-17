@@ -180,6 +180,31 @@ gantt
 
 ---
 
+### Epic 6: Gamification, Streaks & Weekly Leaderboards
+#### `TASK-S2-14`: Student Gamification Engine (XP, Levels & Daily Goals)
+- **Priority**: `P1` | **Estimation**: 5 pts
+- **Description**: Implement event-driven gamification listener reacting to `QuestionAnsweredEvent` and `SessionCompletedEvent` to award XP (+10 per correct answer, +50 per completed session), evaluate daily goals, increment daily streak counters, and handle level promotions.
+- **Acceptance Criteria**:
+  - Automatically calculates XP and updates `user_gamification_profiles`.
+  - Increments streak days and tracks monthly emergency streak freeze usage.
+  - Exposes `GET /api/v1/gamification/profile` and `PUT /api/v1/gamification/daily-goal`.
+
+#### `TASK-S2-15`: Weekly Reset Leaderboard & League Ranking
+- **Priority**: `P1` | **Estimation**: 5 pts
+- **Description**: Implement weekly leaderboard calculation with PostgreSQL window functions (`DENSE_RANK()`) partitioning by league tiers (Bronze, Silver, Gold, Diamond), and scheduled Sunday 23:59:59 BRT league resets.
+- **Acceptance Criteria**:
+  - Sub-5ms query performance on `GET /api/v1/gamification/leaderboard/weekly`.
+  - Promotes top 20% to next league and relegates bottom 10% on weekly reset.
+
+#### `TASK-S2-16`: Daily Study Reminder Scheduled Worker
+- **Priority**: `P2` | **Estimation**: 3 pts
+- **Description**: Implement Spring `@Scheduled` background worker running daily at 19:00 BRT to query students with pending daily study goals and dispatch web push / in-app notifications to protect their streak.
+- **Acceptance Criteria**:
+  - Only alerts users with `opt_in_reminders = true` and `isCompleted = false`.
+  - Dispatches Web Push payload and in-app banner alert.
+
+---
+
 ## 4. Sprint 3: Testing, Quality Gate & Delivery (Review & Polish 🛡️)
 
 | Task ID | Work Item & Title | Priority | Estimation | Acceptance Criteria |

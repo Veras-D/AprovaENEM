@@ -516,3 +516,166 @@ Returns the question statement and options A–E.
   "evaluatedAt": "2026-09-18T00:35:00Z"
 }
 ```
+
+---
+
+## 7. Gamification, Daily Streaks & Leaderboard Endpoints (Registered Users)
+
+> **Access Authorization**: Requires `ROLE_STUDENT` or `ROLE_PREMIUM_STUDENT` (Bearer JWT).  
+> **Anonymous Fallback**: Unauthenticated students receive prompts encouraging account registration to unlock XP, streak tracking, and league competition.
+
+### 7.1 Get Student Gamification Profile
+* **Method**: `GET`
+* **Path**: `/api/v1/gamification/profile`
+* **Headers**: `Authorization: Bearer <token>`
+
+#### Response `200 OK`
+```json
+{
+  "userId": "11111111-2222-3333-4444-555555555555",
+  "level": 8,
+  "levelTitle": "Focado no SISU",
+  "currentXp": 1420,
+  "xpNextLevel": 1600,
+  "levelProgressPercentage": 88.75,
+  "streakDays": 14,
+  "streakFreezeAvailable": 1,
+  "dailyGoal": {
+    "targetQuestions": 10,
+    "completedQuestions": 7,
+    "isCompleted": false,
+    "optInReminders": true
+  },
+  "currentLeague": "SILVER",
+  "weeklyXp": 340,
+  "unlockedBadgesCount": 6
+}
+```
+
+---
+
+### 7.2 Update Daily Goal & Reminders Configuration
+* **Method**: `PUT`
+* **Path**: `/api/v1/gamification/daily-goal`
+* **Headers**: `Authorization: Bearer <token>`, `Content-Type: application/json`
+
+#### Request Body
+```json
+{
+  "targetQuestions": 15,
+  "optInReminders": true
+}
+```
+
+#### Response `200 OK`
+```json
+{
+  "message": "Daily study goal updated successfully.",
+  "targetQuestions": 15,
+  "optInReminders": true
+}
+```
+
+---
+
+### 7.3 Get Weekly Reset Leaderboard
+* **Method**: `GET`
+* **Path**: `/api/v1/gamification/leaderboard/weekly`
+* **Headers**: `Authorization: Bearer <token>`
+* **Query Parameters**:
+  - `league`: `BRONZE` | `SILVER` | `GOLD` | `DIAMOND` (default: student's current league)
+  - `page`: `0`
+  - `size`: `20` (max 50)
+
+#### Response `200 OK`
+```json
+{
+  "weekNumber": 38,
+  "year": 2026,
+  "leagueTier": "SILVER",
+  "resetsAt": "2026-09-20T23:59:59-03:00",
+  "currentUserRank": {
+    "rank": 4,
+    "userId": "11111111-2222-3333-4444-555555555555",
+    "displayName": "Mariana Silva",
+    "weeklyXp": 340,
+    "streakDays": 14,
+    "promotionZone": true
+  },
+  "leaderboard": [
+    {
+      "rank": 1,
+      "userId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+      "displayName": "Lucas Santos",
+      "weeklyXp": 580,
+      "streakDays": 21,
+      "promotionZone": true
+    },
+    {
+      "rank": 2,
+      "userId": "bbbbbbbb-cccc-dddd-eeee-ffffffffffff",
+      "displayName": "Beatriz Lima",
+      "weeklyXp": 490,
+      "streakDays": 9,
+      "promotionZone": true
+    },
+    {
+      "rank": 3,
+      "userId": "cccccccc-dddd-eeee-ffff-000000000000",
+      "displayName": "Gabriel Costa",
+      "weeklyXp": 380,
+      "streakDays": 12,
+      "promotionZone": true
+    },
+    {
+      "rank": 4,
+      "userId": "11111111-2222-3333-4444-555555555555",
+      "displayName": "Mariana Silva",
+      "weeklyXp": 340,
+      "streakDays": 14,
+      "promotionZone": true
+    }
+  ],
+  "totalParticipants": 142
+}
+```
+
+---
+
+### 7.4 Get Student Achievements & Badges
+* **Method**: `GET`
+* **Path**: `/api/v1/gamification/badges`
+* **Headers**: `Authorization: Bearer <token>`
+
+#### Response `200 OK`
+```json
+{
+  "totalUnlocked": 3,
+  "badges": [
+    {
+      "code": "FIRST_SIMULADO",
+      "name": "Primeiro Passo",
+      "description": "Complete seu primeiro simulado com pelo menos 10 questões.",
+      "icon": "trophy",
+      "unlocked": true,
+      "unlockedAt": "2026-09-12T14:20:00Z"
+    },
+    {
+      "code": "STREAK_7_DAYS",
+      "name": "Semana de Ferro",
+      "description": "Mantenha uma ofensiva de estudos ativa por 7 dias consecutivos.",
+      "icon": "flame",
+      "unlocked": true,
+      "unlockedAt": "2026-09-17T20:00:00Z"
+    },
+    {
+      "code": "MATH_WIZARD_50",
+      "name": "Gênio da Matemática",
+      "description": "Resolva 50 questões de Matemática com acurácia superior a 75%.",
+      "icon": "calculator",
+      "unlocked": false,
+      "progressPercentage": 64.0
+    }
+  ]
+}
+```

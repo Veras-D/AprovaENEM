@@ -79,7 +79,14 @@ flowchart LR
 - **FR-12**: If authenticated via JWT, the student's practice history and diagnostic profile must be linked to their account and persisted across sessions.
 - **FR-13**: Anonymous sessions must be linkable to an account upon student registration.
 
-### Module 5: Future Scope — AI Essay Evaluation & OCR (*Redação Nota 1000*)
+### Module 5: Gamification, Daily Streaks & Weekly Leaderboards (Registered Students)
+- **FR-20**: The system must track Experience Points (XP) and student progression levels ($XP_{required} = 100 \times Level^{1.5}$) earned via correct answers, completed sessions, and diagnostic milestones.
+- **FR-21**: The system must maintain a daily study streak tracker (*Ofensiva diária*) with emergency monthly streak protection freezes (*Bloqueio de Ofensiva*).
+- **FR-22**: The system must allow registered students to set customizable daily question goals (e.g., 5, 10, 15, or 25 questions) and track daily completion status.
+- **FR-23**: The system must provide opt-in daily reminders (in-app alerts and Web Push API) scheduled at 19:00 BRT to alert students with pending daily goals to protect their streak.
+- **FR-24**: The system must compute a Weekly Reset Leaderboard resetting every Sunday at 23:59 BRT across 4 competitive leagues (Bronze, Silver, Gold, Diamond), promoting top performers and fostering community motivation.
+
+### Module 6: Future Scope — AI Essay Evaluation & OCR (*Redação Nota 1000*)
 - **FR-14**: The system must accept photo uploads of handwritten student essays (`image/jpeg`, `image/png`, PDF) via `multipart/form-data`.
 - **FR-15**: The system must extract handwritten Portuguese text using a provider-agnostic multimodal vision pipeline benchmarked through an evaluation harness (`evals/`) to select the model with the highest accuracy (lowest WER/CER) and lowest cost.
 - **FR-16**: The system must evaluate transcribed essays strictly against the **5 official INEP competencies** (graded 0 to 200 points each, total 0 to 1,000) using a **Dual-Evaluator + LLM-as-a-Judge arbitration protocol** mirroring INEP's official human evaluation standard whenever score variance exceeds 100 points total or 80 points on any single competency:

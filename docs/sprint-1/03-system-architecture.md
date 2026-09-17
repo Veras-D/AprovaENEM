@@ -516,3 +516,51 @@ Rather than introducing the operational complexity, hosting costs, and network l
    - Retrieves official INEP curriculum competencies, verified formulas, and distractor traps before prompting the tutor, ensuring the AI never gives incorrect scientific information or spoils answers.
 2. **Redação AI Evaluator (Phase 2 Premium)**:
    - Retrieves the official INEP *Manual do Corretor de Redação*, thematic motivating texts, and exemplar benchmark criteria for the specific exam year, providing grounded evaluation across the 5 competencies.
+
+---
+
+## 9. Gamification & Habit-Loop Engine Architecture
+
+To maximize student retention, combat prep fatigue, and provide a game-like educational journey for Brazilian public school students, AprovaENEM implements an event-driven **Gamification Engine** integrated across practice sessions:
+
+```mermaid
+flowchart TD
+    StudentAttempt["Student Submits Answer<br/>(`SubmitAnswerUseCase`)"] --> DomainEvent["Publish Domain Event<br/>(`QuestionAnsweredEvent`)"]
+    
+    subgraph GamificationEngine ["Gamification & Habit-Loop Engine"]
+        DomainEvent --> XPCalculator["XP & Level Calculator<br/>• +10 XP Correct<br/>• +50 XP Complete Session<br/>• +30 XP Daily Goal Achieved"]
+        DomainEvent --> StreakTracker["Streak Tracker (Ofensiva)<br/>• Evaluates `last_activity_date`<br/>• Increments consecutive days<br/>• Applies Monthly Freeze if missed"]
+        DomainEvent --> GoalValidator["Daily Goal Validator<br/>• Evaluates `daily_questions_completed`<br/>• Triggers goal unlocked celebration"]
+        
+        XPCalculator --> ProfileUpdate["Update `user_gamification_profiles`"]
+        StreakTracker --> ProfileUpdate
+        GoalValidator --> ProfileUpdate
+        
+        XPCalculator --> LeaderboardUpdater["Update `weekly_leaderboards`<br/>• Ingests Weekly XP into current week<br/>• Assigns League Tier: Bronze ➔ Diamond"]
+    end
+    
+    ProfileUpdate --> PushNotifier["Notification Scheduler<br/>• Web Push API & In-App Alert<br/>• 19:00 BRT: 'Proteja sua ofensiva!'"]
+```
+
+### 9.1 XP & Level Progression System
+- **Level Scaling Formula**: $XP_{required}(Level) = 100 \times Level^{1.5}$
+- **Level Tiers & Titles**:
+  - **Levels 1–4**: *Calouro do ENEM*
+  - **Levels 5–9**: *Vestibulando Focado*
+  - **Levels 10–19**: *Mestre dos Simulados*
+  - **Levels 20–29**: *Aspirante a Federal*
+  - **Level 30+**: *Nota 1000 Implacável*
+
+### 9.2 Weekly Reset Leaderboards & League Tiers
+- **Reset Frequency**: Every Sunday at 23:59:59 BRT.
+- **Tiers & Progression**:
+  - 🥉 **Bronze League**: Default entry league for newly registered students. Top 20% promote.
+  - 🥈 **Silver League**: Top 20% promote to Gold; bottom 10% relegate to Bronze.
+  - 🥇 **Gold League**: Top 15% promote to Diamond; bottom 15% relegate to Silver.
+  - 💎 **Diamond League**: Top 10 nationally recognized on the public Hall of Fame.
+
+### 9.3 Daily Study Reminders & Streak Protection
+- **Daily Goals**: Configurable question targets (5, 10, 15, or 25 questions/day).
+- **Streak Freeze (*Bloqueio de Ofensiva*)**: Students receive 1 emergency streak freeze per calendar month to accommodate school exam weeks or emergencies without losing motivation.
+- **Smart Push Reminders**: An asynchronous Spring `@Scheduled` worker scans for active registered users with `opt_in_reminders = true` who have not completed their daily goal by 19:00 BRT, triggering a friendly reminder notification.
+
