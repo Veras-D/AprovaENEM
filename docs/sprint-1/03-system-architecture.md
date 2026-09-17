@@ -201,7 +201,106 @@ com.openenem.assessment/
 
 ---
 
-## 4. Inter-Service Communication & Distributed Tracing
+## 4. Spring Security 6 Architecture & Dual-Mode Access Control
+
+To satisfy enterprise portfolio requirements (matching Alma Career / Teamio standards), AprovaENEM integrates **Spring Security 6.3+** with a component-based `SecurityFilterChain` model, stateless JWT authentication, and fine-grained Role-Based Access Control (RBAC).
+
+```mermaid
+flowchart TD
+    ClientReq["Incoming HTTP Request<br/>(Optional: `Authorization: Bearer <token>` or `X-Session-Id`)"] --> SecurityFilterChain
+    
+    subgraph SpringSecurity ["Spring Security 6 Filter Chain"]
+        CorsFilter["CorsFilter<br/>Strict Allowed Origins & Headers"] --> CsrfFilter["CsrfFilter<br/>Disabled (Stateless REST API)"]
+        CsrfFilter --> RateLimitFilter["RateLimitFilter<br/>Token Bucket Ingress Check"]
+        RateLimitFilter --> JwtAuthFilter["JwtAuthenticationFilter<br/>(OncePerRequestFilter)<br/>Validates HMAC-SHA256 & Expiry"]
+        JwtAuthFilter --> AnonFilter["AnonymousAuthenticationFilter<br/>Assigns `ROLE_ANONYMOUS_STUDENT` if unauthenticated"]
+        AnonFilter --> AuthzFilter["AuthorizationFilter<br/>Evaluates Route Permissions & Method Rules"]
+    end
+    
+    AuthzFilter -->|Authorized| RestController["Target RestController<br/>(`@PreAuthorize`)"]
+    AuthzFilter -->|Invalid JWT / Expired| AuthEntryPoint["Custom AuthenticationEntryPoint<br/>(RFC 7807 401 Unauthorized)"]
+    AuthzFilter -->|Insufficient Role| AccessDenied["Custom AccessDeniedHandler<br/>(RFC 7807 403 Forbidden)"]
+```
+
+### 4.1 SecurityFilterChain Configuration (`SecurityConfiguration.java`)
+```java
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
+public class SecurityConfiguration {
+
+    private final JwtAuthenticationFilter jwtAuthFilter;
+    private final CustomAuthenticationEntryPoint authEntryPoint;
+    private final CustomAccessDeniedHandler accessDeniedHandler;
+
+    public SecurityConfiguration(
+            JwtAuthenticationFilter jwtAuthFilter,
+            CustomAuthenticationEntryPoint authEntryPoint,
+            CustomAccessDeniedHandler accessDeniedHandler) {
+        this.jwtAuthFilter = jwtAuthFilter;
+        this.authEntryPoint = authEntryPoint;
+        this.accessDeniedHandler = accessDeniedHandler;
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http
+            .csrf(AbstractHttpConfigurer::disable)
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint(authEntryPoint)
+                .accessDeniedHandler(accessDeniedHandler))
+            .authorizeHttpRequests(auth -> auth
+                // Public & Anonymous Endpoints
+                .requestMatchers(HttpMethod.GET, "/api/v1/questions/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/auth/session").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login").permitAll()
+                .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/prometheus").permitAll()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                // Practice Session & Tutor Endpoints (Anonymous or Registered Student)
+                .requestMatchers("/api/v1/sessions/**").hasAnyRole("ANONYMOUS_STUDENT", "STUDENT")
+                .requestMatchers(HttpMethod.POST, "/api/v1/questions/*/ask").hasAnyRole("ANONYMOUS_STUDENT", "STUDENT")
+                // Registered Student Account & Sync Endpoints
+                .requestMatchers("/api/v1/student/**").hasRole("STUDENT")
+                // Admin Ingestion & Taxonomy Management
+                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                .anyRequest().authenticated()
+            )
+            .anonymous(anon -> anon
+                .principal("anonymousStudent")
+                .authorities("ROLE_ANONYMOUS_STUDENT"))
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12);
+    }
+}
+```
+
+### 4.2 Role-Based Access Control (RBAC) Matrix
+| Role | Assigned When | Permitted Operations |
+| :--- | :--- | :--- |
+| `ROLE_ANONYMOUS_STUDENT` | No JWT provided (Guest student browsing or practicing). | Query catalog, generate practice quizzes, submit answers, get Socratic hints. No persistent cross-device account syncing. |
+| `ROLE_STUDENT` | Valid JWT signed by `auth-service` presented. | All anonymous operations + persistent diagnostic profile, cross-device history synchronization, saved sessions. |
+| `ROLE_ADMIN` | Authenticated teacher/curator credentials. | Batch ingest INEP question archives, edit distractor taxonomies, monitor telemetry. |
+
+### 4.3 Method-Level Security (`@PreAuthorize`)
+Service methods enforce authorization via Spring Security annotations:
+```java
+@PreAuthorize("hasRole('STUDENT')")
+public StudentProfileDTO getStudentProfile(UUID studentId) { ... }
+
+@PreAuthorize("hasRole('ADMIN')")
+public IngestionReportDTO ingestExamPackage(ExamPackageDTO packageDTO) { ... }
+```
+
+---
+
+## 5. Inter-Service Communication & Distributed Tracing
 
 ### Synchronous Communication Contract
 The Gateway communicates with downstream microservices via HTTP/1.1 REST with persistent connections. All service-to-service calls carry the standard **W3C Trace Context headers**:
@@ -242,7 +341,7 @@ When an anomaly occurs in production, entering the `traceId` into Grafana/Promet
 
 ---
 
-## 5. Internationalization (i18n) Architecture
+## 6. Internationalization (i18n) Architecture
 
 The backend supports bilingual operations out of the box:
 - **English (`en`)**: System error messages, validation errors, developer documentation, and API keys.
@@ -263,7 +362,7 @@ flowchart LR
 
 ---
 
-## 6. Future Scaling Path: Decoupling the AI Tutor
+## 7. Future Scaling Path: Decoupling the AI Tutor
 
 While starting with 2 microservices (`auth-service` and `exam-service`), the Hexagonal Ports & Adapters design guarantees that extracting the Socratic AI Tutor into an independent 3rd microservice (`tutor-service`) requires **zero changes to core business logic**:
 

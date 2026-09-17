@@ -32,6 +32,44 @@ All error responses return a standardized JSON payload:
 }
 ```
 
+### Security Schemes & Spring Security 6 RBAC
+AprovaENEM defines two primary OpenAPI security schemes enforced by Spring Security:
+1. **`bearerAuth`**:
+   - Type: `http`, Scheme: `bearer`, BearerFormat: `JWT`.
+   - Required for account sync and profile operations (`ROLE_STUDENT`) or curriculum maintenance (`ROLE_ADMIN`).
+2. **`sessionIdAuth`**:
+   - Type: `apiKey`, In: `header`, Name: `X-Session-Id`.
+   - Used for tracking anonymous practice sessions mapped to `ROLE_ANONYMOUS_STUDENT`.
+
+#### Security Error Schemas (RFC 7807)
+* **401 Unauthorized** (Emitted by `CustomAuthenticationEntryPoint` when JWT is missing, invalid, or expired):
+  ```json
+  {
+    "type": "https://aprovaenem.org/errors/UNAUTHORIZED",
+    "title": "Unauthorized",
+    "status": 401,
+    "detail": "Full authentication is required to access this resource.",
+    "instance": "/api/v1/student/profile",
+    "code": "UNAUTHORIZED",
+    "timestamp": "2026-09-18T00:30:00Z",
+    "traceId": "4bf92f3577b34da6a3ce929d0e0e4736"
+  }
+  ```
+
+* **403 Forbidden** (Emitted by `CustomAccessDeniedHandler` when user lacks required role):
+  ```json
+  {
+    "type": "https://aprovaenem.org/errors/ACCESS_DENIED",
+    "title": "Access Denied",
+    "status": 403,
+    "detail": "Access denied: Principal does not possess 'ROLE_ADMIN'.",
+    "instance": "/api/v1/admin/ingest",
+    "code": "ACCESS_DENIED",
+    "timestamp": "2026-09-18T00:30:00Z",
+    "traceId": "4bf92f3577b34da6a3ce929d0e0e4736"
+  }
+  ```
+
 ---
 
 ## 2. Authentication & Session Endpoints (`auth-service`)

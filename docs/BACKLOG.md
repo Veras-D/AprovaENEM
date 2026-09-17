@@ -86,12 +86,14 @@ gantt
   - Returns UUID session with 30-day expiration.
   - Stores session in `anonymous_sessions` table.
 
-#### `TASK-S2-05`: Optional Student Registration & JWT Security
-- **Priority**: `P1` | **Estimation**: 5 pts
-- **Description**: Implement user registration (`/register`) and login (`/login`) with BCrypt password hashing and stateless JWT issuance.
+#### `TASK-S2-05`: Spring Security 6 Integration, Stateless JWT & RBAC
+- **Priority**: `P0` | **Estimation**: 8 pts
+- **Description**: Configure Spring Security 6 `SecurityFilterChain` bean architecture, stateless session management, `BCryptPasswordEncoder(12)`, custom `JwtAuthenticationFilter` (`OncePerRequestFilter`), `AnonymousAuthenticationFilter` (`ROLE_ANONYMOUS_STUDENT`), method-level security (`@EnableMethodSecurity`), and RFC 7807 `AuthenticationEntryPoint` / `AccessDeniedHandler`.
 - **Acceptance Criteria**:
-  - Valid JWT returned with `userId` and student claims.
-  - Expired or tampered tokens return HTTP 401 with RFC 7807 problem details.
+  - Unauthenticated requests safely obtain `ROLE_ANONYMOUS_STUDENT` to practice quizzes and query public catalogs without credentials.
+  - User `/register` and `/login` issue signed HMAC-SHA256 JWT tokens with `ROLE_STUDENT`.
+  - Protected endpoints validate Bearer tokens and enforce `@PreAuthorize`.
+  - Missing or expired tokens return RFC 7807 401 Unauthorized; insufficient roles return RFC 7807 403 Forbidden.
 
 ---
 
@@ -164,13 +166,14 @@ gantt
 | :--- | :--- | :---: | :---: | :--- |
 | **S3-01** | **Domain Unit Testing** | `P0` | 5 pts | Pure Java domain tests (scoring, TRI rules, entities) with JUnit 5 & AssertJ (fast execution). |
 | **S3-02** | **Application Service Unit Testing** | `P0` | 5 pts | Mockito unit tests covering all Use Case orchestration flows and Socratic prompt formatters. |
-| **S3-03** | **REST Controller WebMvc Tests** | `P0` | 5 pts | MockMvc tests validating status codes (200, 201, 400, 404, 429) and RFC 7807 payloads. |
+| **S3-03** | **Spring Security & Controller Tests** | `P0` | 5 pts | MockMvc tests with `@WithMockUser` and `@WithAnonymousUser` validating 200, 401, 403, and RFC 7807. |
 | **S3-04** | **Testcontainers Integration Testing** | `P0` | 8 pts | Real PostgreSQL 16 container integration tests (`*IT.java`) testing Flyway, JPA, and repositories. |
 | **S3-05** | **JaCoCo Unified Coverage Setup** | `P0` | 3 pts | Merge Surefire + Failsafe datafiles (`jacoco.exec`); fail build if line $< 80\%$ or branch $< 75\%$. |
 | **S3-06** | **Frontend Unit & Component Testing** | `P0` | 5 pts | Vitest + React Testing Library testing Question Cards, LaTeX rendering, radar charts, and dark mode. |
 | **S3-07** | **Frontend MSW Integration Testing** | `P0` | 5 pts | Vitest + Mock Service Worker testing API responses, HTTP 429 retry backoff, and offline states. |
-| **S3-08** | **Playwright Full-Stack E2E Testing** | `P0` | 8 pts | Headless cross-browser student journey tests against live Docker Compose platform (`http://localhost`). |
-| **S3-09** | **OpenAPI / Swagger UI Generation** | `P0` | 3 pts | SpringDoc OpenAPI generated and accessible at `/swagger-ui.html`. |
-| **S3-10** | **Postman Collection Export** | `P1` | 3 pts | Complete Postman collection with sample environments committed to `docs/postman/`. |
-| **S3-11** | **Multi-Job GitHub Actions CI Verification** | `P0` | 5 pts | Multi-job workflow (`backend-quality`, `frontend-quality`, `e2e-quality`, `gitleaks`) passes with 100% green. |
-| **S3-12** | **Reconecta Recode Classroom Delivery** | `P0` | 2 pts | Public GitHub repository link, student name, and email submitted to Google Classroom activity. |
+| **S3-08** | **Cypress E2E Student Journey Tests** | `P0` | 8 pts | Interactive browser testing (`frontend/cypress/`) covering quiz answering, Socratic hints, and radar. |
+| **S3-09** | **Playwright Cross-Browser Testing** | `P1` | 5 pts | Automated headless testing across Chromium, Firefox, WebKit, and mobile viewport emulations. |
+| **S3-10** | **Automated Postman & Newman API Suite** | `P0` | 5 pts | Postman collection executed via Newman CLI in CI validating all REST contracts and latency SLAs. |
+| **S3-11** | **OpenAPI / Swagger UI Generation** | `P0` | 3 pts | SpringDoc OpenAPI generated and accessible at `/swagger-ui.html`. |
+| **S3-12** | **Multi-Job GitHub Actions CI Verification** | `P0` | 5 pts | Multi-job workflow (`backend-quality`, `frontend-quality`, `e2e-and-contract`, `gitleaks`) 100% green. |
+| **S3-13** | **Reconecta Recode Classroom Delivery** | `P0` | 2 pts | Public GitHub repository link, student name, and email submitted to Google Classroom activity. |

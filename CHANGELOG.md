@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.1.1] - 2026-09-18
 ### 🔧 Changed
+- docs(security): Add Spring Security 6 architecture, SecurityFilterChain, stateless JWT filter, and RBAC matrix matching Alma Career / Teamio standards
+- docs(testing): Add Cypress E2E automated test suite and student journey specs in 07-quality-gate-ci.md
+- docs(testing): Add automated Postman collection execution via Newman CLI in CI quality gate
 - docs(testing): Expand Gate 5 into comprehensive Full-Stack Testing Pyramid (Unit, Testcontainers Integration, Frontend Vitest, and Playwright E2E)
 - docs(testing): Configure JaCoCo unified coverage combining Surefire unit tests and Failsafe integration tests (80%+ lines, 75%+ branches)
 - docs(frontend): Define Vitest + React Testing Library + MSW test specifications and coverage thresholds (80%+)

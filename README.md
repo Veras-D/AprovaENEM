@@ -63,6 +63,7 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 ### Backend Microservices
 - **Language**: Java 21 LTS
 - **Framework**: Spring Boot 3.3+ (Web, Data JPA, Validation, Actuator)
+- **Security**: **Spring Security 6.3+** (Stateless JWT, `SecurityFilterChain`, Method Security `@PreAuthorize`, RBAC for anonymous and registered students, BCrypt password hashing)
 - **Architecture**: Microservices with **Hexagonal Architecture (Ports and Adapters)**
 - **API Gateway**: Spring Cloud Gateway with Token Bucket Rate Limiting
 - **Reverse Proxy**: Nginx (L7 Load Balancer, SSL termination, request buffering)
@@ -80,16 +81,17 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 
 ### Automated Testing & Verification
 - **Backend Unit Tests**: JUnit 5, Mockito, AssertJ (Domain entities, TRI rules, scoring algorithms)
-- **Backend Integration Tests**: Spring Boot `@SpringBootTest`, Testcontainers PostgreSQL 16, Maven Failsafe
-- **Backend Coverage**: JaCoCo Maven Plugin (Unified unit + integration merged coverage $\ge 80\%$)
+- **Backend Integration Tests**: Spring Boot `@SpringBootTest`, Testcontainers PostgreSQL 16, Spring Security `@WithMockUser`, Maven Failsafe
+- **Backend Coverage**: JaCoCo Maven Plugin (Unified unit + integration merged coverage $\ge 80\%$ line, $\ge 75\%$ branch)
 - **Frontend Unit & Component Tests**: Vitest, React Testing Library, jsdom
 - **Frontend Integration Tests**: Vitest + Mock Service Worker (MSW)
 - **Frontend Coverage**: `@vitest/coverage-v8` ($\ge 80\%$ lines & statements)
-- **End-to-End (E2E) Tests**: Playwright (Cross-browser student workflows against Docker Compose)
+- **API Contract Tests**: Automated Postman test suite executed via **Newman CLI**
+- **End-to-End (E2E) Tests**: **Cypress** (Interactive student DOM workflows) + **Playwright** (Cross-browser and mobile device matrices)
 
 ### DevOps & CI/CD
 - **Containerization**: Unified Multi-Container Docker Compose (Orchestrating Frontend, Nginx, API Gateway, Microservices, Databases, Prometheus & Grafana)
-- **Quality Gate**: Multi-Job GitHub Actions CI (`-Werror`, Checkstyle, PMD, PMD CPD, Trivy CVE scan, Gitleaks, JaCoCo 80%+, Vitest 80%+, Playwright E2E)
+- **Quality Gate**: Multi-Job GitHub Actions CI (`-Werror`, Checkstyle, PMD, PMD CPD, Trivy CVE scan, Gitleaks, JaCoCo 80%+, Vitest 80%+, Newman API tests, Cypress E2E, Playwright E2E)
 
 ---
 
@@ -256,9 +258,10 @@ AprovaENEM adopts the strict automated quality gate standard established in [CV_
 3. **Gate 3: Duplication Detection**: PMD CPD enforcing duplicate token threshold $< 3\%$.
 4. **Gate 4: Security & Secret Scan**: Trivy CVE dependency audit (0 critical/high) + Gitleaks commit history scan.
 5. **Gate 5: Full Test Pyramid & Dual Coverage**:
-   - **Backend**: Pure Java domain unit tests (`Surefire`) + Testcontainers PostgreSQL integration tests (`Failsafe`). Enforced by **JaCoCo unified coverage ($\ge 80\%$ line, $\ge 75\%$ branch)**.
+   - **Backend**: Pure Java domain unit tests (`Surefire`) + Testcontainers PostgreSQL integration tests (`Failsafe`) + Spring Security authorization tests (`@WithMockUser`). Enforced by **JaCoCo unified coverage ($\ge 80\%$ line, $\ge 75\%$ branch)**.
    - **Frontend**: Vitest + React Testing Library component tests and MSW integration tests. Enforced by **`@vitest/coverage-v8` ($\ge 80\%$)**.
-   - **E2E**: Playwright headless browser tests verifying complete student practice journeys against Docker Compose.
+   - **API Contracts**: Automated Postman regression suite executed via **Newman CLI**.
+   - **E2E**: **Cypress** interactive DOM workflows + **Playwright** cross-browser headless suites verifying student practice journeys against Docker Compose.
 6. **Gate 6: Build Verification**: Clean container builds via Docker Compose and production bundle packaging.
 
 ---
