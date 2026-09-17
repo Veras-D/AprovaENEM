@@ -129,6 +129,7 @@ The pipeline emits normalized JSON fixtures adhering strictly to the PostgreSQL 
   "discipline": "Physics",
   "topicName": "Circuitos Elétricos",
   "difficultyLevel": "MEDIUM",
+  "status": "ACTIVE",
   "statementMarkdown": "Um estudante dispõe de três resistores ôhmicos de resistências $R_1 = 10\\,\\Omega$, $R_2 = 20\\,\\Omega$ e $R_3 = 30\\,\\Omega$...\n\n![Esquema dos resistores](https://cdn.aprovaenem.org/exams/2023/q91_resistors.png)\n\nQual é a corrente total drenada da bateria?",
   "options": [
     { "letter": "A", "text": "0,5 A", "isCorrect": false },

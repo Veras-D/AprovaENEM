@@ -175,6 +175,7 @@ com.openenem.assessment/
 ├── domain/                      # PURE JAVA (No Spring, No JPA)
 │   ├── model/
 │   │   ├── Question.java        # Aggregate root
+│   │   ├── QuestionStatus.java  # Lifecycle state: ACTIVE, SUSPENDED, NEEDS_REVIEW, DRAFT, ANNULLED
 │   │   ├── Option.java          # Value object (A, B, C, D, E)
 │   │   ├── ExamSession.java     # Session entity with lifecycle states
 │   │   ├── Attempt.java         # Student answer submission

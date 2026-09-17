@@ -43,6 +43,7 @@ classDiagram
         +string statement
         +string correctOption
         +string difficultyLevel
+        +string status
         +float triScoreA
         +float triScoreB
         +float triScoreC
@@ -146,6 +147,8 @@ erDiagram
         numeric tri_param_a
         numeric tri_param_b
         numeric tri_param_c
+        varchar status
+        text suspension_reason
         varchar content_language
         timestamp created_at
     }
@@ -331,8 +334,11 @@ CREATE TABLE questions (
     tri_param_a NUMERIC(5, 3), -- Discrimination parameter
     tri_param_b NUMERIC(5, 3), -- Difficulty parameter
     tri_param_c NUMERIC(5, 3), -- Guessing parameter
+    status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'SUSPENDED', 'NEEDS_REVIEW', 'DRAFT', 'ANNULLED')),
+    suspension_reason TEXT, -- Optional pedagogical/formatting notes for suspended items
     content_language VARCHAR(10) NOT NULL DEFAULT 'pt-BR',
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uq_edition_item UNIQUE (exam_edition_id, item_number)
 );
 
@@ -500,9 +506,14 @@ ON notification_logs (user_id, status, created_at DESC);
 To achieve the **`p95 < 100ms`** read requirement for quiz generation and filtering, the following specialized PostgreSQL B-Tree, GIN, and HNSW indexes are deployed:
 
 ```sql
--- 1. Filter Questions by Topic, Difficulty and Language (Quiz Generator Hot Query)
+-- 1. Filter Questions by Topic, Difficulty, Language and Status (Catalog & Filter Queries)
 CREATE INDEX idx_questions_topic_diff_lang 
-ON questions (topic_id, difficulty_level, content_language);
+ON questions (topic_id, difficulty_level, content_language, status);
+
+-- 1b. Partial Index for Active Serving Questions (Instant Quiz Generation)
+CREATE INDEX idx_questions_active_serving 
+ON questions (topic_id, difficulty_level) 
+WHERE status = 'ACTIVE';
 
 -- 2. Filter Questions by Exam Edition
 CREATE INDEX idx_questions_edition_item 

@@ -222,6 +222,7 @@ AprovaENEM defines two primary OpenAPI security schemes enforced by Spring Secur
   - `subject` (string, optional) — e.g. `NATURAL_SCIENCES`
   - `topicId` (UUID, optional) — e.g. `33333333-4444-5555-6666-777777777777`
   - `difficulty` (string, optional) — `EASY` | `MEDIUM` | `HARD`
+  - `status` (string, optional, default: `ACTIVE`) — `ACTIVE` | `SUSPENDED` | `NEEDS_REVIEW` | `DRAFT` | `ANNULLED` (Note: `ROLE_STUDENT` / anonymous can only retrieve `ACTIVE` questions; other statuses require `ROLE_ADMIN`).
   - `page` (int, default: 0)
   - `size` (int, default: 10, max: 50)
 
@@ -238,6 +239,7 @@ AprovaENEM defines two primary OpenAPI security schemes enforced by Spring Secur
       "itemNumber": 105,
       "statement": "Um eletricista precisa instalar um disjuntor para proteger um circuito de chuveiro elétrico de potência $P = 5500\\text{ W}$ conectado a uma rede de $V = 220\\text{ V}$. Considerando a corrente nominal calculada por $I = P/V$, determine a corrente e selecione o disjuntor comercial adequado.",
       "difficulty": "MEDIUM",
+      "status": "ACTIVE",
       "options": [
         { "optionLetter": "A", "text": "Corrente de 15 A; disjuntor de 15 A." },
         { "optionLetter": "B", "text": "Corrente de 25 A; disjuntor de 30 A." },
@@ -262,7 +264,32 @@ AprovaENEM defines two primary OpenAPI security schemes enforced by Spring Secur
 * **Path**: `/api/v1/questions/{id}`
 
 #### Response `200 OK`
-Returns the question statement and options A–E.
+Returns the question statement, status, and options A–E.
+
+---
+
+### 3.5 Update Question Publication Status (Admin Only)
+* **Method**: `PATCH`
+* **Path**: `/api/v1/admin/questions/{id}/status`
+* **Headers**: `Authorization: Bearer <token>` (Requires `ROLE_ADMIN`)
+
+#### Request Body
+```json
+{
+  "status": "SUSPENDED",
+  "suspensionReason": "Diagram image needs higher resolution crop; suspended while reviewing."
+}
+```
+
+#### Response `200 OK`
+```json
+{
+  "id": "77777777-8888-9999-aaaa-bbbbbbbbbbbb",
+  "status": "SUSPENDED",
+  "suspensionReason": "Diagram image needs higher resolution crop; suspended while reviewing.",
+  "updatedAt": "2026-09-18T01:30:00Z"
+}
+```
 
 ---
 

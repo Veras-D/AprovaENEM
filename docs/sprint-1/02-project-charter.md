@@ -55,9 +55,10 @@ flowchart LR
 ## 3. Functional Requirements (FR)
 
 ### Module 1: Question Bank Catalog & Ingestion
-- **FR-01**: The system must allow querying questions filtered by `exam_year`, `subject_area`, `discipline`, `topic`, and `difficulty_level`.
+- **FR-01**: The system must allow querying questions filtered by `exam_year`, `subject_area`, `discipline`, `topic`, `difficulty_level`, and `status`. Public student endpoints strictly return `ACTIVE` questions.
 - **FR-02**: The system must support pagination (default 10 items, maximum 50) and cursor/offset-based queries with total count headers.
-- **FR-03**: The system must provide an endpoint to generate a randomized practice set based on specific filter criteria (e.g., "10 medium-difficulty Physics questions from 2020-2023").
+- **FR-03**: The system must provide an endpoint to generate a randomized practice set based on specific filter criteria, drawing exclusively from `ACTIVE` questions (excluding `SUSPENDED`, `NEEDS_REVIEW`, `DRAFT`, or `ANNULLED` items).
+- **FR-03b**: The system must support a lifecycle state for every question (`ACTIVE`, `SUSPENDED`, `NEEDS_REVIEW`, `DRAFT`, `ANNULLED`), allowing administrators to suspend questions with degraded formatting, missing assets, or during incremental pilot rollouts.
 
 ### Module 2: Practice Sessions & Grading
 - **FR-04**: The system must allow starting an anonymous practice session using an `X-Session-Id` header (UUID) without requiring user authentication.

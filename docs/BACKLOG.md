@@ -111,15 +111,18 @@ gantt
 ### Epic 3: Examination & Assessment Engine (`exam-service`)
 #### `TASK-S2-06`: Hexagonal Core Domain Modeling
 - **Priority**: `P0` | **Estimation**: 5 pts
-- **Description**: Implement pure Java domain entities (`Question`, `ExamSession`, `Attempt`, `DiagnosticReport`) without any Spring or JPA annotations.
+- **Description**: Implement pure Java domain entities (`Question`, `QuestionStatus`, `ExamSession`, `Attempt`, `DiagnosticReport`) without any Spring or JPA annotations.
 - **Acceptance Criteria**:
   - 100% framework-free pure Java classes under `com.openenem.assessment.domain`.
+  - Enforces `QuestionStatus` lifecycle enum (`ACTIVE`, `SUSPENDED`, `NEEDS_REVIEW`, `DRAFT`, `ANNULLED`).
   - Domain validation rules: options must be between A and E, session cannot receive attempts once completed.
 
 #### `TASK-S2-07`: Question Catalog & Filtered Query Use Cases
 - **Priority**: `P0` | **Estimation**: 5 pts
-- **Description**: Implement `GetQuestionsQuery` and outbound `QuestionRepositoryPort` adapter fetching questions from PostgreSQL with pagination and filters.
+- **Description**: Implement `GetQuestionsQuery` and outbound `QuestionRepositoryPort` adapter fetching questions from PostgreSQL with pagination, subject/difficulty filters, and status filtering.
 - **Acceptance Criteria**:
+  - Public student queries and quiz sessions strictly select `ACTIVE` questions (excluding `SUSPENDED` or `NEEDS_REVIEW` items).
+  - Admin endpoint allows updating question status and suspension notes.
   - Answers correctly omitted from public list queries.
   - Paginated responses return `page`, `size`, `totalElements`.
 
