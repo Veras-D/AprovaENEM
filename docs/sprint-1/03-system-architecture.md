@@ -14,34 +14,41 @@ The system is deployed as a resilient, containerized multi-service ecosystem. In
 
 ```mermaid
 flowchart TD
-    Client["📱 Mobile App / Web Browser / Cursinho Client"]
+    User([📱 Student Client / Browser])
     
-    subgraph Perimeter ["Edge & Perimeter Ingress"]
-        LB["🛡️ Nginx Load Balancer / Reverse Proxy<br/>(Port 80/443, SSL Termination, Static Buffering)"]
-        APIGW["⚡ Spring Cloud API Gateway (Port 8080)<br/>• Route Dispatcher<br/>• Token Bucket Rate Limiter (Redis/Memory)<br/>• W3C Distributed Trace Injector (`traceId`)<br/>• Dual-Auth Evaluator (Anonymous vs JWT)"]
-    end
+    subgraph DockerComposePlatform ["Unified Docker Compose Platform"]
+        subgraph Perimeter ["Edge & Perimeter Ingress"]
+            LB["🛡️ Nginx Load Balancer / Reverse Proxy<br/>Port 80/443<br/>• Routes / to Frontend<br/>• Routes /api/** to Gateway"]
+            APIGW["⚡ Spring Cloud API Gateway (Port 8080)<br/>• Route Dispatcher<br/>• Token Bucket Rate Limiter (Redis/Memory)<br/>• W3C Distributed Trace Injector (`traceId`)<br/>• Dual-Auth Evaluator (Anonymous vs JWT)"]
+        end
 
-    subgraph Services ["Microservices Layer (Hexagonal Architecture)"]
-        AuthSvc["🔐 Auth & Identity Service (Port 8081)<br/>• Anonymous Session Provisioning<br/>• Student JWT Registration & Login<br/>• Profile Management"]
-        ExamSvc["📚 Exam & Assessment Service (Port 8082)<br/>• Question Bank & INEP Taxonomy<br/>• Practice Session State Machine<br/>• Automated Grading & Scoring<br/>• Diagnostic Weak-Spot Engine<br/>• Socratic Question Resolution (Gemini Free Tier)"]
-    end
+        subgraph FrontendLayer ["Frontend Container"]
+            FrontendUI["🖥️ frontend (Port 80/internal)<br/>React 18 + TypeScript PWA / Nginx Static Serve"]
+        end
 
-    subgraph DataLayer ["Persistence & Cache Layer"]
-        PostgresAuth[("🗄️ PostgreSQL (Auth DB)<br/>Port 5432 - users, credentials")]
-        PostgresExam[("🗄️ PostgreSQL (Exam DB)<br/>Port 5433 - questions, sessions, attempts")]
+        subgraph Services ["Microservices Layer (Hexagonal Architecture)"]
+            AuthSvc["🔐 Auth & Identity Service (Port 8081)<br/>• Anonymous Session Provisioning<br/>• Student JWT Registration & Login<br/>• Profile Management"]
+            ExamSvc["📚 Exam & Assessment Service (Port 8082)<br/>• Question Bank & INEP Taxonomy<br/>• Practice Session State Machine<br/>• Automated Grading & Scoring<br/>• Diagnostic Weak-Spot Engine<br/>• Socratic Question Resolution (Gemini Free Tier)"]
+        end
+
+        subgraph DataLayer ["Persistence & Cache Layer"]
+            PostgresAuth[("🗄️ PostgreSQL (Auth DB)<br/>Port 5432 - users, credentials")]
+            PostgresExam[("🗄️ PostgreSQL (Exam DB)<br/>Port 5433 - questions, sessions, attempts")]
+        end
+
+        subgraph ObservabilityStack ["Observability & Diagnostics Stack"]
+            Prometheus["📊 Prometheus Server (Port 9090)<br/>Scrapes `/actuator/prometheus`"]
+            Grafana["📈 Grafana Dashboard (Port 3001)<br/>APM Latency & Error Heatmaps"]
+        end
     end
 
     subgraph ExternalAI ["External AI Intelligence"]
         GeminiAPI["🤖 Google Gemini API (Free Tier)<br/>gemini-1.5-flash Socratic Explanations"]
     end
 
-    subgraph ObservabilityStack ["Observability & Diagnostics (Docker Compose)"]
-        Prometheus["📊 Prometheus Server (Port 9090)<br/>Scrapes `/actuator/prometheus`"]
-        Grafana["📈 Grafana Dashboard (Port 3000)<br/>APM Latency & Error Heatmaps"]
-    end
-
-    Client -->|HTTP / HTTPS| LB
-    LB -->|Reverse Proxy| APIGW
+    User -->|HTTP / HTTPS Port 80| LB
+    LB -->|/| FrontendUI
+    LB -->|/api/**| APIGW
     
     APIGW -->|`/api/v1/auth/**`| AuthSvc
     APIGW -->|`/api/v1/exams/**`<br/>`/api/v1/sessions/**`<br/>`/api/v1/questions/**`| ExamSvc

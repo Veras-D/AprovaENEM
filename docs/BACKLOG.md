@@ -54,12 +54,12 @@ gantt
 ## 3. Sprint 2: Core Development & Implementation (Mão na Massa 🚀)
 
 ### Epic 1: Infrastructure & Database Foundation
-#### `TASK-S2-01`: Docker Compose Local Infrastructure Stack
+#### `TASK-S2-01`: Full-Stack Docker Compose Ecosystem
 - **Priority**: `P0` | **Estimation**: 5 pts
-- **Description**: Setup `docker-compose.yml` defining PostgreSQL 16 (two distinct databases: `auth_db` and `exam_db`), Prometheus, Grafana, and persistent named volumes.
+- **Description**: Setup root `docker-compose.yml` orchestrating the entire platform: Frontend (React/Nginx container), Nginx Reverse Proxy / Load Balancer, Spring Cloud API Gateway, Microservices, PostgreSQL 16 (`auth_db` and `exam_db`), Prometheus, and Grafana.
 - **Acceptance Criteria**:
-  - `docker compose up -d` brings up both Postgres instances and Prometheus cleanly.
-  - Health checks verify port bindings (`5432`, `5433`, `9090`).
+  - `docker compose up -d` brings up all services (frontend, backend, databases, telemetry) with 1 command.
+  - Port bindings verified: `80` (Nginx/Frontend), `8080` (Gateway), `5432`/`5433` (Postgres), `9090` (Prometheus), `3001` (Grafana).
 
 #### `TASK-S2-02`: Database Flyway Migrations
 - **Priority**: `P0` | **Estimation**: 5 pts

@@ -79,7 +79,7 @@ In Brazil, over 80% of secondary students attend public high schools, yet they r
 - **Resilience**: Resilience4j Circuit Breaker for Gemini API fallback
 
 ### DevOps & CI/CD
-- **Containerization**: Multi-container Docker Compose
+- **Containerization**: Unified Multi-Container Docker Compose (Orchestrating Frontend, Nginx, API Gateway, Microservices, Databases, Prometheus & Grafana)
 - **Quality Gate**: 6-Stage GitHub Actions CI (`-Werror`, Checkstyle, PMD, PMD CPD, Trivy CVE scan, Gitleaks, JaCoCo 80%+ coverage)
 
 ---
@@ -90,37 +90,40 @@ In Brazil, over 80% of secondary students attend public high schools, yet they r
 graph TD
     User([📱 Student Client / Browser])
     
-    subgraph FrontendLayer ["Frontend Client (React 18 + TypeScript)"]
-        UI["🖥️ Web & Mobile PWA<br/>Tailwind CSS / KaTeX / Diagnostic Radar"]
+    subgraph DockerPlatform ["Unified Docker Compose Platform"]
+        Nginx["🛡️ Nginx Reverse Proxy / Load Balancer<br/>Port 80 / 443<br/>• Routes / to Frontend<br/>• Routes /api/** to Gateway"]
+
+        subgraph FrontendContainer ["Frontend Service"]
+            UI["🖥️ frontend (Port 80/internal)<br/>React 18 + TypeScript PWA / Nginx Static Serve"]
+        end
+
+        subgraph IngressContainer ["Ingress Gateway"]
+            Gateway["⚡ api-gateway (Port 8080)<br/>Spring Cloud Gateway + Token Bucket Rate Limiter"]
+        end
+
+        subgraph MicroservicesLayer ["Hexagonal Microservices (Java 21 / Spring Boot)"]
+            AuthSvc["🔐 auth-service (Port 8081)<br/>Anonymous & JWT Identity"]
+            ExamSvc["📚 exam-service (Port 8082)<br/>Assessment & INEP Question Bank"]
+        end
+
+        subgraph PersistenceLayer ["PostgreSQL 16 Layer"]
+            AuthDB[("🗄️ auth-db (Port 5432)")]
+            ExamDB[("🗄️ exam-db (Port 5433)")]
+        end
+
+        subgraph TelemetryLayer ["Observability Stack"]
+            Prometheus["📊 prometheus (Port 9090)<br/>Scrapes Actuator Metrics"]
+            Grafana["📈 grafana (Port 3001)<br/>APM Latency & Error Dashboards"]
+        end
     end
 
-    subgraph IngressLayer ["Perimeter & Ingress"]
-        Nginx["🛡️ Nginx Reverse Proxy / Load Balancer<br/>Port 80/443"]
-        Gateway["⚡ Spring Cloud API Gateway<br/>Port 8080 / Token Bucket Rate Limiter"]
-    end
-
-    subgraph MicroservicesLayer ["Hexagonal Microservices (Java 21 / Spring Boot)"]
-        AuthSvc["🔐 auth-service<br/>Port 8081 / Anonymous & JWT Identity"]
-        ExamSvc["📚 exam-service<br/>Port 8082 / Assessment & INEP Question Bank"]
-    end
-
-    subgraph PersistenceLayer ["PostgreSQL 16 Layer"]
-        AuthDB[("🗄️ auth_db<br/>Port 5432")]
-        ExamDB[("🗄️ exam_db<br/>Port 5433")]
-    end
-
-    subgraph ExternalServices ["External AI Services"]
+    subgraph ExternalServices ["External AI Cloud"]
         Gemini["🤖 Google Gemini Free Tier<br/>gemini-1.5-flash Socratic Explanations"]
     end
 
-    subgraph TelemetryLayer ["Observability Stack"]
-        Prometheus["📊 Prometheus APM<br/>Port 9090"]
-        Grafana["📈 Grafana Dashboard<br/>Port 3000"]
-    end
-
-    User --> UI
-    UI -->|REST / HTTPS| Nginx
-    Nginx --> Gateway
+    User -->|HTTP / HTTPS Port 80| Nginx
+    Nginx -->|/| UI
+    Nginx -->|/api/**| Gateway
     Gateway -->|/api/v1/auth/**| AuthSvc
     Gateway -->|/api/v1/exams/**<br/>/api/v1/sessions/**<br/>/api/v1/questions/**| ExamSvc
 
@@ -134,8 +137,8 @@ graph TD
     Prometheus --> Grafana
 
     style User fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff
-    style UI fill:#1e293b,stroke:#38bdf8,stroke-width:2px,color:#fff
     style Nginx fill:#1e293b,stroke:#0284c7,stroke-width:2px,color:#fff
+    style UI fill:#047857,stroke:#10b981,stroke-width:2px,color:#fff
     style Gateway fill:#0369a1,stroke:#38bdf8,stroke-width:2px,color:#fff
     style AuthSvc fill:#065f46,stroke:#34d399,stroke-width:2px,color:#fff
     style ExamSvc fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#fff
@@ -154,6 +157,8 @@ graph TD
 ReconectaRecode/
 ├── README.md                            # Master project documentation
 ├── CHANGELOG.md                         # Project changelog (Keep a Changelog standard)
+├── docker-compose.yml                   # Root Full-Stack Docker Compose Orchestration
+├── .env.example                         # Global environment variable template
 ├── docs/                                # Project Specifications & Planning
 │   ├── BACKLOG.md                       # Multi-Sprint Product Backlog & Roadmap
 │   └── sprint-1/                        # Sprint 1 Deliverables
@@ -169,10 +174,10 @@ ReconectaRecode/
 │   ├── api-gateway/                     # Spring Cloud Gateway + Rate Limiting
 │   ├── auth-service/                    # Authentication & Session Service
 │   ├── exam-service/                    # Examination, Assessment & Socratic AI
-│   ├── docker-compose.yml               # Local Infrastructure Stack
 │   └── pom.xml                          # Multi-module Maven Parent POM
 ├── frontend/                            # React 18 + TypeScript Application
 │   ├── src/                             # UI components, pages & state management
+│   ├── Dockerfile                       # Production multi-stage Nginx container
 │   ├── package.json                     # Frontend dependencies & scripts
 │   └── vite.config.ts                   # Vite configuration
 └── .github/
@@ -182,48 +187,36 @@ ReconectaRecode/
 
 ---
 
-## 🚀 Quickstart
+## 🚀 Quickstart (100% Docker Compose)
+
+The entire full-stack ecosystem (frontend, backend microservices, gateway, databases, and telemetry) runs with a **single command**.
 
 ### Prerequisites
 - Docker Engine 24+ & Docker Compose v2
-- Node.js 20+ (for frontend development)
-- Java 21 LTS (optional for host backend compilation)
 - Google Gemini API Key (free tier from [Google AI Studio](https://aistudio.google.com/))
 
-### 1. Clone Repository
+### 1. Clone & Configure
 ```bash
 git clone https://github.com/Veras-D/ReconectaRecode.git
 cd ReconectaRecode
+cp .env.example .env
 ```
-
-### 2. Configure Environment Variables
-```bash
-cp backend/.env.example backend/.env
-```
-Edit `backend/.env` and insert your Gemini API Key:
+Edit `.env` and insert your Gemini API Key:
 ```env
 GEMINI_API_KEY=AIzaSyYourFreeTierKeyHere...
 ```
 
-### 3. Launch Backend Infrastructure (Docker Compose)
+### 2. Launch Entire Platform
 ```bash
-cd backend
-docker compose up -d
+docker compose up -d --build
 ```
 
-Verify backend health endpoints:
-- **API Gateway**: `http://localhost:8080/actuator/health`
+### 3. Access Endpoints
+- **Student Web Application (Frontend)**: `http://localhost`
+- **API Gateway**: `http://localhost:8080` (or `http://localhost/api/v1/...`)
+- **OpenAPI Swagger Documentation**: `http://localhost:8080/swagger-ui.html`
 - **Prometheus Telemetry**: `http://localhost:9090`
-- **Grafana APM**: `http://localhost:3000` (admin / admin)
-- **OpenAPI Swagger**: `http://localhost:8080/swagger-ui.html`
-
-### 4. Launch Frontend Client
-```bash
-cd ../frontend
-npm install
-npm run dev
-```
-Open `http://localhost:5173` to access the interactive student interface.
+- **Grafana APM**: `http://localhost:3001` (admin / admin)
 
 ---
 
