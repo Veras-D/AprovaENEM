@@ -402,7 +402,19 @@ Returns the question statement and options A–E.
   "socraticResponse": "Ótima reflexão! Pense no que acontece no momento em que você liga o chuveiro ou se a tensão da rede oscilar levemente para baixo (por exemplo, 210 V em vez de 220 V). Se a corrente operacional já estiver no limite exato de disparo térmico de 25 A, pequenas oscilações normais provocariam o desarmamento indesejado do disjuntor. Na norma NBR 5410, qual é a margem de segurança recomendada para evitar esses desarmes sem comprometer a fiação?",
   "pedagogicalGoal": "Guide student to understand thermal dissipation margins in circuit breakers",
   "modelUsed": "gemini-1.5-flash",
-  "isFallback": false
+  "isFallback": false,
+  "retrievedContext": [
+    {
+      "documentTitle": "INEP Matriz de Referência - Física: Circuitos Elétricos e Potência",
+      "similarityScore": 0.89,
+      "sourceType": "INEP_MATRIZ"
+    },
+    {
+      "documentTitle": "NBR 5410 - Dimensionamento de Disjuntores e Condutores Térmicos",
+      "similarityScore": 0.84,
+      "sourceType": "STEP_RESOLUTION"
+    }
+  ]
 }
 ```
 

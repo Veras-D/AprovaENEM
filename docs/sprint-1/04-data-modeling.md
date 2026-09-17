@@ -246,8 +246,9 @@ CREATE INDEX idx_anonymous_session_uuid ON anonymous_sessions(session_uuid);
 ### 3.2 Examination & Assessment Database (`exam_db`)
 
 ```sql
--- Enable UUID extension
+-- Enable UUID and Vector extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS vector;
 
 -- Exam Editions (e.g., ENEM 2023 Regular)
 CREATE TABLE exam_editions (
@@ -388,13 +389,33 @@ CREATE TABLE essay_competency_evaluations (
     actionable_tips TEXT,
     CONSTRAINT uq_essay_competency UNIQUE (essay_id, competency_number)
 );
+
+-- RAG & Vector Knowledge Base (Pedagogical Reference Materials & Redação Rubrics)
+CREATE TABLE knowledge_documents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title VARCHAR(255) NOT NULL,
+    source_type VARCHAR(50) NOT NULL, -- 'INEP_MATRIZ', 'STEP_RESOLUTION', 'DISTRACTOR_CATALOG', 'REDAÇÃO_RUBRIC'
+    topic_id UUID REFERENCES topics(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE knowledge_chunks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    document_id UUID NOT NULL REFERENCES knowledge_documents(id) ON DELETE CASCADE,
+    chunk_index INT NOT NULL,
+    content TEXT NOT NULL,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    embedding vector(768) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_document_chunk UNIQUE (document_id, chunk_index)
+);
 ```
 
 ---
 
 ## 4. Indexing Strategy & Performance Optimization
 
-To achieve the **`p95 < 100ms`** read requirement for quiz generation and filtering, the following specialized PostgreSQL B-Tree and GIN indexes are deployed:
+To achieve the **`p95 < 100ms`** read requirement for quiz generation and filtering, the following specialized PostgreSQL B-Tree, GIN, and HNSW indexes are deployed:
 
 ```sql
 -- 1. Filter Questions by Topic, Difficulty and Language (Quiz Generator Hot Query)
@@ -424,6 +445,12 @@ ON student_attempts (session_id, is_correct);
 -- 6. GIN Index on Diagnostic JSONB Breakdown
 CREATE INDEX idx_diagnostic_topic_breakdown_gin 
 ON diagnostic_summaries USING GIN (topic_breakdown);
+
+-- 7. HNSW Vector Index for Semantic Cosine Search (Sub-5ms RAG Retrieval)
+CREATE INDEX idx_knowledge_chunks_hnsw 
+ON knowledge_chunks 
+USING hnsw (embedding vector_cosine_ops) 
+WITH (m = 16, ef_construction = 64);
 ```
 
 ---

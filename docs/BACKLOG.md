@@ -142,6 +142,15 @@ gantt
 - **Acceptance Criteria**:
   - If Gemini returns HTTP 429 or times out, circuit trips and returns the static curated INEP explanation with `isFallback: true`.
 
+#### `TASK-S2-11b`: Retrieval-Augmented Generation (RAG) & pgvector Knowledge Store
+- **Priority**: `P1` | **Estimation**: 5 pts
+- **Description**: Configure PostgreSQL `pgvector` with HNSW indexing and implement the RAG retrieval pipeline in `exam-service` using Spring AI `VectorStore` (or JDBC vector queries) to inject verified pedagogical documents into Socratic prompts.
+- **Acceptance Criteria**:
+  - Flyway migration creates `vector` extension, `knowledge_documents`, `knowledge_chunks` tables and HNSW index.
+  - Generates 768-dim embeddings for question context and performs cosine similarity search (`<=>`).
+  - Fetches top-$k$ ($k=3$, similarity $> 0.75$) pedagogical chunks and injects them into the Socratic AI prompt.
+  - Socratic AI endpoint returns `retrievedContext` metadata in response payload.
+
 ---
 
 ### Epic 5: Ingress & Observability Integration

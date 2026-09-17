@@ -28,12 +28,12 @@ flowchart TD
 
         subgraph Services ["Microservices Layer (Hexagonal Architecture)"]
             AuthSvc["🔐 Auth & Identity Service (Port 8081)<br/>• Anonymous Session Provisioning<br/>• Student JWT Registration & Login<br/>• Profile Management"]
-            ExamSvc["📚 Exam & Assessment Service (Port 8082)<br/>• Question Bank & INEP Taxonomy<br/>• Practice Session State Machine<br/>• Automated Grading & Scoring<br/>• Diagnostic Weak-Spot Engine<br/>• Socratic Question Resolution (Google Gemini)"]
+            ExamSvc["📚 Exam & Assessment Service (Port 8082)<br/>• Question Bank & INEP Taxonomy<br/>• Practice Session State Machine<br/>• Automated Grading & Scoring<br/>• RAG Pipeline & Vector Search (`pgvector`)<br/>• Socratic AI Resolution Engine"]
         end
 
         subgraph DataLayer ["Persistence & Cache Layer"]
             PostgresAuth[("🗄️ PostgreSQL (Auth DB)<br/>Port 5432 - users, credentials")]
-            PostgresExam[("🗄️ PostgreSQL (Exam DB)<br/>Port 5433 - questions, sessions, attempts")]
+            PostgresExam[("🗄️ PostgreSQL 16 + pgvector (Exam DB)<br/>Port 5433 - questions, sessions, vector embeddings")]
         end
 
         subgraph ObservabilityStack ["Observability & Diagnostics Stack"]
@@ -467,3 +467,48 @@ Pluggable infrastructure adapters implement these ports (e.g., `GeminiVisionAdap
 3. **Competência 3 (0–200 pts)**: Thesis defense: selecting, relating, and organizing arguments logically.
 4. **Competência 4 (0–200 pts)**: Cohesion: appropriate use of inter- and intra-paragraph conjunctions and connectors.
 5. **Competência 5 (0–200 pts)**: *Proposta de Intervenção*: Detailed actionable solution addressing the 5 required elements (*Agente, Ação, Meio/Modo, Efeito, Detalhamento*) respecting human rights.
+
+---
+
+## 8. Retrieval-Augmented Generation (RAG) & Vector Search Architecture
+
+To eliminate model hallucinations and anchor all AI explanations in verified Brazilian high school curriculum standards, AprovaENEM implements an end-to-end **Retrieval-Augmented Generation (RAG)** pipeline powered by **PostgreSQL 16 with `pgvector`**:
+
+```mermaid
+flowchart TD
+    StudentQuery["Student Inbound Query<br/>(e.g., 'Why is alternative B wrong?')"] --> EmbedEngine["Dense Embedding Generator<br/>(`text-embedding-004` / 768-dim)"]
+    
+    EmbedEngine --> QueryVec["Query Vector `v_q`"]
+    
+    subgraph VectorSearch ["PostgreSQL 16 + pgvector (HNSW Index)"]
+        QueryVec --> ANN["Approximate Nearest Neighbor Search<br/>`embedding <=> v_q` (Cosine Distance)"]
+        Corpus[("Pedagogical Knowledge Corpus<br/>• INEP Matriz de Referência<br/>• Curated Step-by-Step Resolutions<br/>• Distractor Fallacy Catalog<br/>• Redação Grader Manual")] --> ANN
+        ANN --> TopK["Top-k Relevant Chunks (k=3)<br/>Similarity Score > 0.78"]
+    end
+    
+    TopK --> PromptAssembler["Contextual Prompt Synthesizer"]
+    QuestionCtx["Question Statement, Options & Topic Context"] --> PromptAssembler
+    PedagogicalRules["Socratic Pedagogical Guardrails"] --> PromptAssembler
+    
+    PromptAssembler --> AugmentedPrompt["Enriched Context Prompt<br/>[Guardrails] + [Retrieved Chunks] + [Question] + [Query]"]
+    AugmentedPrompt --> TargetLLM["Foundation Model<br/>(Provider-Agnostic / Socratic Generation)"]
+    TargetLLM --> VerifiedResponse["Factual, Hallucination-Free Socratic Response"]
+```
+
+### 8.1 Vector Store Engine: PostgreSQL with `pgvector`
+Rather than introducing the operational complexity, hosting costs, and network latency of an external standalone vector database cluster (e.g., Pinecone or Milvus), AprovaENEM utilizes **`pgvector` inside the existing PostgreSQL 16 container**:
+- **Dimensionality**: 768 dimensions (`vector(768)`).
+- **Index Type**: **HNSW (Hierarchical Navigable Small World)** with `vector_cosine_ops`, delivering sub-5ms cosine similarity searches under concurrent student traffic.
+- **Index Definition**:
+  ```sql
+  CREATE INDEX idx_knowledge_chunks_hnsw 
+  ON knowledge_chunks 
+  USING hnsw (embedding vector_cosine_ops) 
+  WITH (m = 16, ef_construction = 64);
+  ```
+
+### 8.2 Twofold Application of RAG in AprovaENEM
+1. **Socratic AI Study Tutor (Core Feature)**:
+   - Retrieves official INEP curriculum competencies, verified formulas, and distractor traps before prompting the tutor, ensuring the AI never gives incorrect scientific information or spoils answers.
+2. **Redação AI Evaluator (Phase 2 Premium)**:
+   - Retrieves the official INEP *Manual do Corretor de Redação*, thematic motivating texts, and exemplar benchmark criteria for the specific exam year, providing grounded evaluation across the 5 competencies.

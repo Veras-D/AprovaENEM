@@ -43,6 +43,7 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 - 🗄️ **Complete INEP Question Bank**: Past exams categorized by subject area (*Mathematics, Natural Sciences, Humanities, Languages*), discipline, sub-topic, and Item Response Theory (TRI) difficulty.
 - ⚡ **Real-Time Assessment & Grading**: Millisecond evaluation of submissions with immediate distractor analysis.
 - 🤖 **Socratic AI Study Tutor**: Powered by **Google Gemini (gemini-1.5-flash)** with pedagogical guardrails: guides students through underlying scientific and mathematical principles without spoiling answers.
+- 🧠 **Retrieval-Augmented Generation (RAG) & Vector Search**: Grounded in official INEP curriculum matrices, verified step-by-step resolutions, and distractor catalogs via **PostgreSQL 16 `pgvector`** with HNSW semantic indexing to eliminate LLM hallucinations before student prompts are dispatched.
 - 🛡️ **Token Bucket Edge Rate Limiting**: Built into the API Gateway to prevent scraper abuse and protect upstream LLM API consumption.
 - 📈 **Datadog-Style Observability**: Complete Prometheus APM metrics, Micrometer distributed tracing (`traceId` / `spanId` MDC injection), and sub-minute trace-to-error bug isolation.
 - 🌐 **Bilingual Backend (i18n)**: Spring Boot `MessageSource` supporting both Portuguese (`pt-BR`) and English (`en`).
@@ -71,8 +72,9 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 
 ### Persistence & Storage
 - **Primary Database**: PostgreSQL 16 (isolated `auth_db` and `exam_db`)
+- **Vector Search Engine**: **PostgreSQL `pgvector`** extension (768-dim embeddings, HNSW cosine index `m=16, ef_construction=64`) for sub-5ms pedagogical RAG retrieval
 - **Key Strategy**: Time-ordered UUIDv7
-- **Indexing**: Specialized B-Tree multi-column indexes & GIN JSONB indexes
+- **Indexing**: Specialized B-Tree multi-column indexes, GIN JSONB indexes, and HNSW vector indexes
 
 ### Observability & Resilience
 - **Metrics Scraping**: Prometheus Server (Port 9090) scraping `/actuator/prometheus`
