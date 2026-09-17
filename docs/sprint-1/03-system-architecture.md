@@ -188,15 +188,19 @@ com.openenem.assessment/
     │   │   └── GlobalExceptionHandler.java
     │   ├── out/persistence/
     │   │   ├── entity/          # JPA @Entity models (Postgres tables)
+    │   │   ├── mapper/          # MapStruct / Domain-Entity Mappers
     │   │   ├── repository/      # Spring Data JPA interfaces
     │   │   └── PostgresQuestionAdapter.java # Implements QuestionRepositoryPort
     │   └── out/gemini/
     │       ├── GeminiProperties.java
     │       └── GeminiTutorClientAdapter.java # Implements TutorAiPort
-    └── config/
-        ├── BeanConfiguration.java # Wires domain services as Spring Beans
-        ├── MetricsConfiguration.java # Micrometer Prometheus bindings
-        └── SecurityFilterConfiguration.java
+    ├── config/
+    │   ├── BeanConfiguration.java # Wires domain services as Spring Beans
+    │   ├── MetricsConfiguration.java # Micrometer Prometheus bindings
+    │   └── SecurityFilterConfiguration.java
+    └── resources/
+        ├── application.yml
+        └── db/migration/        # Flyway SQL scripts (V1__..., V2__...)
 ```
 
 ---

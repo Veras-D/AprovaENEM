@@ -72,6 +72,8 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 
 ### Persistence & Storage
 - **Primary Database**: PostgreSQL 16 (isolated `auth_db` and `exam_db`)
+- **Database Migrations**: **Flyway** (`flyway-core` + `flyway-database-postgresql`, strictly immutable SQL scripts `V1__...`, zero auto-DDL in runtime)
+- **ORM & Data Access**: **Spring Data JPA / Hibernate 6** (Jakarta Persistence), isolated within outbound adapters to preserve pure Java domain entities
 - **Vector Search Engine**: **PostgreSQL `pgvector`** extension (768-dim embeddings, HNSW cosine index `m=16, ef_construction=64`) for sub-5ms pedagogical RAG retrieval
 - **Key Strategy**: Time-ordered UUIDv7
 - **Indexing**: Specialized B-Tree multi-column indexes, GIN JSONB indexes, and HNSW vector indexes

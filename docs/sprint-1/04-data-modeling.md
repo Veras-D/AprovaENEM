@@ -475,3 +475,49 @@ Applying the back-of-the-envelope estimation rules:
 - Daily Attempt Volume: $150,000 \times 120\text{ bytes} \approx 18\text{ MB / day}$.
 - 1-Year Attempt Storage: $18\text{ MB} \times 365 \approx \mathbf{6.57\text{ GB / year}}$.
 - **Conclusion**: Readily handled by a single standard PostgreSQL node with zero sharding required for early and mid-stage operations.
+
+---
+
+## 6. Database Migration & ORM Strategy
+
+### 6.1 Database Migration Tool: Flyway
+To guarantee immutable, auditable, and automated schema evolution across development, CI/CD, and production, AprovaENEM utilizes **Flyway** (`flyway-core` + `flyway-database-postgresql`):
+
+1. **Versioning Convention**:
+   - Location: `src/main/resources/db/migration/`
+   - Format: `V<Major>__<Description>.sql` (e.g., `V1__init_auth_schema.sql`, `V1__init_exam_schema.sql`, `V2__add_vector_knowledge_base.sql`)
+   - Repeatable scripts for seed data: `R__seed_enem_taxonomy.sql`
+2. **Schema Safety & Governance**:
+   - **`spring.jpa.hibernate.ddl-auto=validate`**: Hibernate auto-DDL (`update` / `create`) is strictly disabled across all environments to prevent accidental column drops, unintended data loss, or unindexed foreign keys.
+   - Flyway executes schema migrations deterministically before Spring Boot's `EntityManagerFactory` initializes.
+   - All migrations are verified against real PostgreSQL 16 instances in CI using Testcontainers before pull requests merge.
+
+### 6.2 ORM Strategy: Spring Data JPA (Hibernate 6) within Hexagonal Architecture
+AprovaENEM pairs **Spring Data JPA / Hibernate 6** with Hexagonal Architecture (Ports and Adapters) to achieve high developer velocity without tight coupling:
+
+```mermaid
+flowchart LR
+    subgraph DomainCore ["Core Domain (Framework-Agnostic)"]
+        DomainModel["Pure Domain Entity<br/>(`Question.java`)<br/>• 0 JPA annotations<br/>• Encapsulates TRI logic & scoring"]
+        OutboundPort["Outbound Repository Port<br/>(`QuestionRepositoryPort.java`)"]
+    end
+
+    subgraph PersistenceAdapter ["Outbound Persistence Adapter (Infrastructure)"]
+        Adapter["PostgresQuestionAdapter<br/>implements `QuestionRepositoryPort`"]
+        Mapper["Entity Mapper<br/>(`QuestionEntityMapper`)"]
+        JpaEntity["Spring Data JPA Entity<br/>(`QuestionJpaEntity.java`)<br/>• @Entity, @Table, @Id<br/>• Column mappings & foreign keys"]
+        SpringDataRepo["Spring Data Repository<br/>(`QuestionJpaRepository`)<br/>extends JpaRepository"]
+    end
+
+    OutboundPort <|.. Adapter
+    Adapter --> Mapper
+    Mapper --> JpaEntity
+    Adapter --> SpringDataRepo
+    SpringDataRepo --> Postgres[("PostgreSQL 16 + pgvector")]
+```
+
+#### Key ORM Design Principles:
+1. **Decoupled Domain Entities**: Core domain models (`Question`, `PracticeSession`, `ExamEdition`) are pure Java POJOs containing business logic and invariants with **zero Jakarta Persistence (`@Entity`) dependencies**.
+2. **Dedicated Persistence Entities**: `infrastructure/.../entity/` contains specialized `@Entity` classes (`QuestionJpaEntity`) optimized for Hibernate mapping, proxying, and caching.
+3. **Bidirectional Mapping**: Explicit mappers (`MapStruct` or dedicated mapper classes) convert between JPA Entities and Pure Domain Models at the adapter boundary, preventing Hibernate lazy loading leaks (`LazyInitializationException`) or persistence state pollution in business logic.
+4. **Vector Search Integration**: Vector similarity queries (`<=>`) are executed via native SQL queries within Spring Data repositories or through Spring AI's `PgVectorStore`.
