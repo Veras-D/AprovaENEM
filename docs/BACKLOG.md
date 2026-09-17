@@ -70,10 +70,11 @@ gantt
   - Tables, foreign keys, and indexes created automatically on application boot.
   - Seed script populates initial ENEM editions and subject areas.
 
-#### `TASK-S2-02b`: Data Ingestion & Extraction Worker Pipeline
+#### `TASK-S2-02b`: Data Ingestion & Extraction Microservice (`ingestion-service`)
 - **Priority**: `P0` | **Estimation**: 8 pts
-- **Description**: Build the Python/CLI ingestion worker (`scripts/ingestion/`) utilizing **IBM Docling** (DocLayNet + TableFormer) for neural layout parsing, automatic two-column reading flow, built-in formula-to-LaTeX conversion, and diagram cropping (WebP), reconciled with INEP `ITENS_PROVA.csv` microdados.
+- **Description**: Build the decoupled on-demand containerized microservice (`ingestion-service`) using Python and **IBM Docling** (DocLayNet + TableFormer) under Docker Compose profile `ingestion` to perform neural layout parsing, automatic two-column reading flow, built-in formula-to-LaTeX conversion, and diagram cropping (WebP), reconciled with INEP `ITENS_PROVA.csv` microdados.
 - **Acceptance Criteria**:
+  - Containerized with `profiles: ["ingestion"]` (zero idle RAM overhead on core cluster).
   - Employs IBM Docling to parse two-column pages into clean Markdown without interleaved text.
   - Converts math formulas into KaTeX-compatible LaTeX (`$...$` and `$$...$$`).
   - Crops diagrams (`PictureItem`) at 300 DPI and outputs lossless WebP assets.

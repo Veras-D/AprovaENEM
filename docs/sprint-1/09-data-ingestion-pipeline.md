@@ -195,3 +195,49 @@ Every ingested batch must pass an automated Python/JVM test suite (`tests/ingest
 | **Utility Role** | Fast rasterization and page splitting | Primary semantic document understanding | **PyMuPDF as secondary utility** |
 
 > **Conclusion**: **IBM Docling** is adopted as our **primary extraction engine** because it inherently solves the three most failure-prone challenges of ENEM PDFs (two-column flow, formula-to-LaTeX, and table formatting) with neural accuracy, while **PyMuPDF** is retained as a lightweight utility for instantaneous pre-flight page slicing and raw DPI rendering.
+
+---
+
+## 8. Operational Economics & Service Topology (Why an On-Demand Microservice?)
+
+### 8.1 Cost Analysis: Does Docling Incur Extra Costs?
+**No. Docling incurs zero licensing fees and zero operational API costs:**
+1. **100% Open Source (MIT License)**: Developed by IBM Research, free for open and commercial use with zero proprietary API keys or subscriptions.
+2. **Batch / Offline Nature**: Ingestion of past ENEM exams (2009–2025) is an **offline data engineering process (ETL)**, not an online student request-response service.
+   - INEP only releases new exams once or twice a year.
+   - When students take quizzes, they query indexed PostgreSQL tables (`exam_db`) in $< 20\text{ms}$. Docling is never in the critical path of live student traffic.
+   - Therefore, Docling produces **$0 in per-query API bills** and **$0 in production server token overhead**.
+
+### 8.2 Architectural Topology: Microservice vs. Offline Worker
+Docling relies on PyTorch/ONNX runtime and neural model weights (~1.5 GB to 2.5 GB of RAM). Keeping an always-on 24/7 microservice running in the primary cluster would waste server memory when idle 99.9% of the year.
+
+Instead, AprovaENEM architects this as an **On-Demand Containerized Microservice (`ingestion-service`)**:
+
+```mermaid
+flowchart TD
+    subgraph CoreCluster ["Production Student Cluster (Zero Idle Overhead)"]
+        Gateway["Spring Cloud Gateway"]
+        AuthSvc["auth-service"]
+        ExamSvc["exam-service (Java 21)"]
+        Postgres[("PostgreSQL 16")]
+    end
+
+    subgraph IngestionProfile ["On-Demand Docker Profile (`--profile ingestion`)"]
+        IngestionSvc["ingestion-service (Python + Docling)<br/>• Fast, isolated Document AI container<br/>• Zero Java classpath pollution<br/>• Spins up on-demand; terminates when done"]
+        RawPDFs["Raw INEP PDFs & Microdados CSVs"]
+    end
+
+    RawPDFs --> IngestionSvc
+    IngestionSvc -->|Generates Normalized Seeds| Postgres
+    ExamSvc -->|Fast Reads < 20ms| Postgres
+```
+
+#### Key Topology Advantages:
+1. **Polyglot Decoupling**: Isolate heavy Python AI dependencies (PyTorch, DocLayNet, OpenCV) inside `ingestion-service`, keeping the core Java `exam-service` image ultra-lean (~180 MB) and fast to boot.
+2. **Zero Idle Memory Drain (Docker Profiles)**: Configured in `docker-compose.yml` with `profiles: ["ingestion"]`. In standard production or local student testing (`docker compose up`), `ingestion-service` remains completely dormant (0 MB RAM).
+3. **Execution on Demand**: When a new exam edition needs ingestion, developers or CI runners spin it up ephemerally:
+   ```bash
+   docker compose --profile ingestion run --rm ingestion-service --year 2024 --color azul
+   ```
+4. **Future-Proof for Back-Office Mock Exams (Phase 2)**:
+   If an administrative feature is introduced allowing partner public school teachers to upload custom mock exam PDFs (*simulados*), `ingestion-service` can be invoked asynchronously via a queue (e.g., RabbitMQ) without impacting student quiz latency or crashing the Java heap.
