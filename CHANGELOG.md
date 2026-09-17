@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.1.1] - 2026-09-18
 ### 🔧 Changed
+- docs(testing): Expand Gate 5 into comprehensive Full-Stack Testing Pyramid (Unit, Testcontainers Integration, Frontend Vitest, and Playwright E2E)
+- docs(testing): Configure JaCoCo unified coverage combining Surefire unit tests and Failsafe integration tests (80%+ lines, 75%+ branches)
+- docs(frontend): Define Vitest + React Testing Library + MSW test specifications and coverage thresholds (80%+)
+- docs(e2e): Add Playwright cross-browser End-to-End automated testing specification against Docker Compose platform
 - docs(architecture): Refine Gemini API integration and rate limiter specifications across architecture and observability docs
 - docs(setup): Clarify Google Gemini Free Tier as local development onboarding option rather than production architectural constraint
 - docs(business): Align historical exam ingestion span to 2009-2025 across business model and system specs

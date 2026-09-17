@@ -26,11 +26,13 @@ gantt
     Gemini Socratic AI & Resilience4j Fallback (S2-08) :s2_5, after s2_4, 3d
     Gateway Token Bucket Rate Limiting (S2-09)         :s2_6, after s2_5, 2d
     section Sprint 3: Testing & Delivery
-    Unit Tests & JaCoCo 80%+ Coverage (S3-01, S3-02)   :s3_1, 2026-10-01, 3d
-    Testcontainers Integration Testing (S3-03)         :s3_2, after s3_1, 3d
-    OpenAPI / Swagger UI & Postman Collection (S3-04)  :s3_3, after s3_2, 2d
-    GitHub Actions CI Quality Gate Verification (S3-05):s3_4, after s3_3, 2d
-    Classroom Submission & Final Audit (S3-06)         :s3_5, after s3_4, 1d
+    Backend Unit & Domain Testing (S3-01, S3-02)        :s3_1, 2026-10-01, 3d
+    Testcontainers Integration Testing & JaCoCo (S3-03) :s3_2, after s3_1, 3d
+    Frontend Vitest & MSW Component Tests (S3-04)       :s3_3, after s3_1, 3d
+    Playwright Full-Stack E2E Testing (S3-05)           :s3_4, after s3_2, 2d
+    OpenAPI / Swagger & Postman Export (S3-06)          :s3_5, after s3_4, 2d
+    GitHub Actions CI Quality Gate Verification (S3-07) :s3_6, after s3_5, 1d
+    Classroom Submission & Final Audit (S3-08)          :s3_7, after s3_6, 1d
 ```
 
 ---
@@ -160,12 +162,15 @@ gantt
 
 | Task ID | Work Item & Title | Priority | Estimation | Acceptance Criteria |
 | :--- | :--- | :---: | :---: | :--- |
-| **S3-01** | **Domain Unit Testing** | `P0` | 5 pts | 100% branch coverage on domain entities and business rules via JUnit 5. |
-| **S3-02** | **Application Service Unit Testing** | `P0` | 5 pts | Mockito tests covering all Use Case orchestration flows. |
+| **S3-01** | **Domain Unit Testing** | `P0` | 5 pts | Pure Java domain tests (scoring, TRI rules, entities) with JUnit 5 & AssertJ (fast execution). |
+| **S3-02** | **Application Service Unit Testing** | `P0` | 5 pts | Mockito unit tests covering all Use Case orchestration flows and Socratic prompt formatters. |
 | **S3-03** | **REST Controller WebMvc Tests** | `P0` | 5 pts | MockMvc tests validating status codes (200, 201, 400, 404, 429) and RFC 7807 payloads. |
-| **S3-04** | **Testcontainers Integration Testing** | `P0` | 8 pts | End-to-end integration test running against real PostgreSQL container via Testcontainers. |
-| **S3-05** | **JaCoCo Coverage Enforcement** | `P0` | 3 pts | Build fails if line coverage $< 80\%$ or branch coverage $< 75\%$. |
-| **S3-06** | **OpenAPI / Swagger UI Generation** | `P0` | 3 pts | SpringDoc OpenAPI generated and accessible at `/swagger-ui.html`. |
-| **S3-07** | **Postman Collection Export** | `P1` | 3 pts | Complete Postman collection with sample environments committed to `docs/postman/`. |
-| **S3-08** | **GitHub Actions CI Quality Gate Run** | `P0` | 5 pts | Push to branch triggers full 6-stage CI gate in `.github/workflows/quality-gate.yml` with green check. |
-| **S3-09** | **Reconecta Recode Classroom Delivery** | `P0` | 2 pts | Public GitHub repository link, student name, and email submitted to Google Classroom activity. |
+| **S3-04** | **Testcontainers Integration Testing** | `P0` | 8 pts | Real PostgreSQL 16 container integration tests (`*IT.java`) testing Flyway, JPA, and repositories. |
+| **S3-05** | **JaCoCo Unified Coverage Setup** | `P0` | 3 pts | Merge Surefire + Failsafe datafiles (`jacoco.exec`); fail build if line $< 80\%$ or branch $< 75\%$. |
+| **S3-06** | **Frontend Unit & Component Testing** | `P0` | 5 pts | Vitest + React Testing Library testing Question Cards, LaTeX rendering, radar charts, and dark mode. |
+| **S3-07** | **Frontend MSW Integration Testing** | `P0` | 5 pts | Vitest + Mock Service Worker testing API responses, HTTP 429 retry backoff, and offline states. |
+| **S3-08** | **Playwright Full-Stack E2E Testing** | `P0` | 8 pts | Headless cross-browser student journey tests against live Docker Compose platform (`http://localhost`). |
+| **S3-09** | **OpenAPI / Swagger UI Generation** | `P0` | 3 pts | SpringDoc OpenAPI generated and accessible at `/swagger-ui.html`. |
+| **S3-10** | **Postman Collection Export** | `P1` | 3 pts | Complete Postman collection with sample environments committed to `docs/postman/`. |
+| **S3-11** | **Multi-Job GitHub Actions CI Verification** | `P0` | 5 pts | Multi-job workflow (`backend-quality`, `frontend-quality`, `e2e-quality`, `gitleaks`) passes with 100% green. |
+| **S3-12** | **Reconecta Recode Classroom Delivery** | `P0` | 2 pts | Public GitHub repository link, student name, and email submitted to Google Classroom activity. |

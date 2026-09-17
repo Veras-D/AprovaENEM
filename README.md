@@ -78,9 +78,18 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 - **Distributed Tracing**: Micrometer Tracing with W3C Trace Context
 - **Resilience**: Resilience4j Circuit Breaker for Gemini API fallback
 
+### Automated Testing & Verification
+- **Backend Unit Tests**: JUnit 5, Mockito, AssertJ (Domain entities, TRI rules, scoring algorithms)
+- **Backend Integration Tests**: Spring Boot `@SpringBootTest`, Testcontainers PostgreSQL 16, Maven Failsafe
+- **Backend Coverage**: JaCoCo Maven Plugin (Unified unit + integration merged coverage $\ge 80\%$)
+- **Frontend Unit & Component Tests**: Vitest, React Testing Library, jsdom
+- **Frontend Integration Tests**: Vitest + Mock Service Worker (MSW)
+- **Frontend Coverage**: `@vitest/coverage-v8` ($\ge 80\%$ lines & statements)
+- **End-to-End (E2E) Tests**: Playwright (Cross-browser student workflows against Docker Compose)
+
 ### DevOps & CI/CD
 - **Containerization**: Unified Multi-Container Docker Compose (Orchestrating Frontend, Nginx, API Gateway, Microservices, Databases, Prometheus & Grafana)
-- **Quality Gate**: 6-Stage GitHub Actions CI (`-Werror`, Checkstyle, PMD, PMD CPD, Trivy CVE scan, Gitleaks, JaCoCo 80%+ coverage)
+- **Quality Gate**: Multi-Job GitHub Actions CI (`-Werror`, Checkstyle, PMD, PMD CPD, Trivy CVE scan, Gitleaks, JaCoCo 80%+, Vitest 80%+, Playwright E2E)
 
 ---
 
@@ -242,11 +251,14 @@ docker compose up -d --build
 
 AprovaENEM adopts the strict automated quality gate standard established in [CV_Maker](https://github.com/Veras-D/CV_Maker):
 
-1. **Gate 1: Compiler Zero Warnings**: `javac` executed with `-Werror -Xlint:all` and TypeScript strict type checking.
+1. **Gate 1: Compiler Zero Warnings**: `javac` executed with `-Werror -Xlint:all` and TypeScript strict type checking (`strict: true`).
 2. **Gate 2: Static Analysis**: Checkstyle (Google Java Style) + PMD (Cyclomatic Complexity $\le 12$, max method lines $\le 50$) + ESLint.
 3. **Gate 3: Duplication Detection**: PMD CPD enforcing duplicate token threshold $< 3\%$.
 4. **Gate 4: Security & Secret Scan**: Trivy CVE dependency audit (0 critical/high) + Gitleaks commit history scan.
-5. **Gate 5: Automated Test Suite**: JUnit 5 unit & integration tests with **80%+ JaCoCo coverage**.
+5. **Gate 5: Full Test Pyramid & Dual Coverage**:
+   - **Backend**: Pure Java domain unit tests (`Surefire`) + Testcontainers PostgreSQL integration tests (`Failsafe`). Enforced by **JaCoCo unified coverage ($\ge 80\%$ line, $\ge 75\%$ branch)**.
+   - **Frontend**: Vitest + React Testing Library component tests and MSW integration tests. Enforced by **`@vitest/coverage-v8` ($\ge 80\%$)**.
+   - **E2E**: Playwright headless browser tests verifying complete student practice journeys against Docker Compose.
 6. **Gate 6: Build Verification**: Clean container builds via Docker Compose and production bundle packaging.
 
 ---
