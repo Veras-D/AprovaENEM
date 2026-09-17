@@ -401,12 +401,12 @@ ON diagnostic_summaries USING GIN (topic_breakdown);
 
 Applying the back-of-the-envelope estimation rules:
 
-### Question Bank Volume (15 Years of ENEM)
+### Question Bank Volume (17 Years of Modern ENEM: 2009–2025)
 - Annual ENEM Questions: 180 questions / year (45 per area).
-- 15 Years (2010–2024): $15 \times 180 = 2,700\text{ questions}$.
-- Including Second Application / PPL: $2,700 \times 2 \approx \mathbf{5,400\text{ total questions}}$.
+- 17 Years (2009–2025): $17 \times 180 = 3,060\text{ questions}$.
+- Including Second Application / PPL: $3,060 \times 2 \approx \mathbf{6,120\text{ total questions}}$.
 - Average question payload (statement + 5 options + LaTeX): $\approx 4\text{ KB}$.
-- Total Question Catalog Size: $5,400 \times 4\text{ KB} \approx \mathbf{21.6\text{ MB}}$.
+- Total Question Catalog Size: $6,120 \times 4\text{ KB} \approx \mathbf{24.5\text{ MB}}$.
 - **Conclusion**: The entire question bank easily fits into PostgreSQL RAM buffers (`shared_buffers`), guaranteeing instant $O(1)$ in-memory index scans!
 
 ### Student Attempt Volume (Daily Active Scale)

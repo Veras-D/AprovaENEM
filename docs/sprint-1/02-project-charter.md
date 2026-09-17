@@ -12,9 +12,9 @@
 
 ### Problem Statement
 The National High School Exam (ENEM) is the primary gateway to higher education in Brazil, governing access to federal universities (via SISU), private college scholarships (PROUNI), and student loans (FIES). 
-- Over **3.5 million candidates** register annually.
-- Public high school students represent over **80% of secondary enrollment**, but are severely underrepresented in high-competition degree programs (Medicine, Law, Computer Science, Engineering).
-- Commercial platforms monetize question banks with monthly subscriptions that exclude low-income students.
+- Over **3.5 to 4 million candidates** register annually.
+- Public high school students represent **84.3% of secondary enrollment** (INEP Censo Escolar), but are severely underrepresented in high-competition degree programs (Medicine, Law, Computer Science, Engineering).
+- Commercial platforms monetize question banks with subscriptions ranging from R$ 30 to R$ 200+/month (and over R$ 1,000/month for physical prep academies) that exclude low-income students.
 - Raw INEP exam data is published as disorganized PDFs and spreadsheets that cannot be consumed on mobile devices or easily filtered by pedagogical skill tags.
 
 ### Product Vision
@@ -36,7 +36,7 @@ flowchart LR
 
 ### Data Pipeline Specifications
 1. **Raw Sources**:
-   - Official Blue/Yellow/White/Pink exam PDFs and official answer keys (ENEM 2015–2024).
+   - Official Blue/Yellow/White/Pink exam PDFs and official answer keys (spanning the modern TRI format from **2009 to 2025**).
    - INEP Microdados catalog containing official Item Response Theory (TRI) parameters:
      - Discrimination parameter ($a$)
      - Difficulty parameter ($b$)

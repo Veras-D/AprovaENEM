@@ -24,9 +24,9 @@
 
 ## 📖 Overview
 
-In Brazil, over 80% of secondary students attend public high schools, yet they represent a fraction of admissions to prestigious federal universities. Commercial prep platforms charge expensive subscriptions (R$ 60 to R$ 250/month) that systematically exclude low-income students from urban peripheries.
+According to INEP's Censo Escolar, **84.3% of Brazilian secondary students attend public high schools**, yet they remain heavily underrepresented in competitive admissions to federal universities. Commercial online preparatory platforms charge between **R$ 30 and R$ 200+/month** (often requiring full-year credit card debt commitments), while physical prep academies exceed **R$ 1,000/month**, systematically pricing out low-income students from urban peripheries.
 
-**AprovaENEM** is a full-stack open educational platform. It transforms official, public-domain exam archives from **INEP** (2010–2024) into an interactive, mobile-optimized learning ecosystem. Students can practice authentic exam questions on their phones, receive instant step-by-step resolution breakdowns, track diagnostic weak-spot radars, and interact with a Socratic AI study tutor — **100% free, mobile-first, and with zero registration barriers**.
+**AprovaENEM** is a full-stack open educational platform. It transforms official, public-domain exam archives from **INEP (spanning 2009 to 2025)** into an interactive, mobile-optimized learning ecosystem. Students can practice authentic exam questions on their phones, receive instant step-by-step resolution breakdowns, track diagnostic weak-spot radars, and interact with a Socratic AI study tutor — **100% free, mobile-first, and with zero registration barriers**.
 
 ---
 

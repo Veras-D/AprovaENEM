@@ -8,9 +8,9 @@
 
 **AprovaENEM** is an open-source, non-profit digital learning and diagnostic assessment platform built to democratize high-quality ENEM (*Exame Nacional do Ensino Médio*) preparation for Brazilian public high school students (*estudantes de escola pública*) and community prep initiatives (*cursinhos populares*).
 
-In Brazil, over 80% of high school students attend public schools, yet they represent a fraction of admissions to high-demand programs in federal universities. Wealthy students invest in expensive private preparatory courses (*cursinhos* costing R$ 500 to R$ 2,500/month) that offer structured question banks, diagnostic analytics, and step-by-step problem resolution. Public school students are left with static, confusing PDFs and fragmented YouTube videos.
+In Brazil, **84.3% of secondary school students attend public high schools** (INEP Censo Escolar), yet they represent a fraction of admissions to high-demand programs in federal universities. While online commercial platforms charge between R$ 30 and R$ 200+/month (often locking up annual credit card limits) and private physical preparatory courses (*cursinhos*) cost between R$ 1,000 and R$ 2,500/month, public school students are left with static, confusing PDFs and fragmented YouTube videos.
 
-AprovaENEM bridges this gap by leveraging 100% public, official open data from INEP (historical exams, official answer keys, and Item Response Theory / TRI metadata) packaged into a modern, frictionless API that enables practice-based learning, diagnostic skill-gap mapping, and Socratic concept explanations.
+AprovaENEM bridges this gap by leveraging 100% public, official open data from INEP (historical exams spanning 2009 to 2025, official answer keys, and Item Response Theory / TRI metadata) packaged into a modern, frictionless API that enables practice-based learning, diagnostic skill-gap mapping, and Socratic concept explanations.
 
 ---
 
