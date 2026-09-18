@@ -165,6 +165,15 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
   - Protected endpoints validate Bearer tokens and enforce `@PreAuthorize`.
   - Missing or expired tokens return RFC 7807 401 Unauthorized; insufficient roles return RFC 7807 403 Forbidden.
 
+#### `TASK-S2-05b`: Transactional Outbox Pattern & Student Email Confirmation
+- **Priority**: `P0` | **Estimation**: 5 pts
+- **Description**: Implement the Transactional Outbox pattern in `auth-service` to reliably publish `UserRegisteredEvent` and `EmailVerificationRequestedEvent` to RabbitMQ exchange `auth.events` without dual-write inconsistency. Implement email verification endpoints (`POST /api/v1/auth/verify-email`, `POST /api/v1/auth/resend-verification`) with cryptographically secure single-use tokens (24h TTL).
+- **Acceptance Criteria**:
+  - Registration atomically inserts `users` (with `is_email_verified = false`, `email_verification_token`) and `outbox_events` (status: `PENDING`) within the same `@Transactional` boundary.
+  - Scheduled background worker queries `outbox_events` (`SELECT ... FOR UPDATE SKIP LOCKED`), publishes events to RabbitMQ, and updates status to `PUBLISHED`.
+  - `POST /api/v1/auth/verify-email` verifies token, marks `is_email_verified = true`, and invalidates token.
+  - `POST /api/v1/auth/resend-verification` enforces rate limit (3/hour) and emits new outbox event.
+
 ---
 
 ### Epic 3: Examination & Assessment Engine (`exam-service`)

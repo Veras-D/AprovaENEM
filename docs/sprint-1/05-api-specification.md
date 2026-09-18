@@ -70,6 +70,7 @@ AprovaENEM defines two primary OpenAPI security schemes enforced by Spring Secur
     "timestamp": "2026-09-18T00:30:00Z",
     "traceId": "4bf92f3577b34da6a3ce929d0e0e4736"
   }
+  ```
 ### 1.3 Cross-Origin Resource Sharing (CORS) Specification
 
 All endpoints exposed by the `frontend-api` microservice implement strict W3C CORS compliance:
@@ -142,9 +143,12 @@ Vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers
   "userId": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
   "email": "lucas.silva@escola.ma.gov.br",
   "fullName": "Lucas Silva",
+  "role": "ROLE_STUDENT",
+  "isEmailVerified": false,
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "tokenType": "Bearer",
-  "expiresInSeconds": 86400
+  "expiresInSeconds": 86400,
+  "message": "Account created. A confirmation email has been dispatched to verify your address."
 }
 ```
 
@@ -166,8 +170,66 @@ Vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers
 ```json
 {
   "userId": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "role": "ROLE_STUDENT",
+  "isEmailVerified": true,
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "expiresInSeconds": 86400
+}
+```
+
+---
+
+### 2.4 Verify Student Email
+* **Method**: `POST`
+* **Path**: `/api/v1/auth/verify-email`
+* **Description**: Verifies the student's email address using the single-use token delivered via the Transactional Outbox and `notification-service`.
+
+#### Request Body
+```json
+{
+  "token": "4f9a8b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9"
+}
+```
+
+#### Response `200 OK`
+```json
+{
+  "message": "Email address successfully verified. Your AprovaENEM account is now fully active.",
+  "isEmailVerified": true,
+  "verifiedAt": "2026-09-18T14:35:00Z"
+}
+```
+
+#### Error Response `400 Bad Request` (Token Invalid or Expired)
+```json
+{
+  "type": "https://aprovaenem.org/errors/INVALID_VERIFICATION_TOKEN",
+  "title": "Invalid or Expired Verification Token",
+  "status": 400,
+  "detail": "The email verification token is invalid or has expired (24h TTL). Please request a new verification link.",
+  "timestamp": "2026-09-18T14:35:00Z"
+}
+```
+
+---
+
+### 2.5 Resend Email Verification Link
+* **Method**: `POST`
+* **Path**: `/api/v1/auth/resend-verification`
+* **Description**: Generates and persists a new verification token in `users` and emits an event via the Transactional Outbox. Rate-limited to 3 requests per hour.
+
+#### Request Body
+```json
+{
+  "email": "lucas.silva@escola.ma.gov.br"
+}
+```
+
+#### Response `200 OK`
+```json
+{
+  "message": "If an account with this email exists and is unverified, a new confirmation link has been dispatched.",
+  "dispatched": true
 }
 ```
 

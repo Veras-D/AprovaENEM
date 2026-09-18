@@ -12,6 +12,8 @@ The persistence layer is split across two database boundaries to maintain micros
 1. **`auth_db`**: Manages user credentials, roles, and anonymous session mapping.
 2. **`exam_db`**: Manages the INEP exam catalog, question taxonomy, practice sessions, student attempt submissions, and diagnostic analytics.
 
+### 1.1 Examination & Assessment Domain Model (`exam-service`)
+
 ```mermaid
 classDiagram
     class ExamEdition {
@@ -95,9 +97,90 @@ classDiagram
     Question "1" --> "*" StudentAttempt : answered in
 ```
 
+### 1.2 Identity, Gamification & Outbox Domain Model (`auth-service`)
+
+```mermaid
+classDiagram
+    class User {
+        +UUID id
+        +string email
+        +string passwordHash
+        +string fullName
+        +string schoolType
+        +string targetDegree
+        +string role
+        +boolean isActive
+        +boolean isEmailVerified
+        +string emailVerificationToken
+        +timestamp emailVerificationExpiresAt
+        +timestamp createdAt
+        +timestamp updatedAt
+    }
+
+    class AnonymousSession {
+        +UUID id
+        +string sessionUuid
+        +UUID claimedByUserId
+        +string ipHash
+        +timestamp createdAt
+        +timestamp lastActiveAt
+    }
+
+    class UserGamificationProfile {
+        +UUID userId
+        +int currentLevel
+        +int currentXp
+        +int streakDays
+        +int streakFreezeAvailable
+        +date lastActivityDate
+        +int dailyGoalQuestions
+        +int dailyQuestionsCompleted
+        +timestamp dailyGoalReachedAt
+        +boolean optInReminders
+    }
+
+    class WeeklyLeaderboard {
+        +UUID id
+        +UUID userId
+        +int weekNumber
+        +int year
+        +string leagueTier
+        +int weeklyXp
+        +int questionsSolved
+        +int rankPosition
+    }
+
+    class UserAchievement {
+        +UUID id
+        +UUID userId
+        +string badgeCode
+        +timestamp unlockedAt
+    }
+
+    class OutboxEvent {
+        +UUID id
+        +string aggregateType
+        +UUID aggregateId
+        +string eventType
+        +string payload
+        +string status
+        +int retryCount
+        +timestamp createdAt
+        +timestamp publishedAt
+    }
+
+    User "1" --> "0..1" UserGamificationProfile : has
+    User "1" --> "*" WeeklyLeaderboard : competes_in
+    User "1" --> "*" UserAchievement : earns
+    User "1" <-- "0..*" AnonymousSession : claimed_by
+    User "1" ..> "*" OutboxEvent : emits
+```
+
 ---
 
 ## 2. Entity-Relationship (ER) Diagram
+
+### 2.1 Examination Database (`exam_db`) ER Diagram
 
 ```mermaid
 erDiagram
@@ -208,6 +291,92 @@ erDiagram
     }
 ```
 
+### 2.2 Auth & Identity Database (`auth_db`) ER Diagram
+
+```mermaid
+erDiagram
+    USERS ||--o| USER_GAMIFICATION_PROFILES : has
+    USERS ||--o{ WEEKLY_LEADERBOARDS : competes_in
+    USERS ||--o{ USER_ACHIEVEMENTS : earns
+    USERS ||--o{ ANONYMOUS_SESSIONS : claims
+    USERS ||--o{ OUTBOX_EVENTS : triggers
+
+    USERS {
+        uuid id PK
+        varchar email UK
+        varchar password_hash
+        varchar full_name
+        varchar school_type
+        varchar target_degree
+        varchar role
+        boolean is_active
+        boolean is_email_verified
+        varchar email_verification_token
+        timestamp email_verification_expires_at
+        varchar password_reset_token
+        timestamp password_reset_expires_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    ANONYMOUS_SESSIONS {
+        uuid id PK
+        varchar session_uuid UK
+        uuid claimed_by_user_id FK
+        varchar ip_hash
+        timestamp created_at
+        timestamp last_active_at
+    }
+
+    USER_GAMIFICATION_PROFILES {
+        uuid user_id PK,FK
+        int current_level
+        int current_xp
+        int streak_days
+        int streak_freeze_available
+        date last_activity_date
+        int daily_goal_questions
+        int daily_questions_completed
+        timestamp daily_goal_reached_at
+        boolean opt_in_reminders
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    WEEKLY_LEADERBOARDS {
+        uuid id PK
+        uuid user_id FK
+        int week_number
+        int year
+        varchar league_tier
+        int weekly_xp
+        int questions_solved
+        int rank_position
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    USER_ACHIEVEMENTS {
+        uuid id PK
+        uuid user_id FK
+        varchar badge_code
+        timestamp unlocked_at
+    }
+
+    OUTBOX_EVENTS {
+        uuid id PK
+        varchar aggregate_type
+        uuid aggregate_id
+        varchar event_type
+        jsonb payload
+        varchar status
+        int retry_count
+        timestamp created_at
+        timestamp published_at
+        text error_message
+    }
+```
+
 ---
 
 ## 3. Physical DDL Specifications (PostgreSQL 16)
@@ -224,12 +393,37 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     full_name VARCHAR(150) NOT NULL,
-    school_type VARCHAR(50) NOT NULL DEFAULT 'PUBLIC_SCHOOL',
+    school_type VARCHAR(50) NOT NULL DEFAULT 'PUBLIC_SCHOOL', -- 'PUBLIC_SCHOOL', 'PRIVATE_SCHOOL', 'COMMUNITY_PREP', 'OTHER'
     target_degree VARCHAR(100),
+    role VARCHAR(50) NOT NULL DEFAULT 'ROLE_STUDENT',         -- 'ROLE_STUDENT', 'ROLE_PREMIUM_STUDENT', 'ROLE_ADMIN'
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    is_email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    email_verification_token VARCHAR(255),
+    email_verification_expires_at TIMESTAMP WITH TIME ZONE,
+    password_reset_token VARCHAR(255),
+    password_reset_expires_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX idx_users_email_verification ON users(email_verification_token) WHERE email_verification_token IS NOT NULL;
+CREATE INDEX idx_users_password_reset ON users(password_reset_token) WHERE password_reset_token IS NOT NULL;
+
+-- Transactional Outbox Pattern Table (Ensures Dual-Write Consistency to RabbitMQ)
+CREATE TABLE outbox_events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    aggregate_type VARCHAR(100) NOT NULL,     -- 'USER', 'GAMIFICATION_PROFILE'
+    aggregate_id UUID NOT NULL,                -- Logical entity ID (e.g. users.id)
+    event_type VARCHAR(100) NOT NULL,          -- 'UserRegisteredEvent', 'EmailVerificationRequestedEvent'
+    payload JSONB NOT NULL,                    -- Event payload serialized as JSON
+    status VARCHAR(30) NOT NULL DEFAULT 'PENDING', -- 'PENDING', 'PUBLISHED', 'FAILED'
+    retry_count INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    published_at TIMESTAMP WITH TIME ZONE,
+    error_message TEXT
+);
+
+CREATE INDEX idx_outbox_pending ON outbox_events(status, created_at) WHERE status = 'PENDING';
 
 -- Anonymous Session Linkage
 CREATE TABLE anonymous_sessions (

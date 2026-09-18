@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.1.1] - 2026-09-18
 ### 🔧 Changed
+- feat(auth): Architect User entity modeling, Transactional Outbox pattern (outbox_events table), and asynchronous email confirmation lifecycle across data modeling, architecture, and API specs
 - fix(docs): Escape and quote edge labels containing parentheses and resolve invalid flowchart link syntax across 03-system-architecture.md and 04-data-modeling.md
 - feat(auth): Require free registered account (ROLE_STUDENT) to access Socratic AI Tutor with 1 free consultation per day, eliminating cookie/session-clearing quota abuse while keeping core practice 100% free and anonymous with zero login required
 - refactor(branding): Standardize project name to AprovaENEM across all documentation, removing legacy OpenENEM references and updating Java root packages to com.aprovaenem.*
