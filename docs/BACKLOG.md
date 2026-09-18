@@ -56,12 +56,14 @@ gantt
 ## 3. Sprint 2: Core Development & Implementation (Mão na Massa 🚀)
 
 ### Epic 1: Infrastructure & Database Foundation
-#### `TASK-S2-01`: Full-Stack Docker Compose Ecosystem
+#### `TASK-S2-01`: Full-Stack Docker Compose Ecosystem with Zero-Trust Perimeter Isolation
 - **Priority**: `P0` | **Estimation**: 5 pts
-- **Description**: Setup root `docker-compose.yml` orchestrating the entire platform: Frontend (React/Nginx container), Nginx Reverse Proxy / Load Balancer, Spring Cloud API Gateway, Microservices, PostgreSQL 16 (`auth_db` and `exam_db`), Prometheus, and Grafana.
+- **Description**: Setup root `docker-compose.yml` orchestrating the entire platform with strict network segregation: `frontend-edge` network exposing ONLY port 80/443 (Nginx serving frontend SPA and reverse-proxying `/api/**`), and internal private `aprovaenem-internal` network (`internal: true`) where all microservices (`frontend-api`, `auth-service`, `exam-service`, `notification-service`, `ingestion-service`), PostgreSQL databases, and RabbitMQ have ZERO host ports exposed to the outside.
 - **Acceptance Criteria**:
   - `docker compose up -d` brings up all services (frontend, backend, databases, telemetry) with 1 command.
-  - Port bindings verified: `80` (Nginx/Frontend), `8080` (Gateway), `5432`/`5433` (Postgres), `9090` (Prometheus), `3001` (Grafana).
+  - Host port bindings strictly limited: ONLY `80` / `443` (Nginx) bound to `0.0.0.0`.
+  - All internal services (`frontend-api:8080`, `auth-service:8081`, `exam-service:8082`, `notification-service:8083`, Postgres `5432-5434`, RabbitMQ `5672`) have NO published host ports.
+  - External attempts to access backend ports directly from the host/internet are blocked by network isolation.
 
 #### `TASK-S2-02`: Database Flyway Migrations
 - **Priority**: `P0` | **Estimation**: 5 pts
@@ -168,11 +170,15 @@ gantt
 ---
 
 ### Epic 5: Ingress & Observability Integration
-#### `TASK-S2-12`: Spring Cloud Gateway with Token Bucket Rate Limiting
-- **Priority**: `P0` | **Estimation**: 5 pts
-- **Description**: Configure API Gateway routes and Token Bucket rate limiter (60 req/min for general API; 10 req/min for `/ask`).
+#### `TASK-S2-12`: `frontend-api` Microservice (BFF / Edge API Gateway) & Strict CORS Engine
+- **Priority**: `P0` | **Estimation**: 8 pts
+- **Description**: Implement the `frontend-api` microservice (BFF / Edge API Gateway) acting as the single public API facade that shields downstream domain microservices ("Real APIs"). Configure strict CORS policies (`CorsWebFilter` with origin whitelist, explicit allowed headers/methods, credentials support, 1-hour preflight caching), untrusted header stripping (`X-User-Id`, `X-User-Roles`, etc.), JWT/session ingress validation, response data masking (stripping SQL/stack traces), and Token Bucket rate limiting.
 - **Acceptance Criteria**:
-  - Requests exceeding limit receive HTTP 429 with `Retry-After` header.
+  - External requests never reach real domain microservices directly; all traffic flows through `frontend-api`.
+  - Strict CORS headers enforced: whitelisted origins only (rejects `*` when credentials are used), allowed methods (`GET, POST, PUT, PATCH, DELETE, OPTIONS`), allowed headers (`Authorization, Content-Type, Accept, X-Session-Id, traceparent, X-Trace-Id`), exposed headers (`Authorization, X-Trace-Id, X-Session-Id, X-RateLimit-Remaining`).
+  - Preflight `OPTIONS` requests immediately return `200 OK` or `204 No Content` with `Access-Control-Max-Age: 3600`.
+  - Spoofed internal headers stripped from incoming requests before forwarding.
+  - Token Bucket rate limiter (60 req/min for general routes, 10 req/min for `/ask`) emits HTTP 429 with `Retry-After`.
 
 #### `TASK-S2-13`: Micrometer Tracing & Prometheus Scraping
 - **Priority**: `P1` | **Estimation**: 3 pts

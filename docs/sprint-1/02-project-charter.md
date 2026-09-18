@@ -124,7 +124,7 @@ flowchart LR
 ### In Scope (Sprint 1 to Sprint 3: The Base App)
 - Fully functional REST APIs for question bank, practice sessions, instant grading, diagnostics, and Socratic AI resolutions.
 - Complete PostgreSQL database schemas with B-tree indices and relational integrity.
-- Nginx Load Balancer and Spring Cloud Gateway with Token Bucket rate limiting.
+- Nginx Edge Ingress (Ports 80/443 as the ONLY publicly exposed host ports) and dedicated `frontend-api` BFF microservice with Token Bucket rate limiting, strict CORS whitelisting, and zero-exposure perimeter network isolation shielding internal domain microservices ("Real APIs").
 - Spring Security 6 stateless JWT authentication and dual-mode anonymous/registered RBAC.
 - Gamification Engine (XP, Levels, Daily Goals, Streak Tracking, and Weekly Leaderboards).
 - Asynchronous multi-channel Notification Microservice (`notification-service` for email and push).

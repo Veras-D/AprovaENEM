@@ -49,7 +49,7 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 - 🔔 **Multi-Channel Notification Microservice**: Decoupled `notification-service` dispatching transactional emails (SES/Resend), Web Push, and mobile notifications (FCM/APNs) for daily streak preservation at 19:00 BRT and Sunday league results.
 - 🤖 **Socratic AI Study Tutor**: Powered by **Google Gemini (gemini-1.5-flash)** with pedagogical guardrails: guides students through underlying scientific and mathematical principles without spoiling answers.
 - 🧠 **Retrieval-Augmented Generation (RAG) & Vector Search**: Grounded in official INEP curriculum matrices, verified step-by-step resolutions, and distractor catalogs via **PostgreSQL 16 `pgvector`** with HNSW semantic indexing to eliminate LLM hallucinations before student prompts are dispatched.
-- 🛡️ **Token Bucket Edge Rate Limiting**: Built into the API Gateway to prevent scraper abuse and protect upstream LLM API consumption.
+- 🛡️ **Perimeter Isolation & `frontend-api` Microservice (BFF)**: The public user has network access **strictly to the frontend ingress (ports 80/443) and nothing else**. A dedicated `frontend-api` BFF microservice acts as the hardened edge facade, enforcing strict CORS origin whitelisting, 1-hour preflight caching, Token Bucket rate limiting, and anti-spoofing request sanitization while completely shielding internal domain microservices ("Real APIs"), databases, and message brokers inside an isolated Docker network.
 - 📈 **Datadog-Style Observability**: Complete Prometheus APM metrics, Micrometer distributed tracing (`traceId` / `spanId` MDC injection), and sub-minute trace-to-error bug isolation.
 - 🌐 **Bilingual Backend (i18n)**: Spring Boot `MessageSource` supporting both Portuguese (`pt-BR`) and English (`en`).
 - 🏗️ **Hexagonal Architecture**: Strict separation of pure Java domain models from Spring Boot frameworks and PostgreSQL persistence.
@@ -74,9 +74,9 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 - **Framework**: Spring Boot 3.3+ (Web, Data JPA, Validation, Actuator)
 - **Security**: **Spring Security 6.3+** (Stateless JWT, `SecurityFilterChain`, Method Security `@PreAuthorize`, RBAC for anonymous and registered students, BCrypt password hashing)
 - **Architecture**: Microservices with **Hexagonal Architecture (Ports and Adapters)**
-- **API Gateway**: Spring Cloud Gateway with Token Bucket Rate Limiting
+- **Frontend API & Gateway**: **Spring Cloud Gateway (`frontend-api` BFF microservice)** with Token Bucket Rate Limiting, strict CORS engine (origin whitelisting & 1-hour preflight caching), anti-spoofing header stripping, and domain API shielding
 - **Event Bus / Messaging**: **RabbitMQ / Spring Cloud Stream** for asynchronous notification events
-- **Reverse Proxy**: Nginx (L7 Load Balancer, SSL termination, request buffering)
+- **Reverse Proxy & Ingress**: Nginx (L7 Reverse Proxy, SSL termination, static SPA delivery, **the ONLY publicly exposed host port: `80`/`443`**)
 
 ### Persistence & Storage
 - **Primary Database**: PostgreSQL 16 (isolated `auth_db`, `exam_db`, and `notification_db`)

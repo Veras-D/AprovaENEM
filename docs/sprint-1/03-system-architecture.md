@@ -1,51 +1,52 @@
 # System Architecture & Topology — AprovaENEM
 
 > **Architecture Style**: Microservices with Hexagonal Architecture (Ports & Adapters)  
-> **Ingress & Perimeter**: Nginx Load Balancer + Spring Cloud Gateway with Token Bucket Rate Limiter  
+> **Ingress & Perimeter**: Nginx Edge Ingress (Host Port 80/443 ONLY) + Dedicated `frontend-api` Microservice (BFF / Edge API Gateway) with Token Bucket Rate Limiter & Strict CORS Engine  
+> **Network Boundary**: Zero-Trust Internal Bridge (`aprovaenem-internal`, `internal: true`) with ZERO host ports exposed for downstream microservices, databases, and message brokers  
 > **Backend Framework**: Java 21 LTS + Spring Boot 3.3+  
-> **Persistence**: PostgreSQL 16  
+> **Persistence**: PostgreSQL 16 (Isolated DB per Service, Strictly Internal Docker Network)  
 > **Telemetry**: Prometheus + Micrometer Tracing (Datadog-style root-cause diagnostics)  
 
 ---
 
 ## 1. Global Topology & C4 Container Architecture
 
-The system is deployed as a resilient, containerized multi-service ecosystem. Incoming public traffic passes through an outer Nginx perimeter proxy, moves through an authenticated and rate-limited API Gateway, and is dispatched to the downstream microservices.
+The system is deployed as a secure, perimeter-isolated containerized ecosystem. **External users have network access strictly to the frontend ingress (ports 80/443) and nothing else.** All downstream domain microservices ("Real APIs"), databases, and message brokers reside in an isolated, private Docker network with zero host ports published. A dedicated **`frontend-api` microservice (BFF / Edge API Gateway)** acts as the sole, hardened API facade shielding the internal domain services.
 
 ```mermaid
 flowchart TD
     User([📱 Student Client / Browser])
     
-    subgraph DockerComposePlatform ["Unified Docker Compose Platform"]
-        subgraph Perimeter ["Edge & Perimeter Ingress"]
-            LB["🛡️ Nginx Load Balancer / Reverse Proxy<br/>Port 80/443<br/>• Routes / to Frontend<br/>• Routes /api/** to Gateway"]
-            APIGW["⚡ Spring Cloud API Gateway (Port 8080)<br/>• Route Dispatcher<br/>• Token Bucket Rate Limiter (Redis/Memory)<br/>• W3C Distributed Trace Injector (`traceId`)<br/>• Dual-Auth Evaluator (Anonymous vs JWT)"]
+    subgraph HostPerimeter ["Public Edge Ingress (ONLY Host Ports 80 / 443 Published)"]
+        LB["🛡️ Nginx Edge Reverse Proxy / Ingress<br/>Public Host Ports: 80 / 443 (The ONLY exposed ports)<br/>• Serves Frontend Static Assets (/)<br/>• Proxies /api/** to frontend-api<br/>• Blocks external access to /actuator/**"]
+    end
+
+    subgraph PrivateNetwork ["Isolated Internal Network (aprovaenem-internal - Zero Public Exposure)"]
+        subgraph EdgeGatewayLayer ["Edge Gateway & BFF Layer"]
+            FrontendUI["🖥️ frontend (Internal Container)<br/>React 18 + TypeScript PWA / Vite Static Build"]
+            FrontendAPI["⚡ frontend-api Microservice (BFF / Edge Gateway)<br/>Internal Port 8080 (Zero Host Port Exposure)<br/>• Edge API Facade & Real API Shield<br/>• Strict CORS Enforcement & Preflight Handling<br/>• Ingress Header Sanitization (Strips spoofed headers)<br/>• Token Bucket Rate Limiting (Gemini quota protection)<br/>• JWT / Session Auth Verification<br/>• Response Data Masking & BFF DTO Shaping"]
         end
 
-        subgraph FrontendLayer ["Frontend Container"]
-            FrontendUI["🖥️ frontend (Port 80/internal)<br/>React 18 + TypeScript PWA / Nginx Static Serve"]
-            MobileApp["📱 Native Mobile App (Roadmap)<br/>Native Android (Kotlin / Jetpack Compose) & KMP"]
+        subgraph RealAPIs ["Downstream Domain Microservices (Real APIs - Strictly Internal)"]
+            AuthSvc["🔐 auth-service (Internal Port 8081 - Real API)<br/>• Anonymous Session Provisioning<br/>• Student JWT Registration & Login<br/>• Gamification Profiles, XP & Streak Engine"]
+            ExamSvc["📚 exam-service (Internal Port 8082 - Real API)<br/>• Question Bank & INEP Taxonomy<br/>• Practice Session State Machine<br/>• Automated Grading & Scoring<br/>• RAG Pipeline & Vector Search (`pgvector`)<br/>• Socratic AI Resolution Engine"]
+            NotifSvc["🔔 notification-service (Internal Port 8083 - Real API)<br/>• Transactional Email (SES/Resend)<br/>• Web Push & Mobile Push (FCM/APNs)<br/>• In-App Notifications & Streak Alerts"]
+            IngestSvc["⚙️ ingestion-service (Internal On-Demand - Real API)<br/>• IBM Docling Neural PDF Parser<br/>• KaTeX Formula Extraction & WebP Cropper"]
         end
 
-        subgraph Services ["Microservices Layer (Hexagonal Architecture)"]
-            AuthSvc["🔐 Auth & Identity Service (Port 8081)<br/>• Anonymous Session Provisioning<br/>• Student JWT Registration & Login<br/>• Gamification Profiles & XP"]
-            ExamSvc["📚 Exam & Assessment Service (Port 8082)<br/>• Question Bank & INEP Taxonomy<br/>• Practice Session State Machine<br/>• Automated Grading & Scoring<br/>• RAG Pipeline & Vector Search (`pgvector`)<br/>• Socratic AI Resolution Engine"]
-            NotifSvc["🔔 Notification Service (Port 8083)<br/>• Transactional Email (SES/Resend)<br/>• Web Push & Mobile Push (FCM/APNs)<br/>• In-App Notifications & Streak Alerts"]
+        subgraph MessagingLayer ["Internal Asynchronous Event Bus"]
+            EventBus[("📨 Message Broker / Event Bus<br/>RabbitMQ (Internal Port 5672)")]
         end
 
-        subgraph MessagingLayer ["Asynchronous Event Bus"]
-            EventBus[("📨 Message Broker / Event Bus<br/>RabbitMQ / Spring Cloud Stream")]
+        subgraph DataLayer ["Internal Persistence Layer (Zero Host Ports Published)"]
+            PostgresAuth[("🗄️ PostgreSQL (Auth DB)<br/>Internal Port 5432 - users, gamification")]
+            PostgresExam[("🗄️ PostgreSQL 16 + pgvector (Exam DB)<br/>Internal Port 5433 - questions, sessions, embeddings")]
+            PostgresNotif[("🗄️ PostgreSQL (Notification DB)<br/>Internal Port 5434 - device tokens, notification logs")]
         end
 
-        subgraph DataLayer ["Persistence & Cache Layer"]
-            PostgresAuth[("🗄️ PostgreSQL (Auth DB)<br/>Port 5432 - users, gamification")]
-            PostgresExam[("🗄️ PostgreSQL 16 + pgvector (Exam DB)<br/>Port 5433 - questions, sessions, embeddings")]
-            PostgresNotif[("🗄️ PostgreSQL (Notification DB)<br/>Port 5434 - device tokens, notification logs")]
-        end
-
-        subgraph ObservabilityStack ["Observability & Diagnostics Stack"]
-            Prometheus["📊 Prometheus Server (Port 9090)<br/>Scrapes `/actuator/prometheus`"]
-            Grafana["📈 Grafana Dashboard (Port 3001)<br/>APM Latency & Error Heatmaps"]
+        subgraph ObservabilityStack ["Internal Telemetry (Zero Host Ports Published)"]
+            Prometheus["📊 Prometheus Server (Internal Port 9090)<br/>Scrapes `/actuator/prometheus`"]
+            Grafana["📈 Grafana Dashboard (Internal Port 3001)<br/>APM Latency & Error Heatmaps"]
         end
     end
 
@@ -54,14 +55,13 @@ flowchart TD
         PushGateway["📲 FCM / APNs & Email Provider<br/>Firebase, Apple APNs, Resend/SES"]
     end
 
-    User -->|HTTP / HTTPS Port 80| LB
-    MobileApp -.->|Direct API Access| APIGW
-    LB -->|/| FrontendUI
-    LB -->|/api/**| APIGW
+    User -->|HTTP / HTTPS Port 80 / 443| LB
+    LB -->|Route / (Static Files)| FrontendUI
+    LB -->|Route /api/** (Internal Proxy)| FrontendAPI
     
-    APIGW -->|`/api/v1/auth/**`<br/>`/api/v1/gamification/**`| AuthSvc
-    APIGW -->|`/api/v1/exams/**`<br/>`/api/v1/sessions/**`<br/>`/api/v1/questions/**`| ExamSvc
-    APIGW -->|`/api/v1/notifications/**`| NotifSvc
+    FrontendAPI -->|`/api/v1/auth/**`<br/>`/api/v1/gamification/**`| AuthSvc
+    FrontendAPI -->|`/api/v1/exams/**`<br/>`/api/v1/sessions/**`<br/>`/api/v1/questions/**`| ExamSvc
+    FrontendAPI -->|`/api/v1/notifications/**`| NotifSvc
 
     AuthSvc --> PostgresAuth
     ExamSvc --> PostgresExam
@@ -74,7 +74,7 @@ flowchart TD
     ExamSvc -.->|Step-by-step resolution & Socratic hints| GeminiAPI
     NotifSvc -.->|Dispatch Emails & Push Alerts| PushGateway
 
-    APIGW -.->|Metrics Scraping| Prometheus
+    FrontendAPI -.->|Metrics Scraping| Prometheus
     AuthSvc -.->|Metrics Scraping| Prometheus
     ExamSvc -.->|Metrics Scraping| Prometheus
     Prometheus --> Grafana
@@ -82,16 +82,354 @@ flowchart TD
 
 ---
 
-## 2. Ingress, Perimeter & Rate Limiting Strategy
+## 2. Ingress Perimeter, Frontend API (BFF) & Zero-Trust Network Isolation
 
-### Nginx Perimeter
-The front-facing Nginx container acts as the L7 reverse proxy, providing:
-1. **Request Buffering**: Absorbs slow mobile client uploads, freeing application threads.
-2. **Security Headers**: Injects HTTP security headers (`Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`).
-3. **Keep-Alive Connection Pooling**: Maintains persistent upstream connections to the Spring Cloud Gateway.
+### 2.1 Perimeter Isolation & Zero Host Port Exposure Policy
+The core architectural mandate of AprovaENEM is **perimeter isolation**:
+1. **Frontend-Only Public Access**: External public traffic (browsers and mobile clients) has network connectivity **strictly to the Nginx edge proxy on ports 80 and 443**.
+2. **Zero Host Port Exposure for Internal Services**: Neither the `frontend-api` microservice nor any downstream domain microservices, PostgreSQL databases, or RabbitMQ message brokers bind ports to the host interface (`0.0.0.0`).
+3. **Defense-in-Depth Network Segregation**:
+   - `frontend-edge`: Public bridge network containing only the Nginx container, exposing host ports `80` and `443`.
+   - `aprovaenem-internal`: Private, isolated Docker bridge network (`internal: true`). All application microservices, databases, and message brokers communicate exclusively through internal Docker DNS names (e.g., `http://frontend-api:8080`, `http://exam-service:8082`, `postgres-exam:5432`). External packets cannot route into this network.
 
-### API Gateway & Token Bucket Rate Limiting
-To protect the backend from denial-of-service, aggressive question scraping, and exhaustion of upstream **Google Gemini API rate limits and quotas**, the Gateway enforces a **Token Bucket** rate limiting algorithm:
+#### Port Exposure & Network Isolation Matrix
+| Service / Container | Internal Port | Host / Public Port | Network Placement | External Visibility |
+| :--- | :--- | :--- | :--- | :--- |
+| **Nginx Edge Ingress** | 80, 443 | `0.0.0.0:80`, `0.0.0.0:443` | `frontend-edge`, `aprovaenem-internal` | **PUBLIC (Only Gateway)** |
+| **Frontend UI (Static)**| 80 | None (Served via Nginx volume) | `aprovaenem-internal` | **PROTECTED (Via Nginx)** |
+| **`frontend-api` (BFF)**| 8080 | **None** (Internal Docker DNS) | `aprovaenem-internal` | **SHIELDED (Via Nginx `/api/`)** |
+| **`auth-service` (Real API)** | 8081 | **None** | `aprovaenem-internal` | **STRICTLY PRIVATE** |
+| **`exam-service` (Real API)** | 8082 | **None** | `aprovaenem-internal` | **STRICTLY PRIVATE** |
+| **`notification-service` (Real API)** | 8083 | **None** | `aprovaenem-internal` | **STRICTLY PRIVATE** |
+| **`ingestion-service` (Real API)** | None (Worker) | **None** | `aprovaenem-internal` | **STRICTLY PRIVATE** |
+| **PostgreSQL Databases** | 5432, 5433, 5434 | **None** | `aprovaenem-internal` | **STRICTLY PRIVATE** |
+| **RabbitMQ Event Bus** | 5672, 15672 | **None** | `aprovaenem-internal` | **STRICTLY PRIVATE** |
+| **Prometheus / Grafana**| 9090, 3001 | **None** (SSH Tunnel / VPN only)| `aprovaenem-internal` | **STRICTLY PRIVATE** |
+
+#### Docker Compose Network Segregation Snippet
+```yaml
+version: '3.8'
+
+networks:
+  frontend-edge:
+    driver: bridge
+  aprovaenem-internal:
+    driver: bridge
+    internal: true # Disallows external outbound/inbound traffic; isolated backend network
+
+services:
+  nginx-proxy:
+    image: nginx:1.25-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - frontend-edge
+      - aprovaenem-internal
+    depends_on:
+      - frontend-api
+
+  frontend-api:
+    image: aprovaenem/frontend-api:latest
+    # Notice: NO 'ports' key mapped to host! Exposed only inside internal network
+    expose:
+      - "8080"
+    networks:
+      - aprovaenem-internal
+    environment:
+      - CORS_ALLOWED_ORIGINS=http://localhost,http://localhost:3000,http://localhost:5173,https://aprovaenem.com.br
+      - AUTH_SERVICE_URL=http://auth-service:8081
+      - EXAM_SERVICE_URL=http://exam-service:8082
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8083
+
+  exam-service:
+    image: aprovaenem/exam-service:latest
+    expose:
+      - "8082"
+    networks:
+      - aprovaenem-internal
+    depends_on:
+      - postgres-exam
+```
+
+---
+
+### 2.2 The `frontend-api` Microservice (BFF / Edge API Facade)
+
+The user client never communicates directly with the real domain microservices. Instead, all API traffic passes through the dedicated **`frontend-api` microservice (Backend-For-Frontend / Edge API Gateway)**, which fulfills five vital architectural and security functions:
+
+```mermaid
+flowchart LR
+    Browser["Student Browser / Client<br/>(https://aprovaenem.com.br)"] -->|1. Request with Bearer JWT| Nginx["Nginx Ingress (Port 443)"]
+    Nginx -->|2. Proxy /api/**| FrontendAPI["⚡ frontend-api (BFF Microservice)"]
+
+    subgraph FrontendAPIResponsibilities ["frontend-api Perimeter Security & Shielding"]
+        CORS["Strict CORS Engine<br/>• Origin Whitelisting<br/>• 1-Hour Preflight Cache"]
+        Sanitizer["Ingress Header Sanitizer<br/>• Strips spoofed `X-User-Id`<br/>• Validates JWT authenticity"]
+        RateLimiter["Token Bucket Rate Limiter<br/>• 60 req/min general<br/>• 10 req/min /ask"]
+        DataMasker["Response Data Masker<br/>• Strips stack traces & SQL errors<br/>• Aggregates BFF payloads"]
+    end
+
+    FrontendAPI --> CORS
+    CORS --> Sanitizer
+    Sanitizer --> RateLimiter
+    RateLimiter --> DataMasker
+
+    DataMasker -->|3. Trusted Internal REST<br/>X-User-Id: 42, ROLE_STUDENT| RealAPI["🔐 Real Domain APIs<br/>(auth-service, exam-service)<br/>[Internal Network Only]"]
+```
+
+1. **Real API Shielding & Information Hiding**:
+   - Internal microservice topologies, port numbers, container names, and private network DNS records are completely hidden from the public client.
+   - Attackers cannot probe or exploit internal microservice endpoints, administrative routes, or database adapters.
+2. **Untrusted Ingress Header Stripping (Anti-Spoofing)**:
+   - Malicious clients might attempt to inject internal headers such as `X-User-Id: admin`, `X-User-Roles: ROLE_ADMIN`, or `X-Internal-Token`.
+   - The `frontend-api` microservice strips and discards all incoming `X-User-*` or `X-Internal-*` headers from external requests.
+   - Only after validating the cryptographic signature of the student's JWT or resolving the anonymous session does `frontend-api` generate trusted internal headers (`X-User-Id`, `X-User-Roles`, `X-Session-Id`, `traceparent`) for downstream domain services.
+3. **Ingress Token Validation & Session Resolution**:
+   - Validates HMAC-SHA256 signature, issuer, and expiration time of incoming JWTs at the network boundary.
+   - Malformed or expired tokens are rejected at the edge with RFC 7807 401 Unauthorized, saving compute cycles on downstream domain microservices.
+4. **Outbound Response Data Masking**:
+   - Prevents leaking internal database error messages, Hibernate SQL traces, table names, JVM exception stack traces, or internal server IPs.
+   - Masks sensitive internal fields before returning JSON payloads to the browser.
+5. **BFF DTO Shaping & Aggregation**:
+   - Assembles composite data required by specific frontend views in a single HTTP roundtrip (e.g., student dashboard combining profile stats from `auth-service` and recent exam attempt history from `exam-service`), optimizing performance on high-latency mobile 3G/4G connections.
+
+---
+
+### 2.3 Strict Production CORS (Cross-Origin Resource Sharing) Configuration
+
+#### Why Strict CORS is Essential
+When the student browser executes asynchronous JavaScript requests (`fetch` or `axios`), modern browsers enforce the **W3C Same-Origin Policy**.
+- **In Production**: Nginx serves the React SPA at `/` and proxies `/api/**` to `frontend-api`, which means browser requests are technically same-origin (`https://aprovaenem.com.br/api/...`). However, a strict CORS configuration is still mandatory to prevent unauthorized third-party websites from making cross-origin requests using a logged-in student's credentials (CSRF / unauthorized data exfiltration).
+- **In Development / Staging / Multi-Client**: The frontend may run on a distinct origin (e.g., Vite dev server at `http://localhost:5173`, local preview at `http://localhost:3000`, staging environment at `https://staging.aprovaenem.com.br`, or Android native clients). The `frontend-api` microservice must strictly validate and respond with correct CORS headers.
+
+#### Comprehensive CORS Policy Specification
+| CORS Directive | Configured Value | Architectural Justification |
+| :--- | :--- | :--- |
+| **Allowed Origins** | Whitelist via `${CORS_ALLOWED_ORIGINS}`:<br/>`http://localhost:3000`, `http://localhost:5173`, `http://localhost`, `https://aprovaenem.com.br`, `https://staging.aprovaenem.com.br` | Strict origin matching. **Wildcard `*` is strictly forbidden** when credentials are used (violates W3C Fetch standard and causes browser rejection). |
+| **Allowed Methods** | `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS` | Restricts HTTP verbs to standard REST operations; explicitly forbids dangerous methods (`TRACE`, `CONNECT`). |
+| **Allowed Headers** | `Authorization`, `Content-Type`, `Accept`, `X-Session-Id`, `X-Requested-With`, `traceparent`, `X-Trace-Id` | Explicitly permits required operational, authentication, and W3C distributed tracing headers. |
+| **Exposed Headers** | `Authorization`, `X-Trace-Id`, `X-Session-Id`, `X-RateLimit-Remaining`, `X-RateLimit-Retry-After-Seconds` | Explicitly authorizes browser JavaScript to read correlation IDs, refreshed tokens, and rate-limiting headers. |
+| **Allow Credentials** | `true` | Permits the browser to send credentials (`Authorization: Bearer <token>` and session cookies) in cross-origin requests. |
+| **Max Age** | `3600L` (1 hour / 3,600 seconds) | Instructs the browser to cache preflight `OPTIONS` responses for 1 hour, drastically reducing latency and mobile battery consumption. |
+
+#### Preflight Request (`OPTIONS`) Handling Sequence
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Browser as Student Browser (JS)
+    participant Nginx as Nginx Edge Proxy (Port 443)
+    participant Gateway as frontend-api (Port 8080)
+    participant RealAPI as Real Domain APIs (Internal)
+
+    Note over Browser,Gateway: Browser initiates preflight before POST /api/v1/sessions
+    Browser->>Nginx: OPTIONS /api/v1/sessions<br/>Origin: https://aprovaenem.com.br<br/>Access-Control-Request-Method: POST<br/>Access-Control-Request-Headers: Authorization, Content-Type
+    Nginx->>Gateway: Forward OPTIONS request internally
+    
+    alt Origin is Whitelisted
+        Note over Gateway: Evaluates CorsWebFilter / CorsFilter.<br/>Matches origin in whitelist.
+        Gateway-->>Nginx: 200 OK / 204 No Content<br/>Access-Control-Allow-Origin: https://aprovaenem.com.br<br/>Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS<br/>Access-Control-Allow-Headers: Authorization, Content-Type, ...<br/>Access-Control-Allow-Credentials: true<br/>Access-Control-Max-Age: 3600
+        Nginx-->>Browser: Return Preflight Response (Cached for 1 hour)
+        
+        Note over Browser: Preflight approved! Now sends actual request
+        Browser->>Nginx: POST /api/v1/sessions (Bearer JWT)
+        Nginx->>Gateway: Forward POST /api/v1/sessions
+        Gateway->>RealAPI: Forward with X-User-Id, X-User-Roles
+        RealAPI-->>Gateway: 201 Created (Session DTO)
+        Gateway-->>Nginx: 201 Created (with CORS headers)
+        Nginx-->>Browser: 201 Created
+    else Origin is NOT Whitelisted (Malicious Site)
+        Note over Gateway: Origin not in whitelist.
+        Gateway-->>Nginx: 403 Forbidden (CORS Policy Rejection)
+        Nginx-->>Browser: 403 Forbidden (Browser blocks request)
+    end
+```
+
+#### Spring Cloud Gateway / Reactive WebFlux CORS Configuration (`CorsConfig.java`)
+```java
+package com.openenem.gateway.config;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.CorsWebFilter;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.List;
+
+/**
+ * Edge CORS Configuration for the frontend-api microservice (Spring Cloud Gateway).
+ * Enforces strict origin whitelisting, header filtering, and preflight caching.
+ */
+@Configuration
+public class CorsConfig {
+
+    @Value("${cors.allowed-origins:http://localhost,http://localhost:3000,http://localhost:5173,https://aprovaenem.com.br}")
+    private String allowedOriginsConfig;
+
+    @Bean
+    public CorsWebFilter corsWebFilter() {
+        CorsConfiguration corsConfig = new CorsConfiguration();
+
+        // 1. Whitelisted Origins (Parsed from environment variable)
+        List<String> origins = Arrays.stream(allowedOriginsConfig.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+        corsConfig.setAllowedOrigins(origins);
+
+        // 2. Allowed HTTP Methods
+        corsConfig.setAllowedMethods(List.of(
+                "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
+        ));
+
+        // 3. Allowed Request Headers
+        corsConfig.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "Accept",
+                "X-Session-Id",
+                "X-Requested-With",
+                "traceparent",
+                "X-Trace-Id"
+        ));
+
+        // 4. Exposed Response Headers (Readable by Browser JS)
+        corsConfig.setExposedHeaders(List.of(
+                "Authorization",
+                "X-Trace-Id",
+                "X-Session-Id",
+                "X-RateLimit-Remaining",
+                "X-RateLimit-Retry-After-Seconds"
+        ));
+
+        // 5. Allow Credentials (Cookies, Authorization Bearer)
+        // CRITICAL: NEVER set allowedOrigins = "*" when allowCredentials = true!
+        corsConfig.setAllowCredentials(true);
+
+        // 6. Preflight Cache Max Age (3600 seconds = 1 hour)
+        corsConfig.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // Apply strictly to all API paths
+        source.registerCorsConfiguration("/api/**", corsConfig);
+
+        return new CorsWebFilter(source);
+    }
+}
+```
+
+---
+
+### 2.4 Nginx Edge Reverse Proxy Configuration (`nginx.conf`)
+
+The Nginx container serves the static React 18 production build and acts as the sole perimeter entry point, proxying `/api/**` to `frontend-api` and rejecting external access to sensitive internal paths:
+
+```nginx
+worker_processes auto;
+pid /var/run/nginx.pid;
+
+events {
+    worker_connections 1024;
+    use epoll;
+    multi_accept on;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    # Logging format with distributed tracing support
+    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                    '$status $body_bytes_sent "$http_referer" '
+                    '"$http_user_agent" "$http_x_forwarded_for" '
+                    'traceId="$http_traceparent"';
+
+    access_log /var/log/nginx/access.log main;
+    error_log /var/log/nginx/error.log warn;
+
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+
+    # Gzip Compression for budget mobile connections
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types text/plain text/css text/xml application/json application/javascript 
+               application/xml+rss application/atom+xml image/svg+xml;
+
+    upstream frontend_api_upstream {
+        server frontend-api:8080; # Internal Docker DNS
+        keepalive 32;
+    }
+
+    server {
+        listen 80;
+        listen [::]:80;
+        server_name aprovaenem.com.br www.aprovaenem.com.br localhost;
+
+        # Edge Security Headers
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://aprovaenem.com.br;" always;
+
+        # 1. Frontend React SPA: Static File Delivery
+        location / {
+            root /usr/share/nginx/html;
+            index index.html index.htm;
+            try_files $uri $uri/ /index.html; # SPA HTML5 History fallback
+
+            # Cache static assets (JS, CSS, WebP, SVG) for 7 days
+            location ~* \.(?:css|js|webp|png|jpg|jpeg|gif|ico|svg|woff2)$ {
+                expires 7d;
+                add_header Cache-Control "public, no-transform";
+            }
+        }
+
+        # 2. Frontend API Proxy: Route /api/** to frontend-api BFF
+        location /api/ {
+            proxy_pass http://frontend_api_upstream;
+            proxy_http_version 1.1;
+            proxy_set_header Connection "";
+            
+            # Forward Client Identity Headers
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header X-Forwarded-Host $host;
+            proxy_set_header X-Forwarded-Port $server_port;
+
+            # Buffering for mobile uploads
+            proxy_buffering on;
+            proxy_buffer_size 8k;
+            proxy_buffers 8 64k;
+            proxy_connect_timeout 5s;
+            proxy_read_timeout 30s;
+            proxy_send_timeout 15s;
+        }
+
+        # 3. Security Block: Prohibit external access to Actuator & Prometheus
+        location ~* /(actuator|prometheus) {
+            return 404; # Actuator is internal only; return 404 to hide existence
+        }
+    }
+}
+```
+
+---
+
+### 2.5 Token Bucket Rate Limiting Strategy
+To protect the backend from denial-of-service, aggressive question scraping, and exhaustion of upstream **Google Gemini API rate limits and quotas**, the `frontend-api` enforces a **Token Bucket** rate limiting algorithm:
 
 ```mermaid
 stateDiagram-v2
@@ -102,7 +440,7 @@ stateDiagram-v2
     CheckBucket --> DeductToken : Tokens Available (>= 1)
     CheckBucket --> DropRequest : Bucket Empty (Tokens = 0)
     
-    DeductToken --> DispatchUpstream : Forward to Microservice (200 OK)
+    DeductToken --> DispatchUpstream : Forward to Domain Microservice (200 OK)
     DropRequest --> Return429 : Return HTTP 429 Too Many Requests
     Return429 --> [*]
     DispatchUpstream --> [*]
@@ -301,6 +639,32 @@ public class SecurityConfiguration {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        // Whitelist exact trusted frontends (never wildcard '*' with credentials)
+        configuration.setAllowedOrigins(List.of(
+            "http://localhost",
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "https://aprovaenem.com.br",
+            "https://staging.aprovaenem.com.br"
+        ));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of(
+            "Authorization", "Content-Type", "Accept", "X-Session-Id", "X-Requested-With", "traceparent", "X-Trace-Id"
+        ));
+        configuration.setExposedHeaders(List.of(
+            "Authorization", "X-Trace-Id", "X-Session-Id", "X-RateLimit-Remaining", "X-RateLimit-Retry-After-Seconds"
+        ));
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L); // 1-hour preflight cache
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", configuration);
+        return source;
     }
 }
 ```

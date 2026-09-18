@@ -1,7 +1,9 @@
 # REST API Specification — AprovaENEM
 
 > **Specification Standard**: OpenAPI 3.0 / RESTful JSON  
-> **Base URL**: `http://localhost:8080/api/v1` (via API Gateway)  
+> **Base URL (Public Ingress via Nginx)**: `https://aprovaenem.com.br/api/v1` (Production) / `http://localhost/api/v1` (Local Docker Compose Port 80)  
+> **Base URL (Internal `frontend-api` BFF)**: `http://frontend-api:8080/api/v1` (Internal Docker network only; zero public host port exposure)  
+> **Perimeter Security**: External clients have network access ONLY to the frontend (port 80/443). Downstream domain microservices ("Real APIs") are completely hidden, unexposed, and inaccessible from the internet.  
 > **Headers**: `X-Session-Id` (UUID), `Accept-Language` (`pt-BR` | `en`), `Authorization` (`Bearer <token>`)  
 
 ---
@@ -68,7 +70,34 @@ AprovaENEM defines two primary OpenAPI security schemes enforced by Spring Secur
     "timestamp": "2026-09-18T00:30:00Z",
     "traceId": "4bf92f3577b34da6a3ce929d0e0e4736"
   }
-  ```
+### 1.3 Cross-Origin Resource Sharing (CORS) Specification
+
+All endpoints exposed by the `frontend-api` microservice implement strict W3C CORS compliance:
+
+#### Inbound Preflight Request (`OPTIONS`)
+Clients issue an `OPTIONS` preflight request prior to non-simple requests (e.g., `POST` with `Content-Type: application/json` or custom headers like `X-Session-Id`):
+```http
+OPTIONS /api/v1/sessions HTTP/1.1
+Host: aprovaenem.com.br
+Origin: https://aprovaenem.com.br
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: Authorization, Content-Type, X-Session-Id
+```
+
+#### Outbound Preflight Response (`200 OK` / `204 No Content`)
+The `frontend-api` evaluates the origin against its whitelist and emits caching directives:
+```http
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: https://aprovaenem.com.br
+Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS
+Access-Control-Allow-Headers: Authorization, Content-Type, Accept, X-Session-Id, X-Requested-With, traceparent, X-Trace-Id
+Access-Control-Expose-Headers: Authorization, X-Trace-Id, X-Session-Id, X-RateLimit-Remaining, X-RateLimit-Retry-After-Seconds
+Access-Control-Allow-Credentials: true
+Access-Control-Max-Age: 3600
+Vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers
+```
+
+> **Security Rule**: The wildcard `*` is strictly forbidden in `Access-Control-Allow-Origin` when `Access-Control-Allow-Credentials` is `true`. Unrecognized origins receive an immediate `403 Forbidden` response and are denied access to the backend.
 
 ---
 
