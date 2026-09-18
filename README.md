@@ -47,7 +47,7 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 - ⚡ **Real-Time Assessment & Sub-5ms Caching**: Millisecond evaluation of submissions with immediate distractor analysis, backed by **Redis 7+ L2 distributed caching** and specialized PostgreSQL composite B-Tree and partial indexes.
 - 🕹️ **Event-Driven Gamification Engine**: Evaluates domain events (`QuestionAnsweredEvent`, `SessionCompletedEvent`) to compute XP rewards, evaluate daily study goals, and calculate weekly league rankings via **Redis Sorted Sets (`ZSET`)** with asynchronous persistence to PostgreSQL.
 - 🔔 **Multi-Channel Notification Microservice**: Decoupled `notification-service` dispatching transactional emails (SES/Resend), Web Push, and mobile notifications (FCM/APNs) for daily streak preservation at 19:00 BRT and Sunday league results.
-- 🤖 **Socratic AI Study Tutor**: Powered by **Google Gemini (gemini-1.5-flash)** with pedagogical guardrails: guides students through underlying scientific and mathematical principles without spoiling answers.
+- 🤖 **Socratic AI Study Tutor**: Powered by **Google Gemini (gemini-1.5-flash)** with pedagogical guardrails: guides students through underlying scientific and mathematical principles without spoiling answers. Includes **1 free daily AI consultation per student** (resets at midnight 00:00 BRT); **unlimited AI tutoring** unlocked with the **AprovaENEM Pro** plan. (Core question catalog, exam simulations, and written resolutions remain 100% free and unlimited).
 - 🧠 **Retrieval-Augmented Generation (RAG) & Vector Search**: Grounded in official INEP curriculum matrices, verified step-by-step resolutions, and distractor catalogs via **PostgreSQL 16 `pgvector`** with HNSW semantic indexing to eliminate LLM hallucinations before student prompts are dispatched.
 - 🛡️ **Perimeter Isolation & `frontend-api` Microservice (BFF)**: The public user has network access **strictly to the frontend ingress (ports 80/443) and nothing else**. A dedicated `frontend-api` BFF microservice acts as the hardened edge facade, enforcing strict CORS origin whitelisting, 1-hour preflight caching, Token Bucket rate limiting, and anti-spoofing request sanitization while completely shielding internal domain microservices ("Real APIs"), databases, and message brokers inside an isolated Docker network.
 - 📈 **Datadog-Style Observability**: Complete Prometheus APM metrics, Micrometer distributed tracing (`traceId` / `spanId` MDC injection), and sub-minute trace-to-error bug isolation.
@@ -319,8 +319,9 @@ In production, all domain services, databases, caches, and telemetry run within 
 | `POST` | `/api/v1/sessions` | Generate randomized or topic practice quiz | `X-Session-Id` |
 | `POST` | `/api/v1/sessions/{id}/attempts` | Submit answer & receive instant feedback | `X-Session-Id` |
 | `POST` | `/api/v1/sessions/{id}/complete` | Finish quiz & generate diagnostic radar | `X-Session-Id` |
-| `GET` | `/api/v1/questions/{id}/resolution` | Fetch curated step-by-step resolution | Optional |
-| `POST` | `/api/v1/questions/{id}/ask` | Ask Socratic concept question (Gemini AI) | `X-Session-Id` |
+| `GET` | `/api/v1/questions/{id}/resolution` | Fetch curated step-by-step resolution | Optional (100% Free & Unlimited) |
+| `POST` | `/api/v1/questions/{id}/ask` | Ask Socratic concept question (Gemini AI) | `X-Session-Id` (1/day Free, Unlimited Pro) |
+| `GET` | `/api/v1/questions/ai-quota` | Check remaining daily AI tutor quota | `X-Session-Id` (Free / Pro) |
 | `POST` | `/api/v1/essays/upload` | Upload handwritten essay for OCR evaluation (Phase 2) | Bearer (`ROLE_PREMIUM_STUDENT`) |
 | `GET` | `/api/v1/essays/{id}` | Get 5-competency breakdown & thesis feedback (Phase 2) | Bearer (`ROLE_PREMIUM_STUDENT`) |
 

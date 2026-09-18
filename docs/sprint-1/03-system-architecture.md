@@ -24,7 +24,7 @@ flowchart TD
     subgraph PrivateNetwork ["Isolated Internal Network (aprovaenem-internal - Zero Public Exposure)"]
         subgraph EdgeGatewayLayer ["Edge Gateway & BFF Layer"]
             FrontendUI["🖥️ frontend (Internal Container)<br/>React 18 + TypeScript PWA / Vite Static Build"]
-            FrontendAPI["⚡ frontend-api Microservice (BFF / Edge Gateway)<br/>Internal Port 8080 (Zero Host Port Exposure)<br/>• Edge API Facade & Real API Shield<br/>• Strict CORS Enforcement & Preflight Handling<br/>• Ingress Header Sanitization (Strips spoofed headers)<br/>• Token Bucket Rate Limiting (Gemini quota protection)<br/>• JWT / Session Auth Verification<br/>• Response Data Masking & BFF DTO Shaping"]
+            FrontendAPI["⚡ frontend-api Microservice (BFF / Edge Gateway)<br/>Internal Port 8080 (Zero Host Port Exposure)<br/>• Edge API Facade & Real API Shield<br/>• Strict CORS Enforcement & Preflight Handling<br/>• Ingress Header Sanitization (Strips spoofed headers)<br/>• Token Bucket Rate Limiting & Daily AI Quota Engine<br/>• JWT / Session Auth Verification<br/>• Response Data Masking & BFF DTO Shaping"]
         end
 
         subgraph RealAPIs ["Downstream Domain Microservices (Real APIs - Strictly Internal)"]
@@ -472,7 +472,7 @@ flowchart LR
     subgraph FrontendAPIResponsibilities ["frontend-api Perimeter Security & Shielding"]
         CORS["Strict CORS Engine<br/>• Origin Whitelisting<br/>• 1-Hour Preflight Cache"]
         Sanitizer["Ingress Header Sanitizer<br/>• Strips spoofed `X-User-Id`<br/>• Validates JWT authenticity"]
-        RateLimiter["Token Bucket Rate Limiter<br/>• 60 req/min general<br/>• 10 req/min /ask"]
+        RateLimiter["Rate & Quota Limiter<br/>• 60 req/min general<br/>• 10 req/min burst /ask<br/>• 1 free AI question/day<br/>• Unlimited for Pro Plan"]
         DataMasker["Response Data Masker<br/>• Strips stack traces & SQL errors<br/>• Aggregates BFF payloads"]
     end
 
@@ -734,40 +734,86 @@ http {
 
 ---
 
-### 2.5 Token Bucket Rate Limiting Strategy
-To protect the backend from denial-of-service, aggressive question scraping, and exhaustion of upstream **Google Gemini API rate limits and quotas**, the `frontend-api` enforces a **Token Bucket** rate limiting algorithm:
+### 2.5 Rate Limiting & Tiered AI Tutor Quota Strategy
+
+AprovaENEM maintains a strict pedagogical and economic boundary: **core exam training is 100% free and unlimited for everyone**, while **Socratic AI tutoring is metered** via a dual-layer rate limiting engine to prevent upstream Google Gemini API exhaustion and guarantee server sustainability:
 
 ```mermaid
 stateDiagram-v2
-    [*] --> RequestArrived : Client Request Arrives
-    RequestArrived --> CheckBucket : Inspect IP / Session Bucket
+    [*] --> RequestArrived : Client Ingress Request
+    RequestArrived --> CheckRoute : Inspect Path & Action
     
-    state CheckBucket <<choice>>
-    CheckBucket --> DeductToken : Tokens Available (>= 1)
-    CheckBucket --> DropRequest : Bucket Empty (Tokens = 0)
+    state CheckRoute <<choice>>
+    CheckRoute --> GeneralRoutes : GET /api/v1/questions/** (Exam Practice)
+    CheckRoute --> TutorRoutes : POST /api/v1/questions/{id}/ask (AI Tutor)
     
-    DeductToken --> DispatchUpstream : Forward to Domain Microservice (200 OK)
-    DropRequest --> Return429 : Return HTTP 429 Too Many Requests
-    Return429 --> [*]
-    DispatchUpstream --> [*]
+    GeneralRoutes --> TokenBucket60 : Token Bucket (60 req/min)
+    TokenBucket60 --> ForwardToBackend : Tokens Available
+    TokenBucket60 --> Return429Burst : Burst Exceeded (Tokens = 0)
+    
+    TutorRoutes --> CheckRole : Inspect User Role / Tier
+    
+    state CheckRole <<choice>>
+    CheckRole --> ProTier : ROLE_PREMIUM_STUDENT (Pro Plan)
+    CheckRole --> FreeTier : ROLE_ANONYMOUS_STUDENT / ROLE_STUDENT (Free)
+    
+    ProTier --> ForwardToBackend : Unlimited AI Tutor Access
+    
+    FreeTier --> CheckDailyQuota : Redis Atomic INCR (ratelimit:tutor:daily:{id}:{YYYY-MM-DD})
+    
+    state CheckDailyQuota <<choice>>
+    CheckDailyQuota --> ForwardToBackend : Daily Count = 1 (Quota Available)
+    CheckDailyQuota --> Return429DailyQuota : Daily Count > 1 (Quota Exhausted)
+    
+    ForwardToBackend --> [*] : 200 OK (Processed)
+    Return429Burst --> [*] : 429 Too Many Requests (Retry-After)
+    Return429DailyQuota --> [*] : 429 Too Many Requests (Upgrade to Pro)
 ```
 
-#### Rate Limiting Policies
-1. **General Examination Routes** (`GET /api/v1/questions/**`):
-   - Capacity: **60 tokens**.
-   - Refill Rate: **1 token / second** (allows bursts up to 60 req/min).
-2. **AI Tutor Inquiries** (`POST /api/v1/questions/{id}/ask`):
-   - Capacity: **10 tokens**.
-   - Refill Rate: **10 tokens / minute** (strict guardrail protecting upstream LLM API consumption and rate limits).
-3. **HTTP 429 Payload Structure**:
-   ```json
-   {
-     "error": "TOO_MANY_REQUESTS",
-     "message": "Rate limit exceeded. Please wait before asking another question.",
-     "retryAfterSeconds": 15,
-     "timestamp": "2026-09-17T19:30:00Z"
-   }
-   ```
+#### 1. Core Exam Practice (100% Free & Unlimited)
+- Question catalog browsing, practice quiz generation, answer submissions, instant scoring, TRI calculations, and curated step-by-step written resolutions have **zero daily caps or paywalls**.
+- Protected solely by **Layer 1 Token Bucket Rate Limiting** (capacity: 60 tokens, refill: 1 token/sec) to defend against malicious web scrapers and DoS traffic.
+
+#### 2. Socratic AI Tutor: Dual-Layer Rate Limiting & Daily Quota
+AI Tutor inquiries (`POST /api/v1/questions/{id}/ask`) pass through two sequential validation stages:
+
+1. **Layer 1 — Short-Term Burst Limiter (Token Bucket)**:
+   - Capacity: **10 tokens** per minute.
+   - Refill Rate: **10 tokens / minute**.
+   - Prevents automated script-spamming from exhausting connection pools.
+
+2. **Layer 2 — Business Tier Daily Quota Engine (Redis Distributed Counter)**:
+   - **Free Tier (`ROLE_ANONYMOUS_STUDENT` & `ROLE_STUDENT`)**:
+     - **Quota**: **1 free Socratic AI Tutor consultation per day**.
+     - **Storage**: Key `ratelimit:tutor:daily:{userId_or_sessionId}:{YYYY-MM-DD}` in Redis.
+     - **TTL**: Automatically set to expire at midnight BRT (00:00 UTC-3).
+     - **Headers Emitted**:
+       - `X-AI-Quota-Limit: 1`
+       - `X-AI-Quota-Remaining: 0` (or `1`)
+       - `X-AI-Quota-Reset: <epoch_seconds_at_midnight_BRT>`
+     - **Exhaustion Behavior**: Once 1 question is consulted, subsequent AI queries are rejected at the edge with RFC 7807 HTTP 429. The student can continue training with unlimited past questions and static resolutions.
+   - **AprovaENEM Pro Plan (`ROLE_PREMIUM_STUDENT`)**:
+     - **Quota**: **Unlimited** Socratic AI Tutor consultations (bypasses daily quota check).
+     - **Headers Emitted**: `X-AI-Quota-Limit: -1`, `X-AI-Quota-Remaining: -1`.
+
+#### 3. Quota Exhaustion Response (`HTTP 429 Too Many Requests`)
+When a free student exhausts their single daily AI tutor credit:
+```json
+{
+  "type": "https://aprovaenem.org/errors/DAILY_AI_QUOTA_EXHAUSTED",
+  "title": "Daily AI Tutor Quota Exhausted",
+  "status": 429,
+  "detail": "You have used your 1 free Socratic AI consultation for today. You can continue practicing unlimited exam questions for free, or upgrade to AprovaENEM Pro for unlimited AI tutoring.",
+  "quota": {
+    "dailyLimit": 1,
+    "usedToday": 1,
+    "remainingToday": 0,
+    "resetsAt": "2026-09-19T03:00:00Z"
+  },
+  "upgradeUrl": "https://aprovaenem.com.br/pro",
+  "timestamp": "2026-09-18T14:30:00Z"
+}
+```
 
 ---
 
@@ -978,9 +1024,9 @@ public class SecurityConfiguration {
 ### 4.2 Role-Based Access Control (RBAC) Matrix
 | Role | Assigned When | Permitted Operations |
 | :--- | :--- | :--- |
-| `ROLE_ANONYMOUS_STUDENT` | No JWT provided (Guest student browsing or practicing). | Query catalog, generate practice quizzes, submit answers, get Socratic hints. No persistent cross-device account syncing. |
-| `ROLE_STUDENT` | Valid JWT signed by `auth-service` presented. | All anonymous operations + persistent diagnostic profile, cross-device history synchronization, saved sessions. |
-| `ROLE_PREMIUM_STUDENT` | Subscribed student or voucher holder. | All student operations + upload handwritten essay photos for multimodal OCR extraction and in-depth 5-competency grading (*Redação Nota 1000*). |
+| `ROLE_ANONYMOUS_STUDENT` | No JWT provided (Guest student browsing or practicing). | **Unlimited** question catalog queries, quiz generations, answer submissions, instant scoring, and step-by-step static resolutions. **1 free Socratic AI consultation per day** (resets 00:00 BRT). No persistent cross-device account syncing. |
+| `ROLE_STUDENT` | Valid JWT signed by `auth-service` presented. | All anonymous operations (**unlimited practice + 1 free Socratic AI consultation per day**) + persistent diagnostic profile, cross-device history synchronization, saved sessions, XP gamification, daily streaks, and weekly reset league leaderboards. |
+| `ROLE_PREMIUM_STUDENT` | Subscribed student (*AprovaENEM Pro*) or voucher holder. | All student operations + **Unlimited Socratic AI Tutor consultations** (bypasses 1/day daily quota) + upload handwritten essay photos for multimodal OCR extraction and in-depth 5-competency grading (*Redação Nota 1000*). |
 | `ROLE_ADMIN` | Authenticated teacher/curator credentials. | Batch ingest INEP question archives, edit distractor taxonomies, monitor telemetry. |
 
 ### 4.3 Method-Level Security (`@PreAuthorize`)

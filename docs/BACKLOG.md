@@ -202,12 +202,16 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
 ---
 
 ### Epic 4: Socratic AI Tutor & External Resilience
-#### `TASK-S2-10`: Google Gemini AI Tutor Client Adapter
+#### `TASK-S2-10`: Google Gemini AI Tutor Client Adapter & Redis Daily Quota Limiter
 - **Priority**: `P1` | **Estimation**: 5 pts
-- **Description**: Implement `GeminiTutorClientAdapter` using Google GenAI SDK / Spring AI with Socratic system prompt (compatible with local development free-tier keys and production quotas).
+- **Description**: Implement `GeminiTutorClientAdapter` using Google GenAI SDK / Spring AI with Socratic system prompt (compatible with local development free-tier keys and production quotas) and integrate with Redis to enforce a daily rate limit of 1 free AI interaction per student per day while granting unlimited AI queries to `ROLE_PREMIUM_STUDENT`.
 - **Acceptance Criteria**:
   - Sends question context and student query to `gemini-1.5-flash`.
   - Enforces educational prompt: guide the student conceptually without spoiling the answer.
+  - Enforces Redis daily counter (`ratelimit:tutor:daily:{id}:{YYYY-MM-DD}`) with midnight BRT expiration: free students receive 1 free consultation per day; subsequent queries return HTTP 429 with upgrade call-to-action.
+  - Pro subscribers (`ROLE_PREMIUM_STUDENT`) bypass the 1/day quota limit.
+  - Returns quota metadata headers (`X-AI-Quota-Limit`, `X-AI-Quota-Remaining`, `X-AI-Quota-Reset`).
+  - Core question solving, quiz generation, and written resolutions remain completely unaffected (100% free and unlimited).
 
 #### `TASK-S2-11`: Resilience4j Circuit Breaker & Fallback Strategy
 - **Priority**: `P1` | **Estimation**: 5 pts
@@ -229,13 +233,13 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
 ### Epic 5: Ingress & Observability Integration
 #### `TASK-S2-12`: `frontend-api` Microservice (BFF / Edge API Gateway) & Strict CORS Engine
 - **Priority**: `P0` | **Estimation**: 8 pts
-- **Description**: Implement the `frontend-api` microservice (BFF / Edge API Gateway) acting as the single public API facade that shields downstream domain microservices ("Real APIs"). Configure strict CORS policies (`CorsWebFilter` with origin whitelist, explicit allowed headers/methods, credentials support, 1-hour preflight caching), untrusted header stripping (`X-User-Id`, `X-User-Roles`), JWT/session ingress validation, response data masking (stripping SQL/stack traces), and Token Bucket rate limiting.
+- **Description**: Implement the `frontend-api` microservice (BFF / Edge API Gateway) acting as the single public API facade that shields downstream domain microservices ("Real APIs"). Configure strict CORS policies (`CorsWebFilter` with origin whitelist, explicit allowed headers/methods, credentials support, 1-hour preflight caching), untrusted header stripping (`X-User-Id`, `X-User-Roles`), JWT/session ingress validation, response data masking (stripping SQL/stack traces), Token Bucket burst rate limiting, and Redis-backed daily AI Tutor quota enforcement.
 - **Acceptance Criteria**:
   - External requests never reach real domain microservices directly; all traffic flows through `frontend-api`.
   - Strict CORS headers enforced: whitelisted origins only (rejects `*` when credentials are used), allowed methods (`GET, POST, PUT, PATCH, DELETE, OPTIONS`), allowed headers (`Authorization, Content-Type, Accept, X-Session-Id, traceparent, X-Trace-Id`), exposed headers (`Authorization, X-Trace-Id, X-Session-Id, X-RateLimit-Remaining`).
   - Preflight `OPTIONS` requests immediately return `200 OK` or `204 No Content` with `Access-Control-Max-Age: 3600`.
   - Spoofed internal headers stripped from incoming requests before forwarding.
-  - Token Bucket rate limiter (60 req/min for general routes, 10 req/min for `/ask`) emits HTTP 429 with `Retry-After`.
+  - Token Bucket rate limiter (60 req/min general, 10 req/min burst on `/ask`) and Redis daily AI quota (1 free/day for guest/student, unlimited for Pro) emit HTTP 429 with `Retry-After` and quota metadata.
 
 #### `TASK-S2-13`: Micrometer Tracing & Prometheus Scraping
 - **Priority**: `P1` | **Estimation**: 3 pts
@@ -319,7 +323,7 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
 | :--- | :--- | :---: | :---: | :--- |
 | **S5-01** | **Interactive Question Card & Timed Quiz Mode** | `P0` | 5 pts | Question statement, statement images (WebP), option selector (A to E), countdown timer, and question navigation carousel. |
 | **S5-02** | **Instant Feedback Banner & Step-by-Step Accordion** | `P0` | 5 pts | Color-coded immediate correctness indicator (green/red), distractor explanation breakdown, and curated INEP resolution accordion. |
-| **S5-03** | **Socratic AI Tutor Interactive Chat Drawer** | `P0` | 8 pts | Slide-out conversational AI drawer powered by Google Gemini, guiding students conceptually without spoiling answers, with streaming responses. |
+| **S5-03** | **Socratic AI Tutor Interactive Chat Drawer & Quota Widget** | `P0` | 8 pts | Slide-out conversational AI drawer powered by Google Gemini, guiding students conceptually without spoiling answers, with streaming responses, daily free quota counter (1/day), countdown to midnight reset, and upgrade CTA when exhausted. |
 | **S5-04** | **Gamification Dashboard & Celebration Animations** | `P1` | 5 pts | XP progress bar, student level badges (*Freshman* to *Top Scorer*), daily streak counter, emergency freeze button, and level-up confetti. |
 | **S5-05** | **Weekly League Leaderboard UI** | `P1` | 5 pts | Ranked league tables (Bronze, Silver, Gold, Diamond) with user position highlight, countdown timer to Sunday 23:59 reset, and promotion/relegation zones. |
 | **S5-06** | **Diagnostic Skill Radar & Topic Heatmaps** | `P1` | 5 pts | Recharts / Chart.js radar charts mapping student proficiency across 4 ENEM areas, highlighting critical weak spots for revision. |

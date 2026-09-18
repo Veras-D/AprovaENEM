@@ -441,8 +441,15 @@ Returns the question statement, status, and options A–E.
 * **Path**: `/api/v1/questions/{id}/ask`
 * **Headers**:
   - `X-Session-Id`: `UUID`
+  - `Authorization`: `Bearer <token>` (Optional, upgrades quota if account has `ROLE_PREMIUM_STUDENT`)
   - `Accept-Language`: `pt-BR` | `en`
-* **Rate Limit Policy**: Max 10 requests / minute per session.
+* **Rate & Quota Policy**:
+  - **Free Tier (`ROLE_ANONYMOUS_STUDENT` / `ROLE_STUDENT`)**: **1 consultation per calendar day** (resets at 00:00 BRT / UTC-3). Burst guard: 10 req/min. Note that general practice questions, quizzes, and written step-by-step resolutions remain **100% free and unlimited**.
+  - **Pro Plan (`ROLE_PREMIUM_STUDENT`)**: **Unlimited** Socratic AI consultations per day.
+* **Emitted Response Headers**:
+  - `X-AI-Quota-Limit`: `1` (or `-1` for Pro)
+  - `X-AI-Quota-Remaining`: `0` (or `-1` for Pro)
+  - `X-AI-Quota-Reset`: Epoch timestamp in seconds (midnight 00:00 BRT)
 
 #### Request Body
 ```json
@@ -459,6 +466,12 @@ Returns the question statement, status, and options A–E.
   "pedagogicalGoal": "Guide student to understand thermal dissipation margins in circuit breakers",
   "modelUsed": "gemini-1.5-flash",
   "isFallback": false,
+  "quota": {
+    "dailyLimit": 1,
+    "usedToday": 1,
+    "remainingToday": 0,
+    "resetsAt": "2026-09-19T03:00:00Z"
+  },
   "retrievedContext": [
     {
       "documentTitle": "INEP Matriz de Referência - Física: Circuitos Elétricos e Potência",
@@ -474,15 +487,56 @@ Returns the question statement, status, and options A–E.
 }
 ```
 
-#### Rate Limit Exceeded Response `429 Too Many Requests`
+#### Quota Exceeded Response `429 Too Many Requests`
 ```json
 {
-  "type": "https://aprovaenem.org/errors/RATE_LIMIT_EXCEEDED",
-  "title": "Too Many Requests",
+  "type": "https://aprovaenem.org/errors/DAILY_AI_QUOTA_EXHAUSTED",
+  "title": "Daily AI Tutor Quota Exhausted",
   "status": 429,
-  "detail": "AI tutor quota rate limit reached. Please wait before asking another question.",
-  "retryAfterSeconds": 12,
-  "timestamp": "2026-09-17T19:44:00Z"
+  "detail": "You have used your 1 free Socratic AI consultation for today. You can continue practicing unlimited exam questions and static resolutions for free, or upgrade to AprovaENEM Pro for unlimited AI tutoring.",
+  "quota": {
+    "dailyLimit": 1,
+    "usedToday": 1,
+    "remainingToday": 0,
+    "resetsAt": "2026-09-19T03:00:00Z"
+  },
+  "upgradeUrl": "https://aprovaenem.com.br/pro",
+  "timestamp": "2026-09-18T14:30:00Z"
+}
+```
+
+---
+
+### 5.3 Check Student Daily AI Tutor Quota
+Used by frontend clients (e.g., Socratic AI chat drawer badge) to display remaining free questions before opening the chat drawer.
+
+* **Method**: `GET`
+* **Path**: `/api/v1/questions/ai-quota`
+* **Headers**:
+  - `X-Session-Id`: `UUID`
+  - `Authorization`: `Bearer <token>` (Optional)
+
+#### Response `200 OK` (Free Tier Student)
+```json
+{
+  "tier": "FREE",
+  "dailyLimit": 1,
+  "usedToday": 0,
+  "remainingToday": 1,
+  "resetsAt": "2026-09-19T03:00:00Z",
+  "isUnlimited": false
+}
+```
+
+#### Response `200 OK` (Pro Subscriber)
+```json
+{
+  "tier": "PRO",
+  "dailyLimit": -1,
+  "usedToday": 14,
+  "remainingToday": -1,
+  "resetsAt": null,
+  "isUnlimited": true
 }
 ```
 
