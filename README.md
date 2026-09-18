@@ -235,8 +235,7 @@ ReconectaRecode/
 │       ├── 05-api-specification.md      # OpenAPI 3.0 REST Route & CORS Specifications
 │       ├── 06-observability-datadog-style.md # Prometheus, Micrometer & Alert Rules
 │       ├── 07-quality-gate-ci.md        # 6-Stage CI/CD Specification
-│       ├── 08-sprint-backlog.md         # Sprint 1 Summary & Next Steps Index
-│       └── 09-data-ingestion-pipeline.md # IBM Docling & Multi-Source Extraction Architecture
+│       └── 08-data-ingestion-pipeline.md # IBM Docling & Multi-Source Extraction Architecture
 ├── backend/                             # Spring Boot Microservices (Java 21 LTS)
 │   ├── frontend-api/                    # Spring Cloud Gateway BFF + Rate Limiting & CORS
 │   ├── auth-service/                    # Authentication, Identity & Gamification Service

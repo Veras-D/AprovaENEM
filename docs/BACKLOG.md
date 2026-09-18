@@ -87,7 +87,7 @@ All architectural foundations, entity models, REST contracts, and verification b
 | **S1-07** | **REST API Route & CORS Specifications**     |   `P0`   | [05-api-specification.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/sprint-1/05-api-specification.md) (OpenAPI contracts, CORS preflight)         | **DONE** |
 | **S1-08** | **Datadog-Style Observability Design**       |   `P0`   | [06-observability-datadog-style.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/sprint-1/06-observability-datadog-style.md) (Prometheus + Tracing)  | **DONE** |
 | **S1-09** | **Automated CI Quality Gate Definition**     |   `P0`   | [07-quality-gate-ci.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/sprint-1/07-quality-gate-ci.md) (6-stage pipeline blueprint)                    | **DONE** |
-| **S1-10** | **Data Ingestion Pipeline Architecture**     |   `P0`   | [09-data-ingestion-pipeline.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/sprint-1/09-data-ingestion-pipeline.md) (Docling neural layout & LaTeX) | **DONE** |
+| **S1-10** | **Data Ingestion Pipeline Architecture**     |   `P0`   | [08-data-ingestion-pipeline.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/sprint-1/08-data-ingestion-pipeline.md) (Docling neural layout & LaTeX) | **DONE** |
 
 ---
 
