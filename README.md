@@ -214,6 +214,7 @@ ReconectaRecode/
 ├── README.md                            # Master project documentation
 ├── CHANGELOG.md                         # Project changelog (Keep a Changelog standard)
 ├── docker-compose.yml                   # Root Full-Stack Docker Compose Orchestration
+├── docker-compose.override.dev.yml      # Local developer port-forwarding override (optional)
 ├── .env.example                         # Global environment variable template
 ├── docs/                                # Project Specifications & Planning
 │   ├── BACKLOG.md                       # Multi-Sprint Product Backlog & Roadmap
@@ -227,7 +228,7 @@ ReconectaRecode/
 │       ├── 07-quality-gate-ci.md        # 6-Stage CI/CD Specification
 │       ├── 08-sprint-backlog.md         # Sprint 1 Summary & Next Steps Index
 │       └── 09-data-ingestion-pipeline.md # IBM Docling & Multi-Source Extraction Architecture
-├── backend/                             # Spring Boot Microservices
+├── backend/                             # Spring Boot Microservices (Java 21 LTS)
 │   ├── frontend-api/                    # Spring Cloud Gateway BFF + Rate Limiting & CORS
 │   ├── auth-service/                    # Authentication, Identity & Gamification Service
 │   ├── exam-service/                    # Examination, Assessment, RAG & Socratic AI
@@ -236,12 +237,18 @@ ReconectaRecode/
 │   └── pom.xml                          # Multi-module Maven Parent POM
 ├── frontend/                            # React 18 + TypeScript Application
 │   ├── src/                             # UI components, pages & state management
-│   ├── Dockerfile                       # Production multi-stage Nginx container
+│   ├── Dockerfile                       # Multi-stage production build container
 │   ├── package.json                     # Frontend dependencies & scripts
 │   └── vite.config.ts                   # Vite configuration
+├── mobile/                              # [Roadmap] Native Android & Kotlin Multiplatform (KMP)
+│   ├── androidApp/                      # Android Client (Jetpack Compose, CameraX, Room SQLite)
+│   └── shared/                          # KMP shared business logic, data models & offline cache
+├── infrastructure/                      # Edge Ingress & Telemetry Configuration
+│   ├── nginx/                           # Reverse proxy, SSL termination & security headers (nginx.conf)
+│   └── prometheus/                      # Prometheus scraping config & alerting rules
 └── .github/
     └── workflows/
-        └── quality-gate.yml             # Automated CI Verification Pipeline
+        └── quality-gate.yml             # 6-Stage Automated CI Verification Pipeline
 ```
 
 ---
@@ -271,11 +278,30 @@ docker compose up -d --build
 ```
 
 ### 3. Access Endpoints
-- **Student Web Application (Frontend)**: `http://localhost`
-- **API Gateway**: `http://localhost:8080` (or `http://localhost/api/v1/...`)
-- **OpenAPI Swagger Documentation**: `http://localhost:8080/swagger-ui.html`
-- **Prometheus Telemetry**: `http://localhost:9090`
-- **Grafana APM**: `http://localhost:3001` (admin / admin)
+
+#### 🌐 Public Production Ingress (Host Port 80 / 443 Only)
+In strict adherence to **Perimeter Isolation**, external clients (browsers and mobile devices) interact strictly with the Nginx edge proxy:
+- **Student Web Application (Frontend)**: `http://localhost` (or `https://aprovaenem.com.br`)
+- **Public REST API (via frontend-api BFF)**: `http://localhost/api/v1/...`
+- **OpenAPI Swagger UI (Dev Ingress)**: `http://localhost/swagger-ui.html`
+
+#### 🔒 Internal Backend Network (`aprovaenem-internal` - Zero Host Port Exposure)
+In production, all domain services, databases, caches, and telemetry run within the private Docker network:
+- **frontend-api (BFF Gateway)**: `http://frontend-api:8080` (Internal port only)
+- **auth-service**: `http://auth-service:8081` (Internal port only)
+- **exam-service**: `http://exam-service:8082` (Internal port only)
+- **notification-service**: `http://notification-service:8083` (Internal port only)
+- **PostgreSQL Databases**: `auth-db:5432`, `exam-db:5433`, `notification-db:5434`
+- **Redis 7+ Alpine**: `redis:6379`
+- **RabbitMQ Event Bus**: `rabbitmq:5672` (Management: `rabbitmq:15672`)
+- **Prometheus Telemetry**: `http://prometheus:9090`
+- **Grafana APM**: `http://grafana:3001` (admin / admin)
+
+> [!TIP]
+> For local development and APM dashboard debugging, use the optional developer override to bind telemetry ports to localhost:
+> ```bash
+> docker compose -f docker-compose.yml -f docker-compose.override.dev.yml up -d
+> ```
 
 ---
 
