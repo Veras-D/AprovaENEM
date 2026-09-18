@@ -56,32 +56,32 @@ flowchart TD
         PushGateway["📲 FCM / APNs & Email Provider<br/>Firebase, Apple APNs, Resend/SES"]
     end
 
-    User -->|HTTP / HTTPS Port 80 / 443| LB
-    LB -->|Route / (Static Files)| FrontendUI
-    LB -->|Route /api/** (Internal Proxy)| FrontendAPI
+    User -->|"HTTP / HTTPS Port 80 / 443"| LB
+    LB -->|"Route / to Static Build"| FrontendUI
+    LB -->|"Proxy /api to frontend-api"| FrontendAPI
     
-    FrontendAPI -->|`/api/v1/auth/**`<br/>`/api/v1/gamification/**`| AuthSvc
-    FrontendAPI -->|`/api/v1/exams/**`<br/>`/api/v1/sessions/**`<br/>`/api/v1/questions/**`| ExamSvc
-    FrontendAPI -->|`/api/v1/notifications/**`| NotifSvc
-    FrontendAPI -.->|Distributed Rate Limit Check| RedisCache
+    FrontendAPI -->|"Auth & Gamification APIs"| AuthSvc
+    FrontendAPI -->|"Exam & Session APIs"| ExamSvc
+    FrontendAPI -->|"Notification APIs"| NotifSvc
+    FrontendAPI -.->|"Rate Limit Check"| RedisCache
 
     AuthSvc --> PostgresAuth
     ExamSvc --> PostgresExam
     NotifSvc --> PostgresNotif
 
-    AuthSvc -.->|ZSET Real-Time Leaderboard & Session Cache| RedisCache
-    ExamSvc -.->|L2 Question Cache (TTL 24h)| RedisCache
+    AuthSvc -.->|"Leaderboard & Session Cache"| RedisCache
+    ExamSvc -.->|"L2 Question Cache"| RedisCache
 
-    AuthSvc -->|Domain Events| EventBus
-    ExamSvc -->|Domain Events| EventBus
-    EventBus -->|Consume Events| NotifSvc
+    AuthSvc -->|"Domain Events"| EventBus
+    ExamSvc -->|"Domain Events"| EventBus
+    EventBus -->|"Consume Events"| NotifSvc
 
-    ExamSvc -.->|Step-by-step resolution & Socratic hints| GeminiAPI
-    NotifSvc -.->|Dispatch Emails & Push Alerts| PushGateway
+    ExamSvc -.->|"Socratic Context"| GeminiAPI
+    NotifSvc -.->|"Push Alerts"| PushGateway
 
-    FrontendAPI -.->|Metrics Scraping| Prometheus
-    AuthSvc -.->|Metrics Scraping| Prometheus
-    ExamSvc -.->|Metrics Scraping| Prometheus
+    FrontendAPI -.->|"Metrics Scraping"| Prometheus
+    AuthSvc -.->|"Metrics Scraping"| Prometheus
+    ExamSvc -.->|"Metrics Scraping"| Prometheus
     Prometheus --> Grafana
 ```
 

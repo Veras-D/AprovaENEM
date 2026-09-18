@@ -114,62 +114,93 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 ```mermaid
 graph TD
     User([📱 Student Client / Browser])
-    
-    subgraph DockerPlatform ["Unified Docker Compose Platform"]
-        Nginx["🛡️ Nginx Reverse Proxy / Load Balancer<br/>Port 80 / 443<br/>• Routes / to Frontend<br/>• Routes /api/** to Gateway"]
+    Mobile([📱 Native Mobile App - Kotlin / KMP])
 
-        subgraph FrontendContainer ["Frontend Service"]
-            UI["🖥️ frontend (Port 80/internal)<br/>React 18 + TypeScript PWA / Nginx Static Serve"]
+    subgraph HostPerimeter ["Public Edge Ingress (ONLY Host Ports 80 / 443 Published)"]
+        Nginx["🛡️ Nginx Reverse Proxy & Ingress<br/>Public Host Ports: 80 / 443 (The ONLY public entrypoint)<br/>• Serves Frontend SPA Static Build (/)<br/>• Proxies /api/** to frontend-api<br/>• Strict Security Headers & Actuator Block"]
+    end
+
+    subgraph PrivateNetwork ["Isolated Internal Network (aprovaenem-internal - Zero Public Exposure)"]
+        subgraph EdgeGatewayLayer ["Frontend & Edge Gateway (BFF) Layer"]
+            UI["🖥️ frontend (Internal Container)<br/>React 18 + TypeScript PWA / Vite Build"]
+            Gateway["⚡ frontend-api (BFF Microservice)<br/>Spring Cloud Gateway (Internal Port 8080)<br/>• Strict CORS Whitelisting & 1h Preflight Cache<br/>• Anti-Spoofing Ingress Header Sanitizer<br/>• Token Bucket Rate Limiting<br/>• Response Masking & BFF DTO Shaping"]
         end
 
-        subgraph IngressContainer ["Ingress Gateway"]
-            Gateway["⚡ api-gateway (Port 8080)<br/>Spring Cloud Gateway + Token Bucket Rate Limiter"]
+        subgraph MicroservicesLayer ["Hexagonal Microservices (Java 21 / Spring Boot 3)"]
+            AuthSvc["🔐 auth-service (Internal 8081)<br/>Anonymous & JWT Identity, XP & Streak Engine"]
+            ExamSvc["📚 exam-service (Internal 8082)<br/>Assessment, RAG Pipeline & Gemini Socratic Tutor"]
+            NotifSvc["🔔 notification-service (Internal 8083)<br/>Transactional Emails, Web & Mobile Push"]
+            IngestSvc["⚙️ ingestion-service (Internal Profile)<br/>IBM Docling Neural PDF Parser & KaTeX Extractor"]
         end
 
-        subgraph MicroservicesLayer ["Hexagonal Microservices (Java 21 / Spring Boot)"]
-            AuthSvc["🔐 auth-service (Port 8081)<br/>Anonymous & JWT Identity"]
-            ExamSvc["📚 exam-service (Port 8082)<br/>Assessment & INEP Question Bank"]
+        subgraph MessagingLayer ["Asynchronous Event Bus"]
+            RabbitMQ[("📨 RabbitMQ (Internal 5672)<br/>Spring Cloud Stream Event Bus")]
         end
 
-        subgraph PersistenceLayer ["PostgreSQL 16 Layer"]
-            AuthDB[("🗄️ auth-db (Port 5432)")]
-            ExamDB[("🗄️ exam-db (Port 5433)")]
+        subgraph PersistenceLayer ["Persistence & Caching Grid (Zero Host Ports Published)"]
+            AuthDB[("🗄️ auth-db<br/>PostgreSQL 16 (Port 5432)")]
+            ExamDB[("🗄️ exam-db<br/>PostgreSQL 16 + pgvector (Port 5433)")]
+            NotifDB[("🗄️ notification-db<br/>PostgreSQL 16 (Port 5434)")]
+            Redis[("⚡ redis<br/>Redis 7+ Alpine (Port 6379)<br/>L2 Cache, ZSET Ranks & Rate Limits")]
         end
 
-        subgraph TelemetryLayer ["Observability Stack"]
-            Prometheus["📊 prometheus (Port 9090)<br/>Scrapes Actuator Metrics"]
-            Grafana["📈 grafana (Port 3001)<br/>APM Latency & Error Dashboards"]
+        subgraph TelemetryLayer ["Internal Observability Stack"]
+            Prometheus["📊 prometheus (Internal 9090)<br/>Scrapes Actuator Metrics"]
+            Grafana["📈 grafana (Internal 3001)<br/>APM Latency & Error Heatmaps"]
         end
     end
 
-    subgraph ExternalServices ["External AI Cloud"]
+    subgraph ExternalCloud ["External Cloud Services"]
         Gemini["🤖 Google Gemini API<br/>gemini-1.5-flash Socratic Explanations"]
+        PushService["📲 Push & Email Gateway<br/>Firebase FCM, Apple APNs, Resend/SES"]
     end
 
-    User -->|HTTP / HTTPS Port 80| Nginx
-    Nginx -->|/| UI
-    Nginx -->|/api/**| Gateway
-    Gateway -->|/api/v1/auth/**| AuthSvc
-    Gateway -->|/api/v1/exams/**<br/>/api/v1/sessions/**<br/>/api/v1/questions/**| ExamSvc
+    User -->|"HTTP / HTTPS Port 80 / 443"| Nginx
+    Mobile -.->|"HTTPS /api via Ingress"| Nginx
+    Nginx -->|"Route / to Static Build"| UI
+    Nginx -->|"Proxy /api to frontend-api"| Gateway
+
+    Gateway -->|"Auth & Gamification APIs"| AuthSvc
+    Gateway -->|"Exam & Session APIs"| ExamSvc
+    Gateway -->|"Notification APIs"| NotifSvc
+    Gateway -.->|"Rate Limit Check"| Redis
 
     AuthSvc --> AuthDB
     ExamSvc --> ExamDB
-    ExamSvc -.->|Socratic Prompts| Gemini
+    NotifSvc --> NotifDB
 
-    Gateway -.->|Metrics| Prometheus
-    AuthSvc -.->|Metrics| Prometheus
-    ExamSvc -.->|Metrics| Prometheus
+    AuthSvc -.->|"Leaderboard & Session Cache"| Redis
+    ExamSvc -.->|"L2 Question Cache"| Redis
+
+    AuthSvc -->|"Domain Events"| RabbitMQ
+    ExamSvc -->|"Domain Events"| RabbitMQ
+    RabbitMQ -->|"Consume Events"| NotifSvc
+
+    ExamSvc -.->|"Socratic Context"| Gemini
+    NotifSvc -.->|"Push Alerts"| PushService
+
+    Gateway -.->|"Metrics"| Prometheus
+    AuthSvc -.->|"Metrics"| Prometheus
+    ExamSvc -.->|"Metrics"| Prometheus
+    NotifSvc -.->|"Metrics"| Prometheus
     Prometheus --> Grafana
 
     style User fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff
+    style Mobile fill:#0f172a,stroke:#a855f7,stroke-width:2px,color:#fff
     style Nginx fill:#1e293b,stroke:#0284c7,stroke-width:2px,color:#fff
     style UI fill:#047857,stroke:#10b981,stroke-width:2px,color:#fff
     style Gateway fill:#0369a1,stroke:#38bdf8,stroke-width:2px,color:#fff
     style AuthSvc fill:#065f46,stroke:#34d399,stroke-width:2px,color:#fff
     style ExamSvc fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#fff
+    style NotifSvc fill:#4c1d95,stroke:#c084fc,stroke-width:2px,color:#fff
+    style IngestSvc fill:#78350f,stroke:#f59e0b,stroke-width:2px,color:#fff
+    style RabbitMQ fill:#c2410c,stroke:#fb923c,stroke-width:2px,color:#fff
     style AuthDB fill:#334155,stroke:#94a3b8,color:#fff
     style ExamDB fill:#334155,stroke:#94a3b8,color:#fff
+    style NotifDB fill:#334155,stroke:#94a3b8,color:#fff
+    style Redis fill:#dc2626,stroke:#f87171,stroke-width:2px,color:#fff
     style Gemini fill:#4338ca,stroke:#a5b4fc,color:#fff
+    style PushService fill:#0e7490,stroke:#22d3ee,color:#fff
     style Prometheus fill:#7c2d12,stroke:#fb923c,color:#fff
     style Grafana fill:#701a75,stroke:#f472b6,color:#fff
 ```
@@ -190,15 +221,18 @@ ReconectaRecode/
 │       ├── 01-business-and-market-strategy.md  # BMC, ICP Personas & SDG 4/10 KPIs
 │       ├── 02-project-charter.md        # Scope, INEP Ingestion & Requirements
 │       ├── 03-system-architecture.md   # C4 Containers, Ingress, Hexagonal Layout
-│       ├── 04-data-modeling.md          # PostgreSQL DDL, ER Schemas & B-Trees
-│       ├── 05-api-specification.md      # OpenAPI 3.0 REST Route Specifications
+│       ├── 04-data-modeling.md          # PostgreSQL DDL, ER Schemas, Indexes & Redis Caching
+│       ├── 05-api-specification.md      # OpenAPI 3.0 REST Route & CORS Specifications
 │       ├── 06-observability-datadog-style.md # Prometheus, Micrometer & Alert Rules
 │       ├── 07-quality-gate-ci.md        # 6-Stage CI/CD Specification
-│       └── 08-sprint-backlog.md         # Sprint 1 Summary & Next Steps Index
+│       ├── 08-sprint-backlog.md         # Sprint 1 Summary & Next Steps Index
+│       └── 09-data-ingestion-pipeline.md # IBM Docling & Multi-Source Extraction Architecture
 ├── backend/                             # Spring Boot Microservices
-│   ├── api-gateway/                     # Spring Cloud Gateway + Rate Limiting
-│   ├── auth-service/                    # Authentication & Session Service
-│   ├── exam-service/                    # Examination, Assessment & Socratic AI
+│   ├── frontend-api/                    # Spring Cloud Gateway BFF + Rate Limiting & CORS
+│   ├── auth-service/                    # Authentication, Identity & Gamification Service
+│   ├── exam-service/                    # Examination, Assessment, RAG & Socratic AI
+│   ├── notification-service/            # Multi-channel Email, Web & Mobile Push Service
+│   ├── ingestion-service/               # On-demand Docling PDF Ingestion & Normalizer
 │   └── pom.xml                          # Multi-module Maven Parent POM
 ├── frontend/                            # React 18 + TypeScript Application
 │   ├── src/                             # UI components, pages & state management
