@@ -51,8 +51,8 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 - 🧠 **Retrieval-Augmented Generation (RAG) & Vector Search**: Grounded in official INEP curriculum matrices, verified step-by-step resolutions, and distractor catalogs via **PostgreSQL 16 `pgvector`** with HNSW semantic indexing to eliminate LLM hallucinations before student prompts are dispatched.
 - 🛡️ **Perimeter Isolation & `frontend-api` Microservice (BFF)**: The public user has network access **strictly to the frontend ingress (ports 80/443) and nothing else**. A dedicated `frontend-api` BFF microservice acts as the hardened edge facade, enforcing strict CORS origin whitelisting, 1-hour preflight caching, Token Bucket rate limiting, and anti-spoofing request sanitization while completely shielding internal domain microservices ("Real APIs"), databases, and message brokers inside an isolated Docker network.
 - 📈 **Datadog-Style Observability**: Complete Prometheus APM metrics, Micrometer distributed tracing (`traceId` / `spanId` MDC injection), and sub-minute trace-to-error bug isolation.
-- 🌐 **Bilingual Backend (i18n)**: Spring Boot `MessageSource` supporting both Portuguese (`pt-BR`) and English (`en`).
 - 🏗️ **Hexagonal Architecture**: Strict separation of pure Java domain models from Spring Boot frameworks and PostgreSQL persistence.
+- 🔄 **Self-Healing Container Resilience**: 100% Docker Compose orchestration featuring automated crash restarts (`restart: unless-stopped`), `/actuator/health` liveness/readiness probes, and an `autoheal` watcher daemon that automatically detects and respawns deadlocked containers without Kubernetes overhead.
 - 📝 **Phase 2 Premium Roadmap (*AI Essay Evaluator*)**: Handwritten essay photo scanning via multimodal vision OCR and 5-competency grading (0–1,000 pts) powered by a **Provider-Agnostic AI Engine with LLM-as-a-Judge arbitration** (benchmarked via empirical evals across candidate models for lowest cost and highest scoring accuracy) under a paid plan / subsidized vouchers.
 - 📱 **Phase 2 Mobile Roadmap (Native Android Kotlin & KMP)**: Native mobile application built with **Kotlin / Java** and **Jetpack Compose** on Android, leveraging **Room Database** for offline SQLite question caching, **CameraX** for edge document scanning of handwritten essays, and **Kotlin Multiplatform (KMP)** for cross-platform iOS expansion.
 
@@ -255,7 +255,7 @@ ReconectaRecode/
 
 ## 🚀 Quickstart (100% Docker Compose)
 
-The entire full-stack ecosystem (frontend, backend microservices, gateway, databases, and telemetry) runs with a **single command**.
+The entire full-stack ecosystem (frontend, backend microservices, gateway, databases, and telemetry) runs with a **single command**, featuring **Kubernetes-grade container self-healing** (`restart: unless-stopped`, Spring Boot `/actuator/health` probes, deterministic boot sequencing, and automatic deadlock recovery via `autoheal`).
 
 ### Prerequisites
 - Docker Engine 24+ & Docker Compose v2

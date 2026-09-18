@@ -96,14 +96,17 @@ All architectural foundations, entity models, REST contracts, and verification b
 Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistence, Caching, and Ingress Security**.
 
 ### Epic 1: Infrastructure & Database Foundation
-#### `TASK-S2-01`: Back-end Docker Compose Stack with Zero-Trust Perimeter Isolation
+#### `TASK-S2-01`: Back-end Docker Compose Stack with Perimeter Isolation & Self-Healing Resilience
 - **Priority**: `P0` | **Estimation**: 5 pts
-- **Description**: Setup root `docker-compose.yml` orchestrating the backend microservices with strict network segregation: `frontend-edge` network exposing ONLY port 80/443 (Nginx reverse-proxying `/api/**` to `frontend-api`), and internal private `aprovaenem-internal` network (`internal: true`) where all microservices (`frontend-api`, `auth-service`, `exam-service`, `notification-service`, `ingestion-service`), PostgreSQL databases (`5432–5434`), Redis 7+, and RabbitMQ have ZERO host ports exposed.
+- **Description**: Setup root `docker-compose.yml` orchestrating the backend microservices with strict network segregation and Kubernetes-grade container self-healing: `frontend-edge` network exposing ONLY port 80/443 (Nginx reverse-proxying `/api/**` to `frontend-api`), internal private `aprovaenem-internal` network (`internal: true`) with zero host ports exposed for domain services, `restart: unless-stopped` crash recovery on all containers, `/actuator/health` probes, deterministic boot sequencing (`condition: service_healthy`), and an `autoheal` container daemon monitoring `/var/run/docker.sock` to detect and restart frozen containers automatically.
 - **Acceptance Criteria**:
   - `docker compose up -d` brings up all backend services, databases, cache, queue, and telemetry with 1 command.
   - Host port bindings strictly limited: ONLY `80` / `443` (Nginx) bound to `0.0.0.0`.
   - All internal services (`frontend-api:8080`, `auth-service:8081`, `exam-service:8082`, `notification-service:8083`, Redis `6379`, Postgres `5432-5434`, RabbitMQ `5672`) have NO published host ports.
-  - External attempts to access backend ports directly from the host are blocked by network isolation.
+  - All containers configure `restart: unless-stopped` for instant automated process crash respawns.
+  - Spring Boot services configure `/actuator/health` probes; PostgreSQL (`pg_isready`), Redis (`redis-cli ping`), and RabbitMQ (`rabbitmq-diagnostics ping`) configure native probes.
+  - Downstream services wait for `condition: service_healthy` before initiating database or cache connections, eliminating cold-start boot races.
+  - Lightweight `autoheal` container automatically detects and respawns deadlocked containers marked `unhealthy`.
 
 #### `TASK-S2-02`: Database Flyway Migrations & Performance Indexing Strategy
 - **Priority**: `P0` | **Estimation**: 5 pts

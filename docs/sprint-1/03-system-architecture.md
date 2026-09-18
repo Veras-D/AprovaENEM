@@ -112,7 +112,14 @@ The core architectural mandate of AprovaENEM is **perimeter isolation**:
 | **RabbitMQ Event Bus** | 5672, 15672 | **None** | `aprovaenem-internal` | **STRICTLY PRIVATE** |
 | **Prometheus / Grafana**| 9090, 3001 | **None** (SSH Tunnel / VPN only)| `aprovaenem-internal` | **STRICTLY PRIVATE** |
 
-#### Docker Compose Network Segregation Snippet
+#### Docker Compose Resilient Network & Self-Healing Container Topology
+
+To achieve **Kubernetes-grade self-healing and zero-downtime container resilience** without Kubernetes overhead, the platform implements a 4-tier Docker Compose resilience architecture:
+1. **Automated Crash Restart (`restart: unless-stopped`)**: If any JVM process, database daemon, or proxy crashes or exits unexpectedly, the Docker daemon immediately respawns a fresh container within milliseconds.
+2. **Spring Boot Actuator Healthchecks (`/actuator/health`)**: Every service exposes liveness and readiness state. Docker probes health every 15 seconds.
+3. **Deterministic Boot Sequencing (`condition: service_healthy`)**: Downstream microservices only boot once PostgreSQL, Redis, and RabbitMQ report verified healthy status, eliminating cold-start database connection race conditions.
+4. **Automated Deadlock & Hang Recovery (`autoheal` Daemon)**: An ultra-lightweight daemon monitors `/var/run/docker.sock`. If a container freezes or deadlocks (remains `unhealthy` for 3 consecutive probes), `autoheal` forcibly terminates and respawns it automatically.
+
 ```yaml
 version: '3.8'
 
@@ -124,20 +131,46 @@ networks:
     internal: true # Disallows external outbound/inbound traffic; isolated backend network
 
 services:
+  # --- Resilient Autoheal Daemon (Monitors and restarts unhealthy containers) ---
+  autoheal:
+    image: willfarrell/autoheal:latest
+    container_name: aprovaenem-autoheal
+    restart: always
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=all
+      - AUTOHEAL_INTERVAL=10
+      - AUTOHEAL_START_PERIOD=30
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - aprovaenem-internal
+
+  # --- Edge Ingress Proxy (The ONLY public entrypoint) ---
   nginx-proxy:
     image: nginx:1.25-alpine
+    container_name: aprovaenem-nginx
+    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
     networks:
       - frontend-edge
       - aprovaenem-internal
+    healthcheck:
+      test: ["CMD-SHELL", "nginx -t && wget --spider -q http://localhost/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     depends_on:
-      - frontend-api
+      frontend-api:
+        condition: service_healthy
 
+  # --- Frontend API Gateway (BFF Facade) ---
   frontend-api:
     image: aprovaenem/frontend-api:latest
-    # Notice: NO 'ports' key mapped to host! Exposed only inside internal network
+    container_name: aprovaenem-frontend-api
+    restart: unless-stopped
     expose:
       - "8080"
     networks:
@@ -149,26 +182,110 @@ services:
       - NOTIFICATION_SERVICE_URL=http://notification-service:8083
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 35s
+    depends_on:
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      exam-service:
+        condition: service_healthy
 
+  # --- Exam Microservice (Core Assessment Engine) ---
+  exam-service:
+    image: aprovaenem/exam-service:latest
+    container_name: aprovaenem-exam-service
+    restart: unless-stopped
+    expose:
+      - "8082"
+    networks:
+      - aprovaenem-internal
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-exam:5432/exam_db
+      - SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT=30000
+      - SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=20
+      - SPRING_DATASOURCE_HIKARI_MAX_LIFETIME=1800000
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8082/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      postgres-exam:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  # --- Redis 7 In-Memory Cache & State Grid ---
   redis:
     image: redis:7.2-alpine
+    container_name: aprovaenem-redis
+    restart: unless-stopped
     command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
     expose:
       - "6379"
     networks:
       - aprovaenem-internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
     volumes:
       - redis-data:/data
 
-  exam-service:
-    image: aprovaenem/exam-service:latest
+  # --- PostgreSQL 16 + pgvector Database ---
+  postgres-exam:
+    image: pgvector/pgvector:pg16
+    container_name: aprovaenem-postgres-exam
+    restart: unless-stopped
     expose:
-      - "8082"
+      - "5432"
     networks:
       - aprovaenem-internal
-    depends_on:
-      - postgres-exam
-      - redis
+    environment:
+      - POSTGRES_DB=exam_db
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d exam_db || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - exam-db-data:/var/lib/postgresql/data
+
+  # --- RabbitMQ Event Bus ---
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: aprovaenem-rabbitmq
+    restart: unless-stopped
+    expose:
+      - "5672"
+      - "15672"
+    networks:
+      - aprovaenem-internal
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
 ```
 
 ---

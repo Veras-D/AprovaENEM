@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.1.1] - 2026-09-18
 ### 🔧 Changed
+- feat(resilience): Architect self-healing Docker Compose topology with automated crash recovery (restart: unless-stopped), Spring Boot /actuator/health probes, boot sequencing (condition: service_healthy), and autoheal watchdog daemon
 - feat(security): Architect Multi-Stage AI-Assisted and Real-Time Security Audit Framework terminating both backend (JAM 1 / Sprint 3 - TASK-S3-11) and full-stack (JAM 2 / Sprint 6 - TASK-S6-06) delivery milestones
 - docs(backlog): Realign sprint backlog with Reconecta Recode program: JAM 1 (Sprints 1-3 Backend only, documented API deliverable), JAM 2 (Sprints 4-6 Frontend & Full-Stack Integration, deployed public URL deliverable), and Month 4 Career Placement
 - docs(structure): Synchronize master README project structure tree (mobile KMP roadmap, Nginx/Prometheus infrastructure config) and align Access Endpoints with perimeter isolation
