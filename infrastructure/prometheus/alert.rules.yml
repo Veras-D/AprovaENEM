@@ -1,0 +1,42 @@
+groups:
+  - name: aprovaenem-critical-alerts
+    rules:
+      # Alert 1: Unhandled 5xx Error Spike
+      - alert: HighHttp5xxErrorRate
+        expr: sum(rate(http_server_requests_seconds_count{status=~"5.."}[1m])) / sum(rate(http_server_requests_seconds_count[1m])) > 0.02
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "HTTP 5xx error rate exceeds 2% across microservices"
+          description: "Microservice {{ $labels.app }} is returning elevated 5xx server errors."
+
+      # Alert 2: Database Connection Pool Starvation
+      - alert: HikariPoolStarvation
+        expr: hikaricp_connections_pending > 5
+        for: 15s
+        labels:
+          severity: warning
+        annotations:
+          summary: "HikariCP connection pool starvation in {{ $labels.app }}"
+          description: "More than 5 requests are queued waiting for a database connection."
+
+      # Alert 3: Question Catalog High Latency (p95 SLA Breach)
+      - alert: HighQuestionReadLatency
+        expr: histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{uri=~"/api/v1/questions.*"}[2m])) by (le)) > 0.200
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Question read latency p95 > 200ms"
+          description: "Database B-tree index or payload size regression on question queries."
+
+      # Alert 4: Gemini AI Rate Limit Exhaustion
+      - alert: GeminiRateLimitBreach
+        expr: sum(rate(gemini_api_requests_total{status="429"}[1m])) > 0
+        for: 10s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Google Gemini Upstream Rate Limit hit (429)"
+          description: "AI Tutor endpoint is hitting upstream rate limits. Activating fallback."

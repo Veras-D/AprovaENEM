@@ -1,0 +1,379 @@
+version: '3.8'
+
+networks:
+  frontend-edge:
+    driver: bridge
+  aprovaenem-internal:
+    driver: bridge
+    internal: true # Disallows external outbound/inbound traffic; isolated backend network
+
+services:
+  # ============================================================================
+  # 1. Resilient Autoheal Daemon (Monitors and restarts unhealthy containers)
+  # ============================================================================
+  autoheal:
+    image: willfarrell/autoheal:latest
+    container_name: aprovaenem-autoheal
+    restart: always
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=all
+      - AUTOHEAL_INTERVAL=10
+      - AUTOHEAL_START_PERIOD=30
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - aprovaenem-internal
+
+  # ============================================================================
+  # 2. Edge Ingress Proxy (The ONLY public entrypoint)
+  # ============================================================================
+  nginx-proxy:
+    image: nginx:1.25-alpine
+    container_name: aprovaenem-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - frontend-edge
+      - aprovaenem-internal
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - exam-assets-data:/usr/share/nginx/html/assets/questions:ro
+    depends_on:
+      frontend-api:
+        condition: service_started
+
+  # ============================================================================
+  # 3. Microservices (Stateless 12-Factor Compute Layer)
+  # ============================================================================
+  frontend-api:
+    build:
+      context: ./backend
+      dockerfile: frontend-api/Dockerfile
+    image: aprovaenem/frontend-api:latest
+    container_name: aprovaenem-frontend-api
+    restart: unless-stopped
+    expose:
+      - "8080"
+    networks:
+      - aprovaenem-internal
+    environment:
+      - SERVER_PORT=8080
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost,http://localhost:3000,http://localhost:5173,https://aprovaenem.com.br}
+      - AUTH_SERVICE_URL=http://auth-service:8081
+      - EXAM_SERVICE_URL=http://exam-service:8082
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8083
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 35s
+    depends_on:
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      exam-service:
+        condition: service_started
+
+  auth-service:
+    build:
+      context: ./backend
+      dockerfile: auth-service/Dockerfile
+    image: aprovaenem/auth-service:latest
+    container_name: aprovaenem-auth-service
+    restart: unless-stopped
+    expose:
+      - "8081"
+    networks:
+      - aprovaenem-internal
+    environment:
+      - SERVER_PORT=8081
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-auth:5432/${AUTH_DB_NAME:-auth_db}
+      - SPRING_DATASOURCE_USERNAME=${DB_USER:-aprovaenem_user}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-aprovaenem_secure_password_2026}
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_DEFAULT_USER:-aprovaenem_rabbit}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_DEFAULT_PASS:-rabbit_secure_password_2026}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION_MS=${JWT_EXPIRATION_MS:-86400000}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8081/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 35s
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  exam-service:
+    build:
+      context: ./backend
+      dockerfile: exam-service/Dockerfile
+    image: aprovaenem/exam-service:latest
+    container_name: aprovaenem-exam-service
+    restart: unless-stopped
+    expose:
+      - "8082"
+    networks:
+      - aprovaenem-internal
+    environment:
+      - SERVER_PORT=8082
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-exam:5432/${EXAM_DB_NAME:-exam_db}
+      - SPRING_DATASOURCE_USERNAME=${DB_USER:-aprovaenem_user}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-aprovaenem_secure_password_2026}
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_DEFAULT_USER:-aprovaenem_rabbit}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_DEFAULT_PASS:-rabbit_secure_password_2026}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-1.5-flash}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8082/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 35s
+    depends_on:
+      postgres-exam:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  notification-service:
+    build:
+      context: ./backend
+      dockerfile: notification-service/Dockerfile
+    image: aprovaenem/notification-service:latest
+    container_name: aprovaenem-notification-service
+    restart: unless-stopped
+    expose:
+      - "8083"
+    networks:
+      - aprovaenem-internal
+    environment:
+      - SERVER_PORT=8083
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-notification:5432/${NOTIFICATION_DB_NAME:-notification_db}
+      - SPRING_DATASOURCE_USERNAME=${DB_USER:-aprovaenem_user}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-aprovaenem_secure_password_2026}
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_DEFAULT_USER:-aprovaenem_rabbit}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_DEFAULT_PASS:-rabbit_secure_password_2026}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8083/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 35s
+    depends_on:
+      postgres-notification:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  # ============================================================================
+  # 4. In-Memory Cache Grid (Redis 7+)
+  # ============================================================================
+  redis:
+    image: redis:7.2-alpine
+    container_name: aprovaenem-redis
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-redis_secure_password_2026}", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
+    expose:
+      - "6379"
+    networks:
+      - aprovaenem-internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_secure_password_2026}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    volumes:
+      - redis-data:/data
+
+  # ============================================================================
+  # 5. Relational Databases (PostgreSQL 16 + pgvector)
+  # ============================================================================
+  postgres-auth:
+    image: postgres:16-alpine
+    container_name: aprovaenem-postgres-auth
+    restart: unless-stopped
+    expose:
+      - "5432"
+    networks:
+      - aprovaenem-internal
+    environment:
+      - POSTGRES_DB=${AUTH_DB_NAME:-auth_db}
+      - POSTGRES_USER=${DB_USER:-aprovaenem_user}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-aprovaenem_secure_password_2026}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-aprovaenem_user} -d ${AUTH_DB_NAME:-auth_db} || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+
+  postgres-exam:
+    image: pgvector/pgvector:pg16
+    container_name: aprovaenem-postgres-exam
+    restart: unless-stopped
+    expose:
+      - "5432"
+    networks:
+      - aprovaenem-internal
+    environment:
+      - POSTGRES_DB=${EXAM_DB_NAME:-exam_db}
+      - POSTGRES_USER=${DB_USER:-aprovaenem_user}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-aprovaenem_secure_password_2026}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-aprovaenem_user} -d ${EXAM_DB_NAME:-exam_db} || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - exam-db-data:/var/lib/postgresql/data
+
+  postgres-notification:
+    image: postgres:16-alpine
+    container_name: aprovaenem-postgres-notification
+    restart: unless-stopped
+    expose:
+      - "5432"
+    networks:
+      - aprovaenem-internal
+    environment:
+      - POSTGRES_DB=${NOTIFICATION_DB_NAME:-notification_db}
+      - POSTGRES_USER=${DB_USER:-aprovaenem_user}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-aprovaenem_secure_password_2026}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-aprovaenem_user} -d ${NOTIFICATION_DB_NAME:-notification_db} || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - notification-db-data:/var/lib/postgresql/data
+
+  # ============================================================================
+  # 6. Event Bus (RabbitMQ 3.13)
+  # ============================================================================
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: aprovaenem-rabbitmq
+    restart: unless-stopped
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-aprovaenem_rabbit}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-rabbit_secure_password_2026}
+    expose:
+      - "5672"
+      - "15672"
+    networks:
+      - aprovaenem-internal
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+  # ============================================================================
+  # 7. Data Ingestion & OCR Service (On-Demand Worker)
+  # ============================================================================
+  ingestion-service:
+    build:
+      context: ./backend/ingestion-service
+      dockerfile: Dockerfile
+    image: aprovaenem/ingestion-service:latest
+    container_name: aprovaenem-ingestion-service
+    profiles: ["ingestion"]
+    restart: "no" # On-demand batch execution
+    networks:
+      - aprovaenem-internal
+    volumes:
+      - exam-assets-data:/app/extracted_assets
+
+  # ============================================================================
+  # 8. Telemetry & Observability Stack (Prometheus + Grafana)
+  # ============================================================================
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: aprovaenem-prometheus
+    restart: unless-stopped
+    expose:
+      - "9090"
+    networks:
+      - aprovaenem-internal
+    volumes:
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infrastructure/prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
+      - prometheus-data:/prometheus
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: aprovaenem-grafana
+    restart: unless-stopped
+    expose:
+      - "3000"
+    networks:
+      - aprovaenem-internal
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin_secure_password_2026}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana-data:/var/lib/grafana
+
+# ==============================================================================
+# Persistent Named Volumes (Driver: local)
+# ==============================================================================
+volumes:
+  auth-db-data:
+    driver: local
+  exam-db-data:
+    driver: local
+  notification-db-data:
+    driver: local
+  redis-data:
+    driver: local
+  rabbitmq-data:
+    driver: local
+  exam-assets-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local

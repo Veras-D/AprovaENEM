@@ -1,0 +1,61 @@
+version: '3.8'
+
+# ==============================================================================
+# Local Developer Override Configuration
+# ==============================================================================
+# Use this override to bind internal container ports to localhost for
+# local database inspection (DBeaver/TablePlus), RabbitMQ UI, and Telemetry:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.override.dev.yml up -d
+# ==============================================================================
+
+services:
+  # Expose microservices locally for direct debugging
+  frontend-api:
+    ports:
+      - "8080:8080"
+
+  auth-service:
+    ports:
+      - "8081:8081"
+
+  exam-service:
+    ports:
+      - "8082:8082"
+
+  notification-service:
+    ports:
+      - "8083:8083"
+
+  # Expose databases on distinct localhost ports
+  postgres-auth:
+    ports:
+      - "5432:5432"
+
+  postgres-exam:
+    ports:
+      - "5433:5432"
+
+  postgres-notification:
+    ports:
+      - "5434:5432"
+
+  # Expose Redis for RedisInsight / redis-cli
+  redis:
+    ports:
+      - "6379:6379"
+
+  # Expose RabbitMQ AMQP and Web Management UI
+  rabbitmq:
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  # Expose Prometheus and Grafana
+  prometheus:
+    ports:
+      - "9090:9090"
+
+  grafana:
+    ports:
+      - "3001:3000"

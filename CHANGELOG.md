@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.2.0] - 2026-09-18
+### 🚀 Added
+- feat(infra): Implement production-ready Docker Compose stack with strict perimeter isolation (frontend-edge vs. internal private network), autoheal deadlock watchdog daemon, named volumes (driver: local), and local developer override (TASK-S2-01)
+- feat(db): Implement Flyway migrations (V1 schemas, V2 performance indexes, V3 seed data) with PostgreSQL 16 + pgvector, GIN full-text search, composite B-Trees, and Transactional Outbox pattern across auth_db, exam_db, and notification_db (TASK-S2-02)
+
 ## [0.1.1] - 2026-09-18
 ### 🔧 Changed
 - refactor(docs): Remove redundant 08-sprint-backlog.md and consolidate single source of truth in master BACKLOG.md, renumbering 08-data-ingestion-pipeline.md

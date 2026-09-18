@@ -96,29 +96,29 @@ All architectural foundations, entity models, REST contracts, and verification b
 Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistence, Caching, and Ingress Security**.
 
 ### Epic 1: Infrastructure & Database Foundation
-#### `TASK-S2-01`: Back-end Docker Compose Stack with Perimeter Isolation, Self-Healing Resilience & Persistent Named Volumes
+#### `TASK-S2-01`: Back-end Docker Compose Stack with Perimeter Isolation, Self-Healing Resilience & Persistent Named Volumes — **COMPLETED ✅**
 - **Priority**: `P0` | **Estimation**: 5 pts
 - **Description**: Setup root `docker-compose.yml` orchestrating the backend microservices with strict network segregation, Kubernetes-grade container self-healing, and enterprise persistent storage architecture: `frontend-edge` network exposing ONLY port 80/443 (Nginx reverse-proxying `/api/**` to `frontend-api`), internal private `aprovaenem-internal` network (`internal: true`) with zero host ports exposed for domain services, `restart: unless-stopped` crash recovery on all containers, `/actuator/health` probes, deterministic boot sequencing (`condition: service_healthy`), `autoheal` container daemon, and Docker **named volumes** (`driver: local`) for all stateful stores (`auth-db-data`, `exam-db-data`, `notification-db-data`, `redis-data`, `rabbitmq-data`, `exam-assets-data`, `prometheus-data`, `grafana-data`), maintaining strict 12-Factor statelessness for compute microservices.
 - **Acceptance Criteria**:
-  - `docker compose up -d` brings up all backend services, databases, cache, queue, and telemetry with 1 command.
-  - Host port bindings strictly limited: ONLY `80` / `443` (Nginx) bound to `0.0.0.0`.
-  - All internal services (`frontend-api:8080`, `auth-service:8081`, `exam-service:8082`, `notification-service:8083`, Redis `6379`, Postgres `5432-5434`, RabbitMQ `5672`) have NO published host ports.
-  - All containers configure `restart: unless-stopped` for instant automated process crash respawns.
-  - Spring Boot services configure `/actuator/health` probes; PostgreSQL (`pg_isready`), Redis (`redis-cli ping`), and RabbitMQ (`rabbitmq-diagnostics ping`) configure native probes.
-  - Downstream services wait for `condition: service_healthy` before initiating database or cache connections, eliminating cold-start boot races.
-  - Lightweight `autoheal` container automatically detects and respawns deadlocked containers marked `unhealthy`.
-  - Persistent named volumes configured with `driver: local` for PostgreSQL databases (`/var/lib/postgresql/data`), Redis (`/data`), RabbitMQ (`/var/lib/rabbitmq`), Docling/Nginx assets, and Prometheus/Grafana TSDB.
-  - Backend application microservices (`frontend-api`, `auth-service`, `exam-service`, `notification-service`) remain strictly stateless (Twelve-Factor Factor VI) with zero local persistent volume mounts.
-  - Zero data loss verified across container teardown: `docker compose down && docker compose up -d` preserves all database records, migrations, Redis leaderboards, and extracted assets.
-  - Shared `exam-assets-data` volume verified: `ingestion-service` writes extracted WebP figures to `/app/extracted_assets` and `nginx-proxy` mounts it read-only to serve `/assets/questions/` directly with zero JVM overhead.
+  - [x] `docker compose up -d` brings up all backend services, databases, cache, queue, and telemetry with 1 command.
+  - [x] Host port bindings strictly limited: ONLY `80` / `443` (Nginx) bound to `0.0.0.0`.
+  - [x] All internal services (`frontend-api:8080`, `auth-service:8081`, `exam-service:8082`, `notification-service:8083`, Redis `6379`, Postgres `5432-5434`, RabbitMQ `5672`) have NO published host ports.
+  - [x] All containers configure `restart: unless-stopped` for instant automated process crash respawns.
+  - [x] Spring Boot services configure `/actuator/health` probes; PostgreSQL (`pg_isready`), Redis (`redis-cli ping`), and RabbitMQ (`rabbitmq-diagnostics ping`) configure native probes.
+  - [x] Downstream services wait for `condition: service_healthy` before initiating database or cache connections, eliminating cold-start boot races.
+  - [x] Lightweight `autoheal` container automatically detects and respawns deadlocked containers marked `unhealthy`.
+  - [x] Persistent named volumes configured with `driver: local` for PostgreSQL databases (`/var/lib/postgresql/data`), Redis (`/data`), RabbitMQ (`/var/lib/rabbitmq`), Docling/Nginx assets, and Prometheus/Grafana TSDB.
+  - [x] Backend application microservices (`frontend-api`, `auth-service`, `exam-service`, `notification-service`) remain strictly stateless (Twelve-Factor Factor VI) with zero local persistent volume mounts.
+  - [x] Zero data loss verified across container teardown: `docker compose down && docker compose up -d` preserves all database records, migrations, Redis leaderboards, and extracted assets.
+  - [x] Shared `exam-assets-data` volume verified: `ingestion-service` writes extracted WebP figures to `/app/extracted_assets` and `nginx-proxy` mounts it read-only to serve `/assets/questions/` directly with zero JVM overhead.
 
-#### `TASK-S2-02`: Database Flyway Migrations & Performance Indexing Strategy
+#### `TASK-S2-02`: Database Flyway Migrations & Performance Indexing Strategy — **COMPLETED ✅**
 - **Priority**: `P0` | **Estimation**: 5 pts
 - **Description**: Create Flyway migration scripts (`V1__init_schema.sql` and `V2__performance_indexes.sql`) implementing the physical DDL and specialized PostgreSQL indexes defined in `04-data-modeling.md`.
 - **Acceptance Criteria**:
-  - Tables, foreign keys, and indexes created automatically on application boot.
-  - Specialized indexes verified: Portuguese Full-Text Search GIN (`idx_questions_statement_fts`), partial active question index (`idx_questions_active_serving`), 19:00 BRT streak reminder index (`idx_gamification_streak_reminder`), HNSW vector index, and JSONB GIN index.
-  - Seed script populates initial ENEM editions and subject areas.
+  - [x] Tables, foreign keys, and indexes created automatically on application boot.
+  - [x] Specialized indexes verified: Portuguese Full-Text Search GIN (`idx_questions_statement_fts`), partial active question index (`idx_questions_active_serving`), 19:00 BRT streak reminder index (`idx_gamification_streak_reminder`), HNSW vector index, and JSONB GIN index.
+  - [x] Seed script populates initial ENEM editions and subject areas.
 
 #### `TASK-S2-02b`: Data Ingestion & Extraction Microservice (`ingestion-service`)
 - **Priority**: `P0` | **Estimation**: 8 pts
