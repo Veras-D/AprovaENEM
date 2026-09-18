@@ -524,15 +524,19 @@ Returns the question statement, status, and options A–E.
 #### Response `200 OK`
 ```json
 {
+  "threadId": "33333333-4444-5555-6666-777777777777",
   "questionId": "77777777-8888-9999-aaaa-bbbbbbbbbbbb",
+  "turnNumber": 1,
+  "maxTurnsPerThread": 6,
+  "remainingTurnsInThread": 5,
   "socraticResponse": "Ótima reflexão! Pense no que acontece no momento em que você liga o chuveiro ou se a tensão da rede oscilar levemente para baixo (por exemplo, 210 V em vez de 220 V). Se a corrente operacional já estiver no limite exato de disparo térmico de 25 A, pequenas oscilações normais provocariam o desarmamento indesejado do disjuntor. Na norma NBR 5410, qual é a margem de segurança recomendada para evitar esses desarmes sem comprometer a fiação?",
   "pedagogicalGoal": "Guide student to understand thermal dissipation margins in circuit breakers",
   "modelUsed": "gemini-1.5-flash",
   "isFallback": false,
   "quota": {
-    "dailyLimit": 1,
-    "usedToday": 1,
-    "remainingToday": 0,
+    "dailyUnlockedQuestionsLimit": 1,
+    "unlockedQuestionsToday": 1,
+    "remainingQuestionUnlocksToday": 0,
     "resetsAt": "2026-09-19T03:00:00Z"
   },
   "retrievedContext": [
@@ -583,7 +587,60 @@ Returned when an unauthenticated guest attempts to call the Socratic AI Tutor:
 
 ---
 
-### 5.3 Check Student Daily AI Tutor Quota
+### 5.3 Get Question Chat History
+Used when the student opens the Socratic AI chat drawer on a question to load previous conversation bubbles.
+
+* **Method**: `GET`
+* **Path**: `/api/v1/questions/{id}/chat`
+* **Headers**: `Authorization: Bearer <token>` (**Required**)
+
+#### Response `200 OK`
+```json
+{
+  "threadId": "33333333-4444-5555-6666-777777777777",
+  "questionId": "77777777-8888-9999-aaaa-bbbbbbbbbbbb",
+  "status": "ACTIVE",
+  "turnCount": 2,
+  "maxTurns": 6,
+  "unlockedAt": "2026-09-18T14:30:00Z",
+  "messages": [
+    {
+      "id": "aaaa1111-bb22-cc33-dd44-ee5555555555",
+      "role": "STUDENT",
+      "content": "Why can't I just use a 25 A circuit breaker if the current is exactly 25 A?",
+      "createdAt": "2026-09-18T14:30:05Z"
+    },
+    {
+      "id": "bbbb2222-cc33-dd44-ee55-ff6666666666",
+      "role": "AI_TUTOR",
+      "content": "Ótima reflexão! Pense no que acontece no momento em que você liga o chuveiro...",
+      "createdAt": "2026-09-18T14:30:08Z"
+    }
+  ]
+}
+```
+
+---
+
+### 5.4 Reset Question Chat Conversation
+Allows the student to start a fresh Socratic dialogue on the active question without re-consuming a daily question credit if already unlocked today.
+
+* **Method**: `DELETE`
+* **Path**: `/api/v1/questions/{id}/chat`
+* **Headers**: `Authorization: Bearer <token>` (**Required**)
+
+#### Response `200 OK`
+```json
+{
+  "message": "Chat conversation on this question has been reset. You can start a fresh dialogue.",
+  "questionId": "77777777-8888-9999-aaaa-bbbbbbbbbbbb",
+  "resetAt": "2026-09-18T14:35:00Z"
+}
+```
+
+---
+
+### 5.5 Check Student Daily AI Tutor Quota
 Used by frontend clients (e.g., Socratic AI chat drawer badge) to display remaining free questions before opening the chat drawer.
 
 * **Method**: `GET`

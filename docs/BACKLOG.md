@@ -211,15 +211,16 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
 ---
 
 ### Epic 4: Socratic AI Tutor & External Resilience
-#### `TASK-S2-10`: Google Gemini AI Tutor Client Adapter & Redis Daily Quota Limiter
+#### `TASK-S2-10`: Google Gemini AI Tutor Client Adapter & Per-Question Multi-Turn Thread Engine
 - **Priority**: `P1` | **Estimation**: 5 pts
-- **Description**: Implement `GeminiTutorClientAdapter` using Google GenAI SDK / Spring AI with Socratic system prompt (compatible with local development free-tier keys and production quotas) and integrate with Redis to enforce a daily rate limit of 1 free AI interaction per registered student per day (`ROLE_STUDENT`), requiring authentication on `POST /ask` (401 with free signup prompt for anonymous guests) while granting unlimited AI queries to `ROLE_PREMIUM_STUDENT`.
+- **Description**: Implement `GeminiTutorClientAdapter` using Google GenAI SDK / Spring AI with Socratic system prompt (compatible with local development free-tier keys and production quotas) and integrate with Redis and PostgreSQL (`tutor_chat_threads`, `tutor_chat_messages`) to enforce a daily rate limit of 1 free question consultation per registered student per day (`ROLE_STUDENT`), supporting up to 6 multi-turn Socratic turns per thread, thread reset (`DELETE /chat`), and 90-day hot retention while granting unlimited questions to `ROLE_PREMIUM_STUDENT`.
 - **Acceptance Criteria**:
-  - Sends question context and student query to `gemini-1.5-flash`.
+  - Sends question context and student query history to `gemini-1.5-flash`.
   - Enforces educational prompt: guide the student conceptually without spoiling the answer.
   - Requires authenticated Bearer token (`ROLE_STUDENT` or `ROLE_PREMIUM_STUDENT`); unauthenticated requests return HTTP 401 with registration call-to-action to prevent cookie-clearing quota abuse.
-  - Enforces Redis daily counter (`ratelimit:tutor:daily:{userId}:{YYYY-MM-DD}`) with midnight BRT expiration: free registered students receive 1 free consultation per day; subsequent queries return HTTP 429 with upgrade call-to-action.
-  - Pro subscribers (`ROLE_PREMIUM_STUDENT`) bypass the 1/day quota limit.
+  - Enforces Redis daily counter (`ratelimit:tutor:daily:{userId}:{YYYY-MM-DD}`): 1 credit unlocks multi-turn Socratic conversation on 1 question per day; subsequent turns on that already-unlocked question do not deduct quota.
+  - Exposes `GET /api/v1/questions/{id}/chat` (history) and `DELETE /api/v1/questions/{id}/chat` (reset).
+  - Pro subscribers (`ROLE_PREMIUM_STUDENT`) bypass the 1 question/day quota limit.
   - Returns quota metadata headers (`X-AI-Quota-Limit`, `X-AI-Quota-Remaining`, `X-AI-Quota-Reset`).
   - Core question solving, quiz generation, and written resolutions remain completely unaffected (100% free and unlimited with zero login required).
 
@@ -333,7 +334,7 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
 | :--- | :--- | :---: | :---: | :--- |
 | **S5-01** | **Interactive Question Card & Timed Quiz Mode** | `P0` | 5 pts | Question statement, statement images (WebP), option selector (A to E), countdown timer, and question navigation carousel. |
 | **S5-02** | **Instant Feedback Banner & Step-by-Step Accordion** | `P0` | 5 pts | Color-coded immediate correctness indicator (green/red), distractor explanation breakdown, and curated INEP resolution accordion. |
-| **S5-03** | **Socratic AI Tutor Interactive Chat Drawer & Quota Widget** | `P0` | 8 pts | Slide-out conversational AI drawer powered by Google Gemini, guiding students conceptually without spoiling answers, with streaming responses, free registration prompt gate for unauthenticated guests, daily free quota counter (1/day for registered free students), countdown to midnight reset, and upgrade CTA when exhausted. |
+| **S5-03** | **Socratic AI Tutor Per-Question Chat Drawer & Quota Widget** | `P0` | 8 pts | Slide-out conversational AI drawer bound per question, guiding students conceptually without spoiling answers, displaying message bubble history, turn counter indicator (up to 6 turns per unlock), reset conversation button, free registration prompt gate for unauthenticated guests, daily free question unlock counter (1 question/day), countdown to midnight reset, and upgrade CTA when exhausted. |
 | **S5-04** | **Gamification Dashboard & Celebration Animations** | `P1` | 5 pts | XP progress bar, student level badges (*Freshman* to *Top Scorer*), daily streak counter, emergency freeze button, and level-up confetti. |
 | **S5-05** | **Weekly League Leaderboard UI** | `P1` | 5 pts | Ranked league tables (Bronze, Silver, Gold, Diamond) with user position highlight, countdown timer to Sunday 23:59 reset, and promotion/relegation zones. |
 | **S5-06** | **Diagnostic Skill Radar & Topic Heatmaps** | `P1` | 5 pts | Recharts / Chart.js radar charts mapping student proficiency across 4 ENEM areas, highlighting critical weak spots for revision. |

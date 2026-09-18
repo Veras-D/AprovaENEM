@@ -169,11 +169,36 @@ classDiagram
         +timestamp publishedAt
     }
 
+    class TutorChatThread {
+        +UUID id
+        +UUID userId
+        +UUID questionId
+        +string status
+        +int turnCount
+        +int maxTurns
+        +timestamp unlockedAt
+        +timestamp createdAt
+        +timestamp updatedAt
+    }
+
+    class TutorChatMessage {
+        +UUID id
+        +UUID threadId
+        +string role
+        +string content
+        +int promptTokens
+        +int completionTokens
+        +string modelUsed
+        +timestamp createdAt
+    }
+
     User "1" --> "0..1" UserGamificationProfile : has
     User "1" --> "*" WeeklyLeaderboard : competes_in
     User "1" --> "*" UserAchievement : earns
     User "1" <-- "0..*" AnonymousSession : claimed_by
     User "1" ..> "*" OutboxEvent : emits
+    User "1" --> "*" TutorChatThread : initiates
+    TutorChatThread "1" --> "*" TutorChatMessage : contains
 ```
 
 ---
@@ -300,6 +325,8 @@ erDiagram
     USERS ||--o{ USER_ACHIEVEMENTS : earns
     USERS ||--o{ ANONYMOUS_SESSIONS : claims
     USERS ||--o{ OUTBOX_EVENTS : triggers
+    USERS ||--o{ TUTOR_CHAT_THREADS : initiates
+    TUTOR_CHAT_THREADS ||--|{ TUTOR_CHAT_MESSAGES : contains
 
     USERS {
         uuid id PK
@@ -374,6 +401,29 @@ erDiagram
         timestamp created_at
         timestamp published_at
         text error_message
+    }
+
+    TUTOR_CHAT_THREADS {
+        uuid id PK
+        uuid user_id FK
+        uuid question_id
+        varchar status
+        int turn_count
+        int max_turns
+        timestamp unlocked_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    TUTOR_CHAT_MESSAGES {
+        uuid id PK
+        uuid thread_id FK
+        varchar role
+        text content
+        int prompt_tokens
+        int completion_tokens
+        varchar model_used
+        timestamp created_at
     }
 ```
 
@@ -476,6 +526,36 @@ CREATE TABLE user_achievements (
     unlocked_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uq_user_badge UNIQUE (user_id, badge_code)
 );
+
+-- Socratic AI Tutor Chat Threads (Per-Question Multi-Turn Conversation)
+CREATE TABLE tutor_chat_threads (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    question_id UUID NOT NULL, -- Logical reference to exam_db.questions(id)
+    status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE', -- 'ACTIVE', 'ARCHIVED', 'RESET'
+    turn_count INT NOT NULL DEFAULT 0,
+    max_turns INT NOT NULL DEFAULT 6, -- Multi-turn safeguard per question consultation
+    unlocked_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_chat_threads_user_question ON tutor_chat_threads(user_id, question_id, status);
+CREATE INDEX idx_chat_threads_unlocked_at ON tutor_chat_threads(unlocked_at);
+
+-- Socratic AI Tutor Chat Messages (90-day hot retention for student review)
+CREATE TABLE tutor_chat_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    thread_id UUID NOT NULL REFERENCES tutor_chat_threads(id) ON DELETE CASCADE,
+    role VARCHAR(20) NOT NULL, -- 'STUDENT', 'AI_TUTOR'
+    content TEXT NOT NULL,
+    prompt_tokens INT DEFAULT 0,
+    completion_tokens INT DEFAULT 0,
+    model_used VARCHAR(50) DEFAULT 'gemini-1.5-flash',
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_chat_messages_thread_created ON tutor_chat_messages(thread_id, created_at ASC);
 ```
 
 ---

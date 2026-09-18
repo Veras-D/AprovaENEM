@@ -799,16 +799,19 @@ AI Tutor inquiries (`POST /api/v1/questions/{id}/ask`) pass through sequential s
 
 3. **Layer 2 — Business Tier Daily Quota Engine (Redis Distributed Counter)**:
    - **Free Registered Student (`ROLE_STUDENT`)**:
-     - **Quota**: **1 free Socratic AI Tutor consultation per day**.
-     - **Storage**: Key `ratelimit:tutor:daily:{userId}:{YYYY-MM-DD}` in Redis.
-     - **TTL**: Automatically set to expire at midnight BRT (00:00 UTC-3).
+     - **Quota Model**: **1 free Socratic Question Consultation per day** (resets at 00:00 BRT / UTC-3).
+     - **Multi-Turn Thread Scope**: Unlocking a question grants a multi-turn conversation thread for *that specific question* (up to 6 conversational turns, enabling true Socratic dialogue: conceptual clue $\rightarrow$ student hypothesis $\rightarrow$ reinforcement).
+     - **Thread Idempotency**: Subsequent conversational messages within an already-unlocked question on that calendar day do not deduct additional quota credits.
+     - **Storage & State**: Redis key `ratelimit:tutor:daily:{userId}:{YYYY-MM-DD}` tracks unlocked question IDs (e.g., Redis Set `SADD` / atomic counter).
      - **Headers Emitted**:
        - `X-AI-Quota-Limit: 1`
        - `X-AI-Quota-Remaining: 0` (or `1`)
        - `X-AI-Quota-Reset: <epoch_seconds_at_midnight_BRT>`
-     - **Exhaustion Behavior**: Once 1 question is consulted, subsequent AI queries are rejected at the edge with RFC 7807 HTTP 429. The student can continue training with unlimited past questions and static resolutions, watch an optional rewarded video ad for +1 credit, or upgrade to Pro.
+     - **Exhaustion Behavior**: Once 1 question has been unlocked, attempting to consult AI on a *new* question returns RFC 7807 HTTP 429. The student can continue their active conversation on the unlocked question, practice unlimited past questions and static resolutions, watch a 30-second AdMob rewarded video ad for +1 bonus question credit, or upgrade to Pro.
+     - **Student Reset Control**: Students can click *"Reiniciar conversa"* (`DELETE /api/v1/questions/{id}/chat`) to archive previous messages and start a fresh dialogue on that question without re-consuming a daily credit.
+     - **Review & 90-Day Retention**: Chat threads persist in PostgreSQL `auth_db.tutor_chat_threads` for **90 days**, allowing students to review their tutor interactions when revising diagnostic weak spots.
    - **AprovaENEM Pro Plan (`ROLE_PREMIUM_STUDENT`)**:
-     - **Quota**: **Unlimited** Socratic AI Tutor consultations (bypasses daily quota check).
+     - **Quota**: **Unlimited** questions and **unlimited** conversational turns (bypasses daily quota check).
      - **Headers Emitted**: `X-AI-Quota-Limit: -1`, `X-AI-Quota-Remaining: -1`.
 
 #### 3. Authentication Required Response (`HTTP 401 Unauthorized`)
