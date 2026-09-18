@@ -703,7 +703,7 @@ flowchart LR
         SpringDataRepo["Spring Data Repository<br/>(`QuestionJpaRepository`)<br/>extends JpaRepository"]
     end
 
-    OutboundPort <|.. Adapter
+    Adapter -.->|implements| OutboundPort
     Adapter --> Mapper
     Mapper --> JpaEntity
     Adapter --> SpringDataRepo
@@ -738,7 +738,7 @@ flowchart TD
         Postgres[("PostgreSQL 16 Tables")]
     end
 
-    Service -->|1. Cache Hit (Sub-2ms)| CachingLayer
+    Service -->|"1. Cache Hit (Sub-2ms)"| CachingLayer
     Service -.->|2. Cache Miss| Postgres
     Postgres -.->|3. Hydrate & Populate Cache| CachingLayer
 ```

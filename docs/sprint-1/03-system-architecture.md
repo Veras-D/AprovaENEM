@@ -426,7 +426,7 @@ To maximize web performance and protect JVM backend services from static asset d
 flowchart LR
     INEP["INEP PDF Exam<br/>(2009–2025)"] -->|1. Neural Layout Parsing| Ingestion["📥 ingestion-service<br/>(Docling OCR / WebP Cropper)"]
     Ingestion -->|2. Write Cropped WebP Figures| Volume[("💾 exam-assets-data<br/>(Named Docker Volume)")]
-    Volume -->|3. Read-Only Mount (:ro)| Nginx["🛡️ Nginx Edge Proxy<br/>(/usr/share/nginx/html/assets/questions)"]
+    Volume -->|"3. Read-Only Mount (:ro)"| Nginx["🛡️ Nginx Edge Proxy<br/>(/usr/share/nginx/html/assets/questions)"]
     Browser["Student Browser / Client"] -->|4. HTTP/2 GET /assets/questions/*.webp| Nginx
     Nginx -.->|5. Zero JVM Overhead<br/>Aggressive Cache-Control: 1yr| Browser
 ```
