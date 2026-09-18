@@ -38,10 +38,11 @@ flowchart TD
             EventBus[("📨 Message Broker / Event Bus<br/>RabbitMQ (Internal Port 5672)")]
         end
 
-        subgraph DataLayer ["Internal Persistence Layer (Zero Host Ports Published)"]
+        subgraph DataLayer ["Internal Persistence & Caching (Zero Host Ports Published)"]
             PostgresAuth[("🗄️ PostgreSQL (Auth DB)<br/>Internal Port 5432 - users, gamification")]
             PostgresExam[("🗄️ PostgreSQL 16 + pgvector (Exam DB)<br/>Internal Port 5433 - questions, sessions, embeddings")]
             PostgresNotif[("🗄️ PostgreSQL (Notification DB)<br/>Internal Port 5434 - device tokens, notification logs")]
+            RedisCache[("⚡ Redis 7+ In-Memory Cache & State<br/>Internal Port 6379 - L2 Cache, ZSET Ranks, Rate Limits")]
         end
 
         subgraph ObservabilityStack ["Internal Telemetry (Zero Host Ports Published)"]
@@ -62,10 +63,14 @@ flowchart TD
     FrontendAPI -->|`/api/v1/auth/**`<br/>`/api/v1/gamification/**`| AuthSvc
     FrontendAPI -->|`/api/v1/exams/**`<br/>`/api/v1/sessions/**`<br/>`/api/v1/questions/**`| ExamSvc
     FrontendAPI -->|`/api/v1/notifications/**`| NotifSvc
+    FrontendAPI -.->|Distributed Rate Limit Check| RedisCache
 
     AuthSvc --> PostgresAuth
     ExamSvc --> PostgresExam
     NotifSvc --> PostgresNotif
+
+    AuthSvc -.->|ZSET Real-Time Leaderboard & Session Cache| RedisCache
+    ExamSvc -.->|L2 Question Cache (TTL 24h)| RedisCache
 
     AuthSvc -->|Domain Events| EventBus
     ExamSvc -->|Domain Events| EventBus
@@ -103,6 +108,7 @@ The core architectural mandate of AprovaENEM is **perimeter isolation**:
 | **`notification-service` (Real API)** | 8083 | **None** | `aprovaenem-internal` | **STRICTLY PRIVATE** |
 | **`ingestion-service` (Real API)** | None (Worker) | **None** | `aprovaenem-internal` | **STRICTLY PRIVATE** |
 | **PostgreSQL Databases** | 5432, 5433, 5434 | **None** | `aprovaenem-internal` | **STRICTLY PRIVATE** |
+| **Redis 7+ In-Memory Grid** | 6379 | **None** | `aprovaenem-internal` | **STRICTLY PRIVATE** |
 | **RabbitMQ Event Bus** | 5672, 15672 | **None** | `aprovaenem-internal` | **STRICTLY PRIVATE** |
 | **Prometheus / Grafana**| 9090, 3001 | **None** (SSH Tunnel / VPN only)| `aprovaenem-internal` | **STRICTLY PRIVATE** |
 
@@ -141,6 +147,18 @@ services:
       - AUTH_SERVICE_URL=http://auth-service:8081
       - EXAM_SERVICE_URL=http://exam-service:8082
       - NOTIFICATION_SERVICE_URL=http://notification-service:8083
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+
+  redis:
+    image: redis:7.2-alpine
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
+    expose:
+      - "6379"
+    networks:
+      - aprovaenem-internal
+    volumes:
+      - redis-data:/data
 
   exam-service:
     image: aprovaenem/exam-service:latest
@@ -150,6 +168,7 @@ services:
       - aprovaenem-internal
     depends_on:
       - postgres-exam
+      - redis
 ```
 
 ---

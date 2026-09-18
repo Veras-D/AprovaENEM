@@ -58,18 +58,19 @@ gantt
 ### Epic 1: Infrastructure & Database Foundation
 #### `TASK-S2-01`: Full-Stack Docker Compose Ecosystem with Zero-Trust Perimeter Isolation
 - **Priority**: `P0` | **Estimation**: 5 pts
-- **Description**: Setup root `docker-compose.yml` orchestrating the entire platform with strict network segregation: `frontend-edge` network exposing ONLY port 80/443 (Nginx serving frontend SPA and reverse-proxying `/api/**`), and internal private `aprovaenem-internal` network (`internal: true`) where all microservices (`frontend-api`, `auth-service`, `exam-service`, `notification-service`, `ingestion-service`), PostgreSQL databases, and RabbitMQ have ZERO host ports exposed to the outside.
+- **Description**: Setup root `docker-compose.yml` orchestrating the entire platform with strict network segregation: `frontend-edge` network exposing ONLY port 80/443 (Nginx serving frontend SPA and reverse-proxying `/api/**`), and internal private `aprovaenem-internal` network (`internal: true`) where all microservices (`frontend-api`, `auth-service`, `exam-service`, `notification-service`, `ingestion-service`), PostgreSQL databases, Redis 7+, and RabbitMQ have ZERO host ports exposed to the outside.
 - **Acceptance Criteria**:
-  - `docker compose up -d` brings up all services (frontend, backend, databases, telemetry) with 1 command.
+  - `docker compose up -d` brings up all services (frontend, backend, databases, redis, telemetry) with 1 command.
   - Host port bindings strictly limited: ONLY `80` / `443` (Nginx) bound to `0.0.0.0`.
-  - All internal services (`frontend-api:8080`, `auth-service:8081`, `exam-service:8082`, `notification-service:8083`, Postgres `5432-5434`, RabbitMQ `5672`) have NO published host ports.
+  - All internal services (`frontend-api:8080`, `auth-service:8081`, `exam-service:8082`, `notification-service:8083`, Redis `6379`, Postgres `5432-5434`, RabbitMQ `5672`) have NO published host ports.
   - External attempts to access backend ports directly from the host/internet are blocked by network isolation.
 
-#### `TASK-S2-02`: Database Flyway Migrations
+#### `TASK-S2-02`: Database Flyway Migrations & Performance Indexing Strategy
 - **Priority**: `P0` | **Estimation**: 5 pts
-- **Description**: Create Flyway migration scripts (`V1__init_schema.sql`) implementing the DDL defined in `04-data-modeling.md`.
+- **Description**: Create Flyway migration scripts (`V1__init_schema.sql` and `V2__performance_indexes.sql`) implementing the physical DDL and specialized PostgreSQL indexes defined in `04-data-modeling.md`.
 - **Acceptance Criteria**:
   - Tables, foreign keys, and indexes created automatically on application boot.
+  - Specialized indexes verified: Portuguese Full-Text Search GIN (`idx_questions_statement_fts`), partial active question index (`idx_questions_active_serving`), 19:00 BRT streak reminder index (`idx_gamification_streak_reminder`), HNSW vector index, and JSONB GIN index.
   - Seed script populates initial ENEM editions and subject areas.
 
 #### `TASK-S2-02b`: Data Ingestion & Extraction Microservice (`ingestion-service`)
@@ -82,6 +83,15 @@ gantt
   - Crops diagrams (`PictureItem`) at 300 DPI and outputs lossless WebP assets.
   - Reconciles extracted answers with `TX_GABARITO` with 100% concordance.
   - Injects official TRI parameters ($a, b, c$) and generates normalized seed fixtures.
+
+#### `TASK-S2-02c`: Distributed Caching Architecture with Redis 7+
+- **Priority**: `P0` | **Estimation**: 5 pts
+- **Description**: Configure Spring Data Redis with Lettuce connection pool, Jackson JSON serialization, custom TTL cache manager (24h questions, 48h resolutions, 2h active sessions), and Redis Sorted Sets (`ZSET`) for real-time sub-millisecond weekly league leaderboards (`ZINCRBY`, `ZREVRANK`, `ZREVRANGE`).
+- **Acceptance Criteria**:
+  - `@Cacheable` caches question entities in Redis; achieves sub-2ms cache hit latency.
+  - Gamification service updates and queries weekly leaderboards via Redis `ZSET` without executing expensive SQL window functions.
+  - Redis memory configured with `maxmemory 512mb` and `allkeys-lru` eviction policy.
+  - Redis runs strictly inside `aprovaenem-internal` with zero host port exposure.
 
 #### `TASK-S2-03`: Multi-Module Maven Configuration
 - **Priority**: `P0` | **Estimation**: 3 pts

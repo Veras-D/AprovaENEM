@@ -503,52 +503,149 @@ ON notification_logs (user_id, status, created_at DESC);
 
 ## 4. Indexing Strategy & Performance Optimization
 
-To achieve the **`p95 < 100ms`** read requirement for quiz generation and filtering, the following specialized PostgreSQL B-Tree, GIN, and HNSW indexes are deployed:
+To achieve the strict **`p95 < 50ms`** read requirement for quiz generation, catalog filtering, and leaderboard computation, PostgreSQL 16 employs a specialized indexing strategy combining **Composite B-Tree, Partial B-Tree, GIN (Generalized Inverted Index), and HNSW (Hierarchical Navigable Small World)** vector indexes.
 
+### 4.1 Index Definitions by Database
+
+#### A. Examination & Assessment Database (`exam_db`)
 ```sql
--- 1. Filter Questions by Topic, Difficulty, Language and Status (Catalog & Filter Queries)
+-- 1. Full-Text Search (Portuguese) on Question Statements
+-- Enables instant keyword search (e.g., 'termologia', 'função quadrática') without full table scans
+CREATE INDEX idx_questions_statement_fts 
+ON questions USING GIN (to_tsvector('portuguese', statement));
+
+-- 2. Multi-Column Catalog Filter (Topic, Difficulty, Language, Status)
 CREATE INDEX idx_questions_topic_diff_lang 
 ON questions (topic_id, difficulty_level, content_language, status);
 
--- 1b. Partial Index for Active Serving Questions (Instant Quiz Generation)
+-- 3. Partial B-Tree Index for Active Serving Questions
+-- Eliminates table scans for practice quiz generation; ignores DRAFT, SUSPENDED, ANNULLED items
 CREATE INDEX idx_questions_active_serving 
 ON questions (topic_id, difficulty_level) 
 WHERE status = 'ACTIVE';
 
--- 2. Filter Questions by Exam Edition
+-- 4. Edition & Item Lookup (Exam Simulation Mode)
 CREATE INDEX idx_questions_edition_item 
 ON questions (exam_edition_id, item_number);
 
--- 3. Lookup Question Options by Question ID (Composite Foreign Key Fetch)
+-- 5. Foreign Key Covering: Topic to Subject Area
+CREATE INDEX idx_topics_subject_id 
+ON topics (subject_id);
+
+-- 6. Question Options Retrieval by Question ID
 CREATE INDEX idx_question_options_lookup 
 ON question_options (question_id, option_letter);
 
--- 4. Session Lookup by Anonymous Session ID or User ID
+-- 7. Practice Session Lookup (Anonymous Session & Status)
 CREATE INDEX idx_practice_sessions_lookup 
 ON practice_sessions (anonymous_session_id, status);
 
+-- 8. Partial Index for Registered User Practice Sessions
 CREATE INDEX idx_practice_sessions_user 
-ON practice_sessions (user_id) 
+ON practice_sessions (user_id, started_at DESC) 
 WHERE user_id IS NOT NULL;
 
--- 5. Student Attempts Retrieval by Session
+-- 9. Reverse Index on Session Questions
+CREATE INDEX idx_session_questions_question_id 
+ON session_questions (question_id);
+
+-- 10. Student Attempts Retrieval by Session
 CREATE INDEX idx_student_attempts_session 
 ON student_attempts (session_id, is_correct);
 
--- 6. GIN Index on Diagnostic JSONB Breakdown
+-- 11. Distractor & TRI IRT Analytics: Attempts by Question & Option
+-- Accelerates computation of distractor selection percentages and item difficulty calibration
+CREATE INDEX idx_student_attempts_question_distractor 
+ON student_attempts (question_id, selected_option, is_correct);
+
+-- 12. GIN Index on Diagnostic Breakdown (JSONB Path Operations)
 CREATE INDEX idx_diagnostic_topic_breakdown_gin 
 ON diagnostic_summaries USING GIN (topic_breakdown);
 
--- 7. HNSW Vector Index for Semantic Cosine Search (Sub-5ms RAG Retrieval)
+-- 13. HNSW Vector Index for Semantic Cosine Search (Sub-5ms RAG Retrieval)
 CREATE INDEX idx_knowledge_chunks_hnsw 
 ON knowledge_chunks 
 USING hnsw (embedding vector_cosine_ops) 
 WITH (m = 16, ef_construction = 64);
 
--- 8. Weekly Leaderboard League Query (Sub-5ms Rank Filtering)
+-- 14. Phase 2: Student Essays by User
+CREATE INDEX idx_student_essays_user 
+ON student_essays (user_id, created_at DESC);
+
+-- 15. Phase 2: Partial Index for Worker Queue (Pending Essay OCR / Grading)
+CREATE INDEX idx_student_essays_processing 
+ON student_essays (created_at) 
+WHERE status = 'PROCESSING';
+```
+
+#### B. Identity & Gamification Database (`auth_db`)
+```sql
+-- 1. Anonymous Session Token Lookup
+CREATE INDEX idx_anonymous_session_uuid 
+ON anonymous_sessions(session_uuid);
+
+-- 2. Foreign Key Covering: Linked User Claims
+CREATE INDEX idx_anonymous_sessions_claimed 
+ON anonymous_sessions(claimed_by_user_id) 
+WHERE claimed_by_user_id IS NOT NULL;
+
+-- 3. Daily Streak Preserver Cron (Runs at 19:00 BRT)
+-- Partial index targeting only users who opted in and have not yet studied today
+CREATE INDEX idx_gamification_streak_reminder 
+ON user_gamification_profiles (last_activity_date) 
+WHERE opt_in_reminders = TRUE;
+
+-- 4. Weekly Leaderboard Tier Query (Sunday Reset & Real-Time Ranks)
 CREATE INDEX idx_weekly_leaderboards_league_xp 
 ON weekly_leaderboards (year, week_number, league_tier, weekly_xp DESC);
+
+-- 5. User Achievements Lookup
+CREATE INDEX idx_user_achievements_user 
+ON user_achievements (user_id, unlocked_at DESC);
 ```
+
+#### C. Notification Database (`notification_db`)
+```sql
+-- 1. Active Device Tokens by User
+CREATE INDEX idx_user_device_tokens_user 
+ON user_device_tokens (user_id, is_active);
+
+-- 2. User Notification Inbox (Sorted by Recency)
+CREATE INDEX idx_notifications_user_inbox 
+ON notification_logs (user_id, status, created_at DESC);
+```
+
+---
+
+### 4.2 Query-to-Index Performance Mapping Matrix
+
+| Inbound Query / Operation | Target Table | Primary Index Used | Index Scan Type | Target Latency |
+| :--- | :--- | :--- | :--- | :---: |
+| **Instant Quiz Generation** (`GET /api/v1/sessions/generate`) | `questions` | `idx_questions_active_serving` | `Bitmap Index Scan` | $< 5\text{ ms}$ |
+| **Topic Question Catalog** (`GET /api/v1/questions?topic=...`) | `questions` | `idx_questions_topic_diff_lang` | `Index Scan` | $< 8\text{ ms}$ |
+| **Keyword Search** (`GET /api/v1/questions?query=termologia`) | `questions` | `idx_questions_statement_fts` | `Bitmap Index Scan` | $< 12\text{ ms}$ |
+| **Session Hydration** (`GET /api/v1/sessions/{id}`) | `question_options` | `idx_question_options_lookup` | `Index Scan` | $< 3\text{ ms}$ |
+| **Attempt Submission & Distractor Stats** | `student_attempts` | `idx_student_attempts_question_distractor` | `Index Only Scan` | $< 4\text{ ms}$ |
+| **RAG Vector Search** (`POST /api/v1/questions/{id}/ask`) | `knowledge_chunks` | `idx_knowledge_chunks_hnsw` | `HNSW Index Scan` | $< 5\text{ ms}$ |
+| **Daily Streak 19:00 BRT Push Dispatch** | `user_gamification_profiles` | `idx_gamification_streak_reminder` | `Bitmap Index Scan` | $< 15\text{ ms}$ |
+| **Weekly League Leaderboard Top 50** | `weekly_leaderboards` | `idx_weekly_leaderboards_league_xp` | `Index Scan` | $< 5\text{ ms}$ |
+| **Notification Inbox** (`GET /api/v1/notifications`) | `notification_logs` | `idx_notifications_user_inbox` | `Index Scan` | $< 3\text{ ms}$ |
+
+---
+
+### 4.3 Index Maintenance & Monitoring Governance
+
+1. **Unused Index Auditing**:
+   Periodically monitored via PostgreSQL statistics to ensure no deadweight index slows down `INSERT`/`UPDATE` operations:
+   ```sql
+   SELECT schemaname, relname, indexrelname, idx_scan, idx_tup_read, idx_tup_fetch
+   FROM pg_stat_user_indexes
+   WHERE idx_scan = 0 AND schemaname = 'public';
+   ```
+2. **Zero-Downtime Index Rebuilding**:
+   All production indexes are maintained with `REINDEX CONCURRENTLY` to avoid table-level write locks.
+3. **Deterministic Flyway Migrations**:
+   All indexes are codified into versioned migration scripts (`V1__init_schema.sql`, `V2__performance_indexes.sql`), strictly disallowing ad-hoc manual DDL.
 
 ---
 
@@ -618,3 +715,172 @@ flowchart LR
 2. **Dedicated Persistence Entities**: `infrastructure/.../entity/` contains specialized `@Entity` classes (`QuestionJpaEntity`) optimized for Hibernate mapping, proxying, and caching.
 3. **Bidirectional Mapping**: Explicit mappers (`MapStruct` or dedicated mapper classes) convert between JPA Entities and Pure Domain Models at the adapter boundary, preventing Hibernate lazy loading leaks (`LazyInitializationException`) or persistence state pollution in business logic.
 4. **Vector Search Integration**: Vector similarity queries (`<=>`) are executed via native SQL queries within Spring Data repositories or through Spring AI's `PgVectorStore`.
+
+---
+
+## 7. Distributed Caching Architecture with Redis 7+
+
+To offload 85%+ of read queries from PostgreSQL, guarantee sub-5ms response times during high-traffic exam seasons, and enable sub-millisecond gamification leaderboards, AprovaENEM integrates **Redis 7+ Alpine** as a distributed in-memory cache and state store.
+
+```mermaid
+flowchart TD
+    Client["Client / frontend-api"] --> Service["Exam / Auth Service"]
+    
+    subgraph CachingLayer ["Redis 7+ Distributed Memory Grid"]
+        RedisQuestion["L2 Entity Cache<br/>`questions:{id}` (TTL 24h)"]
+        RedisCatalog["Catalog Filter Cache<br/>`catalog:{topic}:{diff}` (TTL 1h)"]
+        RedisSession["Active Session Cache<br/>`sessions:active:{id}` (TTL 2h)"]
+        RedisZSet["Gamification Leaderboard (ZSET)<br/>`leaderboard:{year}:{week}:{league}`"]
+        RedisRateLimit["Token Bucket Rate Limiting<br/>`ratelimit:{ip}:{route}`"]
+    end
+    
+    subgraph PersistentDB ["PostgreSQL 16 Storage Engine"]
+        Postgres[("PostgreSQL 16 Tables")]
+    end
+
+    Service -->|1. Cache Hit (Sub-2ms)| CachingLayer
+    Service -.->|2. Cache Miss| Postgres
+    Postgres -.->|3. Hydrate & Populate Cache| CachingLayer
+```
+
+### 7.1 Redis Key Schema & Expiration (TTL) Matrix
+
+| Cache Namespace / Key Format | Data Structure | TTL | Invalidation Trigger | Purpose |
+| :--- | :--- | :--- | :--- | :--- |
+| `questions:{questionId}` | String (JSON) | **24 hours** | Admin update (`@CacheEvict`) | Hydrates full question statement, options, and LaTeX without hitting `exam_db`. |
+| `questions:resolutions:{questionId}` | String (JSON) | **48 hours** | Admin update | Step-by-step resolution text and pedagogical concept explanations. |
+| `catalog:{topicId}:{diff}:{page}` | String (JSON) | **1 hour** | Question status change | Paginated catalog queries for browsing questions by subject and difficulty. |
+| `sessions:active:{sessionId}` | Hash | **2 hours** | Session completion / abandonment | Fast state checks for in-progress student quiz sessions. |
+| `leaderboard:{year}:{week}:{league}` | **Sorted Set (`ZSET`)** | **7 days** | Sunday 23:59 BRT league reset | Real-time $O(\log N)$ XP rankings across thousands of concurrent students. |
+| `ratelimit:{ip}:{route}` | String (Int Counter) | **1 minute** | Sliding window expiry | Distributed Token Bucket quota counter shared across Gateway instances. |
+
+---
+
+### 7.2 Real-Time Gamification Leaderboard Engine (Redis `ZSET`)
+
+Calculating global ranks in relational databases using `RANK() OVER (ORDER BY weekly_xp DESC)` triggers costly sequential table scans and sorting overhead under high concurrency. Redis **Sorted Sets (`ZSET`)** solve this by maintaining a skip-list with logarithmic time complexity:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Student as Student Client
+    participant Svc as Auth / Gamification Service
+    participant Redis as Redis 7 (ZSET)
+    participant DB as PostgreSQL (weekly_leaderboards)
+
+    Student->>Svc: Submit Correct Answer (+100 XP)
+    Svc->>Redis: ZINCRBY leaderboard:2026:38:BRONZE 100 "user_123"
+    Note over Redis: $O(\log N)$ update to skip-list.<br/>New score immediately indexed.
+    
+    Student->>Svc: GET /api/v1/gamification/leaderboard
+    Svc->>Redis: ZREVRANK leaderboard:2026:38:BRONZE "user_123"
+    Redis-->>Svc: Rank = 4 (Index 3)
+    Svc->>Redis: ZREVRANGE leaderboard:2026:38:BRONZE 0 9 WITHSCORES
+    Redis-->>Svc: Top 10 Leaderboard JSON
+    Svc-->>Student: 200 OK (Instant Rank & Top 10)
+
+    Note over Svc,DB: Asynchronous periodic flush / Sunday reset persists snapshot to Postgres
+```
+
+---
+
+### 7.3 Spring Boot Cache Configuration (`RedisConfig.java`)
+
+```java
+package com.openenem.assessment.infrastructure.config;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+
+@Configuration
+@EnableCaching
+public class RedisConfig {
+
+    @Value("${spring.data.redis.host:redis}")
+    private String redisHost;
+
+    @Value("${spring.data.redis.port:6379}")
+    private int redisPort;
+
+    @Value("${spring.data.redis.password:}")
+    private String redisPassword;
+
+    @Bean
+    public LettuceConnectionFactory redisConnectionFactory() {
+        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(redisHost, redisPort);
+        if (redisPassword != null && !redisPassword.isBlank()) {
+            config.setPassword(redisPassword);
+        }
+        return new LettuceConnectionFactory(config);
+    }
+
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(mapper);
+
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(serializer);
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(serializer);
+        template.afterPropertiesSet();
+        return template;
+    }
+
+    @Bean
+    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(mapper);
+
+        RedisCacheConfiguration defaultCacheConfig = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofHours(1))
+                .disableCachingNullValues()
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer));
+
+        // Specialized TTLs per cache name
+        Map<String, RedisCacheConfiguration> cacheConfigs = new HashMap<>();
+        cacheConfigs.put("questions", defaultCacheConfig.entryTtl(Duration.ofHours(24)));
+        cacheConfigs.put("question_resolutions", defaultCacheConfig.entryTtl(Duration.ofHours(48)));
+        cacheConfigs.put("active_sessions", defaultCacheConfig.entryTtl(Duration.ofHours(2)));
+
+        return RedisCacheManager.builder(connectionFactory)
+                .cacheDefaults(defaultCacheConfig)
+                .withInitialCacheConfigurations(cacheConfigs)
+                .build();
+    }
+}
+```
+
+---
+
+### 7.4 Memory Eviction & Safety Governance
+1. **LRU Eviction Policy**:
+   - `maxmemory 512mb`
+   - `maxmemory-policy allkeys-lru` (Evicts least recently used keys automatically when memory pressure occurs, preventing out-of-memory crashes).
+2. **Network Isolation**:
+   - Redis binds exclusively to the internal Docker bridge network (`aprovaenem-internal`).
+   - Host port `6379` is **strictly unexposed** to the outside world.
+   - Protected with strong authentication (`requirepass ${REDIS_PASSWORD}`).

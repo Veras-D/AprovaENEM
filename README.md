@@ -44,8 +44,8 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 
 ### ⚙️ Backend & Distributed Architecture (`backend/`)
 - 🗄️ **Complete INEP Question Bank**: Past exams categorized by subject area (*Mathematics, Natural Sciences, Humanities, Languages*), discipline, sub-topic, and Item Response Theory (TRI) difficulty.
-- ⚡ **Real-Time Assessment & Grading**: Millisecond evaluation of submissions with immediate distractor analysis.
-- 🕹️ **Event-Driven Gamification Engine**: Evaluates domain events (`QuestionAnsweredEvent`, `SessionCompletedEvent`) to compute XP rewards, evaluate daily study goals, and calculate weekly league rankings via PostgreSQL window functions.
+- ⚡ **Real-Time Assessment & Sub-5ms Caching**: Millisecond evaluation of submissions with immediate distractor analysis, backed by **Redis 7+ L2 distributed caching** and specialized PostgreSQL composite B-Tree and partial indexes.
+- 🕹️ **Event-Driven Gamification Engine**: Evaluates domain events (`QuestionAnsweredEvent`, `SessionCompletedEvent`) to compute XP rewards, evaluate daily study goals, and calculate weekly league rankings via **Redis Sorted Sets (`ZSET`)** with asynchronous persistence to PostgreSQL.
 - 🔔 **Multi-Channel Notification Microservice**: Decoupled `notification-service` dispatching transactional emails (SES/Resend), Web Push, and mobile notifications (FCM/APNs) for daily streak preservation at 19:00 BRT and Sunday league results.
 - 🤖 **Socratic AI Study Tutor**: Powered by **Google Gemini (gemini-1.5-flash)** with pedagogical guardrails: guides students through underlying scientific and mathematical principles without spoiling answers.
 - 🧠 **Retrieval-Augmented Generation (RAG) & Vector Search**: Grounded in official INEP curriculum matrices, verified step-by-step resolutions, and distractor catalogs via **PostgreSQL 16 `pgvector`** with HNSW semantic indexing to eliminate LLM hallucinations before student prompts are dispatched.
@@ -80,11 +80,12 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 
 ### Persistence & Storage
 - **Primary Database**: PostgreSQL 16 (isolated `auth_db`, `exam_db`, and `notification_db`)
+- **Distributed Cache & State Grid**: **Redis 7+ Alpine** (L2 entity caching, Redis `ZSET` for sub-millisecond weekly league leaderboards, Token Bucket rate limiting, and ephemeral session store)
 - **Database Migrations**: **Flyway** (`flyway-core` + `flyway-database-postgresql`, strictly immutable SQL scripts `V1__...`, zero auto-DDL in runtime)
 - **ORM & Data Access**: **Spring Data JPA / Hibernate 6** (Jakarta Persistence), isolated within outbound adapters to preserve pure Java domain entities
 - **Vector Search Engine**: **PostgreSQL `pgvector`** extension (768-dim embeddings, HNSW cosine index `m=16, ef_construction=64`) for sub-5ms pedagogical RAG retrieval
 - **Key Strategy**: Time-ordered UUIDv7
-- **Indexing**: Specialized B-Tree multi-column indexes, GIN JSONB indexes, and HNSW vector indexes
+- **Indexing Strategy**: Comprehensive PostgreSQL indexes including Composite B-Trees, Partial Indexes (`WHERE status = 'ACTIVE'`), Portuguese Full-Text Search GIN (`to_tsvector`), GIN JSONB Path indexes, and HNSW Vector indexes
 
 ### Observability & Resilience
 - **Metrics Scraping**: Prometheus Server (Port 9090) scraping `/actuator/prometheus`

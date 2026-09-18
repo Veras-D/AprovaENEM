@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.1.1] - 2026-09-18
 ### 🔧 Changed
+- feat(cache): Architect Redis 7+ distributed caching grid (L2 entity cache, leaderboard ZSET, rate limiting) and comprehensive PostgreSQL indexing strategy (B-Tree, Partial, GIN Full-Text, HNSW Vector)
 - feat(security): Specify zero-trust perimeter isolation, dedicated frontend-api BFF microservice, strict CORS engine with origin whitelisting, and zero public exposure for internal domain microservices
 - docs(mobile): Pivot mobile application roadmap from React Native/Expo to Native Android (Kotlin / Java & Jetpack Compose) and Kotlin Multiplatform (KMP), unifying the stack under the modern JVM ecosystem with Room SQLite, CameraX, and WorkManager
 - feat(domain): Add question lifecycle status (ACTIVE, SUSPENDED, NEEDS_REVIEW, DRAFT, ANNULLED) with partial PostgreSQL indexes and admin management
