@@ -11,6 +11,11 @@
 
 To ensure senior-level software engineering rigor and production stability, AprovaENEM enforces a **strict, multi-stage automated verification pipeline**. Every Pull Request and commit to `main` must pass all gates across both backend and frontend tiers before merge.
 
+> [!IMPORTANT]
+> **Reconecta Recode Phased CI Execution**:
+> - **JAM 1 (Sprints 1 to 3 — Back-end Focus)**: CI enforces all backend verification jobs: Java 21 compilation with `-Werror`, Checkstyle, PMD, PMD CPD, Trivy CVE audit, Gitleaks, JUnit 5 + Mockito Unit Tests, Testcontainers PostgreSQL 16 Integration Tests, JaCoCo unified coverage ($\ge 80\%$), and Newman/Postman API contract tests.
+> - **JAM 2 (Sprints 4 to 6 — Front-end & Integration Focus)**: Activates frontend and end-to-end verification jobs: TypeScript strict checking (`strict: true`), ESLint, Vitest + React Testing Library component tests ($\ge 80\%$), Cypress student journeys, and Playwright cross-browser matrices against the deployed Docker stack.
+
 ```mermaid
 flowchart LR
     G1["Gate 1<br/>Strict Compilation<br/>(Java -Werror & TS)"] --> G2["Gate 2<br/>Static Analysis<br/>(Checkstyle / PMD / ESLint)"]
@@ -665,3 +670,53 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+---
+
+## 6. Multi-Stage AI-Assisted & Real-Time Security Audit Framework
+
+To guarantee zero specification discrepancies, zero data leakage, and bulletproof security before milestone sign-offs, AprovaENEM implements an exhaustive **Multi-Stage Security & Integrity Audit** at the conclusion of each major engineering cycle:
+1. **Milestone 1 (End of JAM 1 / Sprint 3 — Back-end Finalization)**: `TASK-S3-11`
+2. **Milestone 2 (End of JAM 2 / Sprint 6 — Full-Stack & Cloud Deployment)**: `TASK-S6-06`
+
+```mermaid
+flowchart TD
+    subgraph AuditFramework ["4-Stage Security Verification Engine"]
+        S1["Stage 1: AI-Assisted Static & Semantic Audit<br/>• LLM Code Review across Spring Security Filters & Controllers<br/>• Prompt Injection & Socratic Guardrail Fuzzing<br/>• OWASP API Security Top 10 Threat Model Alignment"]
+        S2["Stage 2: Automated Dynamic & Supply Chain Scanning<br/>• Trivy Dependency & Container Audit (0 Critical/High CVEs)<br/>• Gitleaks Deep History Git Secret Scan<br/>• Static AST Analysis via PMD Security Rules"]
+        S3["Stage 3: Real-Time Runtime Penetration Testing<br/>• Live Interactive Exploits against Running Cluster / Deployed URL<br/>• JWT Forgery, Signature Tampering & RBAC Escalation<br/>• Strict CORS Spoofing & Header Stripping Verification<br/>• Token Bucket Rate Limit Flooding & DoS Stress<br/>• SQLi, pgvector Injection & Parameter Tampering"]
+        S4["Stage 4: Formal Attestation & Audit Reporting<br/>• Automated Generation of Audit Markdown Certificate<br/>• Zero Vulnerability Threshold Gate for Milestone Sign-off"]
+
+        S1 --> S2 --> S3 --> S4
+    end
+
+    style AuditFramework fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff
+    style S1 fill:#1e293b,stroke:#818cf8,color:#fff
+    style S2 fill:#1e293b,stroke:#818cf8,color:#fff
+    style S3 fill:#1e293b,stroke:#f43f5e,stroke-width:2px,color:#fff
+    style S4 fill:#065f46,stroke:#34d399,stroke-width:2px,color:#fff
+```
+
+### 6.1 Backend Multi-Stage Security Audit Specification (JAM 1 — Sprint 3)
+
+The backend audit validates that the isolated architecture, edge facade, and core domain are impervious to external attack:
+
+| Stage | Audit Scope | Tooling & Methodology | Pass Criteria / Security Target |
+| :--- | :--- | :--- | :--- |
+| **Stage 1: AI Threat Modeling** | • Spring Security `SecurityFilterChain` & Filter order<br>• Socratic AI prompt leak prevention<br>• Controller parameter annotations & validation | AI security auditor prompts evaluating AST against OWASP API Top 10 (2023) | Zero Broken Object Level Authorization (BOLA), zero Broken Function Level Authorization (BFLA), prompt cannot be coerced to reveal answers. |
+| **Stage 2: Automated DAST & CVEs** | • Container base images (`eclipse-temurin:21-jre-alpine`)<br>• Third-party Maven dependencies<br>• Leaked tokens / API keys | `trivy image`, `trivy fs`, `gitleaks detect --verbose` | 0 Critical / High CVEs; 0 leaked credentials across all commits. |
+| **Stage 3: Real-Time Penetration** | • **Live JWT Tampering**: Send tokens with modified signatures, expired timestamps, and `alg: none`<br>• **Strict CORS Spoofing**: Send requests with unwhitelisted `Origin: https://attacker.com` and `null`<br>• **Perimeter Breach**: Attempt direct access to internal ports (`8081-8083`, `5432-5434`, `6379`, `5672`)<br>• **Header Spoofing**: Send requests with forged `X-User-Id` and `X-User-Roles`<br>• **Rate Limit Stress**: Burst 120 req/min from single IP to `/api/v1/questions/{id}/ask` | Live attack script executed against the running Docker Compose backend cluster | • JWT tampering returns `401 Unauthorized`<br>• CORS spoofing returns `403 Forbidden` or omits `Access-Control-Allow-Origin`<br>• Internal ports completely unreachable from outside<br>• Forged headers stripped by `frontend-api`<br>• Rate limiter trips with `429 Too Many Requests` and `Retry-After`. |
+| **Stage 4: Attestation** | Synthesis of findings | Generation of `docs/audit/jam1-backend-security-audit.md` | Formal sign-off granting readiness for JAM 1 repository submission. |
+
+---
+
+### 6.2 Full-Stack Multi-Stage Security Audit Specification (JAM 2 — Sprint 6)
+
+The full-stack audit validates client-side resilience and public deployment hardening:
+
+| Stage | Audit Scope | Tooling & Methodology | Pass Criteria / Security Target |
+| :--- | :--- | :--- | :--- |
+| **Stage 1: AI Client Code Audit** | • React components & dangerouslySetInnerHTML audit<br>• Zustand session token storage & lifecycle<br>• KaTeX LaTeX input sanitizer | AI-assisted AST scanning for DOM XSS, prototype pollution, and sensitive data leakage | Zero client-side script execution vectors; zero plaintext secrets in browser memory. |
+| **Stage 2: Supply Chain & Static** | • Frontend npm dependencies (`package-lock.json`)<br>• ESLint security rules (`eslint-plugin-security`)<br>• Edge reverse proxy security headers (`nginx.conf`) | `npm audit --audit-level=high`, `trivy fs frontend/` | 0 High / Critical vulnerabilities in frontend bundles. |
+| **Stage 3: Real-Time Live URL Audit** | • **Live XSS & LaTeX Injection**: Inject `<script>alert(1)</script>`, `\href{javascript:...}`, and SVG payloads into quizzes and Socratic chat<br>• **CSP Verification**: Assert headers on public domain: `Content-Security-Policy`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`<br>• **Token Interception**: Validate session persistence across tabs and verify cookies/storage are scoped<br>• **Concurrent Abuse**: Fuzz quiz submission endpoints under high concurrent browser load | Automated Cypress/Playwright security injection tests & real-time manual penetration testing on the deployed URL | • All LaTeX equations safely sanitized without script execution<br>• Browser blocks all unauthorized external scripts via CSP<br>• Zero clickjacking possible (`X-Frame-Options: DENY`)<br>• Zero memory leaks or unauthorized cross-session data crossover. |
+| **Stage 4: Attestation** | Synthesis of findings | Generation of `docs/audit/jam2-fullstack-security-audit.md` | Formal sign-off granting readiness for partner company presentations and live student traffic. |

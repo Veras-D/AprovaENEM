@@ -34,8 +34,8 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 
 ### 📱 Student Web & Mobile Experience (`frontend/`)
 - 🎯 **Frictionless Instant Practice**: Students start solving questions immediately with zero mandatory registration, phone verification, or paywalls.
-- 🎮 **Game Experience & Progression**: Experience points (XP), student levels (from *Calouro* to *Nota 1000*), celebratory level-up animations, and unlockable achievement badges for registered users.
-- 🔥 **Daily Goals & Streak Tracker**: Customizable daily question targets (5–25 questions/day), daily streak counter (*Ofensiva*), emergency monthly freeze protection, and automated study reminders.
+- 🎮 **Game Experience & Progression**: Experience points (XP), student levels (from *Freshman* to *Top Scorer*), celebratory level-up animations, and unlockable achievement badges for registered users.
+- 🔥 **Daily Goals & Streak Tracker**: Customizable daily question targets (5–25 questions/day), daily streak counter, emergency monthly freeze protection, and automated study reminders.
 - 🏆 **Weekly Reset Leagues**: Competitive weekly leaderboards across 4 tiers (Bronze, Silver, Gold, Diamond) resetting every Sunday at 23:59 BRT to foster peer motivation.
 - 📱 **Mobile-First & 3G/4G Optimized**: High-density, low-bandwidth UI built for budget smartphones and constrained mobile data plans.
 - 📊 **Interactive Diagnostic Radar**: Visual skill radar charts mapping student mastery across topics (`MASTERED`, `ATTENTION_NEEDED`, `CRITICAL`).
@@ -53,7 +53,7 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 - 📈 **Datadog-Style Observability**: Complete Prometheus APM metrics, Micrometer distributed tracing (`traceId` / `spanId` MDC injection), and sub-minute trace-to-error bug isolation.
 - 🌐 **Bilingual Backend (i18n)**: Spring Boot `MessageSource` supporting both Portuguese (`pt-BR`) and English (`en`).
 - 🏗️ **Hexagonal Architecture**: Strict separation of pure Java domain models from Spring Boot frameworks and PostgreSQL persistence.
-- 📝 **Phase 2 Premium Roadmap (*Redação Nota 1000*)**: Handwritten essay photo scanning via multimodal vision OCR and 5-competency grading (0–1,000 pts) powered by a **Provider-Agnostic AI Engine with LLM-as-a-Judge arbitration** (benchmarked via empirical evals across candidate models for lowest cost and highest scoring accuracy) under a paid plan / subsidized vouchers.
+- 📝 **Phase 2 Premium Roadmap (*AI Essay Evaluator*)**: Handwritten essay photo scanning via multimodal vision OCR and 5-competency grading (0–1,000 pts) powered by a **Provider-Agnostic AI Engine with LLM-as-a-Judge arbitration** (benchmarked via empirical evals across candidate models for lowest cost and highest scoring accuracy) under a paid plan / subsidized vouchers.
 - 📱 **Phase 2 Mobile Roadmap (Native Android Kotlin & KMP)**: Native mobile application built with **Kotlin / Java** and **Jetpack Compose** on Android, leveraging **Room Database** for offline SQLite question caching, **CameraX** for edge document scanning of handwritten essays, and **Kotlin Multiplatform (KMP)** for cross-platform iOS expansion.
 
 ---
@@ -339,6 +339,11 @@ AprovaENEM enforces a strict, enterprise-grade automated quality gate across all
    - **API Contracts**: Automated Postman regression suite executed via **Newman CLI**.
    - **E2E**: **Cypress** interactive DOM workflows + **Playwright** cross-browser headless suites verifying student practice journeys against Docker Compose.
 6. **Gate 6: Build Verification**: Clean container builds via Docker Compose and production bundle packaging.
+
+### 🔒 Multi-Stage AI-Assisted & Real-Time Security Audits
+Each engineering milestone is sealed by a comprehensive multi-stage security audit to guarantee zero vulnerabilities or specification gaps:
+- **JAM 1 Exit Gate (Sprint 3 — Back-end)**: AI-assisted OWASP API Top 10 threat modeling, automated DAST/CVE scans (Trivy, Gitleaks), and live runtime penetration testing against the container stack (JWT signature forgery, CORS origin bypass, perimeter isolation breach, header spoofing rejection, Token Bucket flood testing, and SQLi/pgvector fuzzing).
+- **JAM 2 Exit Gate (Sprint 6 — Full-Stack Deployment)**: AI-driven client DOM and KaTeX LaTeX injection audits, supply-chain scans, and live interactive penetration testing on the public deployed URL (strict CSP enforcement, clickjacking immunity, session storage isolation, and mobile WebView sandbox checks).
 
 ---
 
