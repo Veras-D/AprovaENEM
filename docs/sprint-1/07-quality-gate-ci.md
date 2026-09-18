@@ -218,9 +218,9 @@ To prevent coverage blind spots, JaCoCo is configured to record **both** unit te
                 </rules>
                 <excludes>
                     <!-- Exclude configuration, DTO records, and application entry points -->
-                    <exclude>**/com/openenem/**/Application.*</exclude>
-                    <exclude>**/com/openenem/**/config/**</exclude>
-                    <exclude>**/com/openenem/**/dto/**</exclude>
+                    <exclude>**/com/aprovaenem/**/Application.*</exclude>
+                    <exclude>**/com/aprovaenem/**/config/**</exclude>
+                    <exclude>**/com/aprovaenem/**/dto/**</exclude>
                 </excludes>
             </configuration>
         </execution>

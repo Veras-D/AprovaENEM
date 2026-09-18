@@ -172,7 +172,7 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
 - **Priority**: `P0` | **Estimation**: 5 pts
 - **Description**: Implement pure Java domain entities (`Question`, `QuestionStatus`, `ExamSession`, `Attempt`, `DiagnosticReport`) without any Spring or JPA annotations.
 - **Acceptance Criteria**:
-  - 100% framework-free pure Java classes under `com.openenem.assessment.domain`.
+  - 100% framework-free pure Java classes under `com.aprovaenem.assessment.domain`.
   - Enforces `QuestionStatus` lifecycle enum (`ACTIVE`, `SUSPENDED`, `NEEDS_REVIEW`, `DRAFT`, `ANNULLED`).
   - Domain validation rules: options must be between A and E, session cannot receive attempts once completed.
 

@@ -1,7 +1,7 @@
 # Project Charter & Scope Statement — AprovaENEM
 
 > **Document Status**: Approved (Sprint 1 Baseline)  
-> **Product Name**: AprovaENEM / OpenENEM API  
+> **Product Name**: AprovaENEM  
 > **Target Audience**: Brazilian Public School Students, Community Cursinhos, Open Source Education Ecosystem  
 
 ---

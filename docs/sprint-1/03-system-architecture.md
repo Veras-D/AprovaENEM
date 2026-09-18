@@ -554,7 +554,7 @@ sequenceDiagram
 
 #### Spring Cloud Gateway / Reactive WebFlux CORS Configuration (`CorsConfig.java`)
 ```java
-package com.openenem.gateway.config;
+package com.aprovaenem.gateway.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -861,7 +861,7 @@ flowchart TD
 
 ### Standardized Package Layout
 ```text
-com.openenem.assessment/
+com.aprovaenem.assessment/
 ├── domain/                      # PURE JAVA (No Spring, No JPA)
 │   ├── model/
 │   │   ├── Question.java        # Aggregate root

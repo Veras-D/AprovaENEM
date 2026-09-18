@@ -787,7 +787,7 @@ sequenceDiagram
 ### 7.3 Spring Boot Cache Configuration (`RedisConfig.java`)
 
 ```java
-package com.openenem.assessment.infrastructure.config;
+package com.aprovaenem.assessment.infrastructure.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
