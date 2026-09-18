@@ -96,9 +96,9 @@ All architectural foundations, entity models, REST contracts, and verification b
 Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistence, Caching, and Ingress Security**.
 
 ### Epic 1: Infrastructure & Database Foundation
-#### `TASK-S2-01`: Back-end Docker Compose Stack with Perimeter Isolation & Self-Healing Resilience
+#### `TASK-S2-01`: Back-end Docker Compose Stack with Perimeter Isolation, Self-Healing Resilience & Persistent Named Volumes
 - **Priority**: `P0` | **Estimation**: 5 pts
-- **Description**: Setup root `docker-compose.yml` orchestrating the backend microservices with strict network segregation and Kubernetes-grade container self-healing: `frontend-edge` network exposing ONLY port 80/443 (Nginx reverse-proxying `/api/**` to `frontend-api`), internal private `aprovaenem-internal` network (`internal: true`) with zero host ports exposed for domain services, `restart: unless-stopped` crash recovery on all containers, `/actuator/health` probes, deterministic boot sequencing (`condition: service_healthy`), and an `autoheal` container daemon monitoring `/var/run/docker.sock` to detect and restart frozen containers automatically.
+- **Description**: Setup root `docker-compose.yml` orchestrating the backend microservices with strict network segregation, Kubernetes-grade container self-healing, and enterprise persistent storage architecture: `frontend-edge` network exposing ONLY port 80/443 (Nginx reverse-proxying `/api/**` to `frontend-api`), internal private `aprovaenem-internal` network (`internal: true`) with zero host ports exposed for domain services, `restart: unless-stopped` crash recovery on all containers, `/actuator/health` probes, deterministic boot sequencing (`condition: service_healthy`), `autoheal` container daemon, and Docker **named volumes** (`driver: local`) for all stateful stores (`auth-db-data`, `exam-db-data`, `notification-db-data`, `redis-data`, `rabbitmq-data`, `exam-assets-data`, `prometheus-data`, `grafana-data`), maintaining strict 12-Factor statelessness for compute microservices.
 - **Acceptance Criteria**:
   - `docker compose up -d` brings up all backend services, databases, cache, queue, and telemetry with 1 command.
   - Host port bindings strictly limited: ONLY `80` / `443` (Nginx) bound to `0.0.0.0`.
@@ -107,6 +107,10 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
   - Spring Boot services configure `/actuator/health` probes; PostgreSQL (`pg_isready`), Redis (`redis-cli ping`), and RabbitMQ (`rabbitmq-diagnostics ping`) configure native probes.
   - Downstream services wait for `condition: service_healthy` before initiating database or cache connections, eliminating cold-start boot races.
   - Lightweight `autoheal` container automatically detects and respawns deadlocked containers marked `unhealthy`.
+  - Persistent named volumes configured with `driver: local` for PostgreSQL databases (`/var/lib/postgresql/data`), Redis (`/data`), RabbitMQ (`/var/lib/rabbitmq`), Docling/Nginx assets, and Prometheus/Grafana TSDB.
+  - Backend application microservices (`frontend-api`, `auth-service`, `exam-service`, `notification-service`) remain strictly stateless (Twelve-Factor Factor VI) with zero local persistent volume mounts.
+  - Zero data loss verified across container teardown: `docker compose down && docker compose up -d` preserves all database records, migrations, Redis leaderboards, and extracted assets.
+  - Shared `exam-assets-data` volume verified: `ingestion-service` writes extracted WebP figures to `/app/extracted_assets` and `nginx-proxy` mounts it read-only to serve `/assets/questions/` directly with zero JVM overhead.
 
 #### `TASK-S2-02`: Database Flyway Migrations & Performance Indexing Strategy
 - **Priority**: `P0` | **Estimation**: 5 pts

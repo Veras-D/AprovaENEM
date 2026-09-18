@@ -28,7 +28,7 @@ All planning, architecture, business modeling, and API route definitions for Spr
 Under the **Reconecta Recode** program structure, **JAM 1 (Sprints 1 to 3) is dedicated exclusively to the Back-end**, culminating in `TASK-S3-11` (Multi-Stage AI-Assisted & Real-Time Security Audit) and delivering a documented REST API via Swagger/Postman on GitHub. Frontend application development and full-stack integration will commence in **JAM 2 (Sprints 4 to 6)**, terminating in `TASK-S6-06` (Full-Stack Security Audit).
 
 Please refer to the master [BACKLOG.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/BACKLOG.md) for the active user stories scheduled for Sprint 2:
-1. `TASK-S2-01`: Docker Compose Back-end Infrastructure Stack (`auth_db`, `exam_db`, `notification_db`, `redis`, `rabbitmq`, Prometheus, Grafana).
+1. `TASK-S2-01`: Docker Compose Back-end Infrastructure Stack with Named Persistent Volumes, Self-Healing Resilience & Perimeter Isolation (`auth_db`, `exam_db`, `notification_db`, `redis`, `rabbitmq`, Prometheus, Grafana).
 2. `TASK-S2-02`: PostgreSQL Flyway migration scripts based on `04-data-modeling.md` with specialized performance indexes.
 3. `TASK-S2-02c`: Redis 7+ distributed caching layer and real-time gamification leaderboard ZSET engine.
 4. `TASK-S2-03`: Multi-module Maven setup with `-Werror` compiler flags (Java 21 LTS).

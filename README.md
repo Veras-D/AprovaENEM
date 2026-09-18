@@ -80,6 +80,9 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 
 ### Persistence & Storage
 - **Primary Database**: PostgreSQL 16 (isolated `auth_db`, `exam_db`, and `notification_db`)
+- **Docker Named Volumes (`driver: local`)**: Managed volume strategy for persistent backends (`exam-db-data`, `auth-db-data`, `notification-db-data`, `redis-data`, `rabbitmq-data`, `prometheus-data`, `grafana-data`), preventing Linux UID 999 permission collisions and ensuring zero data loss across container restarts
+- **12-Factor Stateless Microservices**: Backend microservices (`frontend-api`, `auth-service`, `exam-service`, `notification-service`) and the React 18 SPA are strictly **stateless** with zero local data volume mounts, enabling instantaneous teardowns and horizontal scaling
+- **Shared Static Media Pipeline**: `exam-assets-data` named volume shared between `ingestion-service` (Docling diagram extraction) and `nginx-proxy` (read-only WebP delivery with 1-year cache headers), offloading static asset traffic 100% from JVM runtimes
 - **Distributed Cache & State Grid**: **Redis 7+ Alpine** (L2 entity caching, Redis `ZSET` for sub-millisecond weekly league leaderboards, Token Bucket rate limiting, and ephemeral session store)
 - **Database Migrations**: **Flyway** (`flyway-core` + `flyway-database-postgresql`, strictly immutable SQL scripts `V1__...`, zero auto-DDL in runtime)
 - **ORM & Data Access**: **Spring Data JPA / Hibernate 6** (Jakarta Persistence), isolated within outbound adapters to preserve pure Java domain entities
@@ -255,7 +258,7 @@ ReconectaRecode/
 
 ## 🚀 Quickstart (100% Docker Compose)
 
-The entire full-stack ecosystem (frontend, backend microservices, gateway, databases, and telemetry) runs with a **single command**, featuring **Kubernetes-grade container self-healing** (`restart: unless-stopped`, Spring Boot `/actuator/health` probes, deterministic boot sequencing, and automatic deadlock recovery via `autoheal`).
+The entire full-stack ecosystem (frontend, backend microservices, gateway, databases, and telemetry) runs with a **single command**, featuring **Kubernetes-grade container self-healing** (`restart: unless-stopped`, Spring Boot `/actuator/health` probes, deterministic boot sequencing, and automatic deadlock recovery via `autoheal`) alongside **resilient Docker named volume persistence**.
 
 ### Prerequisites
 - Docker Engine 24+ & Docker Compose v2

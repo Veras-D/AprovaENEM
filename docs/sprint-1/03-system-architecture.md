@@ -162,6 +162,8 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    volumes:
+      - exam-assets-data:/usr/share/nginx/html/assets/questions:ro
     depends_on:
       frontend-api:
         condition: service_healthy
@@ -286,6 +288,174 @@ services:
       start_period: 20s
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
+
+  # --- PostgreSQL 16 Auth Database ---
+  postgres-auth:
+    image: postgres:16-alpine
+    container_name: aprovaenem-postgres-auth
+    restart: unless-stopped
+    expose:
+      - "5432"
+    networks:
+      - aprovaenem-internal
+    environment:
+      - POSTGRES_DB=auth_db
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d auth_db || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+
+  # --- PostgreSQL 16 Notification Database ---
+  postgres-notification:
+    image: postgres:16-alpine
+    container_name: aprovaenem-postgres-notification
+    restart: unless-stopped
+    expose:
+      - "5432"
+    networks:
+      - aprovaenem-internal
+    environment:
+      - POSTGRES_DB=notification_db
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d notification_db || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - notification-db-data:/var/lib/postgresql/data
+
+  # --- Data Ingestion & OCR Microservice (On-Demand Worker) ---
+  ingestion-service:
+    image: aprovaenem/ingestion-service:latest
+    container_name: aprovaenem-ingestion-service
+    profiles: ["ingestion"]
+    restart: "no" # On-demand batch execution
+    networks:
+      - aprovaenem-internal
+    volumes:
+      - exam-assets-data:/app/extracted_assets
+
+  # --- Prometheus TSDB Telemetry ---
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: aprovaenem-prometheus
+    restart: unless-stopped
+    expose:
+      - "9090"
+    networks:
+      - aprovaenem-internal
+    volumes:
+      - prometheus-data:/prometheus
+
+  # --- Grafana APM Dashboard ---
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: aprovaenem-grafana
+    restart: unless-stopped
+    expose:
+      - "3000"
+    networks:
+      - aprovaenem-internal
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+# --- Persistent Named Volumes ---
+volumes:
+  exam-db-data:
+    driver: local
+  auth-db-data:
+    driver: local
+  notification-db-data:
+    driver: local
+  redis-data:
+    driver: local
+  rabbitmq-data:
+    driver: local
+  exam-assets-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+```
+
+---
+
+#### Persistent Storage & Named Volume Architecture
+
+To guarantee strict enterprise data durability, deterministic state preservation across container restarts, and optimal I/O throughput, AprovaENEM enforces a clear separation between **stateless compute** and **stateful persistence** using Docker **named volumes** (`driver: local`).
+
+##### 1. Stateless Microservice Boundaries (The 12-Factor App Principle)
+In strict compliance with **Factor VI (Stateless Processes)** of the Twelve-Factor App methodology:
+- **Zero Local State in Application Containers**: Microservices (`frontend-api`, `auth-service`, `exam-service`, `notification-service`, `ingestion-service` runtime) and the React 18 SPA web application are strictly **stateless and disposable**.
+- **Ephemeral Container Filesystem**: No user sessions, uploaded images, database state, or temporary business data are ever written to a container's mutable read-write layer (`OverlayFS`).
+- **Seamless Teardown & Horizontal Scaling**: Any application container can be terminated, upgraded, or horizontally scaled by the Docker daemon or orchestrator without risk of data loss or session corruption. All persistent state is delegated exclusively to PostgreSQL databases, Redis, RabbitMQ, and dedicated named volumes.
+
+##### 2. Docker Named Volumes (`driver: local`) vs. Host Bind Mounts
+AprovaENEM deliberately standardizes on **Docker Named Volumes** managed by the Docker storage engine over host folder bind mounts (`./data/...`) for all persistent backends:
+1. **Linux UID/GID Permission Isolation**: PostgreSQL containers execute under internal non-root system accounts (`postgres` UID `999`). When using host bind mounts on Linux hosts, the host user typically runs as UID `1000`, causing immediate permission conflicts (`initdb: directory exists but is not empty` or `chmod: Operation not permitted`). Docker named volumes (`/var/lib/docker/volumes/<volume_name>/_data`) are initialized and managed directly by the Docker daemon, automatically applying correct internal POSIX ownership and permissions.
+2. **Filesystem Locking & Cross-Platform Integrity**: Databases (PostgreSQL write-ahead logs `pg_wal`, Redis append-only files `appendonly.aof`, RabbitMQ mnesia store) require strict POSIX file locking semantics. Host bind mounts across virtualization layers (such as WSL2 on Windows or Docker Desktop on macOS) introduce severe filesystem latency, file-locking deadlocks, and WAL corruption. Named volumes provide raw Linux I/O performance.
+3. **Encapsulated Lifecycle Management**: Named volumes prevent accidental data leaks or file pollution in the Git source tree. They persist across standard restarts (`docker compose down && docker compose up -d`) and require explicit operator intent (`docker compose down -v`) to destroy.
+
+##### 3. Persistent Storage & Volume Matrix
+| Volume Identifier | Target Service(s) | Container Mount Path | Lifecycle & Retention Guarantee | Backup & Disaster Recovery Policy |
+| :--- | :--- | :--- | :--- | :--- |
+| **`exam-db-data`** | `postgres-exam` | `/var/lib/postgresql/data` | **Persistent / Mission-Critical**: Preserves 17 years (2009–2025) of ENEM question banks, official TRI parameters ($a, b, c$), 768-dim `pgvector` HNSW index, and student practice resolution histories. | Automated daily `pg_dump` snapshot to encrypted remote archive; WAL archiving enabled. |
+| **`auth-db-data`** | `postgres-auth` | `/var/lib/postgresql/data` | **Persistent / Mission-Critical**: Stores student authentication credentials (BCrypt hashes), roles, anonymous session mappings, gamification XP balances, streaks, and unlocked badges. | Nightly automated `pg_dump` with point-in-time recovery (PITR). |
+| **`notification-db-data`** | `postgres-notification` | `/var/lib/postgresql/data` | **Persistent / High Priority**: Retains notification dispatch audit trails, user notification preferences, and registered FCM/APNs mobile push device tokens. | Periodic snapshot dump; idempotent notification pipeline allows safe re-execution. |
+| **`redis-data`** | `redis` | `/data` | **Persistent / High Performance**: Backs Redis AOF (Append-Only File) and RDB snapshots. Retains real-time weekly league leaderboards (`ZSET`), token-bucket rate limiter counters, and active session cache across container restarts. | Daily RDB snapshots; non-critical cache reconstructs automatically from primary database. |
+| **`rabbitmq-data`** | `rabbitmq` | `/var/lib/rabbitmq` | **Persistent / Operational**: Retains durable message queues, pending notification dispatch payloads, and Dead-Letter Queues (DLQ) across broker restarts. | RabbitMQ cluster metadata export; auto-recovers durable queues on boot. |
+| **`exam-assets-data`** | `ingestion-service`<br/>`nginx-proxy` | Ingestion: `/app/extracted_assets`<br/>Nginx: `/usr/share/nginx/html/assets/questions:ro` | **Shared Persistent Static Media**: Houses high-resolution exam diagrams, geometry figures, and charts cropped at 300 DPI by Docling and converted to lossless WebP format. | Daily rsync synchronization with S3 object storage; immutable content-hashed files. |
+| **`prometheus-data`** | `prometheus` | `/prometheus` | **Persistent / Observability**: Retains Prometheus TSDB time-series metrics for 15+ days (JVM heap usage, GC pause duration, HTTP latencies, query response times). | Retained for SLA audit compliance; disposable in local development. |
+| **`grafana-data`** | `grafana` | `/var/lib/grafana` | **Persistent / Observability**: Stores custom Grafana dashboards, alert notification channels, user preferences, and dashboard provisioning state. | Dashboards version-controlled in Git and provisioned via declarative YAML. |
+| **Docker Socket (`/var/run/docker.sock`)** | `autoheal` | `/var/run/docker.sock` | **Host Operational Interface**: Grants the `autoheal` container direct communication with the local Docker daemon API to monitor container health status and issue automated restart signals upon deadlock detection. | Ephemeral host socket; no persistent storage requirements. |
+
+##### 4. Shared Static Media Architecture (`exam-assets-data`)
+To maximize web performance and protect JVM backend services from static asset delivery overhead, extracted exam diagrams follow a decoupled shared-volume architecture:
+
+```mermaid
+flowchart LR
+    INEP["INEP PDF Exam<br/>(2009–2025)"] -->|1. Neural Layout Parsing| Ingestion["📥 ingestion-service<br/>(Docling OCR / WebP Cropper)"]
+    Ingestion -->|2. Write Cropped WebP Figures| Volume[("💾 exam-assets-data<br/>(Named Docker Volume)")]
+    Volume -->|3. Read-Only Mount (:ro)| Nginx["🛡️ Nginx Edge Proxy<br/>(/usr/share/nginx/html/assets/questions)"]
+    Browser["Student Browser / Client"] -->|4. HTTP/2 GET /assets/questions/*.webp| Nginx
+    Nginx -.->|5. Zero JVM Overhead<br/>Aggressive Cache-Control: 1yr| Browser
+```
+
+1. **Extraction & Optimization**: The on-demand `ingestion-service` parses INEP PDF exams using IBM Docling, locates figures and formulas, crops them at 300 DPI, converts them to compressed WebP format, and writes them directly to `/app/extracted_assets/` (backed by the `exam-assets-data` volume).
+2. **Zero-JVM Static Ingress**: The Nginx edge ingress proxy mounts `exam-assets-data` into `/usr/share/nginx/html/assets/questions` as **read-only (`:ro`)**.
+3. **Edge Performance & Caching**: When students take an exam, images are fetched directly from Nginx (`/assets/questions/{year}_{caderno}_{item_id}.webp`). Nginx serves these static assets with HTTP/2 and optimal HTTP caching headers (`Cache-Control: public, max-age=31536000, immutable`), completely bypassing Spring Boot microservices and avoiding JVM thread blocking or heap consumption.
+
+##### 5. Disaster Recovery, Backup & Persistence Lifecycle Commands
+Docker named volumes ensure seamless persistence across operational lifecycles without data loss:
+
+```bash
+# Standard graceful restart (All volume data is fully preserved)
+docker compose down && docker compose up -d
+
+# Nuclear environment reset (DANGEROUS: Wipes all databases, queues, and caches)
+docker compose down -v
+
+# Automated hot backup of exam-db-data to a timestamped tarball via transient alpine container
+docker run --rm \
+  -v exam-db-data:/source:ro \
+  -v $(pwd)/backups:/backup \
+  alpine tar czf /backup/exam_db_$(date +%Y%m%d_%H%M%S).tar.gz -C /source .
+
+# Hot restore of exam-db-data from archive
+docker run --rm \
+  -v exam-db-data:/target \
+  -v $(pwd)/backups:/backup \
+  alpine sh -c "rm -rf /target/* && tar xzf /backup/exam_db_YYYYMMDD_HHMMSS.tar.gz -C /target"
 ```
 
 ---
