@@ -120,13 +120,13 @@ graph TD
     Mobile([📱 Native Mobile App - Kotlin / KMP])
 
     subgraph HostPerimeter ["Public Edge Ingress (ONLY Host Ports 80 / 443 Published)"]
-        Nginx["🛡️ Nginx Reverse Proxy & Ingress<br/>Public Host Ports: 80 / 443 (The ONLY public entrypoint)<br/>• Serves Frontend SPA Static Build (/)<br/>• Proxies /api/** to frontend-api<br/>• Strict Security Headers & Actuator Block"]
+        Nginx["🛡️ Nginx Reverse Proxy & Ingress<br/>Public Host Ports: 80 / 443 (The ONLY public entrypoint)<br/>• Serves Frontend SPA Static Build (/)<br/>• Proxies /api/** to frontend-api<br/>• Serves Cropped Diagram WebP Assets (/assets/questions/)<br/>• Strict Security Headers & Actuator Block"]
     end
 
     subgraph PrivateNetwork ["Isolated Internal Network (aprovaenem-internal - Zero Public Exposure)"]
         subgraph EdgeGatewayLayer ["Frontend & Edge Gateway (BFF) Layer"]
             UI["🖥️ frontend (Internal Container)<br/>React 18 + TypeScript PWA / Vite Build"]
-            Gateway["⚡ frontend-api (BFF Microservice)<br/>Spring Cloud Gateway (Internal Port 8080)<br/>• Strict CORS Whitelisting & 1h Preflight Cache<br/>• Anti-Spoofing Ingress Header Sanitizer<br/>• Token Bucket Rate Limiting<br/>• Response Masking & BFF DTO Shaping"]
+            Gateway["⚡ frontend-api (BFF Microservice)<br/>Spring Cloud Gateway (Internal Port 8080)<br/>• Strict CORS Whitelisting & 1h Preflight Cache<br/>• Anti-Spoofing Ingress Header Sanitizer<br/>• Rate Limiting & Daily AI Quota Engine<br/>• Response Masking & BFF DTO Shaping"]
         end
 
         subgraph MicroservicesLayer ["Hexagonal Microservices (Java 21 / Spring Boot 3)"]
@@ -144,12 +144,14 @@ graph TD
             AuthDB[("🗄️ auth-db<br/>PostgreSQL 16 (Port 5432)")]
             ExamDB[("🗄️ exam-db<br/>PostgreSQL 16 + pgvector (Port 5433)")]
             NotifDB[("🗄️ notification-db<br/>PostgreSQL 16 (Port 5434)")]
-            Redis[("⚡ redis<br/>Redis 7+ Alpine (Port 6379)<br/>L2 Cache, ZSET Ranks & Rate Limits")]
+            Redis[("⚡ redis<br/>Redis 7+ Alpine (Port 6379)<br/>L2 Cache, ZSET Ranks & Daily Quotas")]
+            AssetsVol[("💾 exam-assets-data<br/>Named Volume (Docling ➔ Nginx)")]
         end
 
-        subgraph TelemetryLayer ["Internal Observability Stack"]
+        subgraph TelemetryLayer ["Internal Observability & Resilience Stack"]
             Prometheus["📊 prometheus (Internal 9090)<br/>Scrapes Actuator Metrics"]
             Grafana["📈 grafana (Internal 3001)<br/>APM Latency & Error Heatmaps"]
+            Autoheal["🤖 autoheal (Container Watchdog)<br/>Monitors docker.sock & Recovers Hangs"]
         end
     end
 
@@ -162,15 +164,17 @@ graph TD
     Mobile -.->|"HTTPS /api via Ingress"| Nginx
     Nginx -->|"Route / to Static Build"| UI
     Nginx -->|"Proxy /api to frontend-api"| Gateway
+    Nginx -.->|"Direct Static Read (:ro)"| AssetsVol
 
     Gateway -->|"Auth & Gamification APIs"| AuthSvc
     Gateway -->|"Exam & Session APIs"| ExamSvc
     Gateway -->|"Notification APIs"| NotifSvc
-    Gateway -.->|"Rate Limit Check"| Redis
+    Gateway -.->|"Rate Limit & Daily Quota Check"| Redis
 
     AuthSvc --> AuthDB
     ExamSvc --> ExamDB
     NotifSvc --> NotifDB
+    IngestSvc -->|"Writes Cropped WebP"| AssetsVol
 
     AuthSvc -.->|"Leaderboard & Session Cache"| Redis
     ExamSvc -.->|"L2 Question Cache"| Redis
@@ -202,10 +206,12 @@ graph TD
     style ExamDB fill:#334155,stroke:#94a3b8,color:#fff
     style NotifDB fill:#334155,stroke:#94a3b8,color:#fff
     style Redis fill:#dc2626,stroke:#f87171,stroke-width:2px,color:#fff
+    style AssetsVol fill:#334155,stroke:#94a3b8,color:#fff
     style Gemini fill:#4338ca,stroke:#a5b4fc,color:#fff
     style PushService fill:#0e7490,stroke:#22d3ee,color:#fff
     style Prometheus fill:#7c2d12,stroke:#fb923c,color:#fff
     style Grafana fill:#701a75,stroke:#f472b6,color:#fff
+    style Autoheal fill:#374151,stroke:#9ca3af,color:#fff
 ```
 
 ---
@@ -247,8 +253,10 @@ ReconectaRecode/
 │   ├── androidApp/                      # Android Client (Jetpack Compose, CameraX, Room SQLite)
 │   └── shared/                          # KMP shared business logic, data models & offline cache
 ├── infrastructure/                      # Edge Ingress & Telemetry Configuration
-│   ├── nginx/                           # Reverse proxy, SSL termination & security headers (nginx.conf)
-│   └── prometheus/                      # Prometheus scraping config & alerting rules
+│   ├── nginx/                           # Reverse proxy, SSL, WebP static media & security headers (nginx.conf)
+│   ├── prometheus/                      # Prometheus scraping config & alerting rules
+│   └── grafana/                         # APM dashboards & datasource provisioning
+├── evals/                               # [Phase 2] LLM Evaluation & Benchmark Harness (run_benchmarks.py)
 └── .github/
     └── workflows/
         └── quality-gate.yml             # 6-Stage Automated CI Verification Pipeline

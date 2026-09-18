@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.1.1] - 2026-09-18
 ### 🔧 Changed
+- docs(readme): Synchronize System Architecture diagram (shared assets volume, autoheal, tiered daily AI quota) and Project Structure tree (grafana provisioning, evals harness)
 - feat(tutor): Architect Redis-backed 1-per-day AI tutor rate limit for free tier with unlimited Pro plan, while preserving 100% free and unlimited core question training
 - fix(docs): Replace invalid mermaid 'card' blocks in personas with native GitHub alert cards in 01-business-and-market-strategy.md
 - feat(storage): Architect Docker persistent named volume strategy (driver: local), shared OCR static media pipeline, and 12-factor stateless microservice boundaries
