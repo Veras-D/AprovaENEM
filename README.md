@@ -327,7 +327,7 @@ In production, all domain services, databases, caches, and telemetry run within 
 
 ## 🛡️ 6-Stage Quality Gate
 
-AprovaENEM adopts the strict automated quality gate standard established in [CV_Maker](https://github.com/Veras-D/CV_Maker):
+AprovaENEM enforces a strict, enterprise-grade automated quality gate across all backend and frontend tiers:
 
 1. **Gate 1: Compiler Zero Warnings**: `javac` executed with `-Werror -Xlint:all` and TypeScript strict type checking (`strict: true`).
 2. **Gate 2: Static Analysis**: Checkstyle (Google Java Style) + PMD (Cyclomatic Complexity $\le 12$, max method lines $\le 50$) + ESLint.

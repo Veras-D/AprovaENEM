@@ -18,7 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - docs(data): Explicitly specify Flyway database migrations and Spring Data JPA / Hibernate 6 decoupled persistence within Hexagonal Architecture
 - feat(rag): Architect Retrieval-Augmented Generation (RAG) pipeline using PostgreSQL 16 `pgvector` with HNSW cosine indexing to eliminate AI tutor hallucinations and anchor responses in official INEP curriculum guidelines
 - docs(essay): Add Phase 2 architecture for Redação with model evaluation (LLM Evals across candidate models) and INEP-aligned Dual-Evaluator + LLM-as-a-Judge arbitration
-- docs(security): Add Spring Security 6 architecture, SecurityFilterChain, stateless JWT filter, and RBAC matrix matching Alma Career / Teamio standards
+- docs(security): Add Spring Security 6 architecture, SecurityFilterChain, stateless JWT filter, and enterprise RBAC matrix
 - docs(testing): Add Cypress E2E automated test suite and student journey specs in 07-quality-gate-ci.md
 - docs(testing): Add automated Postman collection execution via Newman CLI in CI quality gate
 - docs(testing): Expand Gate 5 into comprehensive Full-Stack Testing Pyramid (Unit, Testcontainers Integration, Frontend Vitest, and Playwright E2E)
@@ -37,6 +37,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - docs(data): Add PostgreSQL 16 DDL, ER diagram, and B-Tree indexing strategy in 04-data-modeling.md
 - docs(api): Add OpenAPI 3.0 REST route specifications in 05-api-specification.md
 - docs(observability): Add Prometheus metrics, Micrometer distributed tracing, and alert rules in 06-observability-datadog-style.md
-- docs(ci): Add 6-stage Quality Gate matching CV_Maker standards in 07-quality-gate-ci.md
+- docs(ci): Add 6-stage Quality Gate specification in 07-quality-gate-ci.md
 - docs(backlog): Add Multi-Sprint Backlog and Roadmap in BACKLOG.md and 08-sprint-backlog.md
 - docs(readme): Add master project documentation in README.md

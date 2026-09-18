@@ -582,7 +582,7 @@ com.openenem.assessment/
 
 ## 4. Spring Security 6 Architecture & Dual-Mode Access Control
 
-To satisfy enterprise portfolio requirements (matching Alma Career / Teamio standards), AprovaENEM integrates **Spring Security 6.3+** with a component-based `SecurityFilterChain` model, stateless JWT authentication, and fine-grained Role-Based Access Control (RBAC).
+To satisfy enterprise production requirements, AprovaENEM integrates **Spring Security 6.3+** with a component-based `SecurityFilterChain` model, stateless JWT authentication, and fine-grained Role-Based Access Control (RBAC).
 
 ```mermaid
 flowchart TD

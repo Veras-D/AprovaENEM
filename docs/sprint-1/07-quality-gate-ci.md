@@ -1,6 +1,6 @@
 # Automated Quality Gate & Full-Stack Testing Specification
 
-> **Quality Standard**: 1:1 Parity with [CV_Maker Quality Gate](file:///home/verivi/Veras/Projects/CV_Maker/.github/workflows/quality-gate.yml)  
+> **Quality Standard**: Enterprise-Grade 6-Stage Automated Verification Pipeline  
 > **Testing Scope**: Comprehensive Test Pyramid (Unit Tests, Integration Tests, End-to-End Tests, and Frontend Component Tests)  
 > **Target Runtimes**: Java 21 LTS + Apache Maven | Node.js 20 LTS + Vite/React 18 | Playwright Headless  
 > **Enforcement Mechanism**: GitHub Actions Multi-Job CI Workflow  
@@ -9,7 +9,7 @@
 
 ## 1. The 6-Stage Quality Gate Overview
 
-To match the engineering rigor established in `CV_Maker`, AprovaENEM enforces a **strict, multi-stage automated verification pipeline**. Every Pull Request and commit to `main` must pass all gates across both backend and frontend tiers before merge.
+To ensure senior-level software engineering rigor and production stability, AprovaENEM enforces a **strict, multi-stage automated verification pipeline**. Every Pull Request and commit to `main` must pass all gates across both backend and frontend tiers before merge.
 
 ```mermaid
 flowchart LR
@@ -224,7 +224,7 @@ To prevent coverage blind spots, JaCoCo is configured to record **both** unit te
 ```
 
 ### 3.5 Spring Security 6 Testing Configuration
-To ensure enterprise RBAC compliance matching Alma Career / Teamio standards, backend tests explicitly verify authorization boundaries using `@WithMockUser` and `@WithAnonymousUser`:
+To ensure enterprise RBAC compliance and zero unauthorized data leakage, backend tests explicitly verify authorization boundaries using `@WithMockUser` and `@WithAnonymousUser`:
 
 ```java
 @WebMvcTest(QuestionRestController.class)
