@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.1.1] - 2026-09-18
 ### 🔧 Changed
+- feat(auth): Require free registered account (ROLE_STUDENT) to access Socratic AI Tutor with 1 free consultation per day, eliminating cookie/session-clearing quota abuse while keeping core practice 100% free and anonymous with zero login required
 - refactor(branding): Standardize project name to AprovaENEM across all documentation, removing legacy OpenENEM references and updating Java root packages to com.aprovaenem.*
 - feat(mobile): Add TASK-M1-05 for AdMob Rewarded Video Ads with Brazil eCPM unit economics calibration and Server-Side Verification
 - docs(readme): Synchronize System Architecture diagram (shared assets volume, autoheal, tiered daily AI quota) and Project Structure tree (grafana provisioning, evals harness)

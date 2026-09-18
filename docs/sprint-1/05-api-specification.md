@@ -440,11 +440,12 @@ Returns the question statement, status, and options A–E.
 * **Method**: `POST`
 * **Path**: `/api/v1/questions/{id}/ask`
 * **Headers**:
-  - `X-Session-Id`: `UUID`
-  - `Authorization`: `Bearer <token>` (Optional, upgrades quota if account has `ROLE_PREMIUM_STUDENT`)
+  - `Authorization`: `Bearer <token>` (**Required**: `ROLE_STUDENT` or `ROLE_PREMIUM_STUDENT`)
   - `Accept-Language`: `pt-BR` | `en`
+  - `X-Session-Id`: `UUID` (Optional, practice session context)
 * **Rate & Quota Policy**:
-  - **Free Tier (`ROLE_ANONYMOUS_STUDENT` / `ROLE_STUDENT`)**: **1 consultation per calendar day** (resets at 00:00 BRT / UTC-3). Burst guard: 10 req/min. Note that general practice questions, quizzes, and written step-by-step resolutions remain **100% free and unlimited**.
+  - **Unauthenticated / Anonymous**: Ineligible for AI Tutor invocations (returns HTTP `401 Unauthorized` / `REGISTRATION_REQUIRED_FOR_AI`). All past questions, quizzes, and written step-by-step resolutions remain **100% free and unlimited with zero registration required**.
+  - **Free Registered Student (`ROLE_STUDENT`)**: **1 consultation per calendar day** (resets at 00:00 BRT / UTC-3). Burst guard: 10 req/min. Tying the daily quota to verified student IDs prevents cookie-clearing quota abuse.
   - **Pro Plan (`ROLE_PREMIUM_STUDENT`)**: **Unlimited** Socratic AI consultations per day.
 * **Emitted Response Headers**:
   - `X-AI-Quota-Limit`: `1` (or `-1` for Pro)
@@ -487,6 +488,19 @@ Returns the question statement, status, and options A–E.
 }
 ```
 
+#### Registration Required Response `401 Unauthorized`
+Returned when an unauthenticated guest attempts to call the Socratic AI Tutor:
+```json
+{
+  "type": "https://aprovaenem.org/errors/REGISTRATION_REQUIRED_FOR_AI",
+  "title": "Registration Required For AI Tutor",
+  "status": 401,
+  "detail": "A free student account is required to use the Socratic AI Tutor. Create a free account to unlock 1 free AI consultation per day, or log in.",
+  "signupUrl": "https://aprovaenem.com.br/register",
+  "timestamp": "2026-09-18T14:30:00Z"
+}
+```
+
 #### Quota Exceeded Response `429 Too Many Requests`
 ```json
 {
@@ -513,10 +527,24 @@ Used by frontend clients (e.g., Socratic AI chat drawer badge) to display remain
 * **Method**: `GET`
 * **Path**: `/api/v1/questions/ai-quota`
 * **Headers**:
-  - `X-Session-Id`: `UUID`
   - `Authorization`: `Bearer <token>` (Optional)
+  - `X-Session-Id`: `UUID` (Optional)
 
-#### Response `200 OK` (Free Tier Student)
+#### Response `200 OK` (Anonymous / Unregistered Guest)
+```json
+{
+  "tier": "ANONYMOUS",
+  "dailyLimit": 0,
+  "usedToday": 0,
+  "remainingToday": 0,
+  "resetsAt": null,
+  "isUnlimited": false,
+  "registrationRequired": true,
+  "message": "Create a free student account to unlock 1 free Socratic AI consultation every day."
+}
+```
+
+#### Response `200 OK` (Free Registered Student)
 ```json
 {
   "tier": "FREE",
@@ -524,7 +552,8 @@ Used by frontend clients (e.g., Socratic AI chat drawer badge) to display remain
   "usedToday": 0,
   "remainingToday": 1,
   "resetsAt": "2026-09-19T03:00:00Z",
-  "isUnlimited": false
+  "isUnlimited": false,
+  "registrationRequired": false
 }
 ```
 
@@ -536,7 +565,8 @@ Used by frontend clients (e.g., Socratic AI chat drawer badge) to display remain
   "usedToday": 14,
   "remainingToday": -1,
   "resetsAt": null,
-  "isUnlimited": true
+  "isUnlimited": true,
+  "registrationRequired": false
 }
 ```
 

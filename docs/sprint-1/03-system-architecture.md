@@ -736,7 +736,10 @@ http {
 
 ### 2.5 Rate Limiting & Tiered AI Tutor Quota Strategy
 
-AprovaENEM maintains a strict pedagogical and economic boundary: **core exam training is 100% free and unlimited for everyone**, while **Socratic AI tutoring is metered** via a dual-layer rate limiting engine to prevent upstream Google Gemini API exhaustion and guarantee server sustainability:
+AprovaENEM maintains a strict pedagogical, security, and economic boundary:
+- **Core exam training is 100% free and unlimited for everyone** (anonymous guests and registered students alike): question bank browsing, quiz generation, answer submissions, instant scoring, and curated step-by-step written resolutions require zero registration or payment.
+- **Socratic AI Tutoring requires a free registered account** (`ROLE_STUDENT`) to prevent quota evasion (e.g. cookie clearing, incognito browsing) and safeguard server sustainability against upstream Google Gemini API costs. Free registered students receive **1 free Socratic AI consultation per day** (resets at midnight 00:00 BRT / UTC-3).
+- **AprovaENEM Pro subscribers** (`ROLE_PREMIUM_STUDENT`) receive **unlimited** Socratic AI consultations and Phase 2 multimodal essay grading.
 
 ```mermaid
 stateDiagram-v2
@@ -747,63 +750,88 @@ stateDiagram-v2
     CheckRoute --> GeneralRoutes : GET /api/v1/questions/** (Exam Practice)
     CheckRoute --> TutorRoutes : POST /api/v1/questions/{id}/ask (AI Tutor)
     
-    GeneralRoutes --> TokenBucket60 : Token Bucket (60 req/min)
-    TokenBucket60 --> ForwardToBackend : Tokens Available
+    GeneralRoutes --> TokenBucket60 : Token Bucket (60 req/min anti-scraping)
+    TokenBucket60 --> ForwardToBackend : Tokens Available (100% Free & Anonymous)
     TokenBucket60 --> Return429Burst : Burst Exceeded (Tokens = 0)
     
-    TutorRoutes --> CheckRole : Inspect User Role / Tier
+    TutorRoutes --> CheckAuth : Check Bearer Token (Authentication)
+    
+    state CheckAuth <<choice>>
+    CheckAuth --> Return401AuthRequired : Unauthenticated / Anonymous (No JWT)
+    CheckAuth --> RegisteredUser : Valid Bearer Token (`ROLE_STUDENT` / `ROLE_PREMIUM_STUDENT`)
+    
+    RegisteredUser --> CheckRole : Inspect User Tier
     
     state CheckRole <<choice>>
     CheckRole --> ProTier : ROLE_PREMIUM_STUDENT (Pro Plan)
-    CheckRole --> FreeTier : ROLE_ANONYMOUS_STUDENT / ROLE_STUDENT (Free)
+    CheckRole --> FreeRegistered : ROLE_STUDENT (Free Account)
     
     ProTier --> ForwardToBackend : Unlimited AI Tutor Access
     
-    FreeTier --> CheckDailyQuota : Redis Atomic INCR (ratelimit:tutor:daily:{id}:{YYYY-MM-DD})
+    FreeRegistered --> CheckDailyQuota : Redis Atomic INCR (ratelimit:tutor:daily:{userId}:{YYYY-MM-DD})
     
     state CheckDailyQuota <<choice>>
     CheckDailyQuota --> ForwardToBackend : Daily Count = 1 (Quota Available)
     CheckDailyQuota --> Return429DailyQuota : Daily Count > 1 (Quota Exhausted)
     
     ForwardToBackend --> [*] : 200 OK (Processed)
+    Return401AuthRequired --> [*] : 401 Unauthorized (Free Signup Prompt)
     Return429Burst --> [*] : 429 Too Many Requests (Retry-After)
-    Return429DailyQuota --> [*] : 429 Too Many Requests (Upgrade to Pro)
+    Return429DailyQuota --> [*] : 429 Too Many Requests (Upgrade to Pro / Rewarded Ad)
 ```
 
 #### 1. Core Exam Practice (100% Free & Unlimited)
-- Question catalog browsing, practice quiz generation, answer submissions, instant scoring, TRI calculations, and curated step-by-step written resolutions have **zero daily caps or paywalls**.
+- Question catalog browsing, practice quiz generation, answer submissions, instant scoring, TRI calculations, and curated step-by-step written resolutions have **zero daily caps, zero paywalls, and zero mandatory registration**.
 - Protected solely by **Layer 1 Token Bucket Rate Limiting** (capacity: 60 tokens, refill: 1 token/sec) to defend against malicious web scrapers and DoS traffic.
 
-#### 2. Socratic AI Tutor: Dual-Layer Rate Limiting & Daily Quota
-AI Tutor inquiries (`POST /api/v1/questions/{id}/ask`) pass through two sequential validation stages:
+#### 2. Socratic AI Tutor: Dual-Layer Rate Limiting & Authentication Gate
+AI Tutor inquiries (`POST /api/v1/questions/{id}/ask`) pass through sequential security and quota verification stages:
 
-1. **Layer 1 — Short-Term Burst Limiter (Token Bucket)**:
-   - Capacity: **10 tokens** per minute.
+1. **Authentication Gate (Anti-Quota Evasion)**:
+   - AI tutoring requires an authenticated student account (`ROLE_STUDENT` or `ROLE_PREMIUM_STUDENT`).
+   - Unauthenticated or anonymous requests receive `HTTP 401 Unauthorized` with an RFC 7807 payload prompting the student to create a free account to claim their daily AI consultation.
+   - **Rationale**: If anonymous users were granted 1 free AI call per session ID or IP, abusive scripts or incognito browsing could clear cookies/UUIDs indefinitely, draining upstream Gemini API quotas and increasing infrastructure costs. Tying free AI usage to registered student accounts anchors quotas to immutable user IDs in Redis while preserving 100% open, anonymous access for core question practice.
+
+2. **Layer 1 — Short-Term Burst Limiter (Token Bucket)**:
+   - Capacity: **10 tokens** per minute per authenticated user.
    - Refill Rate: **10 tokens / minute**.
-   - Prevents automated script-spamming from exhausting connection pools.
+   - Prevents automated script-spamming from exhausting database connection pools and upstream API workers.
 
-2. **Layer 2 — Business Tier Daily Quota Engine (Redis Distributed Counter)**:
-   - **Free Tier (`ROLE_ANONYMOUS_STUDENT` & `ROLE_STUDENT`)**:
+3. **Layer 2 — Business Tier Daily Quota Engine (Redis Distributed Counter)**:
+   - **Free Registered Student (`ROLE_STUDENT`)**:
      - **Quota**: **1 free Socratic AI Tutor consultation per day**.
-     - **Storage**: Key `ratelimit:tutor:daily:{userId_or_sessionId}:{YYYY-MM-DD}` in Redis.
+     - **Storage**: Key `ratelimit:tutor:daily:{userId}:{YYYY-MM-DD}` in Redis.
      - **TTL**: Automatically set to expire at midnight BRT (00:00 UTC-3).
      - **Headers Emitted**:
        - `X-AI-Quota-Limit: 1`
        - `X-AI-Quota-Remaining: 0` (or `1`)
        - `X-AI-Quota-Reset: <epoch_seconds_at_midnight_BRT>`
-     - **Exhaustion Behavior**: Once 1 question is consulted, subsequent AI queries are rejected at the edge with RFC 7807 HTTP 429. The student can continue training with unlimited past questions and static resolutions.
+     - **Exhaustion Behavior**: Once 1 question is consulted, subsequent AI queries are rejected at the edge with RFC 7807 HTTP 429. The student can continue training with unlimited past questions and static resolutions, watch an optional rewarded video ad for +1 credit, or upgrade to Pro.
    - **AprovaENEM Pro Plan (`ROLE_PREMIUM_STUDENT`)**:
      - **Quota**: **Unlimited** Socratic AI Tutor consultations (bypasses daily quota check).
      - **Headers Emitted**: `X-AI-Quota-Limit: -1`, `X-AI-Quota-Remaining: -1`.
 
-#### 3. Quota Exhaustion Response (`HTTP 429 Too Many Requests`)
+#### 3. Authentication Required Response (`HTTP 401 Unauthorized`)
+When an unauthenticated guest attempts to call the Socratic AI Tutor:
+```json
+{
+  "type": "https://aprovaenem.org/errors/REGISTRATION_REQUIRED_FOR_AI",
+  "title": "Registration Required For AI Tutor",
+  "status": 401,
+  "detail": "A free student account is required to use the Socratic AI Tutor. Create a free account to unlock 1 free AI consultation per day, or log in.",
+  "signupUrl": "https://aprovaenem.com.br/register",
+  "timestamp": "2026-09-18T14:30:00Z"
+}
+```
+
+#### 4. Quota Exhaustion Response (`HTTP 429 Too Many Requests`)
 When a free student exhausts their single daily AI tutor credit:
 ```json
 {
   "type": "https://aprovaenem.org/errors/DAILY_AI_QUOTA_EXHAUSTED",
   "title": "Daily AI Tutor Quota Exhausted",
   "status": 429,
-  "detail": "You have used your 1 free Socratic AI consultation for today. You can continue practicing unlimited exam questions for free, or upgrade to AprovaENEM Pro for unlimited AI tutoring.",
+  "detail": "You have used your 1 free Socratic AI consultation for today. You can continue practicing unlimited exam questions and static resolutions for free, or upgrade to AprovaENEM Pro for unlimited AI tutoring.",
   "quota": {
     "dailyLimit": 1,
     "usedToday": 1,
@@ -970,9 +998,10 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login").permitAll()
                 .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/prometheus").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                // Practice Session & Tutor Endpoints (Anonymous or Registered Student)
-                .requestMatchers("/api/v1/sessions/**").hasAnyRole("ANONYMOUS_STUDENT", "STUDENT")
-                .requestMatchers(HttpMethod.POST, "/api/v1/questions/*/ask").hasAnyRole("ANONYMOUS_STUDENT", "STUDENT")
+                // Practice Session Endpoints (Anonymous, Registered, or Pro Student)
+                .requestMatchers("/api/v1/sessions/**").hasAnyRole("ANONYMOUS_STUDENT", "STUDENT", "PREMIUM_STUDENT")
+                // Socratic AI Tutor Consultation (Requires Registered Student or Pro - Anti-Quota Evasion)
+                .requestMatchers(HttpMethod.POST, "/api/v1/questions/*/ask").hasAnyRole("STUDENT", "PREMIUM_STUDENT")
                 // Registered Student Account & Sync Endpoints
                 .requestMatchers("/api/v1/student/**").hasRole("STUDENT")
                 // Future Premium Essay Evaluation & OCR (Phase 2)
@@ -1024,8 +1053,8 @@ public class SecurityConfiguration {
 ### 4.2 Role-Based Access Control (RBAC) Matrix
 | Role | Assigned When | Permitted Operations |
 | :--- | :--- | :--- |
-| `ROLE_ANONYMOUS_STUDENT` | No JWT provided (Guest student browsing or practicing). | **Unlimited** question catalog queries, quiz generations, answer submissions, instant scoring, and step-by-step static resolutions. **1 free Socratic AI consultation per day** (resets 00:00 BRT). No persistent cross-device account syncing. |
-| `ROLE_STUDENT` | Valid JWT signed by `auth-service` presented. | All anonymous operations (**unlimited practice + 1 free Socratic AI consultation per day**) + persistent diagnostic profile, cross-device history synchronization, saved sessions, XP gamification, daily streaks, and weekly reset league leaderboards. |
+| `ROLE_ANONYMOUS_STUDENT` | No JWT provided (Guest student browsing or practicing). | **100% Free & Unlimited** question catalog queries, quiz generations, answer submissions, instant scoring, TRI calculations, and step-by-step static resolutions. Zero registration required. Socratic AI tutoring requires a free registered account (prevents cookie-clearing quota abuse). No persistent cross-device account syncing. |
+| `ROLE_STUDENT` | Valid JWT signed by `auth-service` presented. | All anonymous operations + **1 free Socratic AI consultation per day** (resets 00:00 BRT) + persistent diagnostic profile, cross-device history synchronization, saved sessions, XP gamification, daily streaks, and weekly reset league leaderboards. |
 | `ROLE_PREMIUM_STUDENT` | Subscribed student (*AprovaENEM Pro*) or voucher holder. | All student operations + **Unlimited Socratic AI Tutor consultations** (bypasses 1/day daily quota) + upload handwritten essay photos for multimodal OCR extraction and in-depth 5-competency grading (*Redação Nota 1000*). |
 | `ROLE_ADMIN` | Authenticated teacher/curator credentials. | Batch ingest INEP question archives, edit distractor taxonomies, monitor telemetry. |
 
