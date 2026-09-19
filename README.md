@@ -273,8 +273,8 @@ The entire full-stack ecosystem (frontend, backend microservices, gateway, datab
 
 ### 1. Clone & Configure
 ```bash
-git clone https://github.com/Veras-D/ReconectaRecode.git
-cd ReconectaRecode
+git clone https://github.com/Veras-D/AprovaENEM.git
+cd AprovaENEM
 cp .env.example .env
 ```
 Edit `.env` and insert your Gemini API Key:
