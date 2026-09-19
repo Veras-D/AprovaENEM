@@ -45,6 +45,7 @@
         <pgvector.version>0.1.6</pgvector.version>
         <hypersistence-utils.version>3.8.2</hypersistence-utils.version>
         <micrometer-prometheus.version>1.13.3</micrometer-prometheus.version>
+        <resilience4j.version>2.2.0</resilience4j.version>
 
         <!-- Quality Gate Plugins -->
         <jacoco.version>0.8.12</jacoco.version>
@@ -109,6 +110,13 @@
                 <groupId>com.pgvector</groupId>
                 <artifactId>pgvector</artifactId>
                 <version>${pgvector.version}</version>
+            </dependency>
+
+            <!-- Resilience4j Fault Tolerance -->
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-spring-boot3</artifactId>
+                <version>${resilience4j.version}</version>
             </dependency>
 
             <!-- Hypersistence Utils for Hibernate JSONB / Types -->

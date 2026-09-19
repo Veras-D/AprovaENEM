@@ -212,33 +212,33 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
 ---
 
 ### Epic 4: Socratic AI Tutor & External Resilience
-#### `TASK-S2-10`: Google Gemini AI Tutor Client Adapter & Per-Question Multi-Turn Thread Engine
+#### `TASK-S2-10`: Google Gemini AI Tutor Client Adapter & Per-Question Multi-Turn Thread Engine — **COMPLETED ✅**
 - **Priority**: `P1` | **Estimation**: 5 pts
 - **Description**: Implement `GeminiTutorClientAdapter` using Google GenAI SDK / Spring AI with Socratic system prompt (compatible with local development free-tier keys and production quotas) and integrate with Redis and PostgreSQL (`tutor_chat_threads`, `tutor_chat_messages`) to enforce a daily rate limit of 1 free question consultation per registered student per day (`ROLE_STUDENT`), supporting up to 6 multi-turn Socratic turns per thread, thread reset (`DELETE /chat`), and 90-day hot retention while granting unlimited questions to `ROLE_PREMIUM_STUDENT`.
 - **Acceptance Criteria**:
-  - Sends question context and student query history to `gemini-1.5-flash`.
-  - Enforces educational prompt: guide the student conceptually without spoiling the answer.
-  - Requires authenticated Bearer token (`ROLE_STUDENT` or `ROLE_PREMIUM_STUDENT`); unauthenticated requests return HTTP 401 with registration call-to-action to prevent cookie-clearing quota abuse.
-  - Enforces Redis daily counter (`ratelimit:tutor:daily:{userId}:{YYYY-MM-DD}`): 1 credit unlocks multi-turn Socratic conversation on 1 question per day; subsequent turns on that already-unlocked question do not deduct quota.
-  - Exposes `GET /api/v1/questions/{id}/chat` (history) and `DELETE /api/v1/questions/{id}/chat` (reset).
-  - Pro subscribers (`ROLE_PREMIUM_STUDENT`) bypass the 1 question/day quota limit.
-  - Returns quota metadata headers (`X-AI-Quota-Limit`, `X-AI-Quota-Remaining`, `X-AI-Quota-Reset`).
-  - Core question solving, quiz generation, and written resolutions remain completely unaffected (100% free and unlimited with zero login required).
+  - [x] Sends question context and student query history to `gemini-1.5-flash`.
+  - [x] Enforces educational prompt: guide the student conceptually without spoiling the answer.
+  - [x] Requires authenticated Bearer token (`ROLE_STUDENT` or `ROLE_PREMIUM_STUDENT`); unauthenticated requests return HTTP 401 with registration call-to-action to prevent cookie-clearing quota abuse.
+  - [x] Enforces Redis daily counter (`ratelimit:tutor:daily:{userId}:{YYYY-MM-DD}`): 1 credit unlocks multi-turn Socratic conversation on 1 question per day; subsequent turns on that already-unlocked question do not deduct quota.
+  - [x] Exposes `GET /api/v1/questions/{id}/chat` (history) and `DELETE /api/v1/questions/{id}/chat` (reset).
+  - [x] Pro subscribers (`ROLE_PREMIUM_STUDENT`) bypass the 1 question/day quota limit.
+  - [x] Returns quota metadata headers (`X-AI-Quota-Limit`, `X-AI-Quota-Remaining`, `X-AI-Quota-Reset`).
+  - [x] Core question solving, quiz generation, and written resolutions remain completely unaffected (100% free and unlimited with zero login required).
 
-#### `TASK-S2-11`: Resilience4j Circuit Breaker & Fallback Strategy
+#### `TASK-S2-11`: Resilience4j Circuit Breaker & Fallback Strategy — **COMPLETED ✅**
 - **Priority**: `P1` | **Estimation**: 5 pts
 - **Description**: Wrap Gemini calls with a Resilience4j Circuit Breaker.
 - **Acceptance Criteria**:
-  - If Gemini returns HTTP 429 or times out, circuit trips and returns the static curated INEP explanation with `isFallback: true`.
+  - [x] If Gemini returns HTTP 429 or times out, circuit trips and returns the static curated INEP explanation with `isFallback: true`.
 
-#### `TASK-S2-11b`: Retrieval-Augmented Generation (RAG) & pgvector Knowledge Store
+#### `TASK-S2-11b`: Retrieval-Augmented Generation (RAG) & pgvector Knowledge Store — **COMPLETED ✅**
 - **Priority**: `P1` | **Estimation**: 5 pts
 - **Description**: Configure PostgreSQL `pgvector` with HNSW indexing and implement the RAG retrieval pipeline in `exam-service` using Spring AI `VectorStore` (or JDBC vector queries) to inject verified pedagogical documents into Socratic prompts.
 - **Acceptance Criteria**:
-  - Flyway migration creates `vector` extension, `knowledge_documents`, `knowledge_chunks` tables and HNSW index.
-  - Generates 768-dim embeddings for question context and performs cosine similarity search (`<=>`).
-  - Fetches top-$k$ ($k=3$, similarity $> 0.75$) pedagogical chunks and injects them into the Socratic AI prompt.
-  - Socratic AI endpoint returns `retrievedContext` metadata in response payload.
+  - [x] Flyway migration creates `vector` extension, `knowledge_documents`, `knowledge_chunks` tables and HNSW index.
+  - [x] Generates 768-dim embeddings for question context and performs cosine similarity search (`<=>`).
+  - [x] Fetches top-$k$ ($k=3$, similarity $> 0.75$) pedagogical chunks and injects them into the Socratic AI prompt.
+  - [x] Socratic AI endpoint returns `retrievedContext` metadata in response payload.
 
 ---
 

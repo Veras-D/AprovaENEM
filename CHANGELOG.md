@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.2.0] - 2026-09-18
 ### 🚀 Added
+- feat(tutor): Implement Socratic AI Tutor (`gemini-1.5-flash`), per-question multi-turn thread engine (up to 6 turns), conversation reset (`DELETE /chat`), Resilience4j Circuit Breaker fallback, PostgreSQL `pgvector` HNSW RAG knowledge retrieval, and Redis daily quota rate limiter (1 free question/day for `ROLE_STUDENT`, unlimited for `ROLE_PREMIUM_STUDENT`) in `exam-service` (TASK-S2-10, TASK-S2-11, TASK-S2-11b)
 - feat(exam): Implement Examination & Assessment Engine (`exam-service`) with Hexagonal architecture, Portuguese GIN full-text search, Redis caching, practice sessions, instant grading, and diagnostic radar calculation (TASK-S2-06, TASK-S2-07, TASK-S2-08, TASK-S2-09, TASK-S2-02c)
 - feat(auth): Implement Anonymous Sessions, Spring Security 6 stateless JWT & RBAC, and Transactional Outbox pattern with RabbitMQ publishing for auth-service (TASK-S2-04, TASK-S2-05, TASK-S2-05b)
 - feat(build): Configure Java 21 LTS multi-module Maven parent POM and scaffold microservices (common-core, frontend-api, auth-service, exam-service, notification-service) with multi-stage Dockerfiles (TASK-S2-03)
