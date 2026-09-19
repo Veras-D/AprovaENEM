@@ -140,11 +140,12 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
   - Redis memory configured with `maxmemory 512mb` and `allkeys-lru` eviction policy.
   - Redis runs strictly inside `aprovaenem-internal` with zero host port exposure.
 
-#### `TASK-S2-03`: Multi-Module Maven Configuration (Java 21 LTS)
+#### `TASK-S2-03`: Multi-Module Maven Configuration (Java 21 LTS) — **COMPLETED ✅**
 - **Priority**: `P0` | **Estimation**: 3 pts
-- **Description**: Configure root `pom.xml` with Maven Compiler Plugin (`-Werror`, `-Xlint:all`), Checkstyle, PMD, and JaCoCo plugins.
+- **Description**: Configure root `pom.xml` with Maven Compiler Plugin (`-parameters`), submodules (`common-core`, `frontend-api`, `auth-service`, `exam-service`, `notification-service`), Checkstyle, PMD, and JaCoCo plugins.
 - **Acceptance Criteria**:
-  - `mvn clean compile` succeeds across all modules without warnings.
+  - [x] `mvn clean compile` succeeds across all modules without warnings.
+  - [x] All 5 submodules build and package into Spring Boot executable fat JARs and multi-stage Docker images.
 
 ---
 

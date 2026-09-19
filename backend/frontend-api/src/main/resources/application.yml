@@ -1,0 +1,43 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: frontend-api
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${SPRING_DATA_REDIS_PASSWORD:redis_secure_password_2026}
+  cloud:
+    gateway:
+      routes:
+        # Auth & Gamification Service Routes
+        - id: auth-service-routes
+          uri: ${AUTH_SERVICE_URL:http://auth-service:8081}
+          predicates:
+            - Path=/api/v1/auth/**, /api/v1/gamification/**, /api/v1/users/**
+        # Exam & Socratic AI Tutor Routes
+        - id: exam-service-routes
+          uri: ${EXAM_SERVICE_URL:http://exam-service:8082}
+          predicates:
+            - Path=/api/v1/questions/**, /api/v1/exams/**, /api/v1/topics/**, /api/v1/practice-sessions/**
+        # Notification Service Routes
+        - id: notification-service-routes
+          uri: ${NOTIFICATION_SERVICE_URL:http://notification-service:8083}
+          predicates:
+            - Path=/api/v1/notifications/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
