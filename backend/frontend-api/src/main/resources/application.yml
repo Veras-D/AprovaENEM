@@ -21,7 +21,7 @@ spring:
         - id: exam-service-routes
           uri: ${EXAM_SERVICE_URL:http://exam-service:8082}
           predicates:
-            - Path=/api/v1/questions/**, /api/v1/exams/**, /api/v1/topics/**, /api/v1/practice-sessions/**
+            - Path=/api/v1/questions/**, /api/v1/exams/**, /api/v1/topics/**, /api/v1/sessions/**, /api/v1/practice/**, /api/v1/practice-sessions/**
         # Notification Service Routes
         - id: notification-service-routes
           uri: ${NOTIFICATION_SERVICE_URL:http://notification-service:8083}

@@ -131,14 +131,14 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
   - Reconciles extracted answers with official answer key with 100% concordance.
   - Injects official TRI parameters ($a, b, c$) and generates normalized seed fixtures.
 
-#### `TASK-S2-02c`: Distributed Caching Architecture with Redis 7+
+#### `TASK-S2-02c`: Distributed Caching Architecture with Redis 7+ — **COMPLETED ✅**
 - **Priority**: `P0` | **Estimation**: 5 pts
 - **Description**: Configure Spring Data Redis with Lettuce connection pool, Jackson JSON serialization, custom TTL cache manager (24h questions, 48h resolutions, 2h active sessions), and Redis Sorted Sets (`ZSET`) for real-time sub-millisecond weekly league leaderboards (`ZINCRBY`, `ZREVRANK`, `ZREVRANGE`).
 - **Acceptance Criteria**:
-  - `@Cacheable` caches question entities in Redis; achieves sub-2ms cache hit latency.
-  - Gamification service updates and queries weekly leaderboards via Redis `ZSET` without executing expensive SQL window functions.
-  - Redis memory configured with `maxmemory 512mb` and `allkeys-lru` eviction policy.
-  - Redis runs strictly inside `aprovaenem-internal` with zero host port exposure.
+  - [x] `@Cacheable` caches question entities in Redis; achieves sub-2ms cache hit latency.
+  - [x] Gamification service updates and queries weekly leaderboards via Redis `ZSET` without executing expensive SQL window functions.
+  - [x] Redis memory configured with `maxmemory 512mb` and `allkeys-lru` eviction policy.
+  - [x] Redis runs strictly inside `aprovaenem-internal` with zero host port exposure.
 
 #### `TASK-S2-03`: Multi-Module Maven Configuration (Java 21 LTS) — **COMPLETED ✅**
 - **Priority**: `P0` | **Estimation**: 3 pts
@@ -178,36 +178,36 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
 ---
 
 ### Epic 3: Examination & Assessment Engine (`exam-service`)
-#### `TASK-S2-06`: Hexagonal Core Domain Modeling
+#### `TASK-S2-06`: Hexagonal Core Domain Modeling — **COMPLETED ✅**
 - **Priority**: `P0` | **Estimation**: 5 pts
 - **Description**: Implement pure Java domain entities (`Question`, `QuestionStatus`, `ExamSession`, `Attempt`, `DiagnosticReport`) without any Spring or JPA annotations.
 - **Acceptance Criteria**:
-  - 100% framework-free pure Java classes under `com.aprovaenem.assessment.domain`.
-  - Enforces `QuestionStatus` lifecycle enum (`ACTIVE`, `SUSPENDED`, `NEEDS_REVIEW`, `DRAFT`, `ANNULLED`).
-  - Domain validation rules: options must be between A and E, session cannot receive attempts once completed.
+  - [x] 100% framework-free pure Java classes under `com.aprovaenem.exam.domain.model`.
+  - [x] Enforces `QuestionStatus` lifecycle enum (`ACTIVE`, `SUSPENDED`, `NEEDS_REVIEW`, `DRAFT`, `ANNULLED`).
+  - [x] Domain validation rules: options must be between A and E, session cannot receive attempts once completed.
 
-#### `TASK-S2-07`: Question Catalog & Filtered Query Use Cases
+#### `TASK-S2-07`: Question Catalog & Filtered Query Use Cases — **COMPLETED ✅**
 - **Priority**: `P0` | **Estimation**: 5 pts
 - **Description**: Implement `GetQuestionsQuery` and outbound `QuestionRepositoryPort` adapter fetching questions from PostgreSQL with pagination, subject/difficulty filters, and status filtering.
 - **Acceptance Criteria**:
-  - Public student queries and quiz sessions strictly select `ACTIVE` questions (excluding `SUSPENDED` or `NEEDS_REVIEW` items).
-  - Admin endpoint allows updating question status and suspension notes.
-  - Answers correctly omitted from public list queries.
-  - Paginated responses return `page`, `size`, `totalElements`.
+  - [x] Public student queries and quiz sessions strictly select `ACTIVE` questions (excluding `SUSPENDED` or `NEEDS_REVIEW` items).
+  - [x] Admin endpoint allows updating question status and suspension notes.
+  - [x] Answers correctly omitted from public list queries.
+  - [x] Paginated responses return `page`, `size`, `totalElements`.
 
-#### `TASK-S2-08`: Practice Session State Machine & Instant Grading
+#### `TASK-S2-08`: Practice Session State Machine & Instant Grading — **COMPLETED ✅**
 - **Priority**: `P0` | **Estimation**: 8 pts
 - **Description**: Implement `StartSessionUseCase` and `SubmitAnswerUseCase`.
 - **Acceptance Criteria**:
-  - Generates random or topic-filtered session question set.
-  - Submitting an answer instantly evaluates correctness, updates `correct_count`, and returns base resolution explanation.
-  - Double submission of the same question in a session is prevented via unique constraint.
+  - [x] Generates random or topic-filtered session question set.
+  - [x] Submitting an answer instantly evaluates correctness, updates `correct_count`, and returns base resolution explanation.
+  - [x] Double submission of the same question in a session is prevented via unique constraint.
 
-#### `TASK-S2-09`: Diagnostic Score & Weak-Topic Calculation
+#### `TASK-S2-09`: Diagnostic Score & Weak-Topic Calculation — **COMPLETED ✅**
 - **Priority**: `P0` | **Estimation**: 5 pts
 - **Description**: Implement `CompleteSessionUseCase` to calculate score percentage, accuracy radar per discipline/topic, and recommended study focus.
 - **Acceptance Criteria**:
-  - Returns structured `diagnosticRadar` JSON mapping topic performance (`MASTERED`, `ATTENTION_NEEDED`, `CRITICAL`).
+  - [x] Returns structured `diagnosticRadar` JSON mapping topic performance (`MASTERED`, `ATTENTION_NEEDED`, `CRITICAL`).
 
 ---
 

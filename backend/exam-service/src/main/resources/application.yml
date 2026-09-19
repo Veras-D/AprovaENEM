@@ -30,6 +30,11 @@ spring:
       host: ${SPRING_DATA_REDIS_HOST:redis}
       port: ${SPRING_DATA_REDIS_PORT:6379}
       password: ${SPRING_DATA_REDIS_PASSWORD:redis_secure_password_2026}
+  cache:
+    type: redis
+    redis:
+      time-to-live: 86400000
+      cache-null-values: false
   rabbitmq:
     host: ${SPRING_RABBITMQ_HOST:rabbitmq}
     port: ${SPRING_RABBITMQ_PORT:5672}
