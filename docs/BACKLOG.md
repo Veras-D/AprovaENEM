@@ -150,30 +150,30 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
 ---
 
 ### Epic 2: Authentication & Session Microservice (`auth-service`)
-#### `TASK-S2-04`: Anonymous Session Management (Hexagonal)
+#### `TASK-S2-04`: Anonymous Session Management (Hexagonal) — **COMPLETED ✅**
 - **Priority**: `P0` | **Estimation**: 5 pts
 - **Description**: Implement anonymous session generator (`POST /api/v1/auth/session`) in `auth-service`.
 - **Acceptance Criteria**:
-  - Returns UUID session with 30-day expiration.
-  - Stores session in `anonymous_sessions` table.
+  - [x] Returns UUID session with 30-day expiration.
+  - [x] Stores session in `anonymous_sessions` table.
 
-#### `TASK-S2-05`: Spring Security 6 Integration, Stateless JWT & RBAC
+#### `TASK-S2-05`: Spring Security 6 Integration, Stateless JWT & RBAC — **COMPLETED ✅**
 - **Priority**: `P0` | **Estimation**: 8 pts
 - **Description**: Configure Spring Security 6 `SecurityFilterChain` bean architecture, stateless session management, `BCryptPasswordEncoder(12)`, custom `JwtAuthenticationFilter` (`OncePerRequestFilter`), `AnonymousAuthenticationFilter` (`ROLE_ANONYMOUS_STUDENT`), method-level security (`@EnableMethodSecurity`), and RFC 7807 `AuthenticationEntryPoint` / `AccessDeniedHandler`.
 - **Acceptance Criteria**:
-  - Unauthenticated requests safely obtain `ROLE_ANONYMOUS_STUDENT` to practice quizzes and query public catalogs without credentials.
-  - User `/register` and `/login` issue signed HMAC-SHA256 JWT tokens with `ROLE_STUDENT`.
-  - Protected endpoints validate Bearer tokens and enforce `@PreAuthorize`.
-  - Missing or expired tokens return RFC 7807 401 Unauthorized; insufficient roles return RFC 7807 403 Forbidden.
+  - [x] Unauthenticated requests safely obtain `ROLE_ANONYMOUS_STUDENT` to practice quizzes and query public catalogs without credentials.
+  - [x] User `/register` and `/login` issue signed HMAC-SHA256 JWT tokens with `ROLE_STUDENT`.
+  - [x] Protected endpoints validate Bearer tokens and enforce `@PreAuthorize`.
+  - [x] Missing or expired tokens return RFC 7807 401 Unauthorized; insufficient roles return RFC 7807 403 Forbidden.
 
-#### `TASK-S2-05b`: Transactional Outbox Pattern & Student Email Confirmation
+#### `TASK-S2-05b`: Transactional Outbox Pattern & Student Email Confirmation — **COMPLETED ✅**
 - **Priority**: `P0` | **Estimation**: 5 pts
 - **Description**: Implement the Transactional Outbox pattern in `auth-service` to reliably publish `UserRegisteredEvent` and `EmailVerificationRequestedEvent` to RabbitMQ exchange `auth.events` without dual-write inconsistency. Implement email verification endpoints (`POST /api/v1/auth/verify-email`, `POST /api/v1/auth/resend-verification`) with cryptographically secure single-use tokens (24h TTL).
 - **Acceptance Criteria**:
-  - Registration atomically inserts `users` (with `is_email_verified = false`, `email_verification_token`) and `outbox_events` (status: `PENDING`) within the same `@Transactional` boundary.
-  - Scheduled background worker queries `outbox_events` (`SELECT ... FOR UPDATE SKIP LOCKED`), publishes events to RabbitMQ, and updates status to `PUBLISHED`.
-  - `POST /api/v1/auth/verify-email` verifies token, marks `is_email_verified = true`, and invalidates token.
-  - `POST /api/v1/auth/resend-verification` enforces rate limit (3/hour) and emits new outbox event.
+  - [x] Registration atomically inserts `users` (with `is_email_verified = false`, `email_verification_token`) and `outbox_events` (status: `PENDING`) within the same `@Transactional` boundary.
+  - [x] Scheduled background worker queries `outbox_events` (`SELECT ... FOR UPDATE SKIP LOCKED`), publishes events to RabbitMQ, and updates status to `PUBLISHED`.
+  - [x] `POST /api/v1/auth/verify-email` verifies token, marks `is_email_verified = true`, and invalidates token.
+  - [x] `POST /api/v1/auth/resend-verification` enforces rate limit (3/hour) and emits new outbox event.
 
 ---
 

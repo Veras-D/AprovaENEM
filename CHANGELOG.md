@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.2.0] - 2026-09-18
 ### 🚀 Added
+- feat(auth): Implement Anonymous Sessions, Spring Security 6 stateless JWT & RBAC, and Transactional Outbox pattern with RabbitMQ publishing for auth-service (TASK-S2-04, TASK-S2-05, TASK-S2-05b)
 - feat(build): Configure Java 21 LTS multi-module Maven parent POM and scaffold microservices (common-core, frontend-api, auth-service, exam-service, notification-service) with multi-stage Dockerfiles (TASK-S2-03)
 - feat(infra): Implement production-ready Docker Compose stack with strict perimeter isolation (frontend-edge vs. internal private network), autoheal deadlock watchdog daemon, named volumes (driver: local), and local developer override (TASK-S2-01)
 - feat(db): Implement Flyway migrations (V1 schemas, V2 performance indexes, V3 seed data) with PostgreSQL 16 + pgvector, GIN full-text search, composite B-Trees, and Transactional Outbox pattern across auth_db, exam_db, and notification_db (TASK-S2-02)

@@ -1,0 +1,32 @@
+package com.aprovaenem.auth.infrastructure.adapter.out.security;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.HandlerExceptionResolver;
+
+/**
+ * Bridges the Spring Security filter chain with the Spring MVC Exception Handling pipeline
+ * (RFC 7807 Problem Details), delegating AccessDeniedException to GlobalExceptionHandler.
+ */
+@Component
+public class DelegatingAccessDeniedHandler implements AccessDeniedHandler {
+
+    private final HandlerExceptionResolver resolver;
+
+    public DelegatingAccessDeniedHandler(@Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver) {
+        this.resolver = resolver;
+    }
+
+    @Override
+    public void handle(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            AccessDeniedException accessDeniedException
+    ) {
+        resolver.resolveException(request, response, null, accessDeniedException);
+    }
+}
