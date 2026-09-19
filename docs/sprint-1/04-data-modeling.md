@@ -729,6 +729,37 @@ CREATE TABLE knowledge_chunks (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uq_document_chunk UNIQUE (document_id, chunk_index)
 );
+
+-- Socratic AI Tutor Chat Threads (Per-Question Multi-Turn Conversation - V4 Migration)
+-- Physical placement in exam_db enforces foreign key integrity with questions(id)
+CREATE TABLE tutor_chat_threads (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL, -- Logical reference to auth_db.users(id)
+    question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE', -- 'ACTIVE', 'ARCHIVED', 'RESET'
+    turn_count INT NOT NULL DEFAULT 0,
+    max_turns INT NOT NULL DEFAULT 6, -- Multi-turn safeguard per question consultation
+    unlocked_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_chat_threads_user_question ON tutor_chat_threads(user_id, question_id, status);
+CREATE INDEX idx_chat_threads_unlocked_at ON tutor_chat_threads(unlocked_at);
+
+-- Socratic AI Tutor Chat Messages (90-day hot retention for student review - V4 Migration)
+CREATE TABLE tutor_chat_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    thread_id UUID NOT NULL REFERENCES tutor_chat_threads(id) ON DELETE CASCADE,
+    role VARCHAR(20) NOT NULL, -- 'STUDENT', 'AI_TUTOR'
+    content TEXT NOT NULL,
+    prompt_tokens INT DEFAULT 0,
+    completion_tokens INT DEFAULT 0,
+    model_used VARCHAR(50) DEFAULT 'gemini-1.5-flash',
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_chat_messages_thread_created ON tutor_chat_messages(thread_id, created_at ASC);
 ```
 
 ---

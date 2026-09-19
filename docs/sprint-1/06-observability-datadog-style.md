@@ -32,9 +32,10 @@ flowchart LR
 ```mermaid
 flowchart TD
     subgraph AppContainers ["Application Containers"]
-        APIGW["⚡ api-gateway (8080)<br/>Micrometer Tracer + Actuator"]
+        APIGW["⚡ frontend-api (8080)<br/>Micrometer Tracer + Actuator"]
         AuthSvc["🔐 auth-service (8081)<br/>Micrometer Tracer + Actuator"]
         ExamSvc["📚 exam-service (8082)<br/>Micrometer Tracer + Actuator"]
+        NotifSvc["🔔 notification-service (8083)<br/>Micrometer Tracer + Actuator"]
     end
 
     subgraph PrometheusStack ["Docker Compose Telemetry Stack"]
@@ -43,7 +44,7 @@ flowchart TD
         GrafanaAPM["📈 Grafana APM (Port 3000)<br/>Pre-provisioned dashboards"]
     end
 
-    APIGW & AuthSvc & ExamSvc -->|Scrape HTTP Metrics| PrometheusServer
+    APIGW & AuthSvc & ExamSvc & NotifSvc -->|Scrape HTTP Metrics| PrometheusServer
     PrometheusServer --> AlertManager
     PrometheusServer --> GrafanaAPM
 ```

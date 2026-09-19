@@ -39,7 +39,7 @@ public class SocraticTutorController {
     private final SocraticTutorUseCase tutorUseCase;
     private final JwtTokenValidator jwtValidator;
 
-    @PostMapping("/{id}/chat")
+    @PostMapping({"/{id}/chat", "/{id}/ask"})
     public ResponseEntity<TutorChatResponse> askTutor(
             @PathVariable UUID id,
             @Valid @RequestBody AskTutorRequest request,
@@ -51,7 +51,7 @@ public class SocraticTutorController {
                 id,
                 user.userId(),
                 user.role(),
-                request.getMessage()
+                request.getEffectiveMessage()
         );
 
         HttpHeaders headers = new HttpHeaders();

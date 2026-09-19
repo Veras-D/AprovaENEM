@@ -748,7 +748,7 @@ stateDiagram-v2
     
     state CheckRoute <<choice>>
     CheckRoute --> GeneralRoutes : GET /api/v1/questions/** (Exam Practice)
-    CheckRoute --> TutorRoutes : POST /api/v1/questions/{id}/ask (AI Tutor)
+    CheckRoute --> TutorRoutes : POST /api/v1/questions/{id}/chat or /ask (AI Tutor)
     
     GeneralRoutes --> TokenBucket60 : Token Bucket (60 req/min anti-scraping)
     TokenBucket60 --> ForwardToBackend : Tokens Available (100% Free & Anonymous)
@@ -763,29 +763,35 @@ stateDiagram-v2
     RegisteredUser --> CheckRole : Inspect User Tier
     
     state CheckRole <<choice>>
-    CheckRole --> ProTier : ROLE_PREMIUM_STUDENT (Pro Plan)
-    CheckRole --> FreeRegistered : ROLE_STUDENT (Free Account)
+    CheckRole --> PremiumUnlimited : `ROLE_PREMIUM_STUDENT` (Pro Plan)
+    CheckRole --> StudentDailyCheck : `ROLE_STUDENT` (Free Plan)
     
-    ProTier --> ForwardToBackend : Unlimited AI Tutor Access
+    PremiumUnlimited --> ForwardToAI : Bypass Quota Limits (Unlimited Access)
     
-    FreeRegistered --> CheckDailyQuota : Redis Atomic INCR (ratelimit:tutor:daily:{userId}:{YYYY-MM-DD})
+    StudentDailyCheck --> RedisQuotaCheck : Query Redis `ratelimit:tutor:daily:{userId}:{date}`
     
-    state CheckDailyQuota <<choice>>
-    CheckDailyQuota --> ForwardToBackend : Daily Count = 1 (Quota Available)
-    CheckDailyQuota --> Return429DailyQuota : Daily Count > 1 (Quota Exhausted)
+    state RedisQuotaCheck <<choice>>
+    RedisQuotaCheck --> ConsumeQuota : Consumed < 1 (First consultation today)
+    RedisQuotaCheck --> Return429Exhausted : Consumed >= 1 (Daily limit reached)
     
-    ForwardToBackend --> [*] : 200 OK (Processed)
-    Return401AuthRequired --> [*] : 401 Unauthorized (Free Signup Prompt)
-    Return429Burst --> [*] : 429 Too Many Requests (Retry-After)
-    Return429DailyQuota --> [*] : 429 Too Many Requests (Upgrade to Pro / Rewarded Ad)
+    ConsumeQuota --> ForwardToAI : Atomic INCR & Set TTL (Resets 00:00 BRT)
+    
+    ForwardToAI --> GeminiAPI : Dispatch Socratic Prompt to Gemini 1.5 Flash
+    GeminiAPI --> Return200Success : Conceptual Response & Pedagogical Hint
+    
+    Return401AuthRequired --> [*] : HTTP 401 (Call-to-Action: Register Free)
+    Return429Burst --> [*] : HTTP 429 (Retry-After: 60s)
+    Return429Exhausted --> [*] : HTTP 429 (Upgrade to Pro CTA)
+    Return200Success --> [*] : HTTP 200 (Success)
+    ForwardToBackend --> [*] : HTTP 200 (Instant Grading / Resolution)
 ```
 
-#### 1. Core Exam Practice (100% Free & Unlimited)
-- Question catalog browsing, practice quiz generation, answer submissions, instant scoring, TRI calculations, and curated step-by-step written resolutions have **zero daily caps, zero paywalls, and zero mandatory registration**.
+#### 1. Core Practice Engine: Frictionless & Free (No Authentication)
+- All past questions, customized quizzes, instant scoring, TRI calculations, and detailed step-by-step written explanations are **100% free and accessible with zero registration**.
 - Protected solely by **Layer 1 Token Bucket Rate Limiting** (capacity: 60 tokens, refill: 1 token/sec) to defend against malicious web scrapers and DoS traffic.
 
 #### 2. Socratic AI Tutor: Dual-Layer Rate Limiting & Authentication Gate
-AI Tutor inquiries (`POST /api/v1/questions/{id}/ask`) pass through sequential security and quota verification stages:
+AI Tutor inquiries (`POST /api/v1/questions/{id}/chat` or alias `/ask`) pass through sequential security and quota verification stages:
 
 1. **Authentication Gate (Anti-Quota Evasion)**:
    - AI tutoring requires an authenticated student account (`ROLE_STUDENT` or `ROLE_PREMIUM_STUDENT`).

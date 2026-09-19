@@ -498,26 +498,28 @@ Returns the question statement, status, and options A–E.
 
 ---
 
-### 5.2 Ask Socratic AI Tutor
+### 5.2 Ask Socratic AI Tutor (Chat Dialogue Turn)
 * **Method**: `POST`
-* **Path**: `/api/v1/questions/{id}/ask`
+* **Path**: `/api/v1/questions/{id}/chat` *(alias: `/api/v1/questions/{id}/ask`)*
 * **Headers**:
   - `Authorization`: `Bearer <token>` (**Required**: `ROLE_STUDENT` or `ROLE_PREMIUM_STUDENT`)
   - `Accept-Language`: `pt-BR` | `en`
   - `X-Session-Id`: `UUID` (Optional, practice session context)
 * **Rate & Quota Policy**:
   - **Unauthenticated / Anonymous**: Ineligible for AI Tutor invocations (returns HTTP `401 Unauthorized` / `REGISTRATION_REQUIRED_FOR_AI`). All past questions, quizzes, and written step-by-step resolutions remain **100% free and unlimited with zero registration required**.
-  - **Free Registered Student (`ROLE_STUDENT`)**: **1 consultation per calendar day** (resets at 00:00 BRT / UTC-3). Burst guard: 10 req/min. Tying the daily quota to verified student IDs prevents cookie-clearing quota abuse.
+  - **Free Registered Student (`ROLE_STUDENT`)**: **1 consultation per calendar day** (resets at 00:00 BRT / UTC-3). Burst guard: 10 req/min. Tying the daily quota to verified student IDs prevents cookie-clearing quota abuse. Once a question is unlocked, subsequent turns within the 6-turn limit on that same question thread do not consume quota.
   - **Pro Plan (`ROLE_PREMIUM_STUDENT`)**: **Unlimited** Socratic AI consultations per day.
 * **Emitted Response Headers**:
   - `X-AI-Quota-Limit`: `1` (or `-1` for Pro)
   - `X-AI-Quota-Remaining`: `0` (or `-1` for Pro)
-  - `X-AI-Quota-Reset`: Epoch timestamp in seconds (midnight 00:00 BRT)
+  - `X-AI-Quota-Reset`: ISO-8601 timestamp (midnight 00:00 BRT / 03:00 UTC)
+  - `X-Trace-Id`: Distributed trace identifier
 
 #### Request Body
+Accepts either `message` or `studentQuery`:
 ```json
 {
-  "studentQuery": "Why can't I just use a 25 A circuit breaker if the current is exactly 25 A?"
+  "message": "Why can't I just use a 25 A circuit breaker if the current is exactly 25 A?"
 }
 ```
 

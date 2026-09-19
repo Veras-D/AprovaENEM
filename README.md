@@ -301,11 +301,11 @@ In production, all domain services, databases, caches, and telemetry run within 
 - **auth-service**: `http://auth-service:8081` (Internal port only)
 - **exam-service**: `http://exam-service:8082` (Internal port only)
 - **notification-service**: `http://notification-service:8083` (Internal port only)
-- **PostgreSQL Databases**: `auth-db:5432`, `exam-db:5433`, `notification-db:5434`
+- **PostgreSQL Databases**: `postgres-auth:5432`, `postgres-exam:5432`, `postgres-notification:5432` (Internal ports; host port forwarding 5432/5433/5434 available via dev override)
 - **Redis 7+ Alpine**: `redis:6379`
 - **RabbitMQ Event Bus**: `rabbitmq:5672` (Management: `rabbitmq:15672`)
 - **Prometheus Telemetry**: `http://prometheus:9090`
-- **Grafana APM**: `http://grafana:3001` (admin / admin)
+- **Grafana APM**: `http://grafana:3000` (admin / admin)
 
 > [!TIP]
 > For local development and APM dashboard debugging, use the optional developer override to bind telemetry ports to localhost:
@@ -317,9 +317,14 @@ In production, all domain services, databases, caches, and telemetry run within 
 
 ## 📡 Core API Routes Summary
 
-| Method | Endpoint | Description | Auth Header |
+| Method | Endpoint | Description | Auth / Security |
 | :---: | :--- | :--- | :--- |
-| `POST` | `/api/v1/auth/session` | Create anonymous practice session UUID | None |
+| `POST` | `/api/v1/auth/session` | Create anonymous practice session UUID | None (30-day TTL) |
+| `POST` | `/api/v1/auth/register` | Register student account & emit Outbox event | None (Public) |
+| `POST` | `/api/v1/auth/login` | Authenticate student & issue HMAC-SHA256 JWT | None (Public) |
+| `POST` | `/api/v1/auth/verify-email` | Verify email with single-use Outbox token | None (Public) |
+| `POST` | `/api/v1/auth/resend-verification` | Request fresh email verification token (3/hr) | None (Public) |
+| `GET` | `/api/v1/auth/me` | Fetch authenticated student profile | Bearer (`ROLE_STUDENT`) |
 | `GET` | `/api/v1/exams` | List available ENEM historical editions | Optional |
 | `GET` | `/api/v1/subjects` | List subject areas, disciplines & topics | Optional |
 | `GET` | `/api/v1/questions` | Query questions with topic & difficulty filters | Optional |
@@ -327,8 +332,13 @@ In production, all domain services, databases, caches, and telemetry run within 
 | `POST` | `/api/v1/sessions/{id}/attempts` | Submit answer & receive instant feedback | `X-Session-Id` |
 | `POST` | `/api/v1/sessions/{id}/complete` | Finish quiz & generate diagnostic radar | `X-Session-Id` |
 | `GET` | `/api/v1/questions/{id}/resolution` | Fetch curated step-by-step resolution | Optional (100% Free & Unlimited) |
-| `POST` | `/api/v1/questions/{id}/ask` | Ask Socratic concept question (Gemini AI) | Bearer (1/day Free Student, Unlimited Pro) |
+| `POST` | `/api/v1/questions/{id}/chat` | Socratic dialogue turn (alias: `/ask`) | Bearer (1 free/day, Unlimited Pro) |
+| `GET` | `/api/v1/questions/{id}/chat` | Fetch thread message history bubbles | Bearer (`ROLE_STUDENT`) |
+| `DELETE` | `/api/v1/questions/{id}/chat` | Reset active conversation thread | Bearer (`ROLE_STUDENT`) |
 | `GET` | `/api/v1/questions/ai-quota` | Check remaining daily AI tutor quota | Optional Bearer (Free / Pro / Anonymous) |
+| `GET` | `/api/v1/gamification/profile` | Fetch XP balance, level title, streaks & goals | Bearer (`ROLE_STUDENT`) |
+| `PUT` | `/api/v1/gamification/daily-goal` | Update daily question target & reminder opt-in | Bearer (`ROLE_STUDENT`) |
+| `GET` | `/api/v1/gamification/leaderboard/weekly` | Query Redis `ZSET` weekly league standings | Bearer (`ROLE_STUDENT`) |
 | `POST` | `/api/v1/essays/upload` | Upload handwritten essay for OCR evaluation (Phase 2) | Bearer (`ROLE_PREMIUM_STUDENT`) |
 | `GET` | `/api/v1/essays/{id}` | Get 5-competency breakdown & thesis feedback (Phase 2) | Bearer (`ROLE_PREMIUM_STUDENT`) |
 

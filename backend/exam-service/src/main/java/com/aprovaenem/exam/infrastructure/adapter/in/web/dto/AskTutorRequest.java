@@ -1,6 +1,6 @@
 package com.aprovaenem.exam.infrastructure.adapter.in.web.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,7 +15,14 @@ import lombok.Setter;
 @AllArgsConstructor
 public class AskTutorRequest {
 
-    @NotBlank(message = "Message cannot be empty.")
     @Size(max = 2000, message = "Message must not exceed 2000 characters.")
+    @JsonAlias({"studentQuery", "prompt", "query"})
     private String message;
+
+    public String getEffectiveMessage() {
+        if (message != null && !message.isBlank()) {
+            return message.trim();
+        }
+        return "";
+    }
 }

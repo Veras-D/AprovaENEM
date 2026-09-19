@@ -54,7 +54,7 @@ spring:
         - id: exam-tutor-chat-route
           uri: ${EXAM_SERVICE_URL:http://exam-service:8082}
           predicates:
-            - Path=/api/v1/questions/*/chat, /api/v1/questions/*/chat/**
+            - Path=/api/v1/questions/*/chat, /api/v1/questions/*/chat/**, /api/v1/questions/*/ask, /api/v1/questions/*/ask/**
           filters:
             - name: RequestRateLimiter
               args:
