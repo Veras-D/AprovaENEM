@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+### 🚧 In Progress
+- feat(gamification): Student gamification engine with XP rewards (+10 per correct answer, +50 per completed simulado, +20 daily goal bonus), 4-tier league progression, and emergency monthly streak freeze (TASK-S2-14, TASK-S2-15)
+- feat(leaderboard): Redis ZSET weekly reset leaderboards with sub-5ms rank lookup and top-20% promotion cutoffs (TASK-S2-16)
+- feat(notifications): Daily 19:00 BRT study reminder sweep publishing to RabbitMQ notification exchange (TASK-S2-17)
+
+## [0.2.1] - 2026-09-19
+### 🔄 Changed & Synchronized
+- docs(specs): Synchronize OpenAPI specifications in `05-api-specification.md` with dual `/chat` and `/ask` route mapping, `@JsonAlias({"studentQuery"})` request body backward compatibility, and 429 quota exhaustion headers
+- docs(architecture): Clarify internal container port mappings (`5432` standard) vs host developer overrides in `03-system-architecture.md`, and document BFF routing rules
+- docs(data): Document per-question multi-turn thread persistence model, outbox event status lifecycle, and Redis key namespaces in `04-data-modeling.md`
+- docs(readme): Update verified live operational endpoints, perimeter isolation architecture, and port matrix in `README.md`
+- fix(compat): Add dual `/chat` and `/ask` route mapping and `@JsonAlias({"studentQuery"})` in `exam-service` for 100% backward compatibility
+
 ## [0.2.0] - 2026-09-18
 ### 🚀 Added
 - feat(gateway): Implement `frontend-api` BFF Edge Gateway with strict CORS origin whitelisting, perimeter security, Token Bucket Redis rate limiting, end-to-end distributed tracing (`X-Trace-Id`), and Prometheus scraping across all microservices (TASK-S2-12, TASK-S2-13)
