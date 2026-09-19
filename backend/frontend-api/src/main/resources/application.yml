@@ -11,22 +11,92 @@ spring:
       password: ${SPRING_DATA_REDIS_PASSWORD:redis_secure_password_2026}
   cloud:
     gateway:
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3000"
+              - "http://localhost:5173"
+              - "http://localhost:80"
+              - "https://aprovaenem.com.br"
+              - "https://app.aprovaenem.com.br"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - Authorization
+              - Content-Type
+              - Accept
+              - X-Session-Id
+              - traceparent
+              - X-Trace-Id
+            exposedHeaders:
+              - Authorization
+              - X-Trace-Id
+              - X-Session-Id
+              - X-RateLimit-Remaining
+              - X-AI-Quota-Limit
+              - X-AI-Quota-Remaining
+              - X-AI-Quota-Reset
+            allowCredentials: true
+            maxAge: 3600
+      default-filters:
+        - RemoveRequestHeader=X-User-Id
+        - RemoveRequestHeader=X-User-Roles
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin, RETAIN_UNIQUE
       routes:
-        # Auth & Gamification Service Routes
-        - id: auth-service-routes
-          uri: ${AUTH_SERVICE_URL:http://auth-service:8081}
+        # High-Risk / AI Tutor Route with 10 req/min Token Bucket Burst Limiter
+        - id: exam-tutor-chat-route
+          uri: ${EXAM_SERVICE_URL:http://exam-service:8082}
           predicates:
-            - Path=/api/v1/auth/**, /api/v1/gamification/**, /api/v1/users/**
-        # Exam & Socratic AI Tutor Routes
+            - Path=/api/v1/questions/*/chat, /api/v1/questions/*/chat/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@ipOrSessionKeyResolver}"
+
+        # Exam & Assessment Engine Routes (60 req/min)
         - id: exam-service-routes
           uri: ${EXAM_SERVICE_URL:http://exam-service:8082}
           predicates:
             - Path=/api/v1/questions/**, /api/v1/exams/**, /api/v1/topics/**, /api/v1/sessions/**, /api/v1/practice/**, /api/v1/practice-sessions/**
-        # Notification Service Routes
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 60
+                redis-rate-limiter.burstCapacity: 60
+                key-resolver: "#{@ipOrSessionKeyResolver}"
+
+        # Auth & Gamification Service Routes (60 req/min)
+        - id: auth-service-routes
+          uri: ${AUTH_SERVICE_URL:http://auth-service:8081}
+          predicates:
+            - Path=/api/v1/auth/**, /api/v1/gamification/**, /api/v1/users/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 60
+                redis-rate-limiter.burstCapacity: 60
+                key-resolver: "#{@ipOrSessionKeyResolver}"
+
+        # Notification Service Routes (60 req/min)
         - id: notification-service-routes
           uri: ${NOTIFICATION_SERVICE_URL:http://notification-service:8083}
           predicates:
             - Path=/api/v1/notifications/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 60
+                redis-rate-limiter.burstCapacity: 60
+                key-resolver: "#{@ipOrSessionKeyResolver}"
 
 management:
   endpoints:
@@ -41,3 +111,7 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:frontend-api},%X{traceId:-},%X{spanId:-}]"

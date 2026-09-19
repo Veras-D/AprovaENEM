@@ -243,22 +243,22 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
 ---
 
 ### Epic 5: Ingress & Observability Integration
-#### `TASK-S2-12`: `frontend-api` Microservice (BFF / Edge API Gateway) & Strict CORS Engine
+#### `TASK-S2-12`: `frontend-api` Microservice (BFF / Edge API Gateway) & Strict CORS Engine — **COMPLETED ✅**
 - **Priority**: `P0` | **Estimation**: 8 pts
 - **Description**: Implement the `frontend-api` microservice (BFF / Edge API Gateway) acting as the single public API facade that shields downstream domain microservices ("Real APIs"). Configure strict CORS policies (`CorsWebFilter` with origin whitelist, explicit allowed headers/methods, credentials support, 1-hour preflight caching), untrusted header stripping (`X-User-Id`, `X-User-Roles`), JWT/session ingress validation, response data masking (stripping SQL/stack traces), Token Bucket burst rate limiting, and Redis-backed daily AI Tutor quota enforcement.
 - **Acceptance Criteria**:
-  - External requests never reach real domain microservices directly; all traffic flows through `frontend-api`.
-  - Strict CORS headers enforced: whitelisted origins only (rejects `*` when credentials are used), allowed methods (`GET, POST, PUT, PATCH, DELETE, OPTIONS`), allowed headers (`Authorization, Content-Type, Accept, X-Session-Id, traceparent, X-Trace-Id`), exposed headers (`Authorization, X-Trace-Id, X-Session-Id, X-RateLimit-Remaining`).
-  - Preflight `OPTIONS` requests immediately return `200 OK` or `204 No Content` with `Access-Control-Max-Age: 3600`.
-  - Spoofed internal headers stripped from incoming requests before forwarding.
-  - Token Bucket rate limiter (60 req/min general, 10 req/min burst on `/ask`), JWT authentication challenge on `/ask` (HTTP 401 for anonymous guests), and Redis daily AI quota (1 free/day for registered `ROLE_STUDENT`, unlimited for Pro) emit HTTP 429 with `Retry-After` and quota metadata.
+  - [x] External requests never reach real domain microservices directly; all traffic flows through `frontend-api`.
+  - [x] Strict CORS headers enforced: whitelisted origins only (rejects `*` when credentials are used), allowed methods (`GET, POST, PUT, PATCH, DELETE, OPTIONS`), allowed headers (`Authorization, Content-Type, Accept, X-Session-Id, traceparent, X-Trace-Id`), exposed headers (`Authorization, X-Trace-Id, X-Session-Id, X-RateLimit-Remaining`).
+  - [x] Preflight `OPTIONS` requests immediately return `200 OK` or `204 No Content` with `Access-Control-Max-Age: 3600`.
+  - [x] Spoofed internal headers stripped from incoming requests before forwarding.
+  - [x] Token Bucket rate limiter (60 req/min general, 10 req/min burst on `/ask`), JWT authentication challenge on `/ask` (HTTP 401 for anonymous guests), and Redis daily AI quota (1 free/day for registered `ROLE_STUDENT`, unlimited for Pro) emit HTTP 429 with `Retry-After` and quota metadata.
 
-#### `TASK-S2-13`: Micrometer Tracing & Prometheus Scraping
+#### `TASK-S2-13`: Micrometer Tracing & Prometheus Scraping — **COMPLETED ✅**
 - **Priority**: `P1` | **Estimation**: 3 pts
 - **Description**: Wire Micrometer tracing so all microservice logs include `[serviceName, traceId, spanId]` and configure Prometheus to scrape `/actuator/prometheus`.
 - **Acceptance Criteria**:
-  - Outgoing HTTP responses include `X-Trace-Id` header.
-  - Prometheus target dashboard shows `UP` for all microservices.
+  - [x] Outgoing HTTP responses include `X-Trace-Id` header.
+  - [x] Prometheus target dashboard shows `UP` for all microservices.
 
 ---
 
