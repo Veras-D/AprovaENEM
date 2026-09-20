@@ -227,7 +227,7 @@ ReconectaRecode/
 ├── .env.example                         # Global environment variable template
 ├── docs/                                # Project Specifications & Planning
 │   ├── BACKLOG.md                       # Multi-Sprint Product Backlog & Roadmap
-│   └── sprint-1/                        # Sprint 1 Deliverables
+│   └── specifications/                  # System Architecture & Technical Specifications
 │       ├── 01-business-and-market-strategy.md  # BMC, ICP Personas & SDG 4/10 KPIs
 │       ├── 02-project-charter.md        # Scope, INEP Ingestion & Requirements
 │       ├── 03-system-architecture.md   # C4 Containers, Ingress, Hexagonal Layout
@@ -342,7 +342,7 @@ In production, all domain services, databases, caches, and telemetry run within 
 | `POST` | `/api/v1/essays/upload` | Upload handwritten essay for OCR evaluation (Phase 2) | Bearer (`ROLE_PREMIUM_STUDENT`) |
 | `GET` | `/api/v1/essays/{id}` | Get 5-competency breakdown & thesis feedback (Phase 2) | Bearer (`ROLE_PREMIUM_STUDENT`) |
 
-*Complete OpenAPI specification with request/response JSON schemas is available in [docs/sprint-1/05-api-specification.md](docs/sprint-1/05-api-specification.md).*
+*Complete OpenAPI specification with request/response JSON schemas is available in [docs/specifications/05-api-specification.md](docs/specifications/05-api-specification.md).*
 
 ---
 

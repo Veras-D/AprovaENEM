@@ -78,20 +78,20 @@ All architectural foundations, entity models, REST contracts, and verification b
 
 | Task ID   | Work Item & Title                            | Priority | Output Deliverable                                                                                                                                              |  Status  |
 | :-------- | :------------------------------------------- | :------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------: |
-| **S1-01** | **Social Impact Strategy & SDG Alignment**   |   `P0`   | [01-business-and-market-strategy.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/sprint-1/01-business-and-market-strategy.md)                       | **DONE** |
+| **S1-01** | **Social Impact Strategy & SDG Alignment**   |   `P0`   | [01-business-and-market-strategy.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/specifications/01-business-and-market-strategy.md)                       | **DONE** |
 | **S1-02** | **Customer Research, Personas & JTBD**       |   `P0`   | Value Proposition Canvas, Personas: *Lucas & Mariana*                                                                                                           | **DONE** |
-| **S1-03** | **Project Charter & Ingestion Scope**        |   `P0`   | [02-project-charter.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/sprint-1/02-project-charter.md)                                                 | **DONE** |
-| **S1-04** | **System Topology & Perimeter Architecture** |   `P0`   | [03-system-architecture.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/sprint-1/03-system-architecture.md) (Nginx + Gateway + Rate Limiter)        | **DONE** |
+| **S1-03** | **Project Charter & Ingestion Scope**        |   `P0`   | [02-project-charter.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/specifications/02-project-charter.md)                                                 | **DONE** |
+| **S1-04** | **System Topology & Perimeter Architecture** |   `P0`   | [03-system-architecture.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/specifications/03-system-architecture.md) (Nginx + Gateway + Rate Limiter)        | **DONE** |
 | **S1-05** | **Hexagonal Architecture Specifications**    |   `P0`   | Domain, Ports & Adapters package layout                                                                                                                         | **DONE** |
-| **S1-06** | **Data Modeling & PostgreSQL Schemas**       |   `P0`   | [04-data-modeling.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/sprint-1/04-data-modeling.md) (DDL, ER schema, B-trees, GIN & Vector)             | **DONE** |
-| **S1-07** | **REST API Route & CORS Specifications**     |   `P0`   | [05-api-specification.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/sprint-1/05-api-specification.md) (OpenAPI contracts, CORS preflight)         | **DONE** |
-| **S1-08** | **Datadog-Style Observability Design**       |   `P0`   | [06-observability-datadog-style.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/sprint-1/06-observability-datadog-style.md) (Prometheus + Tracing)  | **DONE** |
-| **S1-09** | **Automated CI Quality Gate Definition**     |   `P0`   | [07-quality-gate-ci.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/sprint-1/07-quality-gate-ci.md) (6-stage pipeline blueprint)                    | **DONE** |
-| **S1-10** | **Data Ingestion Pipeline Architecture**     |   `P0`   | [08-data-ingestion-pipeline.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/sprint-1/08-data-ingestion-pipeline.md) (Docling neural layout & LaTeX) | **DONE** |
+| **S1-06** | **Data Modeling & PostgreSQL Schemas**       |   `P0`   | [04-data-modeling.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/specifications/04-data-modeling.md) (DDL, ER schema, B-trees, GIN & Vector)             | **DONE** |
+| **S1-07** | **REST API Route & CORS Specifications**     |   `P0`   | [05-api-specification.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/specifications/05-api-specification.md) (OpenAPI contracts, CORS preflight)         | **DONE** |
+| **S1-08** | **Datadog-Style Observability Design**       |   `P0`   | [06-observability-datadog-style.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/specifications/06-observability-datadog-style.md) (Prometheus + Tracing)  | **DONE** |
+| **S1-09** | **Automated CI Quality Gate Definition**     |   `P0`   | [07-quality-gate-ci.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/specifications/07-quality-gate-ci.md) (6-stage pipeline blueprint)                    | **DONE** |
+| **S1-10** | **Data Ingestion Pipeline Architecture**     |   `P0`   | [08-data-ingestion-pipeline.md](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/specifications/08-data-ingestion-pipeline.md) (Docling neural layout & LaTeX) | **DONE** |
 
 ---
 
-## 3. Sprint 2: Core Back-end Development & Implementation (JAM 1 — ACTIVE 🚀)
+## 3. Sprint 2: Core Back-end Development & Implementation (JAM 1 — COMPLETED ✅)
 
 Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistence, Caching, and Ingress Security**.
 

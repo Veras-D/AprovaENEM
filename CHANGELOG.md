@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.1] - 2026-09-20
+### 🔄 Changed
+- refactor(docs): Rename foundational specifications directory from `docs/sprint-1/` to `docs/specifications/` to accurately reflect its permanent role as the platform architecture and technical baseline across all project phases
+- docs(links): Synchronize internal documentation links, project directory tree, and backlog artifact cross-references across `README.md`, `docs/BACKLOG.md`, and `docs/specifications/02-project-charter.md`
+
 ## [0.3.0] - 2026-09-20
 ### 🚀 Added
 - feat(gamification): Implement student gamification engine in `auth-service` with XP progression (+10 correct answer, +50 completed session, +20 daily goal bonus), 4-tier title levels (`Calouro Iniciante`, `Focado no SISU`, `Mestre dos Simulados`, `Nota 1000`), daily streak tracking in `America/Sao_Paulo` timezone, and emergency monthly streak freeze (TASK-S2-14)

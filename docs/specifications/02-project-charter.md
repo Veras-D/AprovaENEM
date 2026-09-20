@@ -24,7 +24,7 @@ To provide a clean, high-performance, open-access API that transforms public INE
 
 ## 2. Ingestion Strategy for INEP Open Data
 
-The platform sources 100% of its core examination data from public government releases published by INEP (*Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira*), triangulating between **tabular Microdados**, **exam PDFs**, **answer keys**, and **open academic datasets** (see detailed specification in [`docs/sprint-1/08-data-ingestion-pipeline.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/sprint-1/08-data-ingestion-pipeline.md)):
+The platform sources 100% of its core examination data from public government releases published by INEP (*Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira*), triangulating between **tabular Microdados**, **exam PDFs**, **answer keys**, and **open academic datasets** (see detailed specification in [`docs/specifications/08-data-ingestion-pipeline.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/specifications/08-data-ingestion-pipeline.md)):
 
 ```mermaid
 flowchart LR
