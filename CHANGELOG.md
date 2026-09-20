@@ -18,7 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Added concurrent load benchmark `shouldAchieveSubMillisecondRankingUnderConcurrentLoad` to `RedisLeaderboardIT`: Simulated 500 concurrent `ZADD`, `ZREVRANK`, and `ZREVRANGEBYSCORE` operations across 10 threads, completing in 619ms (**1.24ms wall-clock per op, 807 ops/sec throughput**).
   - build(redis): Added `org.apache.commons:commons-pool2` to `auth-service` and `exam-service`, configuring production Lettuce connection pooling (`max-active: 16`, `max-idle: 8`, `min-idle: 2`, `max-wait: 2000ms`, `timeout: 2000ms`).
 - docs(benchmarks): Published comprehensive latency benchmark report in `docs/benchmarks/jam1-redis-latency-benchmarking.md` detailing architecture, test scenarios, execution metrics, percentile distributions, and production recommendations.
-- docs(backlog): Synchronize `docs/BACKLOG.md` marking `TASK-S3-06` as `DONE ✅` and advancing Sprint 3 completion to 62% (8/13 tasks completed).
+- docs(backlog): Synchronize `docs/BACKLOG.md` marking `TASK-S3-06` as `DONE ✅` and scheduling `TASK-S3-06b` (Backend Load & Stress Testing with Grafana k6).
+- docs(quality-gate): Formalize automated Pre-Flight Smoke Testing (< 15s) and containerized Grafana k6 Full-System Stress & Load Testing (`tests/stress/`) across `docs/specifications/07-quality-gate-ci.md`, `README.md`, and `docs/BACKLOG.md` (covering Exam Rush 1,000+ VU simulation, Socratic consultation bursts, and post-deployment smoke verification in `TASK-S6-05`).
 
 ## [0.3.9] - 2026-09-20
 ### 📊 Added & Enforced (JaCoCo Unified Backend Coverage Quality Gate >= 80% Line, >= 75% Branch)

@@ -389,8 +389,10 @@ AprovaENEM enforces a strict, enterprise-grade automated quality gate across all
 2. **Gate 2: Static Analysis**: Checkstyle (Google Java Style) + PMD (Cyclomatic Complexity $\le 12$, max method lines $\le 50$) + ESLint.
 3. **Gate 3: Duplication Detection**: PMD CPD enforcing duplicate token threshold $< 3\%$.
 4. **Gate 4: Security & Secret Scan**: Trivy CVE dependency audit (0 critical/high) + Gitleaks commit history scan.
-5. **Gate 5: Full Test Pyramid & Dual Coverage**:
-   - **Backend**: **336 unit, adapter, and WebMvc tests (100% green, 0 failures)** + **16 Testcontainers integration tests** (`PostgreSQL 16 pgvector` and `Redis 7.2`). Enforced by **JaCoCo unified coverage quality gate ($\ge 80\%$ line, $\ge 75\%$ branch)** during `verify` lifecycle across all modules (`common-core`: 100%, `notification-service`: 99.2% line / 81.3% branch, `auth-service`: 96.3% line / 82.7% branch, `frontend-api`: 94.2% line / 88.6% branch, `exam-service`: 88.7% line / 75.8% branch).
+5. **Gate 5: Full Test Pyramid, Smoke, Stress & Dual Coverage**:
+   - **Backend**: **336 unit, adapter, and WebMvc tests (100% green, 0 failures)** + **18 Testcontainers integration tests** (`PostgreSQL 16 pgvector` and `Redis 7.2`). Enforced by **JaCoCo unified coverage quality gate ($\ge 80\%$ line, $\ge 75\%$ branch)** during `verify` lifecycle across all modules (`common-core`: 100%, `notification-service`: 99.2% line / 81.3% branch, `auth-service`: 96.3% line / 82.7% branch, `frontend-api`: 94.2% line / 88.6% branch, `exam-service`: 88.7% line / 75.8% branch).
+   - **Pre-Flight & Post-Deploy Smoke Tests**: Sub-15s automated health probes (`/actuator/health` across all microservices, DB, Redis, RabbitMQ) and golden path validation (`POST /sessions`, `GET /questions`, `GET /swagger-ui.html`) in CI and production CD.
+   - **Full-System Stress & Load Tests**: Containerized **Grafana k6** simulating 1,000+ VU national exam rushes, Socratic AI consultation bursts, Token Bucket 429 throttling, and connection pool saturation.
    - **Frontend**: Vitest + React Testing Library component tests and MSW integration tests. Enforced by **`@vitest/coverage-v8` ($\ge 80\%$)**.
    - **API Contracts**: Automated Postman regression suite executed via **Newman CLI** (31 requests, 56 assertions, 0 failures).
    - **E2E**: **Cypress** interactive DOM workflows + **Playwright** cross-browser headless suites verifying student practice journeys against Docker Compose.

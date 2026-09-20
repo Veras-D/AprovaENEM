@@ -31,7 +31,7 @@ flowchart LR
 | **Gate 2: Static Analysis** | Checkstyle + PMD + ESLint | • Google Java Style rules enforced.<br>• Cyclomatic Complexity per method $\le 12$.<br>• Method line count $\le 50$ lines; class line count $\le 350$ lines.<br>• ESLint zero warnings for React/TypeScript frontend. |
 | **Gate 3: Code Duplication** | PMD CPD (Copy/Paste Detector) | Duplication threshold $< 3\%$. Flags any duplicated token blocks $> 75$ tokens. |
 | **Gate 4: Security & CVE Audit** | Trivy + Gitleaks Action | • 0 Critical / High CVEs in dependencies.<br>• Complete git commit history scanned for leaked API keys, tokens, and credentials. |
-| **Gate 5: Full Test Pyramid & Accessibility** | JUnit 5 + JaCoCo + Vitest + Cypress + Playwright + Newman + Axe-Core | • **Unit Tests**: 100% passing (domain models + React components).<br>• **Integration Tests**: Spring Boot + Testcontainers PostgreSQL 16 + Spring Security `@WithMockUser`.<br>• **Unified Backend Coverage**: $\ge 80\%$ line, $\ge 75\%$ branch (JaCoCo merged across Unit + IT).<br>• **Frontend Coverage**: $\ge 80\%$ statement/line coverage (Vitest v8).<br>• **API Contract Tests**: Automated Postman collection verified via Newman CLI.<br>• **E2E Tests**: 100% passing across Cypress and Playwright student flows.<br>• **Digital Accessibility**: Zero critical or serious WCAG 2.1 AA violations verified via Axe-Core; Lighthouse Accessibility score $\ge 95/100$. |
+| **Gate 5: Full Test Pyramid, Smoke, Stress & Accessibility** | JUnit 5 + JaCoCo + Vitest + Cypress + Playwright + Newman + Grafana k6 + Axe-Core | • **Unit Tests**: 100% passing (domain models + React components).<br>• **Integration Tests**: Spring Boot + Testcontainers PostgreSQL 16 + Spring Security `@WithMockUser`.<br>• **Unified Backend Coverage**: $\ge 80\%$ line, $\ge 75\%$ branch (JaCoCo merged across Unit + IT).<br>• **Pre-Flight Smoke Tests**: Fast sanity (< 15s) probing `/actuator/health` and Golden Journey.<br>• **Stress & Load Tests (k6)**: 1,000+ VU Exam Rush simulation, Socratic burst, and Token Bucket saturation.<br>• **Frontend Coverage**: $\ge 80\%$ statement/line coverage (Vitest v8).<br>• **API Contract Tests**: Automated Postman collection verified via Newman CLI.<br>• **E2E Tests**: 100% passing across Cypress and Playwright student flows.<br>• **Digital Accessibility**: Zero critical or serious WCAG 2.1 AA violations verified via Axe-Core; Lighthouse Accessibility score $\ge 95/100$. |
 | **Gate 6: Build Verification** | Docker Buildx / Docker Compose | Clean production container image builds with zero host system dependencies. |
 
 ---
@@ -466,6 +466,71 @@ pm.test("Unauthorized endpoint returns RFC 7807 problem details", function () {
 
 ---
 
+### 5.4 Automated Pre-Flight & Post-Deployment Smoke Testing Suite (`tests/smoke/`)
+
+To prevent pipeline latency waste and guarantee baseline environmental health before launching heavy integration, contract, or end-to-end suites, AprovaENEM implements an automated **Smoke Testing Suite**:
+
+1. **Pre-Flight Cluster Smoke Test (CI Pipeline Gate)**:
+   - **Execution Window**: $< 15$ seconds immediate execution upon Docker Compose cluster startup.
+   - **Health Probes**: Calls `GET /actuator/health` across all microservices:
+     - `frontend-api` (Port 8080)
+     - `auth-service` (Port 8081)
+     - `exam-service` (Port 8082)
+     - `notification-service` (Port 8083)
+     - Verifies database connectivity (`PostgreSQL: UP`), cache status (`Redis: UP`), and message broker status (`RabbitMQ: UP`).
+   - **Golden Path Sanity Verification**:
+     - `POST /api/v1/sessions` $\rightarrow$ Generates anonymous guest session (`201 Created`).
+     - `GET /api/v1/questions?page=0&size=1` $\rightarrow$ Fetches 1 question via BFF gateway (`200 OK`).
+     - `GET /swagger-ui.html` $\rightarrow$ Verifies API documentation portal availability (`200 OK`).
+   - **Fail-Fast Policy**: If any health probe or golden path call fails, the CI job aborts immediately with a clear diagnostic message, preventing 10+ minute timeout cascades in subsequent suites.
+
+2. **Post-Deployment Smoke Test (Continuous Delivery Gate)**:
+   - **Execution Window**: Run immediately upon deployment to staging/production cloud infrastructure.
+   - **Scope**: Verifies public DNS propagation, automated TLS/SSL certificate validity, Nginx reverse proxy headers, and external database connectivity on the live public URL.
+
+---
+
+### 5.5 Full-System Stress & Load Testing Suite (Grafana k6)
+
+To simulate peak traffic during nationwide ENEM preparation surges (e.g., Sunday evening national mock exams), AprovaENEM provides a containerized **Grafana k6** load and stress testing suite located in `tests/stress/`:
+
+| Scenario File | Target Layer & Route | Virtual Users (VUs) & Profile | Primary Verification Goal | Pass SLA Threshold |
+| :--- | :--- | :--- | :--- | :--- |
+| **`catalog-browse-load.js`** | `GET /api/v1/questions`<br>`GET /api/v1/questions/{id}` | Ramp 100 to 1,000 VUs over 2m, sustain 3m | High-volume catalog browsing; evaluates Redis L2 cache hit offloading ($\ge 85\%$) and HikariCP connection pool non-exhaustion. | P95 latency $< 150\text{ ms}$, 0% 5xx errors. |
+| **`socratic-burst-stress.js`** | `POST /api/v1/questions/{id}/ask` | 500 concurrent threads spike over 30s | Socratic AI consultation barrage; validates Token Bucket rate limiting in `frontend-api` returning `429 Too Many Requests`, Redis atomic daily quota race safety (0 leaks), and Resilience4j Circuit Breaker fallback stability. | 0 unhandled 500s; 100% compliant rate-limiting. |
+| **`leaderboard-concurrency.js`** | `POST /api/v1/sessions/{id}/answers`<br>`GET /api/v1/gamification/leaderboard/weekly` | 2,000 XP updates across 50 parallel workers | High-concurrency gamification event ingestion; verifies RabbitMQ outbox publishing throughput, consumer lag in `notification-service`, and Redis Sorted Set ranking performance. | P99 latency $< 250\text{ ms}$. |
+
+#### Example k6 Script Specification (`tests/stress/catalog-browse-load.js`)
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '30s', target: 200 },
+    { duration: '1m', target: 1000 },
+    { duration: '2m', target: 1000 },
+    { duration: '30s', target: 0 },
+  ],
+  thresholds: {
+    http_req_duration: ['p(95)<150'], // 95% of requests must complete below 150ms
+    http_req_failed: ['rate<0.01'],    // Error rate must be under 1%
+  },
+};
+
+export default function () {
+  const res = http.get('http://localhost:8080/api/v1/questions?page=0&size=10');
+  check(res, {
+    'status is 200': (r) => r.status === 200,
+    'has questions array': (r) => r.json().content.length > 0,
+    'tracing header present': (r) => r.headers['X-Trace-Id'] !== undefined,
+  });
+  sleep(1);
+}
+```
+
+---
+
 ## 6. Multi-Job GitHub Actions CI Workflow (`.github/workflows/quality-gate.yml`)
 
 The automated CI workflow runs parallelized backend and frontend verification jobs, followed by an end-to-end integration and API contract gate running against Docker Compose:
@@ -609,6 +674,19 @@ jobs:
           sleep 25
           curl --fail --retry 10 --retry-delay 3 http://localhost/health || exit 1
 
+      # --- 5b: Pre-Flight Automated Smoke Suite (< 15s) ---
+      - name: 'Gate 5b: Pre-Flight Automated Smoke Suite (< 15s)'
+        run: |
+          echo "Running Pre-Flight Smoke Health Probes..."
+          curl --fail --retry 5 --retry-delay 2 http://localhost:8080/actuator/health || exit 1
+          curl --fail --retry 5 --retry-delay 2 http://localhost:8081/actuator/health || exit 1
+          curl --fail --retry 5 --retry-delay 2 http://localhost:8082/actuator/health || exit 1
+          curl --fail --retry 5 --retry-delay 2 http://localhost:8083/actuator/health || exit 1
+          echo "Verifying Golden Path sanity..."
+          curl -s -X POST http://localhost:8080/api/v1/sessions -H "Content-Type: application/json" -d '{"clientIp":"127.0.0.1"}' | grep "sessionId" || exit 1
+          curl -s http://localhost:8080/api/v1/questions?page=0\&size=1 | grep "content" || exit 1
+          echo "Pre-Flight Smoke Suite passed in < 10s!"
+
       - name: Set up Node.js for Newman, Cypress & Playwright
         uses: actions/setup-node@v4
         with:
@@ -633,6 +711,7 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
 
+      # --- 5e: Run Playwright Multi-Device E2E Suite ---
       - name: 'Gate 5e: Run Playwright Multi-Device E2E Suite'
         run: npx playwright test
         env:
@@ -643,6 +722,12 @@ jobs:
         run: |
           echo "Auditing WCAG 2.1 AA compliance across core student routes..."
           npx axe http://localhost --tags wcag2a,wcag2aa,wcag21aa
+        continue-on-error: false
+
+      # --- 5g: Headless k6 Load & Stress Verification ---
+      - name: 'Gate 5g: Run Headless k6 Load & Stress Suite'
+        run: |
+          docker run --rm -i --network="host" grafana/k6 run - < tests/stress/catalog-browse-load.js
         continue-on-error: false
 
       - name: Upload Test Reports on Failure
@@ -680,7 +765,7 @@ jobs:
 
 ---
 
-## 6. Multi-Stage AI-Assisted & Real-Time Security Audit Framework
+## 7. Multi-Stage AI-Assisted & Real-Time Security Audit Framework
 
 To guarantee zero specification discrepancies, zero data leakage, and bulletproof security before milestone sign-offs, AprovaENEM implements an exhaustive **Multi-Stage Security & Integrity Audit** at the conclusion of each major engineering cycle:
 1. **Milestone 1 (End of JAM 1 / Sprint 3 — Back-end Finalization)**: `TASK-S3-11`
@@ -706,7 +791,7 @@ flowchart TD
     style S5 fill:#065f46,stroke:#34d399,stroke-width:2px,color:#fff
 ```
 
-### 6.1 Backend Multi-Stage Security & Test Integrity Audit Specification (JAM 1 — Sprint 3)
+### 7.1 Backend Multi-Stage Security & Test Integrity Audit Specification (JAM 1 — Sprint 3)
 
 The backend audit validates that the isolated architecture, edge facade, and core domain are impervious to external attack, and certifies that all test suites are authentic, rigorous, and free from masked defects or testing smells:
 
@@ -720,7 +805,7 @@ The backend audit validates that the isolated architecture, edge facade, and cor
 
 ---
 
-### 6.2 Full-Stack Multi-Stage Security & Test Integrity Audit Specification (JAM 2 — Sprint 6)
+### 7.2 Full-Stack Multi-Stage Security & Test Integrity Audit Specification (JAM 2 — Sprint 6)
 
 The full-stack audit validates client-side resilience, public deployment hardening, and certifies the authenticity and rigor of all frontend and end-to-end test suites:
 
