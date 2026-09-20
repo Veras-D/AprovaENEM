@@ -32,7 +32,8 @@ public class RedisTutorQuotaAdapter implements TutorQuotaPort {
 
         String key = buildQuotaKey(userId);
         String val = redisTemplate.opsForValue().get(key);
-        int used = (val != null) ? Integer.parseInt(val) : 0;
+        int rawUsed = (val != null) ? Integer.parseInt(val) : 0;
+        int used = Math.min(rawUsed, FREE_DAILY_LIMIT);
 
         return AiQuotaStatus.standard(FREE_DAILY_LIMIT, used, calculateNextReset());
     }

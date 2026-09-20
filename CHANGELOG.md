@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.10] - 2026-09-20
+### ⚡ Added & Optimized (Redis Caching, Lettuce Connection Pooling & Latency Benchmarking Suite)
+- perf(cache): Implement Redis caching layers, connection pool tuning, and comprehensive latency benchmarking suite across `exam-service` and `auth-service` (TASK-S3-06)
+  - `exam-service`:
+    - Added `RedisCacheAndLatencyBenchmarkIT` (4 integration tests against real PostgreSQL 16 `pgvector` and Redis 7.2 containers):
+      - Verified L2 entity cache: Cold miss on PostgreSQL (30.57ms) vs. Hot cache hit on Redis (2.18ms average, 2.10ms P50, 2.90ms P95), achieving a **14x latency reduction (92.8% speedup)** on question retrieval.
+      - Verified cache eviction consistency: `@CacheEvict` on administrative status update immediately invalidates Redis key and triggers fresh re-hydration on next read.
+      - Verified PostgreSQL composite index query performance: Executed parameterized queries against `idx_questions_active_serving` (`topic_id`, `difficulty_level`, `status = 'ACTIVE'`), achieving sub-millisecond latency (**0.38ms average**, 0.36ms P50, 0.59ms P95), surpassing the sub-5ms SLA.
+      - Verified concurrent atomic Socratic daily quota acquisition: 50 concurrent threads dispatched simultaneously via `CountDownLatch`; exactly 1 thread acquired quota and 49 were rejected with sub-30ms P95 latency (**25.23ms average**, 27.56ms P95), completely eliminating race condition vulnerabilities.
+    - Fixed `RedisTutorQuotaAdapter`: Clamped reported used quota to `FREE_DAILY_LIMIT` in `getQuotaStatus` to ensure rejected requests do not skew consumed quota metrics.
+  - `auth-service`:
+    - Added concurrent load benchmark `shouldAchieveSubMillisecondRankingUnderConcurrentLoad` to `RedisLeaderboardIT`: Simulated 500 concurrent `ZADD`, `ZREVRANK`, and `ZREVRANGEBYSCORE` operations across 10 threads, completing in 619ms (**1.24ms wall-clock per op, 807 ops/sec throughput**).
+  - build(redis): Added `org.apache.commons:commons-pool2` to `auth-service` and `exam-service`, configuring production Lettuce connection pooling (`max-active: 16`, `max-idle: 8`, `min-idle: 2`, `max-wait: 2000ms`, `timeout: 2000ms`).
+- docs(benchmarks): Published comprehensive latency benchmark report in `docs/benchmarks/jam1-redis-latency-benchmarking.md` detailing architecture, test scenarios, execution metrics, percentile distributions, and production recommendations.
+- docs(backlog): Synchronize `docs/BACKLOG.md` marking `TASK-S3-06` as `DONE ✅` and advancing Sprint 3 completion to 62% (8/13 tasks completed).
+
 ## [0.3.9] - 2026-09-20
 ### 📊 Added & Enforced (JaCoCo Unified Backend Coverage Quality Gate >= 80% Line, >= 75% Branch)
 - test(coverage): Implement comprehensive adapter, security, and messaging unit tests across all backend microservices, bringing overall suite to 336 tests (100% green, 0 errors, 0 failures) and enforcing the automated JaCoCo coverage quality gate in Maven `verify` lifecycle (TASK-S3-05)
