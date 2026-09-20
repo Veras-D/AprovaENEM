@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.13] - 2026-09-20
+### 🚀 Added & Verified (Containerized Grafana k6 Load & Stress Testing Suite)
+- test(stress): Implement containerized Grafana k6 load, stress, and concurrency benchmarking suite (`tests/stress/`) across 3 high-risk operational scenarios (TASK-S3-06b)
+  - `catalog-browse-load.js`: Simulates the Exam Rush scenario with 150 to 1,000 concurrent Virtual Users (VUs) querying the question catalog, difficulty filters, and single question lookups against Redis L2 cache and PostgreSQL:
+    - Achieved **593.01 requests / second throughput** with **100.00% check pass rate** (51,390/51,390 checks) across 18,002 HTTP requests.
+    - Verified sub-130ms P95 overall latency (**129.52 ms P95**, 23.83 ms median) and **0.00% error rate** with **0 unhandled 5xx server errors**.
+    - Verified Redis L2 cache single-question lookups completing in **21.13 ms median** and **118.91 ms P95**, shielding PostgreSQL HikariCP connection pools from exhaustion.
+  - `socratic-burst-stress.js`: Simulates high-concurrency Socratic AI consultation bursts against `POST /api/v1/questions/{id}/ask`:
+    - Validated Spring Cloud Gateway Redis Token Bucket rate limiting returning `429 Too Many Requests` in **1.82 ms average**, successfully intercepting 952 excess requests without downstream compute exhaustion.
+    - Verified **100.00% compliant status code rate** (200, 429, 401) with **0 unhandled 500 internal server errors**, confirming Resilience4j circuit breaker fallback stability.
+  - `leaderboard-concurrency.js`: Simulates concurrent student practice session lifecycle, answer attempt submissions, automated scoring, RabbitMQ transactional outbox event ingestion, and weekly leaderboard queries on Redis Sorted Sets (`ZSET`):
+    - Ingested **2,493 completed attempts** across 50 concurrent workers with **100.00% check pass rate** (12,496/12,496 checks) and **0.00% error rate**.
+    - Achieved **60.41 ms P95** and **105.67 ms P99** overall latency, beating the $< 250\text{ ms}$ SLA target.
+    - Verified Redis ZSET weekly leaderboard queries completing in **16.53 ms median** and **58.70 ms P95** under sustained read/write load.
+- ci(stress): Added automated stress test execution tooling:
+  - `tests/stress/run-k6-stress.sh`: Unified CLI runner supporting `catalog`, `socratic`, `leaderboard`, and `all` scenarios with configurable `BASE_URL` and `CI_FAST` flags.
+  - `tests/stress/docker-compose.k6.yml`: Containerized k6 service definitions attached to `aprovaenem-internal` and `frontend-edge` Docker networks.
+- docs(benchmarks): Published comprehensive stress testing and saturation report in `docs/benchmarks/jam1-k6-stress-benchmarking.md` detailing architecture, test scenarios, percentile tables, bottleneck analysis, and SLA verification.
+- docs(backlog): Synchronized `docs/BACKLOG.md` marking `TASK-S3-06b` as `DONE ✅`, advancing Sprint 3 completion to 79% (11/14 tasks completed).
+
 ## [0.3.12] - 2026-09-20
 ### 🔐 Added & Hardened (Password Storage Pepper Hardening via HMAC-SHA256 + BCrypt)
 - sec(auth): Layer application-level secret pepper over BCrypt in `auth-service` via `BCryptPasswordEncoderAdapter` and `PasswordEncoderPort` (TASK-S3-07b)

@@ -1,0 +1,61 @@
+version: '3.8'
+
+# ==============================================================================
+# AprovaENEM — Containerized Grafana k6 Stress Testing Stack
+# ==============================================================================
+# Usage:
+#   docker compose -f tests/stress/docker-compose.k6.yml run --rm k6-catalog
+#   docker compose -f tests/stress/docker-compose.k6.yml run --rm k6-socratic
+#   docker compose -f tests/stress/docker-compose.k6.yml run --rm k6-leaderboard
+# ==============================================================================
+
+networks:
+  aprovaenem-internal:
+    external: true
+    name: reconectarecode_aprovaenem-internal
+  frontend-edge:
+    external: true
+    name: reconectarecode_frontend-edge
+
+services:
+  k6-catalog:
+    image: grafana/k6:latest
+    container_name: aprovaenem-k6-catalog
+    networks:
+      - frontend-edge
+      - aprovaenem-internal
+    environment:
+      - BASE_URL=http://nginx-proxy
+      - CI_FAST=${CI_FAST:-false}
+    volumes:
+      - ./tests/stress:/scripts
+    entrypoint: ["k6", "run"]
+    command: ["/scripts/catalog-browse-load.js"]
+
+  k6-socratic:
+    image: grafana/k6:latest
+    container_name: aprovaenem-k6-socratic
+    networks:
+      - frontend-edge
+      - aprovaenem-internal
+    environment:
+      - BASE_URL=http://nginx-proxy
+      - CI_FAST=${CI_FAST:-false}
+    volumes:
+      - ./tests/stress:/scripts
+    entrypoint: ["k6", "run"]
+    command: ["/scripts/socratic-burst-stress.js"]
+
+  k6-leaderboard:
+    image: grafana/k6:latest
+    container_name: aprovaenem-k6-leaderboard
+    networks:
+      - frontend-edge
+      - aprovaenem-internal
+    environment:
+      - BASE_URL=http://nginx-proxy
+      - CI_FAST=${CI_FAST:-false}
+    volumes:
+      - ./tests/stress:/scripts
+    entrypoint: ["k6", "run"]
+    command: ["/scripts/leaderboard-concurrency.js"]
