@@ -11,7 +11,6 @@ import com.aprovaenem.exam.domain.port.in.PracticeSessionUseCase;
 import com.aprovaenem.exam.infrastructure.adapter.in.web.dto.AttemptResultResponse;
 import com.aprovaenem.exam.infrastructure.adapter.in.web.dto.DiagnosticReportResponse;
 import com.aprovaenem.exam.infrastructure.adapter.in.web.dto.PracticeSessionResponse;
-import com.aprovaenem.exam.infrastructure.adapter.in.web.dto.QuestionOptionDto;
 import com.aprovaenem.exam.infrastructure.adapter.in.web.dto.QuestionSummaryDto;
 import com.aprovaenem.exam.infrastructure.adapter.in.web.dto.StartSessionRequest;
 import com.aprovaenem.exam.infrastructure.adapter.in.web.dto.SubmitAnswerRequest;
@@ -135,27 +134,7 @@ public class PracticeSessionController {
     }
 
     private QuestionSummaryDto toQuestionSummaryDto(Question q) {
-        List<QuestionOptionDto> options = q.getOptions().stream()
-                .map(o -> QuestionOptionDto.builder()
-                        .id(o.getId())
-                        .optionLetter(o.getOptionLetter())
-                        .optionText(o.getOptionText())
-                        .isCorrect(null)
-                        .build())
-                .toList();
-
-        return QuestionSummaryDto.builder()
-                .id(q.getId())
-                .examEditionId(q.getExamEditionId())
-                .topicId(q.getTopicId())
-                .topicName(q.getTopicName())
-                .discipline(q.getDiscipline())
-                .itemNumber(q.getItemNumber())
-                .statement(q.getStatement())
-                .difficultyLevel(q.getDifficultyLevel().name())
-                .status(q.getStatus().name())
-                .options(options)
-                .build();
+        return QuestionDtoMapper.toSummaryDto(q);
     }
 
     private DiagnosticReportResponse toDiagnosticResponse(DiagnosticReport report) {

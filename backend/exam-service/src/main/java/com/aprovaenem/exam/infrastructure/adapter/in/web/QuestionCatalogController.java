@@ -83,27 +83,7 @@ public class QuestionCatalogController {
     }
 
     private QuestionSummaryDto toSummaryDto(Question q) {
-        List<QuestionOptionDto> optionDtos = q.getOptions().stream()
-                .map(opt -> QuestionOptionDto.builder()
-                        .id(opt.getId())
-                        .optionLetter(opt.getOptionLetter())
-                        .optionText(opt.getOptionText())
-                        .isCorrect(null) // Purposely null in catalog queries to prevent cheating
-                        .build())
-                .toList();
-
-        return QuestionSummaryDto.builder()
-                .id(q.getId())
-                .examEditionId(q.getExamEditionId())
-                .topicId(q.getTopicId())
-                .topicName(q.getTopicName())
-                .discipline(q.getDiscipline())
-                .itemNumber(q.getItemNumber())
-                .statement(q.getStatement())
-                .difficultyLevel(q.getDifficultyLevel().name())
-                .status(q.getStatus().name())
-                .options(optionDtos)
-                .build();
+        return QuestionDtoMapper.toSummaryDto(q);
     }
 
     private QuestionDetailResponse toDetailDto(Question q) {

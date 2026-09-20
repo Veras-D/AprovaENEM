@@ -1,0 +1,184 @@
+name: AprovaENEM Backend CI Quality Gate & Pre-Flight Suite
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: '21'
+  JAVA_DISTRO: 'temurin'
+
+jobs:
+  # ============================================================================
+  # Quality Gates 1 to 5: Compilation, Static Analysis, Duplication, Security, Tests
+  # ============================================================================
+  backend-quality-gate:
+    name: Backend Quality Gate (Stages 1-5)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java ${{ env.JAVA_VERSION }} (${{ env.JAVA_DISTRO }})
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRO }}
+          cache: 'maven'
+
+      - name: Stage 4a: Gitleaks Secret Audit
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: false
+
+      - name: Stage 1: Strict Compilation (javac -Werror -parameters)
+        working-directory: backend
+        run: |
+          echo "Compiling all microservice submodules with Java 21 strict flags..."
+          mvn clean compile -B -DskipTests
+
+      - name: Stage 2: Static Analysis & Cyclomatic Complexity (Checkstyle & PMD)
+        working-directory: backend
+        run: |
+          echo "Enforcing Checkstyle Google Checks and PMD cyclomatic complexity <= 15..."
+          mvn checkstyle:check pmd:check -B
+
+      - name: Stage 3: Code Duplication Detection (PMD CPD)
+        working-directory: backend
+        run: |
+          echo "Enforcing PMD CPD duplication threshold (< 3% / 100 tokens)..."
+          mvn pmd:cpd-check -B
+
+      - name: Stage 4b: Trivy Security Vulnerability Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          exit-code: '0' # Non-blocking advisory report in CI gate
+
+      - name: Stage 5: Backend Test Suite & JaCoCo Unified Coverage (>= 80% Line, >= 75% Branch)
+        working-directory: backend
+        run: |
+          echo "Executing Unit and Slice tests across all microservices..."
+          mvn test -B -Dspring.profiles.active=test jacoco:report jacoco:check
+
+      - name: Archive JaCoCo Coverage Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-coverage-reports
+          path: |
+            backend/*/target/site/jacoco/
+            backend/*/target/jacoco.exec
+          retention-days: 14
+
+  # ============================================================================
+  # Quality Gates 6 to 7: Docker Compose Ecosystem, Smoke Suite, Newman Contracts, k6
+  # ============================================================================
+  e2e-smoke-and-contracts:
+    name: Production Ecosystem & Contracts (Stages 6-7)
+    runs-on: ubuntu-latest
+    needs: backend-quality-gate
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js for Postman Newman
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Newman & Reporters
+        run: |
+          npm install -g newman newman-reporter-junitxml
+
+      - name: Configure Environment Variables
+        run: |
+          cp .env.example .env
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Launch Docker Compose Ecosystem
+        run: |
+          echo "Building and starting microservices in detached mode..."
+          docker compose up -d --build
+
+      - name: Stage 6a: Wait for Microservices Healthy State
+        run: |
+          echo "Waiting up to 90 seconds for Edge Nginx, Gateway, and databases to reach healthy state..."
+          TIMEOUT=90
+          INTERVAL=3
+          ELAPSED=0
+
+          until curl -s -f http://localhost/health > /dev/null 2>&1 && \
+                curl -s http://localhost/actuator/health | grep -q '"status":"UP"'; do
+            if [ $ELAPSED -ge $TIMEOUT ]; then
+              echo "Timeout waiting for ecosystem to report UP. Container logs:"
+              docker compose logs --tail 50
+              exit 1
+            fi
+            echo "Waiting for services... (${ELAPSED}s elapsed)"
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+          done
+          echo "Ecosystem is healthy and ready for pre-flight testing!"
+
+      - name: Stage 6b: Pre-Flight Automated Smoke Suite (< 15s Health & Golden Journey)
+        run: |
+          chmod +x tests/smoke/preflight-smoke.sh
+          tests/smoke/preflight-smoke.sh
+
+      - name: Stage 7a: Automated Postman Newman API Contract Suite (31 Requests, 56 Assertions)
+        run: |
+          mkdir -p reports/newman
+          newman run docs/postman/AprovaENEM.postman_collection.json \
+            --env-var "baseUrl=http://localhost/api/v1" \
+            --delay-request 100 \
+            --reporters cli,junit \
+            --reporter-junit-export reports/newman/newman-report.xml
+
+      - name: Stage 7b: Headless Grafana k6 Performance Smoke Verification
+        run: |
+          echo "Running headless k6 load test (CI_FAST mode)..."
+          docker run --rm --network host \
+            -e BASE_URL=http://localhost \
+            -e CI_FAST=true \
+            -v ${{ github.workspace }}/tests/stress:/tests \
+            grafana/k6 run /tests/catalog-browse-load.js
+
+      - name: Collect Container Logs on Failure
+        if: failure()
+        run: |
+          mkdir -p reports/docker-logs
+          docker compose logs > reports/docker-logs/compose.log
+
+      - name: Teardown Docker Compose Ecosystem
+        if: always()
+        run: |
+          docker compose down -v
+
+      - name: Archive Test & Contract Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-reports-and-logs
+          path: |
+            reports/
+          retention-days: 14

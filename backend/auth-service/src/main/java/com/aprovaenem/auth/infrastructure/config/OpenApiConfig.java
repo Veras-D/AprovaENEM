@@ -21,7 +21,8 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("AprovaENEM — Identity, Authentication & Gamification API")
-                        .description("Microservice managing user authentication, stateless JWT tokens, anonymous study sessions, XP progression, daily study streaks, and Redis-backed weekly league leaderboards.")
+                        .description("Microservice managing user authentication, stateless JWT tokens, "
+                                + "anonymous study sessions, XP progression, daily study streaks, and Redis-backed weekly league leaderboards.")
                         .version("1.0.0")
                         .contact(new Contact()
                                 .name("AprovaENEM Engineering")

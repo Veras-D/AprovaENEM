@@ -21,7 +21,8 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("AprovaENEM — Multi-Channel Notification API")
-                        .description("Microservice managing device push token registration (Web Push, Android FCM, iOS APNs), student in-app notifications inbox, unread badges, and RabbitMQ event-driven study reminder alerts.")
+                        .description("Microservice managing device push token registration (Web Push, Android FCM, iOS APNs), "
+                                + "student in-app notifications inbox, unread badges, and RabbitMQ event-driven study reminder alerts.")
                         .version("1.0.0")
                         .contact(new Contact()
                                 .name("AprovaENEM Engineering")
@@ -38,7 +39,8 @@ public class OpenApiConfig {
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
                                 .bearerFormat("JWT")
-                                .description("Standard Bearer JWT token required for user notification feed, device token registration, and read status updates.")))
+                                .description("Standard Bearer JWT token required for user notification feed, "
+                                        + "device token registration, and read status updates.")))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"));
     }
 }

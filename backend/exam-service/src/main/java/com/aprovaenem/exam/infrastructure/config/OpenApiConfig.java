@@ -21,7 +21,8 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("AprovaENEM — Examination, Assessment & Socratic AI API")
-                        .description("Microservice managing the official INEP question bank, practice session simulation, instant evaluation, diagnostic skill radar calculation, and pgvector RAG-augmented Google Gemini Socratic AI Tutor.")
+                        .description("Microservice managing the official INEP question bank, practice session simulation, "
+                                + "instant evaluation, diagnostic skill radar calculation, and pgvector RAG-augmented Google Gemini Socratic AI Tutor.")
                         .version("1.0.0")
                         .contact(new Contact()
                                 .name("AprovaENEM Engineering")

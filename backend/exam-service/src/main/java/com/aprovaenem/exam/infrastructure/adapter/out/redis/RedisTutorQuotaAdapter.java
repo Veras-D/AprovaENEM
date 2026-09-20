@@ -58,7 +58,9 @@ public class RedisTutorQuotaAdapter implements TutorQuotaPort {
     }
 
     private boolean isPremium(String role) {
-        if (role == null) return false;
+        if (role == null) {
+            return false;
+        }
         return role.toUpperCase().contains("PREMIUM") || role.toUpperCase().contains("ADMIN");
     }
 

@@ -2,7 +2,6 @@ package com.aprovaenem.notification.infrastructure.adapter.in.messaging;
 
 import com.aprovaenem.common.events.DailyGoalReminderEvent;
 import com.aprovaenem.common.events.EmailVerificationRequestedEvent;
-import com.aprovaenem.common.events.UserRegisteredEvent;
 import com.aprovaenem.notification.infrastructure.config.RabbitMQConfig;
 import com.aprovaenem.notification.infrastructure.persistence.entity.NotificationLogEntity;
 import com.aprovaenem.notification.infrastructure.persistence.repository.NotificationLogRepository;

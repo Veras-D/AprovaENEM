@@ -28,7 +28,8 @@ public class BCryptPasswordEncoderAdapter implements PasswordEncoderPort {
         this.passwordEncoder = new BCryptPasswordEncoder(10);
         this.pepper = (pepper != null && !pepper.isBlank()) ? pepper.trim() : "";
         if (this.pepper.isEmpty()) {
-            log.warn("Application password pepper is not configured or is empty. Passwords will be processed using standard BCrypt without HMAC secret pepper.");
+            log.warn("Application password pepper is not configured or is empty. "
+                    + "Passwords will be processed using standard BCrypt without HMAC secret pepper.");
         }
     }
 

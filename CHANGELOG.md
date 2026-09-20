@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.14] - 2026-09-20
+### 🚀 Added & Verified (7-Stage GitHub Actions CI Quality Gate & Pre-Flight Smoke Suite)
+- ci(backend): Implement production-grade 7-stage GitHub Actions CI pipeline in `.github/workflows/ci.yml` (TASK-S3-10)
+  - **Stage 1 (Strict Compilation)**: Configured strict Maven compilation enforcing Java 21 compiler flags (`-parameters`, `-Werror`) across all 6 backend modules (`common-core`, `frontend-api`, `auth-service`, `exam-service`, `notification-service`).
+  - **Stage 2 (Static Analysis & Cyclomatic Complexity)**: Integrated `maven-checkstyle-plugin` (Google Java Style with Spring Data JPA extensions) and `maven-pmd-plugin` (ruleset bounding cyclomatic complexity $\le 15$ per method and $\le 80$ per class), achieving 0 violations across all 6 modules.
+  - **Stage 3 (Code Duplication Detection)**: Configured PMD CPD duplication gate with a 100-token threshold (< 3% duplication budget); created shared `QuestionDtoMapper` in `exam-service` eliminating redundant mapping logic between `PracticeSessionController` and `QuestionCatalogController`.
+  - **Stage 4 (Security Dependency & Secret Audit)**: Integrated Gitleaks commit history secret scan (`gitleaks/gitleaks-action@v2`) and Trivy vulnerability filesystem audit (`aquasecurity/trivy-action@master`).
+  - **Stage 5 (Backend Test Suite & JaCoCo Quality Gate)**: Automated test execution and JaCoCo coverage quality gate ($\ge 80\%$ line, $\ge 75\%$ branch coverage) with automated artifact archiving for coverage reports (`jacoco.exec` and HTML reports).
+  - **Stage 6 (Docker Compose Production Ecosystem & Pre-Flight Smoke Suite)**: Automated container ecosystem initialization and live health verification; created `tests/smoke/preflight-smoke.sh` executing 7 comprehensive probes (Edge Nginx `/health`, Gateway `/actuator/health`, distributed trace header propagation, question bank catalog browse, anonymous session creation, practice session start, and practice query verification) completing with 100% green pass rate in 147ms (well within the $< 15\text{s}$ SLA budget).
+  - **Stage 7 (Automated Postman Newman API Contract Suite & k6 Smoke)**: Executed Postman collection `docs/postman/AprovaENEM.postman_collection.json` via Newman (31 requests, 56 assertions, 100% pass rate in 9.7s) and headless Grafana k6 smoke verification (`catalog-browse-load.js` in `CI_FAST` mode with 150 VUs, 0% errors, and sub-135ms P95 latency).
+- feat(nginx): Added `/actuator/health` proxy location to `infrastructure/nginx/nginx.conf` routing to `frontend-api` BFF for standardized perimeter health checks and Kubernetes/Prometheus probes.
+- fix(quality): Cleaned up static analysis findings across services:
+  - Removed unused imports in `GlobalGatewayExceptionHandler`, `PracticeSessionEntity`, and `NotificationEventListener`.
+  - Wrapped long lines exceeding 160 characters in `EmailVerificationService`, `OpenApiConfig`, `BCryptPasswordEncoderAdapter`, and `GeminiTutorClientAdapter`.
+  - Added curly braces to single-line control flow statements in `GamificationService` and `RedisTutorQuotaAdapter`.
+  - Added structured audit logging for tier promotion/relegation metrics during weekly league resets.
+- docs(backlog): Synchronized `docs/BACKLOG.md` marking `TASK-S3-10` as `DONE ✅`, advancing Sprint 3 completion to 86% (12/14 tasks completed).
+
 ## [0.3.13] - 2026-09-20
 ### 🚀 Added & Verified (Containerized Grafana k6 Load & Stress Testing Suite)
 - test(stress): Implement containerized Grafana k6 load, stress, and concurrency benchmarking suite (`tests/stress/`) across 3 high-risk operational scenarios (TASK-S3-06b)

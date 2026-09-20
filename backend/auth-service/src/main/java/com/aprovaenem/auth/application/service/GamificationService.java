@@ -223,7 +223,9 @@ public class GamificationService implements GamificationUseCase {
         List<WeeklyLeaderboardResponse.UserRankDto> leaderboardList = new ArrayList<>();
         long currentRank = start + 1;
         for (ZSetOperations.TypedTuple<String> tuple : topEntries) {
-            if (tuple.getValue() == null) continue;
+            if (tuple.getValue() == null) {
+                continue;
+            }
             UUID entryUserId = UUID.fromString(tuple.getValue());
             int score = tuple.getScore() != null ? tuple.getScore().intValue() : 0;
 
@@ -339,11 +341,14 @@ public class GamificationService implements GamificationUseCase {
 
         for (LeagueTier tier : LeagueTier.values()) {
             List<WeeklyLeaderboard> boards = gamificationRepository.findTopByLeague(weekNumber, year, tier.name());
-            if (boards.isEmpty()) continue;
+            if (boards.isEmpty()) {
+                continue;
+            }
 
             int total = boards.size();
             int promoteCount = (int) Math.ceil(total * 0.20);
             int relegateCount = (int) Math.ceil(total * 0.10);
+            log.info("Tier [{}]: total={}, promoteCount={}, relegateCount={}", tier, total, promoteCount, relegateCount);
 
             for (int i = 0; i < total; i++) {
                 WeeklyLeaderboard board = boards.get(i);
