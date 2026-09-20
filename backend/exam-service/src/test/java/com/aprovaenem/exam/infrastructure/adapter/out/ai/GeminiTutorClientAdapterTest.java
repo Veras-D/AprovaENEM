@@ -7,6 +7,7 @@ import com.aprovaenem.exam.domain.model.Question;
 import com.aprovaenem.exam.domain.model.QuestionOption;
 import com.aprovaenem.exam.domain.model.QuestionResolution;
 import com.aprovaenem.exam.domain.model.QuestionStatus;
+import com.aprovaenem.exam.domain.model.TutorAiResult;
 import com.aprovaenem.exam.domain.model.TutorChatMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -98,10 +99,11 @@ class GeminiTutorClientAdapterTest {
                 new TutorChatMessage(UUID.randomUUID(), UUID.randomUUID(), ChatRole.AI_TUTOR, "Olá!", 0, 0, "gemini", Instant.now())
         );
 
-        String result = adapter.generateSocraticResponse(question, chunks, history, "Tenho uma dúvida");
+        TutorAiResult result = adapter.generateSocraticResponse(question, chunks, history, "Tenho uma dúvida");
 
         mockServer.verify();
-        assertThat(result).isEqualTo("Excelente raciocínio! Qual grandeza relaciona potência e corrente?");
+        assertThat(result.isFallback()).isFalse();
+        assertThat(result.responseText()).isEqualTo("Excelente raciocínio! Qual grandeza relaciona potência e corrente?");
     }
 
     @Test
@@ -114,24 +116,26 @@ class GeminiTutorClientAdapterTest {
                 .andExpect(method(HttpMethod.POST))
                 .andRespond(withSuccess(geminiJson, MediaType.APPLICATION_JSON));
 
-        String result = adapter.generateSocraticResponse(question, null, null, "Dúvida");
-        assertThat(result).contains("Consegui analisar sua dúvida");
+        TutorAiResult result = adapter.generateSocraticResponse(question, null, null, "Dúvida");
+        assertThat(result.isFallback()).isFalse();
+        assertThat(result.responseText()).contains("Consegui analisar sua dúvida");
     }
 
     @Test
     @DisplayName("Should use socratic fallback when API key is missing or dummy")
     void shouldUseFallbackWhenKeyMissing() {
         ReflectionTestUtils.setField(adapter, "apiKey", "");
-        String response = adapter.generateSocraticResponse(question, List.of(), List.of(), "Como começo?");
+        TutorAiResult result = adapter.generateSocraticResponse(question, List.of(), List.of(), "Como começo?");
 
-        assertThat(response).contains("Eletrodinâmica");
-        assertThat(response).contains("Lei de Ohm e Potência");
+        assertThat(result.isFallback()).isTrue();
+        assertThat(result.responseText()).contains("Eletrodinâmica");
+        assertThat(result.responseText()).contains("Lei de Ohm e Potência");
     }
 
     @Test
-    @DisplayName("Should politely refuse to give answer when student asks for letter or direct answer")
+    @DisplayName("Should polite refuse to give answer when student asks for letter or direct answer")
     void shouldRefuseDirectAnswer() {
-        String response = adapter.socraticFallback(
+        TutorAiResult result = adapter.socraticFallback(
                 question,
                 List.of(new PedagogicalChunk(UUID.randomUUID(), "Potência P = U * i", 0.9)),
                 List.of(new TutorChatMessage(UUID.randomUUID(), UUID.randomUUID(), ChatRole.STUDENT, "Qual a letra?", 0, 0, "gemini", Instant.now())),
@@ -139,14 +143,15 @@ class GeminiTutorClientAdapterTest {
                 new RuntimeException("API error")
         );
 
-        assertThat(response).contains("Não posso te dar a letra ou a resposta pronta");
-        assertThat(response).contains("Lei de Ohm e Potência");
+        assertThat(result.isFallback()).isTrue();
+        assertThat(result.responseText()).contains("Não posso te dar a letra ou a resposta pronta");
+        assertThat(result.responseText()).contains("Lei de Ohm e Potência");
     }
 
     @Test
     @DisplayName("Should provide reflective pedagogical hint when student asks conceptual question")
     void shouldProvideReflectiveHint() {
-        String response = adapter.socraticFallback(
+        TutorAiResult result = adapter.socraticFallback(
                 question,
                 List.of(),
                 List.of(),
@@ -154,8 +159,9 @@ class GeminiTutorClientAdapterTest {
                 new RuntimeException("Timeout")
         );
 
-        assertThat(response).contains("Excelente iniciativa em tentar resolver!");
-        assertThat(response).contains("Eletrodinâmica");
+        assertThat(result.isFallback()).isTrue();
+        assertThat(result.responseText()).contains("Excelente iniciativa em tentar resolver!");
+        assertThat(result.responseText()).contains("Eletrodinâmica");
     }
 
     @Test
@@ -167,8 +173,9 @@ class GeminiTutorClientAdapterTest {
                 QuestionStatus.ACTIVE, "pt-BR"
         );
 
-        String response = adapter.socraticFallback(bareQuestion, null, null, "Ajuda", new RuntimeException());
-        assertThat(response).contains("esta questão");
-        assertThat(response).contains("os conceitos fundamentais da disciplina");
+        TutorAiResult result = adapter.socraticFallback(bareQuestion, null, null, "Ajuda", new RuntimeException());
+        assertThat(result.isFallback()).isTrue();
+        assertThat(result.responseText()).contains("esta questão");
+        assertThat(result.responseText()).contains("os conceitos fundamentais da disciplina");
     }
 }

@@ -4,6 +4,7 @@ import com.aprovaenem.exam.domain.model.PedagogicalChunk;
 import com.aprovaenem.exam.domain.model.Question;
 import com.aprovaenem.exam.domain.model.QuestionOption;
 import com.aprovaenem.exam.domain.model.QuestionResolution;
+import com.aprovaenem.exam.domain.model.TutorAiResult;
 import com.aprovaenem.exam.domain.model.TutorChatMessage;
 import com.aprovaenem.exam.domain.port.out.TutorAiPort;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -43,7 +44,7 @@ public class GeminiTutorClientAdapter implements TutorAiPort {
 
     @Override
     @CircuitBreaker(name = "geminiTutor", fallbackMethod = "socraticFallback")
-    public String generateSocraticResponse(
+    public TutorAiResult generateSocraticResponse(
             Question question,
             List<PedagogicalChunk> pedagogicalChunks,
             List<TutorChatMessage> history,
@@ -77,10 +78,10 @@ public class GeminiTutorClientAdapter implements TutorAiPort {
                 .retrieve()
                 .body(String.class);
 
-        return extractCandidateText(responseBody);
+        return TutorAiResult.success(extractCandidateText(responseBody));
     }
 
-    public String socraticFallback(
+    public TutorAiResult socraticFallback(
             Question question,
             List<PedagogicalChunk> pedagogicalChunks,
             List<TutorChatMessage> history,
@@ -99,17 +100,17 @@ public class GeminiTutorClientAdapter implements TutorAiPort {
         if (studentMessage != null && (studentMessage.toLowerCase().contains("resposta") ||
                 studentMessage.toLowerCase().contains("letra") ||
                 studentMessage.toLowerCase().contains("gabarito"))) {
-            return "Como seu Tutor Socrático do AprovaENEM, minha função é te guiar no raciocínio para que você domine o conteúdo! " +
+            return TutorAiResult.fallback("Como seu Tutor Socrático do AprovaENEM, minha função é te guiar no raciocínio para que você domine o conteúdo! " +
                     "Não posso te dar a letra ou a resposta pronta. " +
-                    "Em vez disso, que tal identificarmos juntos: quais dados o enunciado nos dá e qual é o conceito de " + keyConcepts + " aplicável aqui?";
+                    "Em vez disso, que tal identificarmos juntos: quais dados o enunciado nos dá e qual é o conceito de " + keyConcepts + " aplicável aqui?");
         }
 
-        return String.format(
+        return TutorAiResult.fallback(String.format(
                 "Excelente iniciativa em tentar resolver! Vamos analisar a questão sobre **%s** passo a passo.\n\n" +
                 "💡 **Dica reflexiva**: Lembre-se de conectar a pergunta com %s.\n\n" +
                 "Qual é o primeiro passo que você daria para isolar as grandezas dadas pelo enunciado?",
                 topicName, keyConcepts
-        );
+        ));
     }
 
     private String buildSystemPrompt(Question question, List<PedagogicalChunk> pedagogicalChunks) {

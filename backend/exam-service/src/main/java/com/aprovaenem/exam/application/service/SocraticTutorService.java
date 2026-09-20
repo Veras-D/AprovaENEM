@@ -8,6 +8,7 @@ import com.aprovaenem.exam.domain.model.PedagogicalChunk;
 import com.aprovaenem.exam.domain.model.Question;
 import com.aprovaenem.exam.domain.model.RegistrationRequiredException;
 import com.aprovaenem.exam.domain.model.ThreadStatus;
+import com.aprovaenem.exam.domain.model.TutorAiResult;
 import com.aprovaenem.exam.domain.model.TutorChatMessage;
 import com.aprovaenem.exam.domain.model.TutorChatThread;
 import com.aprovaenem.exam.domain.model.TutorConsultationResult;
@@ -116,7 +117,7 @@ public class SocraticTutorService implements SocraticTutorUseCase {
 
         List<PedagogicalChunk> ragChunks = ragPort.findRelevantChunks(question.getStatement() + " " + message, 3);
 
-        String aiResponse = aiPort.generateSocraticResponse(
+        TutorAiResult aiResult = aiPort.generateSocraticResponse(
                 question,
                 ragChunks,
                 thread.getMessages(),
@@ -127,10 +128,10 @@ public class SocraticTutorService implements SocraticTutorUseCase {
                 null,
                 thread.getId(),
                 ChatRole.AI_TUTOR,
-                aiResponse,
+                aiResult.responseText(),
                 0,
                 0,
-                "gemini-1.5-flash",
+                aiResult.isFallback() ? "static-inep-fallback" : "gemini-1.5-flash",
                 Instant.now()
         );
         chatRepository.saveMessage(aiMsg);
@@ -143,11 +144,11 @@ public class SocraticTutorService implements SocraticTutorUseCase {
         return new TutorConsultationResult(
                 thread.getId(),
                 questionId,
-                aiResponse,
+                aiResult.responseText(),
                 thread.getTurnCount(),
                 thread.getMaxTurns(),
                 quotaStatus,
-                false,
+                aiResult.isFallback(),
                 ragChunks,
                 Instant.now()
         );

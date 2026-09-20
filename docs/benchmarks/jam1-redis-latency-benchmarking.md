@@ -25,13 +25,13 @@ All benchmarks were executed inside containerized integration test environments 
 
 ### 2.1 Infrastructure Configuration
 
-| Component | Technology | Version | Allocation / Pool Settings |
-| :--- | :--- | :--- | :--- |
-| **Primary Database** | PostgreSQL + pgvector | 16.15 (`pgvector:pg16`) | HikariCP (max-pool: 10, min-idle: 2, timeout: 30s) |
-| **L2 Distributed Cache** | Redis | 7.2 Alpine (`redis:7.2-alpine`) | Standalone instance, appendonly no |
-| **Redis Client Driver** | Lettuce (`spring-boot-starter-data-redis`) | 6.3.2.RELEASE | EventLoop: Netty NIO |
-| **Lettuce Connection Pool** | Apache `commons-pool2` | 2.12.0 | `max-active: 16`, `max-idle: 8`, `min-idle: 2`, `max-wait: 2000ms` |
-| **Serialization Engine** | Jackson 2 JSON (`GenericJackson2JsonRedisSerializer`) | 2.17.2 | Polymorphic Type Handling, ISO-8601 Timestamps |
+| Component                   | Technology                                            | Version                         | Allocation / Pool Settings                                         |
+| :-------------------------- | :---------------------------------------------------- | :------------------------------ | :----------------------------------------------------------------- |
+| **Primary Database**        | PostgreSQL + pgvector                                 | 16.15 (`pgvector:pg16`)         | HikariCP (max-pool: 10, min-idle: 2, timeout: 30s)                 |
+| **L2 Distributed Cache**    | Redis                                                 | 7.2 Alpine (`redis:7.2-alpine`) | Standalone instance, appendonly no                                 |
+| **Redis Client Driver**     | Lettuce (`spring-boot-starter-data-redis`)            | 6.3.2.RELEASE                   | EventLoop: Netty NIO                                               |
+| **Lettuce Connection Pool** | Apache `commons-pool2`                                | 2.12.0                          | `max-active: 16`, `max-idle: 8`, `min-idle: 2`, `max-wait: 2000ms` |
+| **Serialization Engine**    | Jackson 2 JSON (`GenericJackson2JsonRedisSerializer`) | 2.17.2                          | Polymorphic Type Handling, ISO-8601 Timestamps                     |
 
 ### 2.2 Lettuce Pool Tuning (`application.yml`)
 
@@ -133,13 +133,13 @@ spring:
   - `ZREVRANGEBYSCORE leaderboard:weekly:<edition> +inf -inf WITHSCORES LIMIT 0 10`
 - **Workload**: 500 operations dispatched across 10 parallel threads.
 
-| Metric | Measured Performance | Target Benchmark | Status |
-| :--- | :--- | :--- | :--- |
-| **Total Operations** | 500 ops (ZADD + ZREVRANK + ZREVRANGE) | 500 ops | **PASSED ✅** |
-| **Wall-Clock Duration** | **619 ms** | $< 2000\text{ ms}$ | **PASSED ✅** |
-| **Average Wall-Clock per Op**| **1.238 ms** | $< 4.0\text{ ms}$ | **PASSED ✅** |
-| **Effective Throughput** | **807.7 operations / second** | $> 250\text{ ops/sec}$ | **PASSED ✅** |
-| **Data Integrity** | Rank ordering & XP scores validated | 100% correct ordering | **PASSED ✅** |
+| Metric                        | Measured Performance                  | Target Benchmark       | Status       |
+| :---------------------------- | :------------------------------------ | :--------------------- | :----------- |
+| **Total Operations**          | 500 ops (ZADD + ZREVRANK + ZREVRANGE) | 500 ops                | **PASSED ✅** |
+| **Wall-Clock Duration**       | **619 ms**                            | $< 2000\text{ ms}$     | **PASSED ✅** |
+| **Average Wall-Clock per Op** | **1.238 ms**                          | $< 4.0\text{ ms}$      | **PASSED ✅** |
+| **Effective Throughput**      | **807.7 operations / second**         | $> 250\text{ ops/sec}$ | **PASSED ✅** |
+| **Data Integrity**            | Rank ordering & XP scores validated   | 100% correct ordering  | **PASSED ✅** |
 
 > **Analysis**: Redis Sorted Sets provide near-instantaneous $O(\log N)$ ranking computations, capable of sustaining 800+ ranking mutations per second on a single Redis node.
 

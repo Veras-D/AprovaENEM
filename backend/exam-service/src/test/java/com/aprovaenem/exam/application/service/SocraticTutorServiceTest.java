@@ -7,6 +7,7 @@ import com.aprovaenem.exam.domain.model.PedagogicalChunk;
 import com.aprovaenem.exam.domain.model.Question;
 import com.aprovaenem.exam.domain.model.RegistrationRequiredException;
 import com.aprovaenem.exam.domain.model.ThreadStatus;
+import com.aprovaenem.exam.domain.model.TutorAiResult;
 import com.aprovaenem.exam.domain.model.TutorChatMessage;
 import com.aprovaenem.exam.domain.model.TutorChatThread;
 import com.aprovaenem.exam.domain.model.TutorConsultationResult;
@@ -147,7 +148,7 @@ class SocraticTutorServiceTest {
 
         String socraticGuidance = "Pense na relação entre a força resultante aplicada e a massa do bloco.";
         when(aiPort.generateSocraticResponse(eq(question), eq(List.of(chunk)), any(), eq("O que significa F=ma?")))
-                .thenReturn(socraticGuidance);
+                .thenReturn(TutorAiResult.success(socraticGuidance));
 
         AiQuotaStatus activeQuota = new AiQuotaStatus(1, 1, 0, Instant.now().plusSeconds(3600), false);
         when(quotaPort.getQuotaStatus(userId, "ROLE_STUDENT")).thenReturn(activeQuota);
@@ -168,6 +169,50 @@ class SocraticTutorServiceTest {
 
         verify(chatRepository, org.mockito.Mockito.times(2)).saveMessage(any(TutorChatMessage.class));
         verify(chatRepository, org.mockito.Mockito.times(2)).saveThread(any(TutorChatThread.class));
+    }
+
+    @Test
+    @DisplayName("Should propagate isFallback=true when TutorAiPort triggers static INEP fallback")
+    void shouldPropagateFallbackWhenAiPortReturnsFallback() {
+        UUID questionId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        UUID threadId = UUID.randomUUID();
+
+        Question question = new Question();
+        question.setId(questionId);
+        question.setStatement("Questão de circuito elétrico");
+
+        when(questionRepository.findById(questionId)).thenReturn(Optional.of(question));
+        when(chatRepository.findActiveThread(userId, questionId)).thenReturn(Optional.empty());
+        when(quotaPort.tryAcquireQuota(userId, "ROLE_STUDENT")).thenReturn(true);
+
+        when(chatRepository.saveThread(any(TutorChatThread.class)))
+                .thenAnswer(inv -> {
+                    TutorChatThread t = inv.getArgument(0);
+                    return new TutorChatThread(
+                            threadId, t.getUserId(), t.getQuestionId(), t.getStatus(),
+                            t.getTurnCount(), t.getMaxTurns(), t.getUnlockedAt(),
+                            t.getCreatedAt(), t.getUpdatedAt(), t.getMessages()
+                    );
+                });
+
+        when(ragPort.findRelevantChunks(anyString(), anyInt())).thenReturn(List.of());
+        when(aiPort.generateSocraticResponse(eq(question), any(), any(), any()))
+                .thenReturn(TutorAiResult.fallback("Dica estática de resolução INEP"));
+
+        AiQuotaStatus activeQuota = new AiQuotaStatus(1, 1, 0, Instant.now().plusSeconds(3600), false);
+        when(quotaPort.getQuotaStatus(userId, "ROLE_STUDENT")).thenReturn(activeQuota);
+
+        TutorConsultationResult result = socraticTutorService.askTutor(
+                questionId,
+                userId,
+                "ROLE_STUDENT",
+                "Como começo?"
+        );
+
+        assertThat(result).isNotNull();
+        assertThat(result.getResponseText()).isEqualTo("Dica estática de resolução INEP");
+        assertThat(result.isFallback()).isTrue();
     }
 
     @Test

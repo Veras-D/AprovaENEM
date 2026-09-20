@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.11] - 2026-09-20
+### 🛡️ Added & Hardened (Resilience4j Chaos & Fault Injection Testing Suite)
+- test(resilience): Implement Resilience4j Chaos and Circuit Breaker integration testing suite (`Resilience4jChaosAndCircuitBreakerIT`) across `exam-service` against real Testcontainers (`PostgreSQL 16 pgvector` + `Redis 7.2`) with embedded JDK HTTP fault injection server (TASK-S3-07)
+  - Verified 6 fault injection and chaos scenarios:
+    1. **Normal Operation (CLOSED state)**: Verified live Gemini API invocation (HTTP 200 OK) returning model output with `isFallback: false`, verifying Circuit Breaker remains in `CLOSED` state.
+    2. **Latency Fault Injection (API Timeout > 1s)**: Simulated downstream API hang exceeding configured read timeout (2,000ms delay vs. 1,000ms timeout), triggering graceful Socratic fallback with reflective pedagogical hints and `isFallback: true`.
+    3. **HTTP 429 Quota Exhaustion (Rate Limiting)**: Simulated upstream LLM quota exhaustion (`RESOURCE_EXHAUSTED`), verifying instant fallback execution and graceful degradation without throwing exceptions.
+    4. **Sustained Chaos & Zero-Traffic Short-Circuiting**: Injected 3 consecutive HTTP 503 service failures, automatically tripping the Circuit Breaker from `CLOSED` to `OPEN` (breaching the 50% failure rate threshold over `minimum-number-of-calls: 3`). Verified that subsequent requests immediately short-circuit in memory without dispatching any network packets (`requestCounter` delta = 0).
+    5. **Automated Recovery Cycle (`OPEN` -> `HALF_OPEN` -> `CLOSED`)**: Probed recovery transitions through `HALF_OPEN` state, verifying that 2 successful probe requests reset the breaker back to `CLOSED` and restore live LLM traffic.
+    6. **End-to-End Service Orchestration**: Verified full flow through `SocraticTutorService.askTutor(...)`, confirming `TutorConsultationResult.isFallback()` propagation, fallback messaging containing curated INEP pedagogical concepts, and accurate thread history metadata recording (`modelUsed = "static-inep-fallback"` vs `"gemini-1.5-flash"`).
+- refactor(tutor): Refined `TutorAiPort` domain contract and `GeminiTutorClientAdapter` to return `TutorAiResult(String responseText, boolean isFallback)` domain record instead of primitive `String`, properly encapsulating AI invocation provenance and fallback status.
+- config(network): Added `RestClientConfig` configuring `RestClient.Builder` with configurable connect and read timeouts (`gemini.timeout-seconds`, default 5s, 1s in test profile) via `SimpleClientHttpRequestFactory`.
+- test(unit): Updated `GeminiTutorClientAdapterTest` and `SocraticTutorServiceTest` to validate `TutorAiResult` return contracts and fallback propagation.
+- docs(backlog): Synchronize `docs/BACKLOG.md` marking `TASK-S3-07` as `DONE ✅`, advancing Sprint 3 completion to 64% (9/14 tasks completed).
+
 ## [0.3.10] - 2026-09-20
 ### ⚡ Added & Optimized (Redis Caching, Lettuce Connection Pooling & Latency Benchmarking Suite)
 - perf(cache): Implement Redis caching layers, connection pool tuning, and comprehensive latency benchmarking suite across `exam-service` and `auth-service` (TASK-S3-06)
