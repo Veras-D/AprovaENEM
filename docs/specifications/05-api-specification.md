@@ -287,7 +287,7 @@ Vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers
 
 ---
 
-### 2.7 Resend Email Verification Link
+### 2.9 Resend Email Verification Link
 * **Method**: `POST`
 * **Path**: `/api/v1/auth/resend-verification`
 * **Description**: Generates and persists a new verification token in `users` and emits an event via the Transactional Outbox. Rate-limited to 3 requests per hour.

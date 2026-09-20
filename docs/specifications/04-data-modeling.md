@@ -47,9 +47,12 @@ classDiagram
         +string correctOption
         +string difficultyLevel
         +string status
-        +float triScoreA
-        +float triScoreB
-        +float triScoreC
+        +BigDecimal triParamA
+        +BigDecimal triParamB
+        +BigDecimal triParamC
+        +string figureUrl
+        +string figureAltText
+        +string contentLanguage
     }
 
     class QuestionOption {
