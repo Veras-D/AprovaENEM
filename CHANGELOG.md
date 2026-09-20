@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.3.15] - 2026-09-20
 ### 🛡️ Added, Hardened & Documented (Governance, CI Execution & Backlog Investigation Scope)
-- docs(license): Created root MIT `LICENSE` file (Copyright (c) 2026 AprovaENEM Contributors).
+- docs(license): Adopted PolyForm Noncommercial License 1.0.0 in root `LICENSE` file and synchronized OpenAPI configs, strictly prohibiting commercial monetization and private prep-course exploitation while preserving 100% free educational access for students, public schools, and non-profits.
 - config(env): Added `AUTH_PASSWORD_PEPPER` configuration to `.env.example` under JWT & Password Security section, documenting HMAC-SHA256 secret pepper pre-hashing ($2^{10}$ BCrypt rounds).
 - ci(actions): Hardened GitHub Actions CI workflow in `.github/workflows/ci.yml`:
   - Fixed YAML scanner syntax error by enclosing all stage names containing colons in double quotes (`"Stage X: ..."`).

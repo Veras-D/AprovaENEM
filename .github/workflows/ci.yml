@@ -122,23 +122,25 @@ jobs:
 
       - name: "Stage 6a: Wait for Microservices Healthy State"
         run: |
-          echo "Waiting up to 90 seconds for Edge Nginx, Gateway, and databases to reach healthy state..."
-          TIMEOUT=90
+          echo "Waiting up to 120 seconds for Edge Nginx, Gateway, and domain microservices to reach ready state..."
+          TIMEOUT=120
           INTERVAL=3
           ELAPSED=0
 
           until curl -s -f http://localhost/health > /dev/null 2>&1 && \
-                curl -s http://localhost/actuator/health | grep -q '"status":"UP"'; do
+                curl -s http://localhost/actuator/health | grep -q '"status":"UP"' && \
+                curl -s http://localhost/api/v1/questions?page=0\&size=1 | grep -q '"id":' && \
+                curl -s -X POST -H "Content-Type: application/json" -d '{}' http://localhost/api/v1/auth/session | grep -q '"sessionId"'; do
             if [ $ELAPSED -ge $TIMEOUT ]; then
-              echo "Timeout waiting for ecosystem to report UP. Container logs:"
+              echo "Timeout waiting for ecosystem to report ready. Container logs:"
               docker compose logs --tail 50
               exit 1
             fi
-            echo "Waiting for services... (${ELAPSED}s elapsed)"
+            echo "Waiting for services to finish starting & database migrations... (${ELAPSED}s elapsed)"
             sleep $INTERVAL
             ELAPSED=$((ELAPSED + INTERVAL))
           done
-          echo "Ecosystem is healthy and ready for pre-flight testing!"
+          echo "Ecosystem is fully initialized and ready for pre-flight testing!"
 
       - name: "Stage 6b: Pre-Flight Automated Smoke Suite (< 15s Health & Golden Journey)"
         run: |

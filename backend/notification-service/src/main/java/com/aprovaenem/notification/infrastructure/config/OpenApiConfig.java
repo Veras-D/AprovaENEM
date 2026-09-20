@@ -29,8 +29,8 @@ public class OpenApiConfig {
                                 .email("contato@aprovaenem.com.br")
                                 .url("https://github.com/Veras-D/AprovaENEM"))
                         .license(new License()
-                                .name("MIT License")
-                                .url("https://opensource.org/licenses/MIT")))
+                                .name("PolyForm Noncommercial License 1.0.0")
+                                .url("https://polyformproject.org/licenses/noncommercial/1.0.0")))
                 .servers(List.of(
                         new Server().url("/").description("Default Gateway / BFF Proxy")
                 ))

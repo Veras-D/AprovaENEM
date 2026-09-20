@@ -5,7 +5,7 @@
 
 <div align="center">
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-blue.svg)](https://polyformproject.org/licenses/noncommercial/1.0.0)
 [![React: 18+](https://img.shields.io/badge/React-18+-20232A?logo=react&logoColor=61DAFB)](https://react.dev/)
 [![TypeScript: 5.3+](https://img.shields.io/badge/TypeScript-5.3+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS: 3.4](https://img.shields.io/badge/Tailwind%20CSS-3.4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
@@ -419,8 +419,8 @@ Contributions from educators, engineers, and students are welcome!
 ---
 
 ## 📄 License
-
-Distributed under the **MIT License**. See `LICENSE` for details.
+ 
+Distributed under the **PolyForm Noncommercial License 1.0.0**. Free for students, educators, academic researchers, and non-commercial educational use. Commercial use and commercial prep course exploitation are strictly prohibited. See [`LICENSE`](LICENSE) for details.
 
 ---
 

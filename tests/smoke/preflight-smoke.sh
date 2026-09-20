@@ -78,7 +78,7 @@ fi
 # ------------------------------------------------------------------------------
 log_info "Probe 4/7: Question Bank Catalog Browse..."
 CATALOG_RESPONSE=$(curl -s "${BASE_URL}/api/v1/questions?page=0&size=5")
-ITEMS_COUNT=$(echo "${CATALOG_RESPONSE}" | grep -o '"id":' | wc -l)
+ITEMS_COUNT=$(echo "${CATALOG_RESPONSE}" | (grep -o '"id":' || true) | wc -l)
 if [[ ${ITEMS_COUNT} -gt 0 ]]; then
     log_pass "Catalog active: successfully retrieved ${ITEMS_COUNT} questions"
 else
@@ -91,7 +91,7 @@ fi
 # ------------------------------------------------------------------------------
 log_info "Probe 5/7: Golden Journey (Step 1/3) — Provision Anonymous Session..."
 SESSION_RESPONSE=$(curl -s -X POST -H "Content-Type: application/json" -d '{}' "${BASE_URL}/api/v1/auth/session")
-SESSION_ID=$(echo "${SESSION_RESPONSE}" | grep -o '"sessionId":"[^"]*"' | head -n 1 | cut -d'"' -f4)
+SESSION_ID=$(echo "${SESSION_RESPONSE}" | (grep -o '"sessionId":"[^"]*"' || true) | head -n 1 | cut -d'"' -f4 || true)
 
 if [[ -n "${SESSION_ID}" ]]; then
     log_pass "Anonymous session created: ${SESSION_ID}"
@@ -111,7 +111,7 @@ PRACTICE_RESPONSE=$(curl -s -X POST \
     -d "${PRACTICE_START_PAYLOAD}" \
     "${BASE_URL}/api/v1/sessions")
 
-PRACTICE_ID=$(echo "${PRACTICE_RESPONSE}" | grep -o '"id":"[^"]*"' | head -n 1 | cut -d'"' -f4)
+PRACTICE_ID=$(echo "${PRACTICE_RESPONSE}" | (grep -o '"id":"[^"]*"' || true) | head -n 1 | cut -d'"' -f4 || true)
 if [[ -n "${PRACTICE_ID}" ]]; then
     log_pass "Practice session initialized: ${PRACTICE_ID}"
 else
