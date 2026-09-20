@@ -688,32 +688,35 @@ To guarantee zero specification discrepancies, zero data leakage, and bulletproo
 
 ```mermaid
 flowchart TD
-    subgraph AuditFramework ["4-Stage Security Verification Engine"]
+    subgraph AuditFramework ["5-Stage Security & Test Suite Integrity Verification Engine"]
         S1["Stage 1: AI-Assisted Static & Semantic Audit<br/>• LLM Code Review across Spring Security Filters & Controllers<br/>• Prompt Injection & Socratic Guardrail Fuzzing<br/>• OWASP API Security Top 10 Threat Model Alignment"]
         S2["Stage 2: Automated Dynamic & Supply Chain Scanning<br/>• Trivy Dependency & Container Audit (0 Critical/High CVEs)<br/>• Gitleaks Deep History Git Secret Scan<br/>• Static AST Analysis via PMD Security Rules"]
         S3["Stage 3: Real-Time Runtime Penetration Testing<br/>• Live Interactive Exploits against Running Cluster / Deployed URL<br/>• JWT Forgery, Signature Tampering & RBAC Escalation<br/>• Strict CORS Spoofing & Header Stripping Verification<br/>• Token Bucket Rate Limit Flooding & DoS Stress<br/>• SQLi, pgvector Injection & Parameter Tampering"]
-        S4["Stage 4: Formal Attestation & Audit Reporting<br/>• Automated Generation of Audit Markdown Certificate<br/>• Zero Vulnerability Threshold Gate for Milestone Sign-off"]
+        S4["Stage 4: Test Suite Quality, Legitimacy & Mutation Audit<br/>• Detection of Test Smells (Assert-less tests, Vacuous Assertions)<br/>• Anti-Overmocking Audit & Swallowed Exception Scanning<br/>• Fault Injection / Mutation Testing on Core TRI, Streaks & Security<br/>• Assertion Density Verification across 336+ Tests"]
+        S5["Stage 5: Formal Attestation & Comprehensive Audit Report<br/>• Automated Generation of Audit Markdown Certificate<br/>• Zero Vulnerabilities & 100% Legitimate Test Integrity Sign-off"]
 
-        S1 --> S2 --> S3 --> S4
+        S1 --> S2 --> S3 --> S4 --> S5
     end
 
     style AuditFramework fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff
     style S1 fill:#1e293b,stroke:#818cf8,color:#fff
     style S2 fill:#1e293b,stroke:#818cf8,color:#fff
     style S3 fill:#1e293b,stroke:#f43f5e,stroke-width:2px,color:#fff
-    style S4 fill:#065f46,stroke:#34d399,stroke-width:2px,color:#fff
+    style S4 fill:#1e293b,stroke:#eab308,stroke-width:2px,color:#fff
+    style S5 fill:#065f46,stroke:#34d399,stroke-width:2px,color:#fff
 ```
 
-### 6.1 Backend Multi-Stage Security Audit Specification (JAM 1 — Sprint 3)
+### 6.1 Backend Multi-Stage Security & Test Integrity Audit Specification (JAM 1 — Sprint 3)
 
-The backend audit validates that the isolated architecture, edge facade, and core domain are impervious to external attack:
+The backend audit validates that the isolated architecture, edge facade, and core domain are impervious to external attack, and certifies that all test suites are authentic, rigorous, and free from masked defects or testing smells:
 
 | Stage | Audit Scope | Tooling & Methodology | Pass Criteria / Security Target |
 | :--- | :--- | :--- | :--- |
 | **Stage 1: AI Threat Modeling** | • Spring Security `SecurityFilterChain` & Filter order<br>• Socratic AI prompt leak prevention<br>• Controller parameter annotations & validation | AI security auditor prompts evaluating AST against OWASP API Top 10 (2023) | Zero Broken Object Level Authorization (BOLA), zero Broken Function Level Authorization (BFLA), prompt cannot be coerced to reveal answers. |
 | **Stage 2: Automated DAST & CVEs** | • Container base images (`eclipse-temurin:21-jre-alpine`)<br>• Third-party Maven dependencies<br>• Leaked tokens / API keys | `trivy image`, `trivy fs`, `gitleaks detect --verbose` | 0 Critical / High CVEs; 0 leaked credentials across all commits. |
 | **Stage 3: Real-Time Penetration** | • **Live JWT Tampering**: Send tokens with modified signatures, expired timestamps, and `alg: none`<br>• **Strict CORS Spoofing**: Send requests with unwhitelisted `Origin: https://attacker.com` and `null`<br>• **Perimeter Breach**: Attempt direct access to internal ports (`8081-8083`, `5432-5434`, `6379`, `5672`)<br>• **Header Spoofing**: Send requests with forged `X-User-Id` and `X-User-Roles`<br>• **Rate Limit Stress**: Burst 120 req/min from single IP to `/api/v1/questions/{id}/ask` | Live attack script executed against the running Docker Compose backend cluster | • JWT tampering returns `401 Unauthorized`<br>• CORS spoofing returns `403 Forbidden` or omits `Access-Control-Allow-Origin`<br>• Internal ports completely unreachable from outside<br>• Forged headers stripped by `frontend-api`<br>• Rate limiter trips with `429 Too Many Requests` and `Retry-After`. |
-| **Stage 4: Attestation** | Synthesis of findings | Generation of `docs/audit/jam1-backend-security-audit.md` | Formal sign-off granting readiness for JAM 1 repository submission. |
+| **Stage 4: Test Suite Quality & Legitimacy Audit** | • **Test Smell Detection**: Scan for assert-less tests, vacuous/tautological assertions (`assertThat(true).isTrue()`), and swallowed assertion exceptions<br>• **Anti-Overmocking Audit**: Ensure services verify real state transitions rather than pure mock echo checks<br>• **Fault Injection / Mutation Testing**: Introduce deliberate logic mutations into TRI scoring, streak freeze counters, daily goal bonus, and JWT validation to verify test failure | AST parsing scripts, static assertion density inspection, and dynamic mutant fault injection testing | • Zero assert-less tests across all 336 tests<br>• Zero tautological or vacuous assertions<br>• Zero swallowed exceptions in test bodies<br>• $\ge 85\%$ mutation kill rate on core domain, gamification, and security filters<br>• Real verification of business rules and edge cases confirmed. |
+| **Stage 5: Attestation** | Synthesis of findings | Generation of `docs/audit/jam1-backend-security-audit.md` | Formal sign-off granting readiness for JAM 1 repository submission. |
 
 ---
 

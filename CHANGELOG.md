@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `common-core` (8 unit tests passing): Attains **100% line coverage** (8/8) and **100% branch coverage**
 - build(maven): Configure `jacoco-maven-plugin:0.8.12` with `<id>check</id>` execution bound to `<phase>verify</phase>` in root `pom.xml`, establishing a hard build quality gate requiring `<counter>LINE</counter> >= 0.80` and `<counter>BRANCH</counter> >= 0.75` across all packaging modules
 - docs(backlog): Synchronize `docs/BACKLOG.md` marking `TASK-S3-05` as `DONE ✅` and advancing Sprint 3 completion to 58% (7/12 tasks completed)
+- docs(audit): Expand `TASK-S3-11` across `docs/BACKLOG.md` and `docs/specifications/07-quality-gate-ci.md` to establish a 5-Stage Security & Test Suite Integrity Audit framework, incorporating a dedicated Test Quality & Legitimacy Audit stage (detecting test smells, vacuous/tautological assertions, over-mocking, swallowed exceptions, and mutant fault injection verification)
 
 ## [0.3.8] - 2026-09-20
 ### 🧪 Added (Test Pyramid - Testcontainers PostgreSQL 16 pgvector & Redis Integration Tests)
