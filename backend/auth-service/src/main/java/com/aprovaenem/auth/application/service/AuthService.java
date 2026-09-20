@@ -100,7 +100,7 @@ public class AuthService implements AuthUseCase {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthResult login(String email, String rawPassword) {
         String normalizedEmail = email.trim().toLowerCase();
         User user = userRepository.findByEmail(normalizedEmail)
@@ -112,6 +112,12 @@ public class AuthService implements AuthUseCase {
 
         if (!user.isActive()) {
             throw new BusinessException("Your account has been deactivated. Please contact support.");
+        }
+
+        if (passwordEncoder.isLegacyHash(rawPassword, user.getPasswordHash())) {
+            user.setPasswordHash(passwordEncoder.encode(rawPassword));
+            userRepository.save(user);
+            log.info("Seamlessly upgraded legacy password hash with HMAC-SHA256 pepper for user [{}]", user.getId());
         }
 
         String token = tokenProvider.generateToken(user);

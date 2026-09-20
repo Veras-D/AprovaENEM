@@ -132,6 +132,38 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("Should seamlessly upgrade legacy unpeppered password hash to peppered on login")
+    void shouldSeamlesslyUpgradeLegacyPasswordHashOnLogin() {
+        String email = "legacy@escola.gov.br";
+        String rawPassword = "OldPassword123!";
+        String legacyHash = "$2a$10$oldLegacyUnpepperedHash";
+        String pepperedHash = "$2a$10$newPepperedHashWithHmac";
+
+        User user = User.builder()
+                .id(UUID.randomUUID())
+                .email(email)
+                .passwordHash(legacyHash)
+                .fullName("Aluno Antigo")
+                .role(UserRole.ROLE_STUDENT)
+                .isActive(true)
+                .build();
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(rawPassword, legacyHash)).thenReturn(true);
+        when(passwordEncoder.isLegacyHash(rawPassword, legacyHash)).thenReturn(true);
+        when(passwordEncoder.encode(rawPassword)).thenReturn(pepperedHash);
+        when(tokenProvider.generateToken(user)).thenReturn("jwt.token.migrated");
+        when(tokenProvider.getExpirationSeconds()).thenReturn(86400L);
+
+        AuthUseCase.AuthResult result = authService.login(email, rawPassword);
+
+        assertThat(result).isNotNull();
+        assertThat(result.token()).isEqualTo("jwt.token.migrated");
+        assertThat(user.getPasswordHash()).isEqualTo(pepperedHash);
+        verify(userRepository).save(user);
+    }
+
+    @Test
     @DisplayName("Should throw BusinessException when logging in with incorrect password")
     void shouldThrowExceptionWhenPasswordIncorrect() {
         String email = "lucas@escola.gov.br";

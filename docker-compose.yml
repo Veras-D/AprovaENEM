@@ -113,6 +113,7 @@ services:
       - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_DEFAULT_PASS:-rabbit_secure_password_2026}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRATION_MS=${JWT_EXPIRATION_MS:-86400000}
+      - AUTH_PASSWORD_PEPPER=${AUTH_PASSWORD_PEPPER:-aprovaenem_secret_pepper_key_2026_at_least_256_bits!}
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8081/actuator/health || exit 1"]
       interval: 15s

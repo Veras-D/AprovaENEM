@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.12] - 2026-09-20
+### 🔐 Added & Hardened (Password Storage Pepper Hardening via HMAC-SHA256 + BCrypt)
+- sec(auth): Layer application-level secret pepper over BCrypt in `auth-service` via `BCryptPasswordEncoderAdapter` and `PasswordEncoderPort` (TASK-S3-07b)
+  - Implemented HMAC-SHA256 pre-hashing using `javax.crypto.Mac` with Base64 encoding before standard BCrypt hashing ($2^{10}$ rounds).
+  - Externalized secret pepper key to `AUTH_PASSWORD_PEPPER` environment variable (`auth.password-pepper` property in `application.yml` and `docker-compose.yml`) with secure fallback for local development.
+  - Eliminated the known BCrypt 72-byte truncation collision attack vector, ensuring passwords of arbitrary length yield uniform 32-byte HMAC digests prior to BCrypt hashing.
+  - Provided dual-check backward compatibility: `matches(rawPassword, encodedPassword)` evaluates HMAC-SHA256 + BCrypt first, and falls back to legacy raw BCrypt comparison.
+  - Added seamless automatic hash migration on login: `AuthService.login()` detects legacy hashes via `isLegacyHash()` and transparently re-encodes with pepper and persists the updated hash to PostgreSQL within `@Transactional` boundary.
+- test(auth): Added comprehensive unit and integration verification for peppered password hashing:
+  - `BCryptPasswordEncoderAdapterTest`: 7 unit tests verifying peppered hashing, dual-check legacy validation, rejection of invalid credentials, immunity to BCrypt 72-byte truncation collision, empty pepper fallback, null safety, and default port method behavior.
+  - `AuthServiceTest`: Added `shouldSeamlesslyUpgradeLegacyPasswordHashOnLogin` verifying automatic upgrade and persistence.
+  - `AuthRepositoryAndFlywayIT`: 4 Testcontainers integration tests passing against real PostgreSQL 16.
+  - Maintained high JaCoCo coverage in `auth-service`: 95.8% line coverage, 84.1% branch coverage (exceeding $\ge 80\%$ line and $\ge 75\%$ branch thresholds).
+- docs(backlog): Synchronized `docs/BACKLOG.md` marking `TASK-S3-07b` as `DONE ✅`, advancing Sprint 3 completion to 71% (10/14 tasks completed).
+
 ## [0.3.11] - 2026-09-20
 ### 🛡️ Added & Hardened (Resilience4j Chaos & Fault Injection Testing Suite)
 - test(resilience): Implement Resilience4j Chaos and Circuit Breaker integration testing suite (`Resilience4jChaosAndCircuitBreakerIT`) across `exam-service` against real Testcontainers (`PostgreSQL 16 pgvector` + `Redis 7.2`) with embedded JDK HTTP fault injection server (TASK-S3-07)

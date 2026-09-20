@@ -47,6 +47,9 @@ jwt:
   secret: ${JWT_SECRET:super_secret_jwt_key_for_aprovaenem_at_least_256_bits_long_2026!}
   expiration-ms: ${JWT_EXPIRATION_MS:86400000}
 
+auth:
+  password-pepper: ${AUTH_PASSWORD_PEPPER:aprovaenem_secret_pepper_key_2026_at_least_256_bits!}
+
 management:
   endpoints:
     web:
