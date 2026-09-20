@@ -218,7 +218,42 @@ Vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers
 
 ---
 
-### 2.6 Verify Student Email
+### 2.6 Export User Personal Data (LGPD Art. 18, V - Portabilidade)
+* **Method**: `GET`
+* **Path**: `/api/v1/auth/export` *(alias: `/api/v1/auth/me/export`)*
+* **Headers**: `Authorization: Bearer <token>`
+* **Description**: Delivers a structured, machine-readable JSON snapshot of all personal data, educational profile, and legal processing metadata belonging to the authenticated student under Article 18, V of the LGPD.
+
+#### Response `200 OK`
+```json
+{
+  "userId": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "email": "lucas.silva@escola.ma.gov.br",
+  "fullName": "Lucas Silva",
+  "schoolType": "PUBLIC_SCHOOL",
+  "targetDegree": "Computer Science",
+  "role": "ROLE_STUDENT",
+  "isEmailVerified": true,
+  "createdAt": "2026-09-18T10:00:00Z",
+  "exportTimestamp": "2026-09-20T10:00:00Z",
+  "legalBasis": "Art. 7º, I e Art. 14 (Consentimento e Melhor Interesse do Estudante / LGPD)",
+  "privacyPolicyVersion": "2026.1-v1.0"
+}
+```
+
+---
+
+### 2.7 Delete Account & Purge Personal Data (LGPD Art. 18, VI - Direito à Eliminação)
+* **Method**: `DELETE`
+* **Path**: `/api/v1/auth/me` *(alias: `/api/v1/auth/account`)*
+* **Headers**: `Authorization: Bearer <token>`
+* **Description**: Permanently deletes the student's personal account, credentials, and PII from `auth_db`. Decouples historical assessment attempts in `exam_db` (`user_id = NULL`), preserving anonymous psychometric item statistics (TRI) while eradicating all personal identity.
+
+#### Response `204 No Content`
+
+---
+
+### 2.8 Verify Student Email
 * **Method**: `POST`
 * **Path**: `/api/v1/auth/verify-email`
 * **Description**: Verifies the student's email address using the single-use token delivered via the Transactional Outbox and `notification-service`.
@@ -1178,5 +1213,24 @@ The platform enforces digital accessibility across all API payloads and client r
 
 ### 9.4 VLibras Integration & Portuguese-to-Libras Translation
 * Client platforms integrate the official open-source **VLibras 3D Avatar** widget (Federal Government / UFPB) to enable deaf students to translate text selections into Brazilian Sign Language with 1 click.
+
+---
+
+## 10. LGPD Compliance & Privacy by Design Specifications (Lei nº 13.709/2018)
+
+AprovaENEM complies with the Brazilian General Data Protection Law (LGPD) across all microservices and API gateways:
+
+### 10.1 Data Minimization & Anonymous Default (Art. 6º, III)
+* Core question training, exam simulations, instant scoring, and step-by-step INEP resolutions require **zero personal registration, zero CPF, and zero phone verification**.
+* Data generated during practice is associated exclusively with ephemeral UUIDs (`anonymous_session_id`).
+
+### 10.2 Adolescent Data Protection (Art. 14)
+* Educational data processing is conducted strictly in the **best interest of the adolescent student** (*no melhor interesse do adolescente*).
+* Student emails and academic performance data are **strictly non-commercializable**: zero data sharing or selling to third-party ad networks, commercial prep courses, or private universities.
+
+### 10.3 Data Subject Rights Self-Service APIs (Art. 18)
+* **Access & Portability (Art. 18, II e V)**: `GET /api/v1/auth/export` produces an open, standardized JSON bundle containing all stored user metadata, role, and verification history.
+* **Account Erasure & Anonymization (Art. 18, VI)**: `DELETE /api/v1/auth/me` irrevocably purges student PII from `auth_db` while anonymizing historical psychometric exam data in `exam_db` (`user_id = NULL`).
+
 
 

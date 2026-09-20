@@ -330,6 +330,7 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
 | **S4-05** | **KaTeX & MathJax Formula Rendering Engine** | `P0` | 5 pts | Flawless inline (`$...$`) and block (`$$...$$`) LaTeX rendering for mathematical formulas, physics equations, and chemical notations. |
 | **S4-06** | **Responsive Layout Shell & Mobile Navigation** | `P0` | 5 pts | Mobile-first responsive header, bottom navigation bar for smartphones, drawer navigation, and 3G/4G bandwidth optimization. |
 | **S4-07** | **Digital Accessibility Baseline (WCAG 2.1 AA & VLibras Integration)** | `P0` | 5 pts | Implementation of universal accessibility floating widget with VLibras (Língua Brasileira de Sinais 3D avatar), font scaling (100%-200%), high-contrast & Daltonism themes, OpenDyslexic typography toggle, and 100% keyboard focus management (WCAG 2.1 AA / e-MAG compliance). |
+| **S4-08** | **Student Registration Terms of Use & LGPD Consent Modal** | `P0` | 3 pts | Interactive Terms of Use modal with explicit consent opt-in checkbox during registration, clear disclosure of data minimization (no CPF, no commercial data selling), and links to the LGPD privacy policy. |
 
 ### Sprint 5: Student Practice Experience & Gamification UI (JAM 2 — Sprint 2)
 | Task ID | Work Item & Title | Priority | Estimation | Acceptance Criteria |
@@ -353,6 +354,7 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
 | **S6-06** | **Multi-Stage AI-Assisted & Real-Time Full-Stack Security Audit** | `P0` | 5 pts | Comprehensive 4-stage audit: (1) AI-assisted client audit & threat analysis (XSS, DOM clobbering, secret leakage), (2) Automated static & supply chain audit (`npm audit`, Trivy, CSP check), (3) Live real-time penetration testing on the deployed URL (LaTeX injection, CSP enforcement, JWT storage security, mobile sandbox check, live traffic abuse), (4) Full-stack audit attestation certifying production readiness. |
 | **S6-07** | **JAM 2 Final Delivery & Partner Company Presentation** | `P0` | 5 pts | Presentation pitch deck, live demo rehearsal, portfolio showcase on GitHub, and project presentation to partner companies highlighting social impact and digital accessibility. |
 | **S6-08** | **Visual Showcase Media Kit & High-Impact Visual Assets** | `P0` | 3 pts | Curate, capture, and package a high-resolution visual media kit in `docs/images/` for README, pitch deck, and partner presentations (Postman Flows canvas, Swagger UI portal, Newman dark-mode test report, Grafana metrics, frontend dark-mode question interface, Socratic AI chat drawer, diagnostic radar, accessibility features, and mobile viewports). |
+| **S6-09** | **Legal Compliance, Terms of Use & LGPD Privacy Portal** | `P0` | 5 pts | Implementation of adolescent-friendly Terms of Use, transparent Privacy Policy (plain Portuguese), Art. 18 self-service data portability export (`GET /api/v1/auth/export`), and 1-click irrevocable account erasure/anonymization (`DELETE /api/v1/auth/me`) with automated contract tests in Newman. |
 
 #### Visual Showcase Media Kit & Presentation Asset Catalog (`docs/images/`)
 

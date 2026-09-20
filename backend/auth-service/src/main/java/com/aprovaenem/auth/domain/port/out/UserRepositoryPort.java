@@ -16,4 +16,6 @@ public interface UserRepositoryPort {
     Optional<User> findByEmailVerificationToken(String token);
 
     boolean existsByEmail(String email);
+
+    void deleteById(UUID id);
 }

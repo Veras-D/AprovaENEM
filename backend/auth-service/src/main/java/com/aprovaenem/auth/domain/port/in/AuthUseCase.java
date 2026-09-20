@@ -13,5 +13,23 @@ public interface AuthUseCase {
 
     User getCurrentUser(UUID userId);
 
+    UserDataExport exportUserData(UUID userId);
+
+    void deleteAccount(UUID userId);
+
     record AuthResult(User user, String token, long expiresInSeconds) {}
+
+    record UserDataExport(
+            UUID userId,
+            String email,
+            String fullName,
+            String schoolType,
+            String targetDegree,
+            String role,
+            boolean isEmailVerified,
+            java.time.Instant createdAt,
+            java.time.Instant exportTimestamp,
+            String legalBasis,
+            String privacyPolicyVersion
+    ) {}
 }

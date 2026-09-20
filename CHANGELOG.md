@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.4] - 2026-09-20
+### 🛡️ Added & Synchronized
+- feat(lgpd): Implement Brazilian General Data Protection Law (LGPD - Lei nº 13.709/2018) data subject rights in `auth-service`: `GET /api/v1/auth/export` (Art. 18, V - Data Portability) and `DELETE /api/v1/auth/me` (Art. 18, VI - Irrevocable Account Erasure & Psychometric Anonymization)
+- test(contract): Recursively synchronize Postman contract test suite (`AprovaENEM.postman_collection.json`) with LGPD Art. 18 assertions, verified 100% green via Newman CLI (31 requests, 56 assertions passing)
+- docs(backlog): Add TASK-S4-08 (Student Registration Terms of Use & LGPD Consent Modal) and TASK-S6-09 (Legal Compliance, Terms of Use & LGPD Privacy Portal for JAM 3)
+- docs(specs): Document Section 10 LGPD Compliance & Privacy by Design in `05-api-specification.md` and account purge lifecycle in `04-data-modeling.md`
+- docs(readme): Add LGPD Compliance badge and Privacy by Design architectural highlights to `README.md`
+
 ## [0.3.3] - 2026-09-20
 ### ♿ Added & Synchronized
 - docs(accessibility): Specify comprehensive Universal Digital Accessibility baseline across architecture, backlog, and quality gates adhering to WCAG 2.1 Level AA, e-MAG, and Lei Brasileira de Inclusão (LBI - Lei nº 13.146/2015)

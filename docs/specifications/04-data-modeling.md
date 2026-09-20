@@ -202,6 +202,16 @@ classDiagram
     TutorChatThread "1" --> "*" TutorChatMessage : contains
 ```
 
+### 1.4 LGPD Compliance & Data Subject Rights (Lei nº 13.709/2018)
+The persistence model enforces strict compliance with the Brazilian General Data Protection Law:
+1. **Privacy by Design & Default (Art. 6º, III - Minimização de Dados)**:
+   - Practice sessions and diagnostics are decoupled from personal identity via `anonymous_session_id`. Students practice authentic exams with zero collection of PII (no CPF, RG, phone, or billing details).
+2. **Right to Data Portability (Art. 18, V)**:
+   - When requested (`GET /api/v1/auth/export`), the system extracts a complete, portable JSON snapshot of the user's stored account and educational metadata.
+3. **Right to Erasure / Anonymization (Art. 18, VI)**:
+   - When an account deletion is requested (`DELETE /api/v1/auth/me`), the user's record in `auth_db.users` is permanently purged.
+   - Any historical assessment attempts in `exam_db.practice_sessions` decouple their `user_id` (`ON DELETE SET NULL`), preserving the aggregate psychometric item statistics (TRI parameters) while eliminating all traces of the individual student.
+
 ---
 
 ## 2. Entity-Relationship (ER) Diagram

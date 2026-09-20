@@ -127,6 +127,33 @@ public class AuthService implements AuthUseCase {
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public UserDataExport exportUserData(UUID userId) {
+        User user = getCurrentUser(userId);
+        return new UserDataExport(
+                user.getId(),
+                user.getEmail(),
+                user.getFullName(),
+                user.getSchoolType().name(),
+                user.getTargetDegree(),
+                user.getRole().name(),
+                user.isEmailVerified(),
+                user.getCreatedAt(),
+                Instant.now(),
+                "Art. 7º, I e Art. 14 (Consentimento e Melhor Interesse do Estudante / LGPD)",
+                "2026.1-v1.0"
+        );
+    }
+
+    @Override
+    @Transactional
+    public void deleteAccount(UUID userId) {
+        User user = getCurrentUser(userId);
+        userRepository.deleteById(user.getId());
+        log.info("LGPD Art. 18 Purge: User [{}] account and personal identifiers permanently deleted", userId);
+    }
+
     private void publishOutboxEvent(String aggregateType, UUID aggregateId, String eventType, Object payloadObject) {
         try {
             String jsonPayload = objectMapper.writeValueAsString(payloadObject);

@@ -43,6 +43,11 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
         return userRepository.existsByEmail(email);
     }
 
+    @Override
+    public void deleteById(UUID id) {
+        userRepository.deleteById(id);
+    }
+
     private UserEntity toEntity(User user) {
         return UserEntity.builder()
                 .id(user.getId())

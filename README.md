@@ -17,6 +17,7 @@
 [![CI/CD: GitHub Actions](https://img.shields.io/badge/CI%2FCD-6--Stage%20Quality%20Gate-2088FF?logo=githubactions&logoColor=white)](https://github.com/)
 [![WCAG: 2.1 AA](https://img.shields.io/badge/WCAG-2.1%20AA%20Compliant-blue.svg)](https://www.w3.org/WAI/standards-guidelines/wcag/)
 [![VLibras: Supported](https://img.shields.io/badge/VLibras-Libras%20Ready-00A859)](https://www.gov.br/governodigital/pt-br/vlibras)
+[![LGPD: Compliant](https://img.shields.io/badge/LGPD-Compliant%20by%20Design-0052cc)](https://www.gov.br/anpd/pt-br)
 [![UN SDG: 4 Quality Education](https://img.shields.io/badge/UN%20SDG-4%20Quality%20Education-C5192D)](https://sdgs.un.org/goals/goal4)
 [![UN SDG: 10 Reduced Inequalities](https://img.shields.io/badge/UN%20SDG-10%20Reduced%20Inequalities-E5243B)](https://sdgs.un.org/goals/goal10)
 
@@ -33,6 +34,12 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 ---
 
 ## ✨ Features
+
+### 🛡️ LGPD Compliance & Privacy by Design (Lei nº 13.709/2018)
+- 🔒 **Privacy by Default**: Practice past exams, simulate tests, and view INEP resolutions with **zero login, zero CPF, and zero personal data collection**.
+- 🧒 **Adolescent Protection (Art. 14)**: Processing conducted strictly in the best interest of secondary students; student emails and data are **never sold or shared** with commercial prep courses, private colleges, or ad networks.
+- 📦 **Data Portability (Art. 18, V)**: Self-service endpoint (`GET /api/v1/auth/export`) delivering a machine-readable JSON snapshot of student profile, goals, and history.
+- 🗑️ **Right to Erasure (Art. 18, VI)**: Irrevocable account deletion (`DELETE /api/v1/auth/me`) permanently purging PII from `auth_db` while anonymizing historical psychometric exam data in `exam_db`.
 
 ### ♿ Universal Digital Accessibility & Inclusion (WCAG 2.1 AA & INEP Standards)
 - 🤟 **VLibras Integration**: Embedded Brazilian Sign Language 3D digital avatar translating Portuguese text into Libras with 1 click for deaf and hard-of-hearing students.
