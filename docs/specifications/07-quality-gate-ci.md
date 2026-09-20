@@ -28,8 +28,8 @@ flowchart LR
 | Gate | Tool / Engine | Pass Threshold / Enforcement Policy |
 | :--- | :--- | :--- |
 | **Gate 1: Compilation** | `javac` via Maven Compiler Plugin & `tsc --noEmit` | • Java: Zero warnings allowed (`-Werror`, `-Xlint:all`). All warnings fatal.<br>• TypeScript: Strict mode enabled (`strict: true`, zero `any`). |
-| **Gate 2: Static Analysis** | Checkstyle + PMD + ESLint | • Google Java Style rules enforced.<br>• Cyclomatic Complexity per method $\le 12$.<br>• Method line count $\le 50$ lines; class line count $\le 350$ lines.<br>• ESLint zero warnings for React/TypeScript frontend. |
-| **Gate 3: Code Duplication** | PMD CPD (Copy/Paste Detector) | Duplication threshold $< 3\%$. Flags any duplicated token blocks $> 75$ tokens. |
+| **Gate 2: Static Analysis** | Checkstyle + PMD + ESLint | • Google Java Style rules enforced.<br>• Cyclomatic Complexity per method $\le 15$, class complexity $\le 80$.<br>• Method line count $\le 50$ lines; class line count $\le 350$ lines.<br>• ESLint zero warnings for React/TypeScript frontend. |
+| **Gate 3: Code Duplication** | PMD CPD (Copy/Paste Detector) | Duplication threshold $< 3\%$. Flags any duplicated token blocks $\ge 100$ tokens. |
 | **Gate 4: Security & CVE Audit** | Trivy + Gitleaks Action | • 0 Critical / High CVEs in dependencies.<br>• Complete git commit history scanned for leaked API keys, tokens, and credentials. |
 | **Gate 5: Full Test Pyramid, Smoke, Stress & Accessibility** | JUnit 5 + JaCoCo + Vitest + Cypress + Playwright + Newman + Grafana k6 + Axe-Core | • **Unit Tests**: 100% passing (domain models + React components).<br>• **Integration Tests**: Spring Boot + Testcontainers PostgreSQL 16 + Spring Security `@WithMockUser`.<br>• **Unified Backend Coverage**: $\ge 80\%$ line, $\ge 75\%$ branch (JaCoCo merged across Unit + IT).<br>• **Pre-Flight Smoke Tests**: Fast sanity (< 15s) probing `/actuator/health` and Golden Journey.<br>• **Stress & Load Tests (k6)**: 1,000+ VU Exam Rush simulation, Socratic burst, and Token Bucket saturation.<br>• **Frontend Coverage**: $\ge 80\%$ statement/line coverage (Vitest v8).<br>• **API Contract Tests**: Automated Postman collection verified via Newman CLI.<br>• **E2E Tests**: 100% passing across Cypress and Playwright student flows.<br>• **Digital Accessibility**: Zero critical or serious WCAG 2.1 AA violations verified via Axe-Core; Lighthouse Accessibility score $\ge 95/100$. |
 | **Gate 6: Build Verification** | Docker Buildx / Docker Compose | Clean production container image builds with zero host system dependencies. |
@@ -531,7 +531,7 @@ export default function () {
 
 ---
 
-## 6. Multi-Job GitHub Actions CI Workflow (`.github/workflows/quality-gate.yml`)
+## 6. Multi-Job GitHub Actions CI Workflow (`.github/workflows/ci.yml`)
 
 The automated CI workflow runs parallelized backend and frontend verification jobs, followed by an end-to-end integration and API contract gate running against Docker Compose:
 

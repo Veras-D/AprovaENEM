@@ -37,31 +37,31 @@ jobs:
           distribution: ${{ env.JAVA_DISTRO }}
           cache: 'maven'
 
-      - name: Stage 4a: Gitleaks Secret Audit
+      - name: "Stage 4a: Gitleaks Secret Audit"
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: false
 
-      - name: Stage 1: Strict Compilation (javac -Werror -parameters)
+      - name: "Stage 1: Strict Compilation (javac -Werror -parameters)"
         working-directory: backend
         run: |
           echo "Compiling all microservice submodules with Java 21 strict flags..."
           mvn clean compile -B -DskipTests
 
-      - name: Stage 2: Static Analysis & Cyclomatic Complexity (Checkstyle & PMD)
+      - name: "Stage 2: Static Analysis & Cyclomatic Complexity (Checkstyle & PMD)"
         working-directory: backend
         run: |
           echo "Enforcing Checkstyle Google Checks and PMD cyclomatic complexity <= 15..."
           mvn checkstyle:check pmd:check -B
 
-      - name: Stage 3: Code Duplication Detection (PMD CPD)
+      - name: "Stage 3: Code Duplication Detection (PMD CPD)"
         working-directory: backend
         run: |
           echo "Enforcing PMD CPD duplication threshold (< 3% / 100 tokens)..."
           mvn pmd:cpd-check -B
 
-      - name: Stage 4b: Trivy Security Vulnerability Scan
+      - name: "Stage 4b: Trivy Security Vulnerability Scan"
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
@@ -70,7 +70,7 @@ jobs:
           ignore-unfixed: true
           exit-code: '0' # Non-blocking advisory report in CI gate
 
-      - name: Stage 5: Backend Test Suite & JaCoCo Unified Coverage (>= 80% Line, >= 75% Branch)
+      - name: "Stage 5: Backend Test Suite & JaCoCo Unified Coverage (>= 80% Line, >= 75% Branch)"
         working-directory: backend
         run: |
           echo "Executing Unit and Slice tests across all microservices..."
@@ -120,7 +120,7 @@ jobs:
           echo "Building and starting microservices in detached mode..."
           docker compose up -d --build
 
-      - name: Stage 6a: Wait for Microservices Healthy State
+      - name: "Stage 6a: Wait for Microservices Healthy State"
         run: |
           echo "Waiting up to 90 seconds for Edge Nginx, Gateway, and databases to reach healthy state..."
           TIMEOUT=90
@@ -140,12 +140,12 @@ jobs:
           done
           echo "Ecosystem is healthy and ready for pre-flight testing!"
 
-      - name: Stage 6b: Pre-Flight Automated Smoke Suite (< 15s Health & Golden Journey)
+      - name: "Stage 6b: Pre-Flight Automated Smoke Suite (< 15s Health & Golden Journey)"
         run: |
           chmod +x tests/smoke/preflight-smoke.sh
           tests/smoke/preflight-smoke.sh
 
-      - name: Stage 7a: Automated Postman Newman API Contract Suite (31 Requests, 56 Assertions)
+      - name: "Stage 7a: Automated Postman Newman API Contract Suite (31 Requests, 56 Assertions)"
         run: |
           mkdir -p reports/newman
           newman run docs/postman/AprovaENEM.postman_collection.json \
@@ -154,7 +154,7 @@ jobs:
             --reporters cli,junit \
             --reporter-junit-export reports/newman/newman-report.xml
 
-      - name: Stage 7b: Headless Grafana k6 Performance Smoke Verification
+      - name: "Stage 7b: Headless Grafana k6 Performance Smoke Verification"
         run: |
           echo "Running headless k6 load test (CI_FAST mode)..."
           docker run --rm --network host \
