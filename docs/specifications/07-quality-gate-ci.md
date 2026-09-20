@@ -31,7 +31,7 @@ flowchart LR
 | **Gate 2: Static Analysis** | Checkstyle + PMD + ESLint | • Google Java Style rules enforced.<br>• Cyclomatic Complexity per method $\le 12$.<br>• Method line count $\le 50$ lines; class line count $\le 350$ lines.<br>• ESLint zero warnings for React/TypeScript frontend. |
 | **Gate 3: Code Duplication** | PMD CPD (Copy/Paste Detector) | Duplication threshold $< 3\%$. Flags any duplicated token blocks $> 75$ tokens. |
 | **Gate 4: Security & CVE Audit** | Trivy + Gitleaks Action | • 0 Critical / High CVEs in dependencies.<br>• Complete git commit history scanned for leaked API keys, tokens, and credentials. |
-| **Gate 5: Full Test Pyramid** | JUnit 5 + JaCoCo + Vitest + Cypress + Playwright + Newman | • **Unit Tests**: 100% passing (domain models + React components).<br>• **Integration Tests**: Spring Boot + Testcontainers PostgreSQL 16 + Spring Security `@WithMockUser`.<br>• **Unified Backend Coverage**: $\ge 80\%$ line, $\ge 75\%$ branch (JaCoCo merged across Unit + IT).<br>• **Frontend Coverage**: $\ge 80\%$ statement/line coverage (Vitest v8).<br>• **API Contract Tests**: Automated Postman collection verified via Newman CLI.<br>• **E2E Tests**: 100% passing across Cypress and Playwright student flows. |
+| **Gate 5: Full Test Pyramid & Accessibility** | JUnit 5 + JaCoCo + Vitest + Cypress + Playwright + Newman + Axe-Core | • **Unit Tests**: 100% passing (domain models + React components).<br>• **Integration Tests**: Spring Boot + Testcontainers PostgreSQL 16 + Spring Security `@WithMockUser`.<br>• **Unified Backend Coverage**: $\ge 80\%$ line, $\ge 75\%$ branch (JaCoCo merged across Unit + IT).<br>• **Frontend Coverage**: $\ge 80\%$ statement/line coverage (Vitest v8).<br>• **API Contract Tests**: Automated Postman collection verified via Newman CLI.<br>• **E2E Tests**: 100% passing across Cypress and Playwright student flows.<br>• **Digital Accessibility**: Zero critical or serious WCAG 2.1 AA violations verified via Axe-Core; Lighthouse Accessibility score $\ge 95/100$. |
 | **Gate 6: Build Verification** | Docker Buildx / Docker Compose | Clean production container image builds with zero host system dependencies. |
 
 ---
@@ -637,6 +637,13 @@ jobs:
         run: npx playwright test
         env:
           BASE_URL: http://localhost
+
+      # --- 5f: Digital Accessibility (WCAG 2.1 AA) ---
+      - name: 'Gate 5f: Automated Accessibility Audit (Axe-Core & WCAG 2.1 AA)'
+        run: |
+          echo "Auditing WCAG 2.1 AA compliance across core student routes..."
+          npx axe http://localhost --tags wcag2a,wcag2aa,wcag21aa
+        continue-on-error: false
 
       - name: Upload Test Reports on Failure
         if: failure()

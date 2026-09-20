@@ -370,6 +370,8 @@ Vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers
       "statement": "Um eletricista precisa instalar um disjuntor para proteger um circuito de chuveiro elétrico de potência $P = 5500\\text{ W}$ conectado a uma rede de $V = 220\\text{ V}$. Considerando a corrente nominal calculada por $I = P/V$, determine a corrente e selecione o disjuntor comercial adequado.",
       "difficulty": "MEDIUM",
       "status": "ACTIVE",
+      "figureUrl": "https://assets.aprovaenem.com.br/figures/2023_105_circuit.webp",
+      "figureAltText": "Esquema elétrico mostrando um circuito monofásico de 220V com disjuntor em série e chuveiro de 5500W como carga resistiva.",
       "options": [
         { "optionLetter": "A", "text": "Corrente de 15 A; disjuntor de 15 A." },
         { "optionLetter": "B", "text": "Corrente de 25 A; disjuntor de 30 A." },
@@ -436,7 +438,8 @@ Returns the question statement, status, and options A–E.
   "sessionType": "TOPIC_PRACTICE",
   "subject": "NATURAL_SCIENCES",
   "topicId": "33333333-4444-5555-6666-777777777777",
-  "questionCount": 5
+  "questionCount": 5,
+  "timeMode": "EXTENDED_INEP"
 }
 ```
 
@@ -446,6 +449,7 @@ Returns the question statement, status, and options A–E.
   "sessionId": "88888888-9999-aaaa-bbbb-cccccccccccc",
   "sessionType": "TOPIC_PRACTICE",
   "status": "IN_PROGRESS",
+  "timeMode": "EXTENDED_INEP",
   "totalQuestions": 5,
   "questionIds": [
     "77777777-8888-9999-aaaa-bbbbbbbbbbbb",
@@ -1152,4 +1156,27 @@ Used by frontend clients (e.g., Socratic AI chat drawer badge) to display remain
   "unreadCount": 2
 }
 ```
+
+---
+
+## 9. Universal Accessibility & Inclusion Specifications (WCAG 2.1 AA & INEP Standards)
+
+The platform enforces digital accessibility across all API payloads and client rendering contracts in strict accordance with the **Lei Brasileira de Inclusão (LBI - Lei nº 13.146/2015)**, **e-MAG**, and **WCAG 2.1 Level AA**:
+
+### 9.1 INEP Exam Time Accommodations (`timeMode`)
+* `STANDARD`: Default timed practice (3 minutes per question countdown).
+* `EXTENDED_INEP`: Acréscimo de tempo (+50% to +100% time) mirroring official INEP *Atendimento Especializado* for students with ADHD, Autism (TEA), Dyslexia, and physical motor disabilities.
+* `UNTIMED`: Zero countdown timer, designed to alleviate test anxiety and support students with sensory or cognitive processing needs.
+
+### 9.2 Non-Text Content & Screen Reader Accessibility (WCAG 1.1.1)
+* **`figureAltText`**: Every question containing cropped diagrams, charts, or maps returns a high-density, pedagogical description in Portuguese for screen readers (NVDA, TalkBack, VoiceOver).
+* **KaTeX MathML**: All mathematical expressions (`$...$`, `$$...$$`) must be bundled with hidden speech representations (`<span class="katex-mathml">`) so formulas are pronounced phonetically (e.g., $E = mc^2$ $\rightarrow$ *"E é igual a m vezes c ao quadrado"*).
+
+### 9.3 Instant Feedback & ARIA Live Regions (WCAG 4.1.3)
+* Assessment grading endpoints (`/api/v1/sessions/{id}/attempts`) must pair with client `<div role="status" aria-live="polite">` containers to announce correctness, points, and XP gain without moving focus or interrupting keyboard navigation.
+* Never communicate status via color alone: green/red banners must be paired with explicit icons (`✓`, `✗`) and descriptive text.
+
+### 9.4 VLibras Integration & Portuguese-to-Libras Translation
+* Client platforms integrate the official open-source **VLibras 3D Avatar** widget (Federal Government / UFPB) to enable deaf students to translate text selections into Brazilian Sign Language with 1 click.
+
 

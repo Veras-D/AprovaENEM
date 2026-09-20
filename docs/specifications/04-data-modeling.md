@@ -258,6 +258,8 @@ erDiagram
         numeric tri_param_c
         varchar status
         text suspension_reason
+        text figure_url
+        text figure_alt_text
         varchar content_language
         timestamp created_at
     }
@@ -285,6 +287,7 @@ erDiagram
         varchar anonymous_session_id
         varchar session_type
         varchar status
+        varchar time_mode
         int total_questions
         int correct_count
         timestamp started_at
@@ -611,6 +614,8 @@ CREATE TABLE questions (
     tri_param_c NUMERIC(5, 3), -- Guessing parameter
     status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'SUSPENDED', 'NEEDS_REVIEW', 'DRAFT', 'ANNULLED')),
     suspension_reason TEXT, -- Optional pedagogical/formatting notes for suspended items
+    figure_url VARCHAR(500), -- Optional URL to cropped INEP figure/chart/diagram WebP
+    figure_alt_text TEXT, -- Rich accessibility screen-reader description for visually impaired students (WCAG 1.1.1)
     content_language VARCHAR(10) NOT NULL DEFAULT 'pt-BR',
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -644,6 +649,7 @@ CREATE TABLE practice_sessions (
     anonymous_session_id VARCHAR(64) NOT NULL,
     session_type VARCHAR(30) NOT NULL CHECK (session_type IN ('TOPIC_PRACTICE', 'EXAM_SIMULATION', 'DIAGNOSTIC_QUICK')),
     status VARCHAR(20) NOT NULL DEFAULT 'IN_PROGRESS' CHECK (status IN ('IN_PROGRESS', 'COMPLETED', 'ABANDONED')),
+    time_mode VARCHAR(20) NOT NULL DEFAULT 'STANDARD' CHECK (time_mode IN ('STANDARD', 'EXTENDED_INEP', 'UNTIMED')), -- INEP accessibility accommodation
     total_questions INT NOT NULL,
     correct_count INT NOT NULL DEFAULT 0,
     started_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,

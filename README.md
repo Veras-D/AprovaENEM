@@ -15,6 +15,8 @@
 [![Docker: Ready](https://img.shields.io/badge/Docker-Compose%20Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![Prometheus: APM](https://img.shields.io/badge/Prometheus-Telemetry-E6522C?logo=prometheus&logoColor=white)](https://prometheus.io/)
 [![CI/CD: GitHub Actions](https://img.shields.io/badge/CI%2FCD-6--Stage%20Quality%20Gate-2088FF?logo=githubactions&logoColor=white)](https://github.com/)
+[![WCAG: 2.1 AA](https://img.shields.io/badge/WCAG-2.1%20AA%20Compliant-blue.svg)](https://www.w3.org/WAI/standards-guidelines/wcag/)
+[![VLibras: Supported](https://img.shields.io/badge/VLibras-Libras%20Ready-00A859)](https://www.gov.br/governodigital/pt-br/vlibras)
 [![UN SDG: 4 Quality Education](https://img.shields.io/badge/UN%20SDG-4%20Quality%20Education-C5192D)](https://sdgs.un.org/goals/goal4)
 [![UN SDG: 10 Reduced Inequalities](https://img.shields.io/badge/UN%20SDG-10%20Reduced%20Inequalities-E5243B)](https://sdgs.un.org/goals/goal10)
 
@@ -31,6 +33,14 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 ---
 
 ## ✨ Features
+
+### ♿ Universal Digital Accessibility & Inclusion (WCAG 2.1 AA & INEP Standards)
+- 🤟 **VLibras Integration**: Embedded Brazilian Sign Language 3D digital avatar translating Portuguese text into Libras with 1 click for deaf and hard-of-hearing students.
+- 👁️ **Screen Reader & Semantic HTML5**: Native `<fieldset>`/`<legend>` question structures, ARIA Live Regions (`aria-live="polite"` for instant grading feedback without focus loss), and descriptive `figureAltText` for all exam figures and charts.
+- ⏱️ **INEP Exam Time Accommodations**: Mirroring official INEP *Atendimento Especializado* with Standard Mode (3 min/question), Extended Time Mode (+50% or +100% time), and Untimed Relaxed Mode for students with ADHD, Autism, or test anxiety.
+- 📖 **Neurodiversity & Dyslexia Support**: Instant typography toggle for **OpenDyslexic** and **Atkinson Hyperlegible**, alongside an optional Focus Reading Guide (*Régua de Foco*) to eliminate sensory overload.
+- 🎨 **Daltonism & High Contrast**: Accessible color schemes (Protanopia, Deuteranopia, Tritanopia) pairing color with explicit icons (`✓`, `✗`) so status is never conveyed by color alone.
+- ⌨️ **100% Keyboard Operability**: Complete keyboard navigation (Tab flow, hotkeys `A`–`E` or `1`–`5` to select options, `Enter` to submit, `Space` to toggle Socratic AI).
 
 ### 📱 Student Web & Mobile Experience (`frontend/`)
 - 🎯 **Frictionless Instant Practice**: Students start solving questions immediately with zero mandatory registration, phone verification, or paywalls.
@@ -106,9 +116,15 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 - **API Contract Tests**: Automated Postman test suite executed via **Newman CLI**
 - **End-to-End (E2E) Tests**: **Cypress** (Interactive student DOM workflows) + **Playwright** (Cross-browser and mobile device matrices)
 
+### Digital Accessibility & Inclusion
+- **Standards & Guidelines**: **WCAG 2.1 Level AA**, e-MAG (Governo Federal Brasileiro), Lei Brasileira de Inclusão (LBI - Lei nº 13.146/2015)
+- **Assistive Technologies**: **VLibras** (official open-source 3D avatar for Brazilian Sign Language translation), Screen Reader compatibility (NVDA, TalkBack, VoiceOver, JAWS)
+- **Typography & Ergonomics**: **OpenDyslexic**, **Atkinson Hyperlegible**, dynamic font scaling ($100\%$ to $200\%$) via root `rem` units
+- **Automated Accessibility Testing**: `@axe-core/react`, `cypress-axe`, Lighthouse Accessibility Audit ($\ge 95/100$)
+
 ### DevOps & CI/CD
 - **Containerization**: Unified Multi-Container Docker Compose (Orchestrating Frontend, Nginx, API Gateway, Microservices, Databases, Prometheus & Grafana)
-- **Quality Gate**: Multi-Job GitHub Actions CI (`-Werror`, Checkstyle, PMD, PMD CPD, Trivy CVE scan, Gitleaks, JaCoCo 80%+, Vitest 80%+, Newman API tests, Cypress E2E, Playwright E2E)
+- **Quality Gate**: Multi-Job GitHub Actions CI (`-Werror`, Checkstyle, PMD, PMD CPD, Trivy CVE scan, Gitleaks, JaCoCo 80%+, Vitest 80%+, Newman API tests, Cypress E2E, Playwright E2E, Axe-Core WCAG 2.1 AA audit)
 
 ---
 

@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.3] - 2026-09-20
+### ♿ Added & Synchronized
+- docs(accessibility): Specify comprehensive Universal Digital Accessibility baseline across architecture, backlog, and quality gates adhering to WCAG 2.1 Level AA, e-MAG, and Lei Brasileira de Inclusão (LBI - Lei nº 13.146/2015)
+- docs(backlog): Add TASK-S4-07 (Digital Accessibility Baseline & VLibras Integration), TASK-S5-07 (Accessible Question Reader, Hotkeys & INEP Accommodations), and update S6 with automated Axe-Core / Lighthouse accessibility quality gates ($\ge 95/100$)
+- docs(data): Add `figure_alt_text` and `time_mode` (`STANDARD`, `EXTENDED_INEP`, `UNTIMED`) to `questions` and `practice_sessions` tables in `04-data-modeling.md`
+- docs(api): Specify `figureAltText` in question payloads, `timeMode` in practice session creation, and Section 9 Universal Accessibility in `05-api-specification.md`
+- docs(ci): Add Gate 5f automated Axe-Core WCAG 2.1 AA audit step to CI pipeline in `07-quality-gate-ci.md`
+- docs(readme): Add WCAG 2.1 AA and VLibras badges, Universal Digital Accessibility feature highlights, and Accessibility tech stack to `README.md`
+
 ## [0.3.2] - 2026-09-20
 ### 🚀 Added
 - feat(api-docs): Implement interactive OpenAPI 3.0 specifications and Swagger UI (`/swagger-ui.html`) across `auth-service`, `exam-service`, and `notification-service`, with unified multi-spec gateway dropdown aggregation in `frontend-api` BFF and Nginx reverse proxy routing (TASK-S3-08)
