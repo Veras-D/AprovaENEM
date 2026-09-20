@@ -25,23 +25,23 @@ gantt
     CI Quality Gate and Ingestion Pipeline (S1-09, S1-10) :done, s1_5, 2026-09-17, 1d
 
     section JAM 1 - Back-end (Sprint 2)
-    Docker Infrastructure and Flyway (S2-01, S2-02)       :active, s2_1, 2026-09-18, 3d
-    Redis 7 Caching and Docling Ingestion (S2-02b, S2-02c):s2_2, after s2_1, 3d
-    Auth Service and Spring Security 6 (S2-04, S2-05)     :s2_3, after s2_1, 3d
-    Exam Service Hexagonal Core Domain (S2-06, S2-07)    :s2_4, after s2_2, 3d
-    Practice Sessions and Instant Grading (S2-08, S2-09) :s2_5, after s2_4, 3d
-    Gemini Socratic AI and pgvector RAG (S2-10, S2-11b)  :s2_6, after s2_5, 3d
-    frontend-api Gateway and Strict CORS (S2-12, S2-13)  :s2_7, after s2_5, 2d
-    Gamification Engine and Notifications (S2-14, S2-17) :s2_8, after s2_6, 3d
+    Docker Infrastructure and Flyway (S2-01, S2-02)       :done, s2_1, 2026-09-18, 1d
+    Redis 7 Caching and Docling Ingestion (S2-02b, S2-02c):done, s2_2, 2026-09-18, 1d
+    Auth Service and Spring Security 6 (S2-04, S2-05)     :done, s2_3, 2026-09-18, 1d
+    Exam Service Hexagonal Core Domain (S2-06, S2-07)    :done, s2_4, 2026-09-18, 1d
+    Practice Sessions and Instant Grading (S2-08, S2-09) :done, s2_5, 2026-09-18, 1d
+    Gemini Socratic AI and pgvector RAG (S2-10, S2-11b)  :done, s2_6, 2026-09-18, 1d
+    frontend-api Gateway and Strict CORS (S2-12, S2-13)  :done, s2_7, 2026-09-18, 1d
+    Gamification Engine and Notifications (S2-14, S2-17) :done, s2_8, 2026-09-18, 1d
 
     section JAM 1 - Back-end (Sprint 3)
-    Domain and Application Unit Tests (S3-01, S3-02)     :s3_1, 2026-09-27, 2d
+    SpringDoc Swagger UI and Postman Suite (S3-08, S3-09):done, s3_6, 2026-09-20, 1d
+    Domain and Application Unit Tests (S3-01, S3-02)     :active, s3_1, 2026-09-20, 2d
     Spring Security MockMvc Tests (S3-03)                :s3_2, after s3_1, 1d
     Testcontainers PostgreSQL and Redis IT (S3-04)       :s3_3, after s3_1, 2d
     JaCoCo Unified Coverage 80 percent (S3-05)           :s3_4, after s3_3, 1d
-    Redis Latency and Resilience4j Chaos (S3-06, S3-07)  :s3_5, after s3_3, 1d
-    SpringDoc Swagger UI and Postman Suite (S3-08, S3-09):s3_6, after s3_4, 2d
-    Back-end CI Quality Gate Verification (S3-10)        :s3_7, after s3_6, 1d
+    Redis Latency and Resilience4j Chaos (S3-06, S3-07)  :s3_5, after s3_4, 1d
+    Back-end CI Quality Gate Verification (S3-10)        :s3_7, after s3_5, 1d
     Multi-Stage Backend Security Audit (S3-11)           :s3_8, after s3_7, 1d
     JAM 1 Final Delivery and Audit (S3-12)               :s3_9, after s3_8, 1d
 
@@ -49,12 +49,14 @@ gantt
     React 18 TypeScript and Tailwind Setup (S4-01, S4-02):s4_1, 2026-10-01, 3d
     TanStack Query and Zustand State (S4-03, S4-04)      :s4_2, after s4_1, 3d
     KaTeX Formula Engine and Mobile Shell (S4-05, S4-06) :s4_3, after s4_2, 3d
+    Accessibility Baseline and Terms Modal (S4-07, S4-08):s4_4, after s4_3, 2d
 
     section JAM 2 - Front-end (Sprint 5)
     Timed Question Card and Feedback (S5-01, S5-02)      :s5_1, 2026-10-11, 3d
     Socratic AI Chat Drawer (S5-03)                      :s5_2, after s5_1, 3d
     Gamification UI and Leaderboards (S5-04, S5-05)      :s5_3, after s5_2, 3d
     Diagnostic Skill Radar and Heatmaps (S5-06)          :s5_4, after s5_3, 2d
+    Accessible Question Card and Hotkeys (S5-07)         :s5_5, after s5_4, 2d
 
     section JAM 2 - Front-end (Sprint 6)
     Vitest Component Tests and Cypress E2E (S6-01, S6-02):s6_1, 2026-10-21, 3d
@@ -63,12 +65,27 @@ gantt
     Cloud HTTPS Deployment and Live URL (S6-05)          :s6_4, after s6_3, 2d
     Multi-Stage Full-Stack Security Audit (S6-06)        :s6_5, after s6_4, 1d
     Partner Company Showcase and Pitch (S6-07)           :s6_6, after s6_5, 1d
+    Visual Media Kit and LGPD Portal (S6-08, S6-09)      :s6_7, after s6_6, 2d
 
     section Month 4 - Career Placement
     Career Placement and Interviews (M4-01)              :m4_1, 2026-11-01, 15d
     Recode Certification and Enrollment (M4-02)          :m4_2, after m4_1, 7d
     Final Social Impact Audit Report (M4-03)             :m4_3, after m4_2, 7d
 ```
+
+### Milestone & Sprint Status Summary
+
+| Phase / Milestone | Sprint / Horizon | Focus & Scope | Planned Tasks | Completed Tasks | Status | Key Deliverables & Gates |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- |
+| **JAM 1: Month 2** | **Sprint 1** (Sept 17, 2026) | Planning, Hexagonal Architecture, DDL & Contracts | 10 | 10 | **COMPLETED (100%) ✅** | Architecture specs, DDL schema, REST contracts, CORS spec, CI Quality Gate blueprint |
+| **JAM 1: Month 2** | **Sprint 2** (Sept 18–19, 2026) | Core Microservices, Flyway, Redis, Gemini AI & BFF | 17 | 17 | **COMPLETED (100%) ✅** | Docker Compose perimeter, auth-service, exam-service, Gemini AI Socratic tutor, frontend-api BFF, gamification engine, Redis caching, RabbitMQ |
+| **JAM 1: Month 2** | **Sprint 3** (Sept 20–22, 2026) | Verification, Hardening, Contracts & JAM 1 Delivery | 12 | 2 | **IN PROGRESS (17%) 🚀** | Swagger UI (`S3-08` ✅), Newman Contract Suite (`S3-09` ✅), Domain/App Unit Tests (`S3-01`/`S3-02` ⏳), MockMvc (`S3-03` ⏳), Testcontainers (`S3-04` ⏳), JaCoCo 80% (`S3-05` ⏳), Redis benchmark (`S3-06` ⏳), Chaos fallback (`S3-07` ⏳), CI Gate (`S3-10` ⏳), Security Audit (`S3-11` ⏳), JAM 1 Submission & Media Kit (`S3-12` ⏳) |
+| **JAM 2: Month 3** | **Sprint 4** (Oct 01–10, 2026) | Frontend Setup, Design Tokens, State & Accessibility | 8 | 0 | `PLANNED 📅` | React 18 + TS + Vite, Tailwind dark mode, Zustand store, TanStack Query, KaTeX math formulas, Mobile shell, Accessibility baseline (`S4-07`), Terms modal (`S4-08`) |
+| **JAM 2: Month 3** | **Sprint 5** (Oct 11–20, 2026) | Practice UI, Socratic Drawer, Gamification & Radar | 7 | 0 | `PLANNED 📅` | Interactive Question Card, INEP feedback accordion, Socratic AI drawer with quota widget, Gamification dashboard, Weekly leagues, Diagnostic radar, Accessible reader & INEP accommodations (`S5-07`) |
+| **JAM 2: Month 3** | **Sprint 6** (Oct 21–31, 2026) | Full-Stack Integration, E2E Testing & Cloud Deployment | 9 | 0 | `PLANNED 📅` | Vitest RTL suite, Cypress E2E, Playwright cross-browser, Production Nginx container, Cloud HTTPS deployment, Security audit, Partner presentation (`S6-07`), Visual media kit (`S6-08`), LGPD portal (`S6-09`) |
+| **Month 4: Closure** | **Sprint 7** (Nov 01–30, 2026) | Career Placement, Certification & Social Impact Audit | 3 | 0 | `PLANNED 📅` | Partner company interviews, Recode certification issuance, Final social impact audit report |
+| **Future Phase 2** | **Roadmap: Essay AI** | Handwritten Essay OCR & LLM-as-a-Judge Evaluation | 5 | 0 | `PLANNED 📅` | S3 photo ingestion, vision model benchmarks, dual-evaluator arbitration, `ROLE_PREMIUM_STUDENT` gate, student annotation UI |
+| **Future Phase 3** | **Roadmap: Android** | Native Android KMP App & Offline Study Bank | 5 | 0 | `PLANNED 📅` | Kotlin Jetpack Compose, Room SQLite offline packs, CameraX essay scanner, FCM notifications, AdMob rewarded video unit economics |
 
 ---
 
@@ -299,20 +316,20 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
 
 > **JAM 1 Official Deliverable**: Fully functional, tested backend API documented via **Swagger / OpenAPI 3.0** and **Postman**, verified through the automated CI quality gate, and published to a **public GitHub repository**.
 
-| Task ID | Work Item & Title | Priority | Estimation | Acceptance Criteria |
-| :--- | :--- | :---: | :---: | :--- |
-| **S3-01** | **Domain Unit Testing** | `P0` | 5 pts | Pure Java domain tests (scoring, TRI formulas, question status transitions, entities) with JUnit 5 & AssertJ (execution $< 1\text{s}$). |
-| **S3-02** | **Application Service Unit Testing** | `P0` | 5 pts | Mockito unit tests covering all Use Case orchestration flows, Socratic prompt builders, and domain event publishers. |
-| **S3-03** | **Spring Security & WebMvc MockMvc Tests** | `P0` | 5 pts | MockMvc tests with `@WithMockUser` and `@WithAnonymousUser` validating 200 OK, 401 Unauthorized, 403 Forbidden, and RFC 7807 Problem Details payloads. |
-| **S3-04** | **Testcontainers PostgreSQL 16 & Redis Integration Tests** | `P0` | 8 pts | Real PostgreSQL 16 (`pgvector`) and Redis container integration tests (`*IT.java` via Maven Failsafe) verifying Flyway migrations, JPA queries, and Redis ZSET operations. |
-| **S3-05** | **JaCoCo Unified Backend Coverage Enforcement** | `P0` | 3 pts | Merged Surefire + Failsafe execution data (`jacoco.exec`); build fails if line coverage $< 80\%$ or branch coverage $< 75\%$. |
-| **S3-06** | **Redis Caching & Latency Benchmarking** | `P1` | 5 pts | Verification of sub-2ms L2 cache hit latency, sub-5ms composite index queries, and ZSET ranking performance under concurrent request simulation. |
-| **S3-07** | **Resilience4j Chaos & Fault Injection Testing** | `P1` | 5 pts | Verification of Circuit Breaker behavior: simulated Gemini API timeouts, HTTP 429 quota exhaustion, and graceful fallback to static INEP explanations with `isFallback: true`. |
-| **S3-08** | **SpringDoc OpenAPI 3.0 & Swagger UI Documentation** | `P0` | 5 pts | Full interactive API documentation generated at `/swagger-ui.html` via SpringDoc OpenAPI, including schemas, parameter descriptions, error responses, and CORS behavior. |
-| **S3-09** | **Automated Newman / Postman API Contract Suite** | `P0` | 5 pts | Complete Postman collection (`docs/postman/AprovaENEM.postman_collection.json`) and environment file executed via Newman CLI in CI, asserting status codes, schemas, and SLAs. |
-| **S3-10** | **Back-end GitHub Actions CI Quality Gate Verification** | `P0` | 5 pts | 6-stage CI verification for backend (`javac -Werror`, Checkstyle, PMD, PMD CPD, Trivy, Gitleaks, JaCoCo, Newman) 100% green on `main`. |
-| **S3-11** | **Multi-Stage AI-Assisted & Real-Time Backend Security Audit** | `P0` | 5 pts | Comprehensive 4-stage audit: (1) AI-driven threat modeling & code review (OWASP API Top 10), (2) Automated DAST & dependency audit (Trivy, Gitleaks, ZAP), (3) Live interactive runtime penetration testing (JWT signature tampering, CORS bypass fuzzing, perimeter isolation check, header spoofing rejection, Token Bucket flooding, SQLi/pgvector injection), (4) Audit report certifying zero vulnerabilities. |
-| **S3-12** | **JAM 1 Final Delivery & Repository Submission** | `P0` | 2 pts | Audit public GitHub repository, verify README quickstart, validate Swagger UI, Postman collection export, capture initial backend visual assets in `docs/images/` (`swagger-ui-portal.png`, `postman-flow-journey.png`, `newman-test-dashboard.png`), and submit project URL to the Reconecta Recode platform. |
+| Task ID | Work Item & Title | Priority | Estimation | Status | Acceptance Criteria |
+| :--- | :--- | :---: | :---: | :---: | :--- |
+| **S3-01** | **Domain Unit Testing** | `P0` | 5 pts | `PENDING ⏳` | Pure Java domain tests (scoring, TRI formulas, question status transitions, entities) with JUnit 5 & AssertJ (execution $< 1\text{s}$). |
+| **S3-02** | **Application Service Unit Testing** | `P0` | 5 pts | `PENDING ⏳` | Mockito unit tests covering all Use Case orchestration flows, Socratic prompt builders, and domain event publishers. |
+| **S3-03** | **Spring Security & WebMvc MockMvc Tests** | `P0` | 5 pts | `PENDING ⏳` | MockMvc tests with `@WithMockUser` and `@WithAnonymousUser` validating 200 OK, 401 Unauthorized, 403 Forbidden, and RFC 7807 Problem Details payloads. |
+| **S3-04** | **Testcontainers PostgreSQL 16 & Redis Integration Tests** | `P0` | 8 pts | `PENDING ⏳` | Real PostgreSQL 16 (`pgvector`) and Redis container integration tests (`*IT.java` via Maven Failsafe) verifying Flyway migrations, JPA queries, and Redis ZSET operations. |
+| **S3-05** | **JaCoCo Unified Backend Coverage Enforcement** | `P0` | 3 pts | `PENDING ⏳` | Merged Surefire + Failsafe execution data (`jacoco.exec`); build fails if line coverage $< 80\%$ or branch coverage $< 75\%$. |
+| **S3-06** | **Redis Caching & Latency Benchmarking** | `P1` | 5 pts | `PENDING ⏳` | Verification of sub-2ms L2 cache hit latency, sub-5ms composite index queries, and ZSET ranking performance under concurrent request simulation. |
+| **S3-07** | **Resilience4j Chaos & Fault Injection Testing** | `P1` | 5 pts | `PENDING ⏳` | Verification of Circuit Breaker behavior: simulated Gemini API timeouts, HTTP 429 quota exhaustion, and graceful fallback to static INEP explanations with `isFallback: true`. |
+| **S3-08** | **SpringDoc OpenAPI 3.0 & Swagger UI Documentation** | `P0` | 5 pts | **DONE ✅** | Full interactive API documentation generated at `/swagger-ui.html` via SpringDoc OpenAPI, including schemas, parameter descriptions, error responses, and CORS behavior. |
+| **S3-09** | **Automated Newman / Postman API Contract Suite** | `P0` | 5 pts | **DONE ✅** | Complete Postman collection (`docs/postman/AprovaENEM.postman_collection.json`) and environment file executed via Newman CLI in CI, asserting status codes, schemas, and SLAs. |
+| **S3-10** | **Back-end GitHub Actions CI Quality Gate Verification** | `P0` | 5 pts | `PENDING ⏳` | 6-stage CI verification for backend (`javac -Werror`, Checkstyle, PMD, PMD CPD, Trivy, Gitleaks, JaCoCo, Newman) 100% green on `main`. |
+| **S3-11** | **Multi-Stage AI-Assisted & Real-Time Backend Security Audit** | `P0` | 5 pts | `PENDING ⏳` | Comprehensive 4-stage audit: (1) AI-driven threat modeling & code review (OWASP API Top 10), (2) Automated DAST & dependency audit (Trivy, Gitleaks, ZAP), (3) Live interactive runtime penetration testing (JWT signature tampering, CORS bypass fuzzing, perimeter isolation check, header spoofing rejection, Token Bucket flooding, SQLi/pgvector injection), (4) Audit report certifying zero vulnerabilities. |
+| **S3-12** | **JAM 1 Final Delivery & Repository Submission** | `P0` | 2 pts | `PENDING ⏳` | Audit public GitHub repository, verify README quickstart, validate Swagger UI, Postman collection export, capture initial backend visual assets in `docs/images/` (`swagger-ui-portal.png`, `postman-flow-journey.png`, `newman-test-dashboard.png`), and submit project URL to the Reconecta Recode platform. |
 
 ---
 
@@ -321,40 +338,40 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
 > **JAM 2 Official Deliverable**: Deployed full-stack application accessible via a **public URL**, certification issuance, GitHub portfolio showcase, and **presentation to partner companies**.
 
 ### Sprint 4: Frontend Architecture & Design System (JAM 2 — Sprint 1)
-| Task ID | Work Item & Title | Priority | Estimation | Acceptance Criteria |
-| :--- | :--- | :---: | :---: | :--- |
-| **S4-01** | **React 18 + TypeScript + Vite Project Setup** | `P0` | 5 pts | Strict TypeScript configuration (`strict: true`, zero `any`), ESLint, and fast Vite 5 HMR build pipeline. |
-| **S4-02** | **Tailwind CSS Theme & Dark Mode Design Tokens** | `P0` | 5 pts | Accessible, high-contrast dark theme optimized for student mobile displays, custom colors, and typography tokens. |
-| **S4-03** | **API Client SDK & TanStack Query Integration** | `P0` | 5 pts | Typed Axios/Fetch client connecting to `frontend-api` BFF, JWT header injection, preflight caching, and MSW mock integration for offline development. |
-| **S4-04** | **Authentication & Student Session State Machine** | `P0` | 5 pts | Zustand store managing anonymous practice sessions (`X-Session-Id`), registered JWT auth, and seamless progress migration upon registration. |
-| **S4-05** | **KaTeX & MathJax Formula Rendering Engine** | `P0` | 5 pts | Flawless inline (`$...$`) and block (`$$...$$`) LaTeX rendering for mathematical formulas, physics equations, and chemical notations. |
-| **S4-06** | **Responsive Layout Shell & Mobile Navigation** | `P0` | 5 pts | Mobile-first responsive header, bottom navigation bar for smartphones, drawer navigation, and 3G/4G bandwidth optimization. |
-| **S4-07** | **Digital Accessibility Baseline (WCAG 2.1 AA & VLibras Integration)** | `P0` | 5 pts | Implementation of universal accessibility floating widget with VLibras (Língua Brasileira de Sinais 3D avatar), font scaling (100%-200%), high-contrast & Daltonism themes, OpenDyslexic typography toggle, and 100% keyboard focus management (WCAG 2.1 AA / e-MAG compliance). |
-| **S4-08** | **Student Registration Terms of Use & LGPD Consent Modal** | `P0` | 3 pts | Interactive Terms of Use modal with explicit consent opt-in checkbox during registration, clear disclosure of data minimization (no CPF, no commercial data selling), and links to the LGPD privacy policy. |
+| Task ID | Work Item & Title | Priority | Estimation | Status | Acceptance Criteria |
+| :--- | :--- | :---: | :---: | :---: | :--- |
+| **S4-01** | **React 18 + TypeScript + Vite Project Setup** | `P0` | 5 pts | `PLANNED 📅` | Strict TypeScript configuration (`strict: true`, zero `any`), ESLint, and fast Vite 5 HMR build pipeline. |
+| **S4-02** | **Tailwind CSS Theme & Dark Mode Design Tokens** | `P0` | 5 pts | `PLANNED 📅` | Accessible, high-contrast dark theme optimized for student mobile displays, custom colors, and typography tokens. |
+| **S4-03** | **API Client SDK & TanStack Query Integration** | `P0` | 5 pts | `PLANNED 📅` | Typed Axios/Fetch client connecting to `frontend-api` BFF, JWT header injection, preflight caching, and MSW mock integration for offline development. |
+| **S4-04** | **Authentication & Student Session State Machine** | `P0` | 5 pts | `PLANNED 📅` | Zustand store managing anonymous practice sessions (`X-Session-Id`), registered JWT auth, and seamless progress migration upon registration. |
+| **S4-05** | **KaTeX & MathJax Formula Rendering Engine** | `P0` | 5 pts | `PLANNED 📅` | Flawless inline (`$...$`) and block (`$$...$$`) LaTeX rendering for mathematical formulas, physics equations, and chemical notations. |
+| **S4-06** | **Responsive Layout Shell & Mobile Navigation** | `P0` | 5 pts | `PLANNED 📅` | Mobile-first responsive header, bottom navigation bar for smartphones, drawer navigation, and 3G/4G bandwidth optimization. |
+| **S4-07** | **Digital Accessibility Baseline (WCAG 2.1 AA & VLibras Integration)** | `P0` | 5 pts | `PLANNED 📅` | Implementation of universal accessibility floating widget with VLibras (Língua Brasileira de Sinais 3D avatar), font scaling (100%-200%), high-contrast & Daltonism themes, OpenDyslexic typography toggle, and 100% keyboard focus management (WCAG 2.1 AA / e-MAG compliance). |
+| **S4-08** | **Student Registration Terms of Use & LGPD Consent Modal** | `P0` | 3 pts | `PLANNED 📅` | Interactive Terms of Use modal with explicit consent opt-in checkbox during registration, clear disclosure of data minimization (no CPF, no commercial data selling), and links to the LGPD privacy policy. |
 
 ### Sprint 5: Student Practice Experience & Gamification UI (JAM 2 — Sprint 2)
-| Task ID | Work Item & Title | Priority | Estimation | Acceptance Criteria |
-| :--- | :--- | :---: | :---: | :--- |
-| **S5-01** | **Interactive Question Card & Timed Quiz Mode** | `P0` | 5 pts | Question statement, statement images (WebP), option selector (A to E), countdown timer, and question navigation carousel. |
-| **S5-02** | **Instant Feedback Banner & Step-by-Step Accordion** | `P0` | 5 pts | Color-coded immediate correctness indicator (green/red + icons `✓`/`✗`), distractor explanation breakdown, and curated INEP resolution accordion. |
-| **S5-03** | **Socratic AI Tutor Per-Question Chat Drawer & Quota Widget** | `P0` | 8 pts | Slide-out conversational AI drawer bound per question, guiding students conceptually without spoiling answers, displaying message bubble history, turn counter indicator (up to 6 turns per unlock), reset conversation button, free registration prompt gate for unauthenticated guests, daily free question unlock counter (1 question/day), countdown to midnight reset, and upgrade CTA when exhausted. |
-| **S5-04** | **Gamification Dashboard & Celebration Animations** | `P1` | 5 pts | XP progress bar, student level badges (*Freshman* to *Top Scorer*), daily streak counter, emergency freeze button, and level-up confetti. |
-| **S5-05** | **Weekly League Leaderboard UI** | `P1` | 5 pts | Ranked league tables (Bronze, Silver, Gold, Diamond) with user position highlight, countdown timer to Sunday 23:59 reset, and promotion/relegation zones. |
-| **S5-06** | **Diagnostic Skill Radar & Topic Heatmaps** | `P1` | 5 pts | Recharts / Chart.js radar charts mapping student proficiency across 4 ENEM areas, highlighting critical weak spots for revision. |
-| **S5-07** | **Accessible Question Reader, Hotkeys & INEP Accommodations** | `P0` | 5 pts | Semantic `<fieldset>`/`<legend>` question cards with radio group navigation, hotkeys (A-E or 1-5 to select, Enter to submit, Space for Socratic AI), live ARIA status announcements (`aria-live="polite"` for grading), Web Speech TTS ("Ouvir Questão"), and INEP exam time accommodations (Standard, +60min Extended, Untimed Mode). |
+| Task ID | Work Item & Title | Priority | Estimation | Status | Acceptance Criteria |
+| :--- | :--- | :---: | :---: | :---: | :--- |
+| **S5-01** | **Interactive Question Card & Timed Quiz Mode** | `P0` | 5 pts | `PLANNED 📅` | Question statement, statement images (WebP), option selector (A to E), countdown timer, and question navigation carousel. |
+| **S5-02** | **Instant Feedback Banner & Step-by-Step Accordion** | `P0` | 5 pts | `PLANNED 📅` | Color-coded immediate correctness indicator (green/red + icons `✓`/`✗`), distractor explanation breakdown, and curated INEP resolution accordion. |
+| **S5-03** | **Socratic AI Tutor Per-Question Chat Drawer & Quota Widget** | `P0` | 8 pts | `PLANNED 📅` | Slide-out conversational AI drawer bound per question, guiding students conceptually without spoiling answers, displaying message bubble history, turn counter indicator (up to 6 turns per unlock), reset conversation button, free registration prompt gate for unauthenticated guests, daily free question unlock counter (1 question/day), countdown to midnight reset, and upgrade CTA when exhausted. |
+| **S5-04** | **Gamification Dashboard & Celebration Animations** | `P1` | 5 pts | `PLANNED 📅` | XP progress bar, student level badges (*Freshman* to *Top Scorer*), daily streak counter, emergency freeze button, and level-up confetti. |
+| **S5-05** | **Weekly League Leaderboard UI** | `P1` | 5 pts | `PLANNED 📅` | Ranked league tables (Bronze, Silver, Gold, Diamond) with user position highlight, countdown timer to Sunday 23:59 reset, and promotion/relegation zones. |
+| **S5-06** | **Diagnostic Skill Radar & Topic Heatmaps** | `P1` | 5 pts | `PLANNED 📅` | Recharts / Chart.js radar charts mapping student proficiency across 4 ENEM areas, highlighting critical weak spots for revision. |
+| **S5-07** | **Accessible Question Reader, Hotkeys & INEP Accommodations** | `P0` | 5 pts | `PLANNED 📅` | Semantic `<fieldset>`/`<legend>` question cards with radio group navigation, hotkeys (A-E or 1-5 to select, Enter to submit, Space for Socratic AI), live ARIA status announcements (`aria-live="polite"` for grading), Web Speech TTS ("Ouvir Questão"), and INEP exam time accommodations (Standard, +60min Extended, Untimed Mode). |
 
 ### Sprint 6: Full-Stack Integration, E2E Testing & Production Deployment (JAM 2 — Sprint 3)
-| Task ID | Work Item & Title | Priority | Estimation | Acceptance Criteria |
-| :--- | :--- | :---: | :---: | :--- |
-| **S6-01** | **Frontend Vitest & RTL Component Testing Suite** | `P0` | 5 pts | Vitest + React Testing Library testing Question Cards, LaTeX rendering, radar charts, dark mode, and accessibility audit via `@axe-core/react` ($\ge 80\%$ line coverage, zero WCAG 2.1 AA critical violations). |
-| **S6-02** | **Cypress Interactive Student Journey E2E Suite** | `P0` | 8 pts | Interactive browser test suite (`frontend/cypress/`) testing full student quiz flow, Socratic chat, diagnostic completion, and automated `cypress-axe` WCAG accessibility checks across all views. |
-| **S6-03** | **Playwright Cross-Browser & Mobile Viewport Matrix** | `P1` | 5 pts | Headless automated suite verifying rendering across Chromium, Firefox, WebKit, mobile screen emulation (iPhone/Pixel), and Lighthouse Accessibility score ($\ge 95/100$). |
-| **S6-04** | **Production Multi-Stage Nginx Container Packaging** | `P0` | 5 pts | Multi-stage Docker build packaging optimized static React build into Nginx alpine with gzip, caching headers, and BFF proxying. |
-| **S6-05** | **Cloud Production Deployment with Public HTTPS URL** | `P0` | 8 pts | Full-stack deployment on cloud infrastructure (VPS / Kubernetes / Render) with automated SSL termination (Let's Encrypt) and public domain access. |
-| **S6-06** | **Multi-Stage AI-Assisted & Real-Time Full-Stack Security Audit** | `P0` | 5 pts | Comprehensive 4-stage audit: (1) AI-assisted client audit & threat analysis (XSS, DOM clobbering, secret leakage), (2) Automated static & supply chain audit (`npm audit`, Trivy, CSP check), (3) Live real-time penetration testing on the deployed URL (LaTeX injection, CSP enforcement, JWT storage security, mobile sandbox check, live traffic abuse), (4) Full-stack audit attestation certifying production readiness. |
-| **S6-07** | **JAM 2 Final Delivery & Partner Company Presentation** | `P0` | 5 pts | Presentation pitch deck, live demo rehearsal, portfolio showcase on GitHub, and project presentation to partner companies highlighting social impact and digital accessibility. |
-| **S6-08** | **Visual Showcase Media Kit & High-Impact Visual Assets** | `P0` | 3 pts | Curate, capture, and package a high-resolution visual media kit in `docs/images/` for README, pitch deck, and partner presentations (Postman Flows canvas, Swagger UI portal, Newman dark-mode test report, Grafana metrics, frontend dark-mode question interface, Socratic AI chat drawer, diagnostic radar, accessibility features, and mobile viewports). |
-| **S6-09** | **Legal Compliance, Terms of Use & LGPD Privacy Portal** | `P0` | 5 pts | Implementation of adolescent-friendly Terms of Use, transparent Privacy Policy (plain Portuguese), Art. 18 self-service data portability export (`GET /api/v1/auth/export`), and 1-click irrevocable account erasure/anonymization (`DELETE /api/v1/auth/me`) with automated contract tests in Newman and live Swagger UI (`/swagger-ui.html`) synchronization. |
+| Task ID | Work Item & Title | Priority | Estimation | Status | Acceptance Criteria |
+| :--- | :--- | :---: | :---: | :---: | :--- |
+| **S6-01** | **Frontend Vitest & RTL Component Testing Suite** | `P0` | 5 pts | `PLANNED 📅` | Vitest + React Testing Library testing Question Cards, LaTeX rendering, radar charts, dark mode, and accessibility audit via `@axe-core/react` ($\ge 80\%$ line coverage, zero WCAG 2.1 AA critical violations). |
+| **S6-02** | **Cypress Interactive Student Journey E2E Suite** | `P0` | 8 pts | `PLANNED 📅` | Interactive browser test suite (`frontend/cypress/`) testing full student quiz flow, Socratic chat, diagnostic completion, and automated `cypress-axe` WCAG accessibility checks across all views. |
+| **S6-03** | **Playwright Cross-Browser & Mobile Viewport Matrix** | `P1` | 5 pts | `PLANNED 📅` | Headless automated suite verifying rendering across Chromium, Firefox, WebKit, mobile screen emulation (iPhone/Pixel), and Lighthouse Accessibility score ($\ge 95/100$). |
+| **S6-04** | **Production Multi-Stage Nginx Container Packaging** | `P0` | 5 pts | `PLANNED 📅` | Multi-stage Docker build packaging optimized static React build into Nginx alpine with gzip, caching headers, and BFF proxying. |
+| **S6-05** | **Cloud Production Deployment with Public HTTPS URL** | `P0` | 8 pts | `PLANNED 📅` | Full-stack deployment on cloud infrastructure (VPS / Kubernetes / Render) with automated SSL termination (Let's Encrypt) and public domain access. |
+| **S6-06** | **Multi-Stage AI-Assisted & Real-Time Full-Stack Security Audit** | `P0` | 5 pts | `PLANNED 📅` | Comprehensive 4-stage audit: (1) AI-assisted client audit & threat analysis (XSS, DOM clobbering, secret leakage), (2) Automated static & supply chain audit (`npm audit`, Trivy, CSP check), (3) Live real-time penetration testing on the deployed URL (LaTeX injection, CSP enforcement, JWT storage security, mobile sandbox check, live traffic abuse), (4) Full-stack audit attestation certifying production readiness. |
+| **S6-07** | **JAM 2 Final Delivery & Partner Company Presentation** | `P0` | 5 pts | `PLANNED 📅` | Presentation pitch deck, live demo rehearsal, portfolio showcase on GitHub, and project presentation to partner companies highlighting social impact and digital accessibility. |
+| **S6-08** | **Visual Showcase Media Kit & High-Impact Visual Assets** | `P0` | 3 pts | `PLANNED 📅` | Curate, capture, and package a high-resolution visual media kit in `docs/images/` for README, pitch deck, and partner presentations (Postman Flows canvas, Swagger UI portal, Newman dark-mode test report, Grafana metrics, frontend dark-mode question interface, Socratic AI chat drawer, diagnostic radar, accessibility features, and mobile viewports). |
+| **S6-09** | **Legal Compliance, Terms of Use & LGPD Privacy Portal** | `P0` | 5 pts | `PLANNED 📅` | Implementation of adolescent-friendly Terms of Use, transparent Privacy Policy (plain Portuguese), Art. 18 self-service data portability export (`GET /api/v1/auth/export`), and 1-click irrevocable account erasure/anonymization (`DELETE /api/v1/auth/me`) with automated contract tests in Newman and live Swagger UI (`/swagger-ui.html`) synchronization. |
 
 #### Visual Showcase Media Kit & Presentation Asset Catalog (`docs/images/`)
 
@@ -380,11 +397,11 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
 
 > **Focus**: Career monitoring (formal employment, freelance contracts, or entrepreneurship), mentorship support from Recode, and final social impact audit.
 
-| Task ID | Work Item & Title | Priority | Estimation | Acceptance Criteria |
-| :--- | :--- | :---: | :---: | :--- |
-| **M4-01** | **Career Placement & Job Opportunities** | `P0` | Continuous | Participation in partner company interviews, hiring pipelines, technical interviews, and freelance onboarding. |
-| **M4-02** | **Recode Certification & Alumni Network Enrollment** | `P0` | 1 pt | Issuance of official Reconecta Recode graduation certificates and integration into the alumni mentorship community. |
-| **M4-03** | **Final Social Impact Audit Report** | `P0` | 3 pts | Report quantifying student reach, questions solved, diagnostic accuracy improvement, and UN SDG 4 & 10 alignment indicators. |
+| Task ID | Work Item & Title | Priority | Estimation | Status | Acceptance Criteria |
+| :--- | :--- | :---: | :---: | :---: | :--- |
+| **M4-01** | **Career Placement & Job Opportunities** | `P0` | Continuous | `PLANNED 📅` | Participation in partner company interviews, hiring pipelines, technical interviews, and freelance onboarding. |
+| **M4-02** | **Recode Certification & Alumni Network Enrollment** | `P0` | 1 pt | `PLANNED 📅` | Issuance of official Reconecta Recode graduation certificates and integration into the alumni mentorship community. |
+| **M4-03** | **Final Social Impact Audit Report** | `P0` | 3 pts | `PLANNED 📅` | Report quantifying student reach, questions solved, diagnostic accuracy improvement, and UN SDG 4 & 10 alignment indicators. |
 
 ---
 
