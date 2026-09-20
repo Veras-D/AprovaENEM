@@ -1,0 +1,899 @@
+{
+  "info": {
+    "_postman_id": "8f3b2d1e-9a4c-4e8b-b7c1-2a9d8e7f6c5b",
+    "name": "AprovaENEM — Comprehensive API Contract Test Suite",
+    "description": "Production API contract verification suite for AprovaENEM microservices covering Auth, Exam, Socratic AI Tutor, Gamification, and Notifications via Nginx Edge and Spring Cloud Gateway BFF.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Ingress & Perimeter Security",
+      "item": [
+        {
+          "name": "CORS Preflight Request (OPTIONS /api/v1/sessions)",
+          "request": {
+            "method": "OPTIONS",
+            "header": [
+              { "key": "Origin", "value": "http://localhost:3000" },
+              { "key": "Access-Control-Request-Method", "value": "POST" },
+              { "key": "Access-Control-Request-Headers", "value": "Authorization,Content-Type,X-Session-Id" }
+            ],
+            "url": { "raw": "{{baseUrl}}/sessions", "host": ["{{baseUrl}}"], "path": ["sessions"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 or 204', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+                  "});",
+                  "pm.test('Strict CORS headers present', function () {",
+                  "    pm.expect(pm.response.headers.get('Access-Control-Allow-Origin')).to.eql('http://localhost:3000');",
+                  "    pm.expect(pm.response.headers.get('Access-Control-Allow-Credentials')).to.eql('true');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Authentication & Identity",
+      "item": [
+        {
+          "name": "Provision Anonymous Session (POST /api/v1/auth/session)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/auth/session", "host": ["{{baseUrl}}"], "path": ["auth", "session"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.environment.set('sessionId', json.sessionId);",
+                  "pm.test('Returns valid anonymous sessionId', function () {",
+                  "    pm.expect(json.sessionId).to.be.a('string');",
+                  "    pm.expect(json.anonymous !== undefined ? json.anonymous : json.isAnonymous).to.eql(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Retrieve Active Anonymous Session (GET /api/v1/auth/session/:id)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/auth/session/{{sessionId}}", "host": ["{{baseUrl}}"], "path": ["auth", "session", "{{sessionId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Session UUID matches environment', function () {",
+                  "    pm.expect(json.sessionId).to.eql(pm.environment.get('sessionId'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register Student Account (POST /api/v1/auth/register)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const randomEmail = 'student.' + Date.now() + '@escola.gov.br';",
+                  "pm.environment.set('studentEmail', randomEmail);",
+                  "pm.environment.set('studentPassword', 'Aprova2026!Secure');"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Returns JWT token and userId', function () {",
+                  "    pm.expect(json.token).to.be.a('string');",
+                  "    pm.expect(json.userId).to.be.a('string');",
+                  "    pm.expect(json.role).to.eql('ROLE_STUDENT');",
+                  "    pm.environment.set('authToken', json.token);",
+                  "    pm.environment.set('userId', json.userId);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{studentEmail}}\",\n  \"password\": \"{{studentPassword}}\",\n  \"fullName\": \"Lucas Silva dos Santos\",\n  \"schoolType\": \"PUBLIC_SCHOOL\",\n  \"targetDegree\": \"Engenharia da Computacao\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Login Student Account (POST /api/v1/auth/login)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{studentEmail}}\",\n  \"password\": \"{{studentPassword}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Login returns active JWT', function () {",
+                  "    pm.expect(json.token).to.be.a('string');",
+                  "    pm.environment.set('authToken', json.token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Authenticated User Profile (GET /api/v1/auth/me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Profile returns registered student details', function () {",
+                  "    pm.expect(json.id).to.eql(pm.environment.get('userId'));",
+                  "    pm.expect(json.role).to.eql('ROLE_STUDENT');",
+                  "    pm.expect(json.schoolType).to.eql('PUBLIC_SCHOOL');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Question Catalog",
+      "item": [
+        {
+          "name": "List Questions (GET /api/v1/questions)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/questions?page=0&size=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["questions"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "5" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Returns paginated question list', function () {",
+                  "    pm.expect(json.items).to.be.an('array').that.is.not.empty;",
+                  "    pm.environment.set('questionId', json.items[0].id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Question Detail (GET /api/v1/questions/:id)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/questions/{{questionId}}", "host": ["{{baseUrl}}"], "path": ["questions", "{{questionId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Contains statement and 5 options without answers leaked', function () {",
+                  "    pm.expect(json.id).to.eql(pm.environment.get('questionId'));",
+                  "    pm.expect(json.statement).to.be.a('string');",
+                  "    pm.expect(json.options).to.have.lengthOf(5);",
+                  "    json.options.forEach(opt => pm.expect(opt.isCorrect).to.be.null);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Question Status (PATCH /api/v1/questions/:id/status)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACTIVE\",\n  \"suspensionReason\": null\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/questions/{{questionId}}/status", "host": ["{{baseUrl}}"], "path": ["questions", "{{questionId}}", "status"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Question is marked ACTIVE', function () {",
+                  "    pm.expect(json.status).to.eql('ACTIVE');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Practice Sessions & Assessment",
+      "item": [
+        {
+          "name": "Start Practice Session (POST /api/v1/sessions)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Session-Id", "value": "{{sessionId}}" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionType\": \"TOPIC_PRACTICE\",\n  \"totalQuestions\": 5\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/sessions", "host": ["{{baseUrl}}"], "path": ["sessions"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Practice session created with questions', function () {",
+                  "    pm.expect(json.id).to.be.a('string');",
+                  "    pm.expect(json.status).to.eql('IN_PROGRESS');",
+                  "    pm.environment.set('practiceSessionId', json.id);",
+                  "    if (json.questions && json.questions.length > 0) {",
+                  "        pm.environment.set('sessionQuestionId', json.questions[0].id);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Practice Session (GET /api/v1/sessions/:id)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/sessions/{{practiceSessionId}}", "host": ["{{baseUrl}}"], "path": ["sessions", "{{practiceSessionId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Submit Answer Attempt (POST /api/v1/sessions/:id/attempts)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"questionId\": \"{{questionId}}\",\n  \"selectedOption\": \"A\",\n  \"timeSpentSeconds\": 45\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/sessions/{{practiceSessionId}}/attempts", "host": ["{{baseUrl}}"], "path": ["sessions", "{{practiceSessionId}}", "attempts"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Evaluation returns correctness and base explanation', function () {",
+                  "    pm.expect(json.correct !== undefined ? json.correct : json.isCorrect).to.be.a('boolean');",
+                  "    pm.expect(json.correctOption).to.be.a('string');",
+                  "    pm.expect(json.baseExplanation).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Complete Session (POST /api/v1/sessions/:id/complete)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/sessions/{{practiceSessionId}}/complete", "host": ["{{baseUrl}}"], "path": ["sessions", "{{practiceSessionId}}", "complete"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Returns diagnostic report with topic breakdown', function () {",
+                  "    pm.expect(json.scorePercentage).to.be.a('number');",
+                  "    pm.expect(json.topicBreakdown).to.be.an('object');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Diagnostic Report (GET /api/v1/sessions/:id/diagnostic)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/sessions/{{practiceSessionId}}/diagnostic", "host": ["{{baseUrl}}"], "path": ["sessions", "{{practiceSessionId}}", "diagnostic"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Matches diagnostic report schema', function () {",
+                  "    pm.expect(json.sessionId).to.eql(pm.environment.get('practiceSessionId'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Socratic AI Tutor",
+      "item": [
+        {
+          "name": "Check Daily AI Quota (GET /api/v1/questions/ai-quota)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/questions/ai-quota", "host": ["{{baseUrl}}"], "path": ["questions", "ai-quota"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Quota indicates 1 free question per day for registered students', function () {",
+                  "    pm.expect(json.dailyLimit).to.eql(1);",
+                  "    pm.expect(json.remainingToday).to.be.at.least(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ask Socratic Tutor (POST /api/v1/questions/:id/chat)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Por que a alternativa A esta incorreta?\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/questions/{{questionId}}/chat", "host": ["{{baseUrl}}"], "path": ["questions", "{{questionId}}", "chat"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Returns Socratic response and turn count', function () {",
+                  "    pm.expect(json.message).to.be.a('string');",
+                  "    pm.expect(json.turnCount).to.be.at.least(1);",
+                  "    pm.expect(json.maxTurns).to.eql(6);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Chat History (GET /api/v1/questions/:id/chat)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/questions/{{questionId}}/chat", "host": ["{{baseUrl}}"], "path": ["questions", "{{questionId}}", "chat"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('History contains recorded messages', function () {",
+                  "    pm.expect(json.messages).to.be.an('array').that.is.not.empty;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reset Chat Conversation (DELETE /api/v1/questions/:id/chat)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/questions/{{questionId}}/chat", "host": ["{{baseUrl}}"], "path": ["questions", "{{questionId}}", "chat"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Gamification & Leaderboards",
+      "item": [
+        {
+          "name": "Get Student Profile (GET /api/v1/gamification/profile)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/gamification/profile", "host": ["{{baseUrl}}"], "path": ["gamification", "profile"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Profile contains XP, level and streak information', function () {",
+                  "    pm.expect(json.currentXp !== undefined ? json.currentXp : json.totalXp).to.be.a('number');",
+                  "    pm.expect(json.level !== undefined ? json.level : json.currentLevel).to.be.a('number');",
+                  "    pm.expect(json.levelTitle || json.titleLevel).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Daily Study Goal (PUT /api/v1/gamification/daily-goal)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetQuestions\": 15,\n  \"optInReminders\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/gamification/daily-goal", "host": ["{{baseUrl}}"], "path": ["gamification", "daily-goal"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Daily goal target updated', function () {",
+                  "    pm.expect(json.targetQuestions).to.eql(15);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Record Practice Activity (POST /api/v1/gamification/activity)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"questionsSolved\": 5,\n  \"correctCount\": 4,\n  \"sessionCompleted\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/gamification/activity", "host": ["{{baseUrl}}"], "path": ["gamification", "activity"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Weekly League Leaderboard (GET /api/v1/gamification/leaderboard/weekly)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/gamification/leaderboard/weekly", "host": ["{{baseUrl}}"], "path": ["gamification", "leaderboard", "weekly"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Returns weekly leaderboard ranks', function () {",
+                  "    pm.expect(json.leaderboard || json.entries).to.be.an('array');",
+                  "    pm.expect(json.leagueTier || json.league).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Badges and Achievements (GET /api/v1/gamification/badges)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/gamification/badges", "host": ["{{baseUrl}}"], "path": ["gamification", "badges"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Returns badge catalog', function () {",
+                  "    pm.expect(json.badges).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Trigger Study Reminders Sweep (POST /api/v1/gamification/reminders/trigger)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/gamification/reminders/trigger", "host": ["{{baseUrl}}"], "path": ["gamification", "reminders", "trigger"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Sweep returns dispatched count', function () {",
+                  "    pm.expect(json.dispatchedReminders).to.be.at.least(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7. Multi-Channel Notifications",
+      "item": [
+        {
+          "name": "Register Push Token (POST /api/v1/notifications/push-tokens)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceToken\": \"fcm_token_contract_test_sample\",\n  \"platform\": \"ANDROID\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/notifications/push-tokens", "host": ["{{baseUrl}}"], "path": ["notifications", "push-tokens"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Notifications Feed (GET /api/v1/notifications)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/notifications", "host": ["{{baseUrl}}"], "path": ["notifications"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Returns notification feed', function () {",
+                  "    pm.expect(json.notifications).to.be.an('array');",
+                  "    if (json.notifications && json.notifications.length > 0) {",
+                  "        pm.environment.set('notificationId', json.notifications[0].id);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Unread Count (GET /api/v1/notifications/unread-count)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/notifications/unread-count", "host": ["{{baseUrl}}"], "path": ["notifications", "unread-count"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Returns unread count non-negative number', function () {",
+                  "    pm.expect(json.unreadCount).to.be.at.least(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "8. Security & RFC 7807 Error Verification",
+      "item": [
+        {
+          "name": "Unauthorized Access (GET /api/v1/auth/me without Token)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401 Unauthorized', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Not Found Resource (GET /api/v1/questions/nonexistent)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/questions/00000000-0000-0000-0000-000000000000", "host": ["{{baseUrl}}"], "path": ["questions", "00000000-0000-0000-0000-000000000000"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404 Not Found', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Adheres to RFC 7807 Problem Details', function () {",
+                  "    pm.expect(json.error || json.title).to.be.a('string');",
+                  "    pm.expect(json.status).to.eql(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

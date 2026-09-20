@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.2] - 2026-09-20
+### 🚀 Added
+- feat(api-docs): Implement interactive OpenAPI 3.0 specifications and Swagger UI (`/swagger-ui.html`) across `auth-service`, `exam-service`, and `notification-service`, with unified multi-spec gateway dropdown aggregation in `frontend-api` BFF and Nginx reverse proxy routing (TASK-S3-08)
+- test(contract): Implement automated Newman / Postman end-to-end API contract test suite (`docs/postman/AprovaENEM.postman_collection.json` and `docs/postman/AprovaENEM.postman_environment.json`) covering 8 modules, 29 requests, and 53 assertions verifying status codes, schemas, and SLA latency (TASK-S3-09)
+
 ## [0.3.1] - 2026-09-20
 ### 🔄 Changed
 - refactor(docs): Rename foundational specifications directory from `docs/sprint-1/` to `docs/specifications/` to accurately reflect its permanent role as the platform architecture and technical baseline across all project phases

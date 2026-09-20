@@ -98,6 +98,43 @@ spring:
                 redis-rate-limiter.burstCapacity: 60
                 key-resolver: "#{@ipOrSessionKeyResolver}"
 
+        # OpenAPI 3.0 Documentation Aggregator Routes
+        - id: exam-openapi-route
+          uri: ${EXAM_SERVICE_URL:http://exam-service:8082}
+          predicates:
+            - Path=/v3/api-docs/exam
+          filters:
+            - SetPath=/v3/api-docs
+
+        - id: auth-openapi-route
+          uri: ${AUTH_SERVICE_URL:http://auth-service:8081}
+          predicates:
+            - Path=/v3/api-docs/auth
+          filters:
+            - SetPath=/v3/api-docs
+
+        - id: notification-openapi-route
+          uri: ${NOTIFICATION_SERVICE_URL:http://notification-service:8083}
+          predicates:
+            - Path=/v3/api-docs/notification
+          filters:
+            - SetPath=/v3/api-docs
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    urls:
+      - name: "1. Examination, Assessment & Socratic AI API (exam-service)"
+        url: /v3/api-docs/exam
+      - name: "2. Identity, Authentication & Gamification API (auth-service)"
+        url: /v3/api-docs/auth
+      - name: "3. Multi-Channel Notification API (notification-service)"
+        url: /v3/api-docs/notification
+
 management:
   endpoints:
     web:

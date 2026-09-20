@@ -46,6 +46,7 @@
         <hypersistence-utils.version>3.8.2</hypersistence-utils.version>
         <micrometer-prometheus.version>1.13.3</micrometer-prometheus.version>
         <resilience4j.version>2.2.0</resilience4j.version>
+        <springdoc.version>2.6.0</springdoc.version>
 
         <!-- Quality Gate Plugins -->
         <jacoco.version>0.8.12</jacoco.version>
@@ -124,6 +125,18 @@
                 <groupId>io.hypersistence</groupId>
                 <artifactId>hypersistence-utils-hibernate-63</artifactId>
                 <version>${hypersistence-utils.version}</version>
+            </dependency>
+
+            <!-- SpringDoc OpenAPI 3.0 Documentation & Swagger UI -->
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+                <version>${springdoc.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -49,6 +49,12 @@ public class SecurityConfig {
                                 "/api/v1/auth/verify-email",
                                 "/api/v1/auth/resend-verification"
                         ).permitAll()
+                        // SpringDoc OpenAPI 3.0 & Swagger UI
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
                         .requestMatchers("/health", "/error").permitAll()
                         // Protected endpoints requiring authentication
                         .anyRequest().authenticated()
