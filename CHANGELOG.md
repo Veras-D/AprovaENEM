@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - refactor(tutor): Refined `TutorAiPort` domain contract and `GeminiTutorClientAdapter` to return `TutorAiResult(String responseText, boolean isFallback)` domain record instead of primitive `String`, properly encapsulating AI invocation provenance and fallback status.
 - config(network): Added `RestClientConfig` configuring `RestClient.Builder` with configurable connect and read timeouts (`gemini.timeout-seconds`, default 5s, 1s in test profile) via `SimpleClientHttpRequestFactory`.
 - test(unit): Updated `GeminiTutorClientAdapterTest` and `SocraticTutorServiceTest` to validate `TutorAiResult` return contracts and fallback propagation.
-- docs(backlog): Synchronize `docs/BACKLOG.md` marking `TASK-S3-07` as `DONE ✅`, advancing Sprint 3 completion to 64% (9/14 tasks completed).
+- docs(backlog): Synchronize `docs/BACKLOG.md` marking `TASK-S3-07` as `DONE ✅`, advancing Sprint 3 completion to 64% (9/14 tasks completed), and schedule `TASK-S4-00` (Historical Question Catalog Bulk Ingestion & Reconciliation 2019–2023) as the kick-off task for Sprint 4.
 
 ## [0.3.10] - 2026-09-20
 ### ⚡ Added & Optimized (Redis Caching, Lettuce Connection Pooling & Latency Benchmarking Suite)
