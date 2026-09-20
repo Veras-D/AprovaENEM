@@ -46,8 +46,8 @@ jobs:
       - name: "Stage 1: Strict Compilation (javac -Werror -parameters)"
         working-directory: backend
         run: |
-          echo "Compiling all microservice submodules with Java 21 strict flags..."
-          mvn clean compile -B -DskipTests
+          echo "Compiling and installing all microservice submodules with Java 21 strict flags..."
+          mvn clean install -B -DskipTests
 
       - name: "Stage 2: Static Analysis & Cyclomatic Complexity (Checkstyle & PMD)"
         working-directory: backend
