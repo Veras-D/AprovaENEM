@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - docs(audit): Expand both milestone audit specifications (`TASK-S3-11` in Sprint 3 for backend and `TASK-S6-06` in Sprint 6 for full-stack) across `docs/BACKLOG.md` and `docs/specifications/07-quality-gate-ci.md` to establish a 5-Stage Security & Test Suite Integrity Audit framework, incorporating a dedicated Test Quality & Legitimacy Audit stage (detecting test smells, vacuous/tautological assertions, over-mocking, swallowed exceptions, unhandled async promise rejections, and mutant fault injection verification)
 - docs(specs): Align `docs/specifications/04-data-modeling.md` (Question domain model attributes: `triParamA/B/C`, `figureUrl`, `figureAltText`, `contentLanguage`) and `docs/specifications/05-api-specification.md` (sequential section numbering for email resend verification) with current microservice implementations and Flyway DDL migrations
 - fix(database): Align `V1__init_exam_schema.sql`, `QuestionEntity`, and `QuestionRepositoryAdapter` with `04-data-modeling.md` by including `figure_url` and `figure_alt_text` columns for INEP charts and WCAG 1.1.1 screen-reader descriptions
+- docs(backlog): Add `TASK-S3-07b` (Password Storage Pepper Hardening via HMAC-SHA256 + BCrypt) to Sprint 3 backlog and roadmap to provide defense-in-depth against isolated database breaches
 
 ## [0.3.8] - 2026-09-20
 ### 🧪 Added (Test Pyramid - Testcontainers PostgreSQL 16 pgvector & Redis Integration Tests)
