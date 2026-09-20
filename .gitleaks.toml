@@ -1,0 +1,8 @@
+[allowlist]
+description = "AprovaENEM Gitleaks Allowlist for Documentation and Test Fixtures"
+paths = [
+    '''docs/.*''',
+    '''README\.md''',
+    '''tests/.*''',
+    '''\.github/.*'''
+]
