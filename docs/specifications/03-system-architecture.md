@@ -856,7 +856,7 @@ When a free student exhausts their single daily AI tutor credit:
 
 ## 3. Hexagonal Architecture (Ports and Adapters)
 
-Both microservices (`auth-service` and `exam-service`) strictly adhere to **Hexagonal Architecture**. Business logic resides in a pure Java domain layer with zero dependencies on Spring Boot, JPA, or web frameworks.
+All domain microservices (`auth-service`, `exam-service`, and `notification-service`) strictly adhere to **Hexagonal Architecture (Ports and Adapters)**, supported by the `common-core` shared library for uniform domain events and error envelopes. Business logic resides in a pure Java domain layer with zero dependencies on Spring Boot, JPA, or web frameworks.
 
 ```mermaid
 flowchart TD

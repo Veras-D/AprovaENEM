@@ -250,6 +250,9 @@ ReconectaRecode/
 ├── .env.example                         # Global environment variable template
 ├── docs/                                # Project Specifications & Planning
 │   ├── BACKLOG.md                       # Multi-Sprint Product Backlog & Roadmap
+│   ├── postman/                         # Automated Postman Collection & Environment (Newman CI)
+│   │   ├── AprovaENEM.postman_collection.json
+│   │   └── AprovaENEM.postman_environment.json
 │   └── specifications/                  # System Architecture & Technical Specifications
 │       ├── 01-business-and-market-strategy.md  # BMC, ICP Personas & SDG 4/10 KPIs
 │       ├── 02-project-charter.md        # Scope, INEP Ingestion & Requirements
@@ -260,6 +263,7 @@ ReconectaRecode/
 │       ├── 07-quality-gate-ci.md        # 6-Stage CI/CD Specification
 │       └── 08-data-ingestion-pipeline.md # IBM Docling & Multi-Source Extraction Architecture
 ├── backend/                             # Spring Boot Microservices (Java 21 LTS)
+│   ├── common-core/                     # Shared Domain Events, Unified RFC 7807 DTOs & Exceptions
 │   ├── frontend-api/                    # Spring Cloud Gateway BFF + Rate Limiting & CORS
 │   ├── auth-service/                    # Authentication, Identity & Gamification Service
 │   ├── exam-service/                    # Examination, Assessment, RAG & Socratic AI
@@ -348,12 +352,15 @@ In production, all domain services, databases, caches, and telemetry run within 
 | `POST` | `/api/v1/auth/verify-email` | Verify email with single-use Outbox token | None (Public) |
 | `POST` | `/api/v1/auth/resend-verification` | Request fresh email verification token (3/hr) | None (Public) |
 | `GET` | `/api/v1/auth/me` | Fetch authenticated student profile | Bearer (`ROLE_STUDENT`) |
+| `GET` | `/api/v1/auth/export` | Export LGPD Art. 18 machine-readable student data | Bearer (`ROLE_STUDENT`) |
+| `DELETE` | `/api/v1/auth/me` | Irrevocable LGPD account erasure / anonymization | Bearer (`ROLE_STUDENT`) |
 | `GET` | `/api/v1/exams` | List available ENEM historical editions | Optional |
 | `GET` | `/api/v1/subjects` | List subject areas, disciplines & topics | Optional |
 | `GET` | `/api/v1/questions` | Query questions with topic & difficulty filters | Optional |
 | `POST` | `/api/v1/sessions` | Generate randomized or topic practice quiz | `X-Session-Id` |
 | `POST` | `/api/v1/sessions/{id}/attempts` | Submit answer & receive instant feedback | `X-Session-Id` |
-| `POST` | `/api/v1/sessions/{id}/complete` | Finish quiz & generate diagnostic radar | `X-Session-Id` |
+| `POST` | `/api/v1/sessions/{id}/complete` | Finish quiz & trigger diagnostic generation | `X-Session-Id` |
+| `GET` | `/api/v1/sessions/{id}/report` | Retrieve completed quiz diagnostic radar report | `X-Session-Id` / Bearer |
 | `GET` | `/api/v1/questions/{id}/resolution` | Fetch curated step-by-step resolution | Optional (100% Free & Unlimited) |
 | `POST` | `/api/v1/questions/{id}/chat` | Socratic dialogue turn (alias: `/ask`) | Bearer (1 free/day, Unlimited Pro) |
 | `GET` | `/api/v1/questions/{id}/chat` | Fetch thread message history bubbles | Bearer (`ROLE_STUDENT`) |
@@ -362,6 +369,11 @@ In production, all domain services, databases, caches, and telemetry run within 
 | `GET` | `/api/v1/gamification/profile` | Fetch XP balance, level title, streaks & goals | Bearer (`ROLE_STUDENT`) |
 | `PUT` | `/api/v1/gamification/daily-goal` | Update daily question target & reminder opt-in | Bearer (`ROLE_STUDENT`) |
 | `GET` | `/api/v1/gamification/leaderboard/weekly` | Query Redis `ZSET` weekly league standings | Bearer (`ROLE_STUDENT`) |
+| `GET` | `/api/v1/gamification/badges` | List student achievement badges & unlocked status | Bearer (`ROLE_STUDENT`) |
+| `GET` | `/api/v1/notifications` | Fetch paginated multi-channel notification inbox | Bearer / `X-User-Id` |
+| `POST` | `/api/v1/notifications/push-tokens` | Register Web Push, Android FCM or iOS device token | Bearer / `X-User-Id` |
+| `PATCH` | `/api/v1/notifications/{id}/read` | Mark notification alert as read | Bearer / `X-User-Id` |
+| `GET` | `/api/v1/notifications/unread-count` | Query unread notification counter | Bearer / `X-User-Id` |
 | `POST` | `/api/v1/essays/upload` | Upload handwritten essay for OCR evaluation (Phase 2) | Bearer (`ROLE_PREMIUM_STUDENT`) |
 | `GET` | `/api/v1/essays/{id}` | Get 5-competency breakdown & thesis feedback (Phase 2) | Bearer (`ROLE_PREMIUM_STUDENT`) |
 
@@ -378,16 +390,16 @@ AprovaENEM enforces a strict, enterprise-grade automated quality gate across all
 3. **Gate 3: Duplication Detection**: PMD CPD enforcing duplicate token threshold $< 3\%$.
 4. **Gate 4: Security & Secret Scan**: Trivy CVE dependency audit (0 critical/high) + Gitleaks commit history scan.
 5. **Gate 5: Full Test Pyramid & Dual Coverage**:
-   - **Backend**: Pure Java domain unit tests (`Surefire`) + Testcontainers PostgreSQL integration tests (`Failsafe`) + Spring Security authorization tests (`@WithMockUser`). Enforced by **JaCoCo unified coverage ($\ge 80\%$ line, $\ge 75\%$ branch)**.
+   - **Backend**: **336 unit, adapter, and WebMvc tests (100% green, 0 failures)** + **16 Testcontainers integration tests** (`PostgreSQL 16 pgvector` and `Redis 7.2`). Enforced by **JaCoCo unified coverage quality gate ($\ge 80\%$ line, $\ge 75\%$ branch)** during `verify` lifecycle across all modules (`common-core`: 100%, `notification-service`: 99.2% line / 81.3% branch, `auth-service`: 96.3% line / 82.7% branch, `frontend-api`: 94.2% line / 88.6% branch, `exam-service`: 88.7% line / 75.8% branch).
    - **Frontend**: Vitest + React Testing Library component tests and MSW integration tests. Enforced by **`@vitest/coverage-v8` ($\ge 80\%$)**.
-   - **API Contracts**: Automated Postman regression suite executed via **Newman CLI**.
+   - **API Contracts**: Automated Postman regression suite executed via **Newman CLI** (31 requests, 56 assertions, 0 failures).
    - **E2E**: **Cypress** interactive DOM workflows + **Playwright** cross-browser headless suites verifying student practice journeys against Docker Compose.
 6. **Gate 6: Build Verification**: Clean container builds via Docker Compose and production bundle packaging.
 
-### 🔒 Multi-Stage AI-Assisted & Real-Time Security Audits
-Each engineering milestone is sealed by a comprehensive multi-stage security audit to guarantee zero vulnerabilities or specification gaps:
-- **JAM 1 Exit Gate (Sprint 3 — Back-end)**: AI-assisted OWASP API Top 10 threat modeling, automated DAST/CVE scans (Trivy, Gitleaks), and live runtime penetration testing against the container stack (JWT signature forgery, CORS origin bypass, perimeter isolation breach, header spoofing rejection, Token Bucket flood testing, and SQLi/pgvector fuzzing).
-- **JAM 2 Exit Gate (Sprint 6 — Full-Stack Deployment)**: AI-driven client DOM and KaTeX LaTeX injection audits, supply-chain scans, and live interactive penetration testing on the public deployed URL (strict CSP enforcement, clickjacking immunity, session storage isolation, and mobile WebView sandbox checks).
+### 🔒 Multi-Stage Security & Test Suite Integrity Audits
+Each engineering milestone is sealed by a comprehensive 5-stage security and test legitimacy audit to guarantee zero vulnerabilities, zero specification gaps, and 100% authentic test assertions:
+- **JAM 1 Exit Gate (Sprint 3 — Back-end)**: 5-Stage Audit: (1) AI-assisted OWASP API Top 10 threat modeling, (2) automated DAST/CVE scans (Trivy, Gitleaks), (3) live runtime penetration testing against the container stack (JWT signature forgery, CORS origin bypass, perimeter isolation breach, header spoofing rejection, Token Bucket flood testing, and SQLi/pgvector fuzzing), (4) **Test Suite Quality, Legitimacy & Mutation Audit** (eliminating test smells, vacuous/tautological assertions, over-mocking, and validating mutant killing on TRI scoring, streaks, daily goals, and security filters), and (5) formal attestation report (`docs/audit/jam1-backend-security-audit.md`).
+- **JAM 2 Exit Gate (Sprint 6 — Full-Stack Deployment)**: 5-Stage Audit: (1) AI-driven client DOM and KaTeX LaTeX injection audits, (2) supply-chain scans (`npm audit`, Trivy), (3) live interactive penetration testing on public deployed URL (strict CSP, clickjacking immunity, session storage isolation, mobile sandbox), (4) **Frontend & E2E Test Suite Quality & Legitimacy Audit** (eliminating test smells, vacuous assertions, unhandled async promise rejections, over-mocked UI handlers, and UI fault injection on Question Cards, LaTeX rendering, and accessibility toggles), and (5) formal full-stack attestation report (`docs/audit/jam2-fullstack-security-audit.md`).
 
 ---
 

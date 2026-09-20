@@ -34,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - build(maven): Configure `jacoco-maven-plugin:0.8.12` with `<id>check</id>` execution bound to `<phase>verify</phase>` in root `pom.xml`, establishing a hard build quality gate requiring `<counter>LINE</counter> >= 0.80` and `<counter>BRANCH</counter> >= 0.75` across all packaging modules
 - docs(backlog): Synchronize `docs/BACKLOG.md` marking `TASK-S3-05` as `DONE ✅` and advancing Sprint 3 completion to 58% (7/12 tasks completed)
 - docs(audit): Expand both milestone audit specifications (`TASK-S3-11` in Sprint 3 for backend and `TASK-S6-06` in Sprint 6 for full-stack) across `docs/BACKLOG.md` and `docs/specifications/07-quality-gate-ci.md` to establish a 5-Stage Security & Test Suite Integrity Audit framework, incorporating a dedicated Test Quality & Legitimacy Audit stage (detecting test smells, vacuous/tautological assertions, over-mocking, swallowed exceptions, unhandled async promise rejections, and mutant fault injection verification)
+- docs(readme): Synchronize root `README.md` and `docs/specifications/03-system-architecture.md` to reflect `backend/common-core`, `docs/postman`, complete implemented REST API routes (LGPD export/erasure, badges, notifications, reports), verified backend test metrics (336 unit tests, 16 Testcontainers ITs), and the 5-Stage Security & Test Suite Integrity Audit framework
 
 ## [0.3.8] - 2026-09-20
 ### 🧪 Added (Test Pyramid - Testcontainers PostgreSQL 16 pgvector & Redis Integration Tests)
