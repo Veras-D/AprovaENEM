@@ -36,9 +36,10 @@ gantt
 
     section JAM 1 - Back-end (Sprint 3)
     SpringDoc Swagger UI and Postman Suite (S3-08, S3-09):done, s3_6, 2026-09-20, 1d
-    Domain and Application Unit Tests (S3-01, S3-02)     :active, s3_1, 2026-09-20, 2d
-    Spring Security MockMvc Tests (S3-03)                :s3_2, after s3_1, 1d
-    Testcontainers PostgreSQL and Redis IT (S3-04)       :s3_3, after s3_1, 2d
+    Domain Unit Tests (S3-01)                            :done, s3_1, 2026-09-20, 1d
+    Application Service Unit Tests (S3-02)               :active, s3_1b, after s3_1, 1d
+    Spring Security MockMvc Tests (S3-03)                :s3_2, after s3_1b, 1d
+    Testcontainers PostgreSQL and Redis IT (S3-04)       :s3_3, after s3_1b, 2d
     JaCoCo Unified Coverage 80 percent (S3-05)           :s3_4, after s3_3, 1d
     Redis Latency and Resilience4j Chaos (S3-06, S3-07)  :s3_5, after s3_4, 1d
     Back-end CI Quality Gate Verification (S3-10)        :s3_7, after s3_5, 1d
@@ -79,7 +80,7 @@ gantt
 | :--- | :--- | :--- | :---: | :---: | :---: | :--- |
 | **JAM 1: Month 2** | **Sprint 1** (Sept 17, 2026) | Planning, Hexagonal Architecture, DDL & Contracts | 10 | 10 | **COMPLETED (100%) ✅** | Architecture specs, DDL schema, REST contracts, CORS spec, CI Quality Gate blueprint |
 | **JAM 1: Month 2** | **Sprint 2** (Sept 18–19, 2026) | Core Microservices, Flyway, Redis, Gemini AI & BFF | 17 | 17 | **COMPLETED (100%) ✅** | Docker Compose perimeter, auth-service, exam-service, Gemini AI Socratic tutor, frontend-api BFF, gamification engine, Redis caching, RabbitMQ |
-| **JAM 1: Month 2** | **Sprint 3** (Sept 20–22, 2026) | Verification, Hardening, Contracts & JAM 1 Delivery | 12 | 2 | **IN PROGRESS (17%) 🚀** | Swagger UI (`S3-08` ✅), Newman Contract Suite (`S3-09` ✅), Domain/App Unit Tests (`S3-01`/`S3-02` ⏳), MockMvc (`S3-03` ⏳), Testcontainers (`S3-04` ⏳), JaCoCo 80% (`S3-05` ⏳), Redis benchmark (`S3-06` ⏳), Chaos fallback (`S3-07` ⏳), CI Gate (`S3-10` ⏳), Security Audit (`S3-11` ⏳), JAM 1 Submission & Media Kit (`S3-12` ⏳) |
+| **JAM 1: Month 2** | **Sprint 3** (Sept 20–22, 2026) | Verification, Hardening, Contracts & JAM 1 Delivery | 12 | 3 | **IN PROGRESS (25%) 🚀** | Domain Unit Tests (`S3-01` ✅), Swagger UI (`S3-08` ✅), Newman Contract Suite (`S3-09` ✅), App Unit Tests (`S3-02` ⏳), MockMvc (`S3-03` ⏳), Testcontainers (`S3-04` ⏳), JaCoCo 80% (`S3-05` ⏳), Redis benchmark (`S3-06` ⏳), Chaos fallback (`S3-07` ⏳), CI Gate (`S3-10` ⏳), Security Audit (`S3-11` ⏳), JAM 1 Submission & Media Kit (`S3-12` ⏳) |
 | **JAM 2: Month 3** | **Sprint 4** (Oct 01–10, 2026) | Frontend Setup, Design Tokens, State & Accessibility | 8 | 0 | `PLANNED 📅` | React 18 + TS + Vite, Tailwind dark mode, Zustand store, TanStack Query, KaTeX math formulas, Mobile shell, Accessibility baseline (`S4-07`), Terms modal (`S4-08`) |
 | **JAM 2: Month 3** | **Sprint 5** (Oct 11–20, 2026) | Practice UI, Socratic Drawer, Gamification & Radar | 7 | 0 | `PLANNED 📅` | Interactive Question Card, INEP feedback accordion, Socratic AI drawer with quota widget, Gamification dashboard, Weekly leagues, Diagnostic radar, Accessible reader & INEP accommodations (`S5-07`) |
 | **JAM 2: Month 3** | **Sprint 6** (Oct 21–31, 2026) | Full-Stack Integration, E2E Testing & Cloud Deployment | 9 | 0 | `PLANNED 📅` | Vitest RTL suite, Cypress E2E, Playwright cross-browser, Production Nginx container, Cloud HTTPS deployment, Security audit, Partner presentation (`S6-07`), Visual media kit (`S6-08`), LGPD portal (`S6-09`) |
@@ -318,7 +319,7 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
 
 | Task ID | Work Item & Title | Priority | Estimation | Status | Acceptance Criteria |
 | :--- | :--- | :---: | :---: | :---: | :--- |
-| **S3-01** | **Domain Unit Testing** | `P0` | 5 pts | `PENDING ⏳` | Pure Java domain tests (scoring, TRI formulas, question status transitions, entities) with JUnit 5 & AssertJ (execution $< 1\text{s}$). |
+| **S3-01** | **Domain Unit Testing** | `P0` | 5 pts | **DONE ✅** | Pure Java domain tests (scoring, TRI formulas, question status transitions, entities) with JUnit 5 & AssertJ (execution $< 1\text{s}$). |
 | **S3-02** | **Application Service Unit Testing** | `P0` | 5 pts | `PENDING ⏳` | Mockito unit tests covering all Use Case orchestration flows, Socratic prompt builders, and domain event publishers. |
 | **S3-03** | **Spring Security & WebMvc MockMvc Tests** | `P0` | 5 pts | `PENDING ⏳` | MockMvc tests with `@WithMockUser` and `@WithAnonymousUser` validating 200 OK, 401 Unauthorized, 403 Forbidden, and RFC 7807 Problem Details payloads. |
 | **S3-04** | **Testcontainers PostgreSQL 16 & Redis Integration Tests** | `P0` | 8 pts | `PENDING ⏳` | Real PostgreSQL 16 (`pgvector`) and Redis container integration tests (`*IT.java` via Maven Failsafe) verifying Flyway migrations, JPA queries, and Redis ZSET operations. |

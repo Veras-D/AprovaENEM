@@ -32,6 +32,8 @@ public class Question implements Serializable {
     private QuestionStatus status;
     private String suspensionReason;
     private String contentLanguage;
+    private String figureUrl;
+    private String figureAltText;
     private Instant createdAt;
     private Instant updatedAt;
     private List<QuestionOption> options = new ArrayList<>();
@@ -106,6 +108,27 @@ public class Question implements Serializable {
 
     public boolean isOptionCorrect(char optionLetter) {
         return Character.toUpperCase(optionLetter) == Character.toUpperCase(this.correctOption);
+    }
+
+    /**
+     * Calculates the probability of a correct response under the 3-Parameter Logistic (3PL)
+     * Item Response Theory (TRI) model:
+     * P(theta) = c + (1 - c) / (1 + exp(-1.7 * a * (theta - b)))
+     *
+     * @param theta student proficiency estimate
+     * @return probability of correct response in range [c, 1.0]
+     */
+    public double calculateTriProbability(double theta) {
+        if (triParamA == null || triParamB == null || triParamC == null) {
+            throw new IllegalStateException("TRI parameters (a, b, c) must be set to calculate response probability");
+        }
+        double a = triParamA.doubleValue();
+        double b = triParamB.doubleValue();
+        double c = triParamC.doubleValue();
+        double d = 1.7; // Standard logistic scaling factor for normal ogive approximation
+        double exponent = -d * a * (theta - b);
+        double logistic = 1.0 / (1.0 + Math.exp(exponent));
+        return c + (1.0 - c) * logistic;
     }
 
     // Getters and Setters
@@ -268,5 +291,21 @@ public class Question implements Serializable {
 
     public void setResolution(QuestionResolution resolution) {
         this.resolution = resolution;
+    }
+
+    public String getFigureUrl() {
+        return figureUrl;
+    }
+
+    public void setFigureUrl(String figureUrl) {
+        this.figureUrl = figureUrl;
+    }
+
+    public String getFigureAltText() {
+        return figureAltText;
+    }
+
+    public void setFigureAltText(String figureAltText) {
+        this.figureAltText = figureAltText;
     }
 }

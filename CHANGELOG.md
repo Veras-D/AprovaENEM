@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.5] - 2026-09-20
+### 🧪 Added (Test Pyramid - Domain Unit Tests)
+- test(domain): Implement pure Java domain unit test suites with JUnit 5 & AssertJ across `exam-service`, `auth-service`, and `common-core` (134 tests, 0 failures, execution time $< 1\text{s}$) (TASK-S3-01)
+  - `QuestionTest`: Status lifecycle transitions (`ACTIVE` $\rightarrow$ `SUSPENDED` $\rightarrow$ `NEEDS_REVIEW` $\rightarrow$ `ACTIVE`), option letter validation (A–E range), casing tolerance, and INEP 3-Parameter Logistic (3PL) Item Response Theory (TRI) probability formula verification ($P(\theta) = c + (1-c)/(1+e^{-1.7a(\theta-b)})$)
+  - `PracticeSessionTest`: Session state machine (`IN_PROGRESS` $\rightarrow$ `COMPLETED` / `ABANDONED`), monotonic score calculations with `HALF_UP` 2-decimal rounding, and attempt acceptance guarding
+  - `StudentAttemptTest`: Multiple-choice option enforcement, time spent non-negative clamping, and submittedAt timestamps
+  - `TopicPerformanceTest`: Accuracy percentage calculation and 3-tier mastery classification (`MASTERED` $\ge 70\%$, `ATTENTION_NEEDED` $\ge 50\%$, `CRITICAL` $< 50\%$)
+  - `TutorChatThreadTest`: Turn quota limitation (up to 6 turns per unlock), active acceptance rules, and conversation thread resets
+  - `DiagnosticReportTest`: Aggregated topic breakdown mapping and pedagogical revision recommendations
+  - `UserGamificationProfileTest`: Linear XP progression ($L \times 200$), level percentage computation, pedagogical titles (`Calouro Iniciante`, `Focado no SISU`, `Mestre dos Simulados`, `Nota 1000`), and daily goal completion logic
+  - `AnonymousSessionTest`: Expiration window detection and post-registration user ownership binding
+  - `UserTest` & `WeeklyLeaderboardTest`: Role verification, school demographics, and weekly league rank / promotion zone tracking
+  - `ApiResponseTest` & `ExceptionAndEventTest`: DTO builder encapsulation, RFC 7807 problem details, and RabbitMQ domain events
+- docs(backlog): Update `docs/BACKLOG.md` marking TASK-S3-01 as DONE, advancing Sprint 3 completion to 25%, and setting TASK-S3-02 (Application Service Unit Testing) as ACTIVE
+
 ## [0.3.4] - 2026-09-20
 ### 🛡️ Added & Synchronized
 - feat(lgpd): Implement Brazilian General Data Protection Law (LGPD - Lei nº 13.709/2018) data subject rights in `auth-service`: `GET /api/v1/auth/export` (Art. 18, V - Data Portability) and `DELETE /api/v1/auth/me` (Art. 18, VI - Irrevocable Account Erasure & Psychometric Anonymization)
