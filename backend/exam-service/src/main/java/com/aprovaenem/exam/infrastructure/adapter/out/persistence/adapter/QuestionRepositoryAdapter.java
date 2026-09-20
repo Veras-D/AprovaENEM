@@ -115,6 +115,8 @@ public class QuestionRepositoryAdapter implements QuestionRepositoryPort {
         }
 
         question.setSuspensionReason(entity.getSuspensionReason());
+        question.setFigureUrl(entity.getFigureUrl());
+        question.setFigureAltText(entity.getFigureAltText());
         question.setCreatedAt(entity.getCreatedAt());
         question.setUpdatedAt(entity.getUpdatedAt());
 
@@ -161,6 +163,8 @@ public class QuestionRepositoryAdapter implements QuestionRepositoryPort {
                 .triParamC(domain.getTriParamC())
                 .status(domain.getStatus() != null ? domain.getStatus().name() : QuestionStatus.ACTIVE.name())
                 .suspensionReason(domain.getSuspensionReason())
+                .figureUrl(domain.getFigureUrl())
+                .figureAltText(domain.getFigureAltText())
                 .contentLanguage(domain.getContentLanguage() != null ? domain.getContentLanguage() : "pt-BR")
                 .createdAt(domain.getCreatedAt() != null ? domain.getCreatedAt() : Instant.now())
                 .updatedAt(domain.getUpdatedAt() != null ? domain.getUpdatedAt() : Instant.now())

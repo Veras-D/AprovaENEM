@@ -49,6 +49,8 @@ CREATE TABLE questions (
     tri_param_c NUMERIC(5, 3), -- Guessing parameter
     status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'SUSPENDED', 'NEEDS_REVIEW', 'DRAFT', 'ANNULLED')),
     suspension_reason TEXT,
+    figure_url VARCHAR(500),
+    figure_alt_text TEXT,
     content_language VARCHAR(10) NOT NULL DEFAULT 'pt-BR',
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,

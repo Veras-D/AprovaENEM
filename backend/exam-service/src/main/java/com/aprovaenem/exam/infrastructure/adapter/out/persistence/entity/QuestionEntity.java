@@ -77,6 +77,12 @@ public class QuestionEntity {
     @Column(name = "suspension_reason", columnDefinition = "TEXT")
     private String suspensionReason;
 
+    @Column(name = "figure_url", length = 500)
+    private String figureUrl;
+
+    @Column(name = "figure_alt_text", columnDefinition = "TEXT")
+    private String figureAltText;
+
     @Column(name = "content_language", nullable = false, length = 10)
     private String contentLanguage;
 
