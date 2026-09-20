@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.9] - 2026-09-20
+### 📊 Added & Enforced (JaCoCo Unified Backend Coverage Quality Gate >= 80% Line, >= 75% Branch)
+- test(coverage): Implement comprehensive adapter, security, and messaging unit tests across all backend microservices, bringing overall suite to 336 tests (100% green, 0 errors, 0 failures) and enforcing the automated JaCoCo coverage quality gate in Maven `verify` lifecycle (TASK-S3-05)
+  - `auth-service` (132 unit tests passing): Attains **96.25% line coverage** (975/1013) and **82.69% branch coverage** (129/156)
+    - Added `JwtAuthenticationFilterTest` (5 tests): Verifies valid Bearer token extraction, user details loading, security context authentication, missing header bypass, non-Bearer bypass, invalid token handling, and runtime exception tolerance
+    - Added `GamificationRepositoryAdapterTest` (4 tests): Verifies profile querying, upserting, streak freeze updates, weekly leaderboard persistence, and badge unlocking
+    - Added `OutboxRepositoryAdapterTest` (4 tests): Verifies outbox event persistence, pending batch queries, and status updates
+    - Added `OutboxPollingWorkerTest` (3 tests): Verifies periodic polling, exchange publishing, and broker error resilience
+    - Added `RabbitMQNotificationPublisherAdapterTest` (2 tests): Verifies study reminder event dispatch and failure handling
+    - Added `JwtTokenProviderTest` (2 tests), `CustomUserDetailsServiceTest` (4 tests), and `BCryptPasswordEncoderAdapterTest` (1 test)
+    - Expanded `GamificationServiceTest` with 6 new branch test cases: Initializing streak on null last activity date, same-day activity question accumulation, LEVEL_10 badge unlock and skipping redundant daily goal bonus, cold Redis cache fallback to Postgres leaderboard, partial daily goal updates, and silent handling when user entity is absent
+  - `exam-service` (157 unit tests passing): Attains **88.67% line coverage** (1378/1554) and **75.75% branch coverage** (303/400)
+    - Added `GeminiTutorClientAdapterTest` (6 tests with `MockRestServiceServer`): Verifies JSON payload construction, Socratic prompt forwarding, response parsing, and error fallback
+    - Added `QuestionRepositoryAdapterTest` (7 tests): Verifies pagination, filtering, full-text search, and status updates
+    - Added `PracticeSessionRepositoryAdapterTest` (8 tests): Verifies session lifecycle and student attempts
+    - Added `DiagnosticReportRepositoryAdapterTest` (4 tests): Verifies diagnostic report persistence
+    - Added `DomainCommandsAndModelsTest` (5 tests): Verifies `AiQuotaStatus`, `StartSessionCommand`, `TutorChatMessage`, `QuestionFilterCommand`, and `TutorConsultationResult`
+    - Added `TutorChatRepositoryAdapterTest` (7 tests) and `RagKnowledgeAdapterTest` (3 tests)
+  - `notification-service` (22 unit tests passing): Attains **99.24% line coverage** (131/132) and **81.25% branch coverage** (13/16)
+    - Added `NotificationEventListenerTest` (4 tests): Verifies RabbitMQ event listener consumption for email verification and daily study goal reminders
+    - Added `JwtTokenValidatorTest` (2 tests): Verifies JWT signature validation and user ID extraction
+  - `frontend-api` (17 unit tests passing): Attains **94.20% line coverage** (65/69) and **88.64% branch coverage** (39/44)
+    - Added `TraceHeaderFilterTest` (4 tests): Verifies `X-Trace-Id` generation, propagation, and reactive WebFilter integration
+    - Added `GlobalGatewayExceptionHandlerTest` (5 tests): Verifies RFC 7807 problem details generation for WebFlux gateway exceptions
+    - Added `RateLimiterConfigTest` (8 tests): Verifies Token Bucket rate limiting resolver and route configurations
+    - Added `io.projectreactor:reactor-test` test scope dependency
+  - `common-core` (8 unit tests passing): Attains **100% line coverage** (8/8) and **100% branch coverage**
+- build(maven): Configure `jacoco-maven-plugin:0.8.12` with `<id>check</id>` execution bound to `<phase>verify</phase>` in root `pom.xml`, establishing a hard build quality gate requiring `<counter>LINE</counter> >= 0.80` and `<counter>BRANCH</counter> >= 0.75` across all packaging modules
+- docs(backlog): Synchronize `docs/BACKLOG.md` marking `TASK-S3-05` as `DONE ✅` and advancing Sprint 3 completion to 58% (7/12 tasks completed)
+
 ## [0.3.8] - 2026-09-20
 ### 🧪 Added (Test Pyramid - Testcontainers PostgreSQL 16 pgvector & Redis Integration Tests)
 - test(integration): Implement real container integration test suites across `auth-service`, `exam-service`, and `notification-service` verifying database migrations, JPA repositories, full-text search, and Redis caching with Testcontainers (5 test suites, 16 integration tests, 100% passing) (TASK-S3-04)

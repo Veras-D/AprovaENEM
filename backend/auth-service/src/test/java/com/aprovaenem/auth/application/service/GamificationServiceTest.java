@@ -370,4 +370,192 @@ class GamificationServiceTest {
         verify(gamificationRepository).saveWeeklyLeaderboard(wb2);
         verify(redisLeaderboardPort).clearWeeklyLeaderboard(anyInt(), anyInt(), eq(LeagueTier.BRONZE));
     }
+
+    @Test
+    @DisplayName("Should initialize streak to 1 when last activity date is null")
+    void shouldInitializeStreakWhenLastActivityDateIsNull() {
+        UUID userId = UUID.randomUUID();
+        LocalDate today = LocalDate.now(BRT_ZONE);
+
+        UserGamificationProfile profile = UserGamificationProfile.builder()
+                .userId(userId)
+                .currentLevel(1)
+                .currentXp(0)
+                .streakDays(0)
+                .streakFreezeAvailable(1)
+                .dailyGoalQuestions(10)
+                .dailyQuestionsCompleted(0)
+                .lastActivityDate(null)
+                .build();
+
+        when(gamificationRepository.findProfileByUserId(userId)).thenReturn(Optional.of(profile));
+        when(gamificationRepository.saveProfile(any(UserGamificationProfile.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+        when(gamificationRepository.findWeeklyLeaderboard(eq(userId), anyInt(), anyInt()))
+                .thenReturn(Optional.empty());
+
+        UserGamificationProfile updated = gamificationService.awardXpForActivity(userId, 3, 3, false);
+
+        assertThat(updated.getStreakDays()).isEqualTo(1);
+        assertThat(updated.getDailyQuestionsCompleted()).isEqualTo(3);
+        assertThat(updated.getLastActivityDate()).isEqualTo(today);
+    }
+
+    @Test
+    @DisplayName("Should accumulate questions completed when activity occurs on the same day")
+    void shouldAccumulateQuestionsCompletedSameDay() {
+        UUID userId = UUID.randomUUID();
+        LocalDate today = LocalDate.now(BRT_ZONE);
+
+        UserGamificationProfile profile = UserGamificationProfile.builder()
+                .userId(userId)
+                .currentLevel(1)
+                .currentXp(50)
+                .streakDays(3)
+                .streakFreezeAvailable(1)
+                .dailyGoalQuestions(10)
+                .dailyQuestionsCompleted(4)
+                .lastActivityDate(today)
+                .build();
+
+        when(gamificationRepository.findProfileByUserId(userId)).thenReturn(Optional.of(profile));
+        when(gamificationRepository.saveProfile(any(UserGamificationProfile.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+        when(gamificationRepository.findWeeklyLeaderboard(eq(userId), anyInt(), anyInt()))
+                .thenReturn(Optional.empty());
+
+        UserGamificationProfile updated = gamificationService.awardXpForActivity(userId, 2, 2, false);
+
+        assertThat(updated.getStreakDays()).isEqualTo(3);
+        assertThat(updated.getDailyQuestionsCompleted()).isEqualTo(6);
+        assertThat(updated.getLastActivityDate()).isEqualTo(today);
+    }
+
+    @Test
+    @DisplayName("Should unlock LEVEL_10 badge when student reaches level 10 and not re-award goal bonus if already reached")
+    void shouldUnlockLevel10BadgeAndSkipDailyGoalBonusIfAlreadyReached() {
+        UUID userId = UUID.randomUUID();
+        LocalDate today = LocalDate.now(BRT_ZONE);
+
+        UserGamificationProfile profile = UserGamificationProfile.builder()
+                .userId(userId)
+                .currentLevel(9)
+                .currentXp(1800) // 1800 + 200 = 2000 -> Level 11 >= 10
+                .streakDays(2)
+                .streakFreezeAvailable(1)
+                .dailyGoalQuestions(5)
+                .dailyQuestionsCompleted(10)
+                .dailyGoalReachedAt(Instant.now().minusSeconds(3600)) // already reached earlier today
+                .lastActivityDate(today)
+                .build();
+
+        when(gamificationRepository.findProfileByUserId(userId)).thenReturn(Optional.of(profile));
+        when(gamificationRepository.saveProfile(any(UserGamificationProfile.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+        when(gamificationRepository.findWeeklyLeaderboard(eq(userId), anyInt(), anyInt()))
+                .thenReturn(Optional.empty());
+
+        // 20 questions, 20 correct (+200 XP), session completed (+50 XP) -> +250 XP
+        UserGamificationProfile updated = gamificationService.awardXpForActivity(userId, 20, 20, true);
+
+        assertThat(updated.getCurrentLevel()).isGreaterThanOrEqualTo(10);
+        verify(gamificationRepository).unlockBadge(userId, "LEVEL_10");
+        verify(gamificationRepository).unlockBadge(userId, "FIRST_SIMULADO");
+    }
+
+    @Test
+    @DisplayName("Should populate cold Redis cache from Postgres leaderboard when totalParticipants is 0")
+    void shouldPopulateColdRedisCacheFromPostgresLeaderboard() {
+        UUID currentUserId = UUID.randomUUID();
+        UUID otherUserId = UUID.randomUUID();
+
+        // user has existing leaderboard in SILVER
+        WeeklyLeaderboard userBoard = WeeklyLeaderboard.builder()
+                .userId(currentUserId)
+                .leagueTier(LeagueTier.SILVER)
+                .weeklyXp(150)
+                .build();
+
+        when(gamificationRepository.findWeeklyLeaderboard(eq(currentUserId), anyInt(), anyInt()))
+                .thenReturn(Optional.of(userBoard));
+        // total participants in Redis is 0 (cold cache)
+        when(redisLeaderboardPort.getTotalParticipants(anyInt(), anyInt(), eq(LeagueTier.SILVER)))
+                .thenReturn(0L);
+
+        WeeklyLeaderboard pgEntry = WeeklyLeaderboard.builder()
+                .userId(otherUserId)
+                .leagueTier(LeagueTier.SILVER)
+                .weeklyXp(200)
+                .build();
+        when(gamificationRepository.findTopByLeague(anyInt(), anyInt(), eq("SILVER")))
+                .thenReturn(List.of(pgEntry, userBoard));
+
+        Set<ZSetOperations.TypedTuple<String>> entries = new LinkedHashSet<>();
+        entries.add(new DefaultTypedTuple<>(otherUserId.toString(), 200.0));
+        when(redisLeaderboardPort.getTopRanked(anyInt(), anyInt(), eq(LeagueTier.SILVER), eq(0L), eq(9L)))
+                .thenReturn(entries);
+
+        when(userRepository.findById(otherUserId)).thenReturn(Optional.empty()); // defaults to "Estudante"
+        when(gamificationRepository.findProfileByUserId(otherUserId)).thenReturn(Optional.empty()); // defaults to 0 streak
+
+        when(redisLeaderboardPort.getStudentRank(anyInt(), anyInt(), eq(LeagueTier.SILVER), eq(currentUserId)))
+                .thenReturn(null); // not ranked
+        when(redisLeaderboardPort.getStudentScore(anyInt(), anyInt(), eq(LeagueTier.SILVER), eq(currentUserId)))
+                .thenReturn(null);
+
+        WeeklyLeaderboardResponse response = gamificationService.getWeeklyLeaderboard(currentUserId, null, 0, 10);
+
+        assertThat(response.getLeagueTier()).isEqualTo("SILVER");
+        assertThat(response.getTotalParticipants()).isEqualTo(2L);
+        assertThat(response.getCurrentUserRank()).isNull();
+        assertThat(response.getLeaderboard()).hasSize(1);
+        assertThat(response.getLeaderboard().get(0).getDisplayName()).isEqualTo("Estudante");
+        verify(redisLeaderboardPort).incrementWeeklyXp(anyInt(), anyInt(), eq(LeagueTier.SILVER), eq(otherUserId), eq(200));
+    }
+
+    @Test
+    @DisplayName("Should handle partial updates in updateDailyGoal when only targetQuestions or optInReminders is provided")
+    void shouldHandlePartialUpdatesInDailyGoal() {
+        UUID userId = UUID.randomUUID();
+        UserGamificationProfile profile = UserGamificationProfile.builder()
+                .userId(userId)
+                .dailyGoalQuestions(10)
+                .optInReminders(true)
+                .build();
+
+        when(gamificationRepository.findProfileByUserId(userId)).thenReturn(Optional.of(profile));
+        when(gamificationRepository.saveProfile(any(UserGamificationProfile.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        // targetQuestions null, optInReminders false
+        UserGamificationProfile updated1 = gamificationService.updateDailyGoal(userId, null, false);
+        assertThat(updated1.getDailyGoalQuestions()).isEqualTo(10);
+        assertThat(updated1.isOptInReminders()).isFalse();
+
+        // targetQuestions 25, optInReminders null
+        UserGamificationProfile updated2 = gamificationService.updateDailyGoal(userId, 25, null);
+        assertThat(updated2.getDailyGoalQuestions()).isEqualTo(25);
+        assertThat(updated2.isOptInReminders()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Should skip notification publishing when user profile has no matching User entity")
+    void shouldSkipStudyReminderWhenUserNotFound() {
+        UUID userId = UUID.randomUUID();
+        UserGamificationProfile pendingProfile = UserGamificationProfile.builder()
+                .userId(userId)
+                .streakDays(2)
+                .dailyQuestionsCompleted(1)
+                .dailyGoalQuestions(10)
+                .optInReminders(true)
+                .build();
+
+        when(gamificationRepository.findPendingStudyReminderProfiles()).thenReturn(List.of(pendingProfile));
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        int count = gamificationService.triggerDailyStudyReminders();
+
+        assertThat(count).isZero();
+        verify(notificationPublisherPort, never()).publishStudyReminder(any());
+    }
 }
