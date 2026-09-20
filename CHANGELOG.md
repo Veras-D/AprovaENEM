@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.8] - 2026-09-20
+### 🧪 Added (Test Pyramid - Testcontainers PostgreSQL 16 pgvector & Redis Integration Tests)
+- test(integration): Implement real container integration test suites across `auth-service`, `exam-service`, and `notification-service` verifying database migrations, JPA repositories, full-text search, and Redis caching with Testcontainers (5 test suites, 16 integration tests, 100% passing) (TASK-S3-04)
+  - `AuthRepositoryAndFlywayIT` (4 tests): Verifies PostgreSQL 16 container executing Flyway migrations V1–V3 (`init_auth_schema`, `auth_indexes`, `gamification_and_sessions`), `UserRepositoryAdapter` CRUD, `GamificationRepositoryAdapter` profile persistence, XP accumulation, streaks, and `AnonymousSessionRepositoryAdapter` provisioning and post-registration claiming
+  - `RedisLeaderboardIT` (2 tests): Verifies real Redis 7.2 container executing atomic ZSET operations (`ZADD`, `ZREVRANGE_WITHSCORES`), rank retrieval, score incrementation, and clean league reset eviction
+  - `ExamPersistenceIT` (4 tests): Verifies `pgvector/pgvector:pg16` container with `vector` extension, Flyway migrations V1–V4 (`init_exam_schema`, `exam_performance_indexes`, `exam_seed_data`, `tutor_chat_schema`), Portuguese full-text search (`to_tsvector('portuguese', ...)` with GIN indexes), Question CRUD with status lifecycle transitions, and Practice Session persistence with Student Attempts
+  - `RedisTutorQuotaIT` (3 tests): Verifies real Redis 7.2 container enforcing Socratic AI daily quota tracking with TTL, quota exhaustion for standard students, unlimited access bypass for premium students, and cross-student key isolation
+  - `NotificationRepositoryAndFlywayIT` (3 tests): Verifies PostgreSQL 16 container executing Flyway migrations V1–V2 (`init_notification_schema`, `notification_indexes`), `UserDeviceTokenRepository` token registration, querying by active status, and deactivation, and `NotificationLogRepository` persisting multi-channel notifications (in-app, email, push) with JSONB metadata and unread status counting
+- build(maven): Configure Maven Failsafe Plugin in root `backend/pom.xml` for integration test execution (`*IT.java`) with strict separation from Surefire fast unit tests (`*Test.java`), and Docker Java API version 1.44 negotiation properties for host Docker Engine 29+ compatibility
+- docs(backlog): Update `docs/BACKLOG.md` marking TASK-S3-04 as DONE, advancing Sprint 3 completion to 50% (6/12 tasks completed)
+
 ## [0.3.7] - 2026-09-20
 ### 🛡️ Added (Test Pyramid - Spring Security & WebMvc MockMvc Tests)
 - test(security): Implement comprehensive WebMvc MockMvc test suites across `auth-service`, `exam-service`, and `notification-service` verifying HTTP status codes, security boundaries, and validation rules (7 test suites, 48 tests, 100% passing, total backend tests reach 202 tests) (TASK-S3-03)

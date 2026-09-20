@@ -20,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
+@Transactional
 public class QuestionRepositoryAdapter implements QuestionRepositoryPort {
 
     private final SpringDataQuestionRepository questionRepository;
@@ -104,8 +106,12 @@ public class QuestionRepositoryAdapter implements QuestionRepositoryPort {
         );
 
         if (entity.getTopic() != null) {
-            question.setTopicName(entity.getTopic().getName());
-            question.setDiscipline(entity.getTopic().getDiscipline());
+            try {
+                question.setTopicName(entity.getTopic().getName());
+                question.setDiscipline(entity.getTopic().getDiscipline());
+            } catch (org.hibernate.LazyInitializationException ignored) {
+                // If proxy is not initialized
+            }
         }
 
         question.setSuspensionReason(entity.getSuspensionReason());
@@ -161,10 +167,12 @@ public class QuestionRepositoryAdapter implements QuestionRepositoryPort {
                 .build();
 
         if (domain.getExamEditionId() != null) {
-            entity.setExamEdition(entityManager.getReference(ExamEditionEntity.class, domain.getExamEditionId()));
+            ExamEditionEntity exam = entityManager.find(ExamEditionEntity.class, domain.getExamEditionId());
+            entity.setExamEdition(exam != null ? exam : entityManager.getReference(ExamEditionEntity.class, domain.getExamEditionId()));
         }
         if (domain.getTopicId() != null) {
-            entity.setTopic(entityManager.getReference(TopicEntity.class, domain.getTopicId()));
+            TopicEntity topic = entityManager.find(TopicEntity.class, domain.getTopicId());
+            entity.setTopic(topic != null ? topic : entityManager.getReference(TopicEntity.class, domain.getTopicId()));
         }
 
         if (domain.getOptions() != null) {

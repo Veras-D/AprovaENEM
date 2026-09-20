@@ -14,6 +14,7 @@ import com.aprovaenem.exam.infrastructure.adapter.out.persistence.repository.Spr
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
+@Transactional
 public class PracticeSessionRepositoryAdapter implements PracticeSessionRepositoryPort {
 
     private final SpringDataPracticeSessionRepository sessionRepository;
@@ -32,7 +34,13 @@ public class PracticeSessionRepositoryAdapter implements PracticeSessionReposito
 
     @Override
     public Optional<PracticeSession> findById(UUID id) {
-        return sessionRepository.findById(id).map(this::toDomain);
+        return sessionRepository.findById(id).map(entity -> {
+            PracticeSession domain = toDomain(entity);
+            if (domain != null && (domain.getAttempts() == null || domain.getAttempts().isEmpty())) {
+                domain.setAttempts(findAttemptsBySessionId(id));
+            }
+            return domain;
+        });
     }
 
     @Override
@@ -86,14 +94,14 @@ public class PracticeSessionRepositoryAdapter implements PracticeSessionReposito
         session.setStartedAt(entity.getStartedAt());
         session.setCompletedAt(entity.getCompletedAt());
 
-        if (entity.getQuestions() != null) {
+        if (entity.getQuestions() != null && org.hibernate.Hibernate.isInitialized(entity.getQuestions())) {
             List<Question> questions = entity.getQuestions().stream()
                     .map(questionAdapter::toDomain)
                     .toList();
             session.setQuestions(questions);
         }
 
-        if (entity.getAttempts() != null) {
+        if (entity.getAttempts() != null && org.hibernate.Hibernate.isInitialized(entity.getAttempts())) {
             List<StudentAttempt> attempts = entity.getAttempts().stream()
                     .map(this::toAttemptDomain)
                     .toList();

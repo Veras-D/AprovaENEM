@@ -322,13 +322,15 @@ flowchart TD
     subgraph TestPyramid["AprovaENEM Test Pyramid (Backend Verification)"]
         direction TB
         L4["Contract & E2E Tests (Newman/Postman CLI - 31 Requests, 56 Assertions)"]
-        L3["WebMvc & Spring Security (7 Controllers, 48 Tests - HTTP 200, 401, 403, 404, 429)"]
-        L2["Application Service Unit Tests (8 Services, 57 Tests - Use Cases & RAG)"]
-        L1["Pure Domain Unit Tests (12 Suites, 97 Tests - Models, Scoring, TRI, Invariants)"]
+        L3["Integration Tests (Testcontainers PG 16 pgvector & Redis - 5 Suites, 16 Tests)"]
+        L2["WebMvc & Spring Security (7 Controllers, 48 Tests - HTTP 200, 401, 403, 404, 429)"]
+        L1["Application Service Unit Tests (8 Services, 57 Tests - Use Cases & RAG)"]
+        L0["Pure Domain Unit Tests (12 Suites, 97 Tests - Models, Scoring, TRI, Invariants)"]
     end
     L4 --> L3
     L3 --> L2
     L2 --> L1
+    L1 --> L0
 ```
 
 | Task ID | Work Item & Title | Priority | Estimation | Status | Acceptance Criteria |
@@ -336,7 +338,7 @@ flowchart TD
 | **S3-01** | **Domain Unit Testing** | `P0` | 5 pts | **DONE ✅** | Pure Java domain tests (scoring, TRI formulas, question status transitions, entities) with JUnit 5 & AssertJ (execution $< 1\text{s}$). |
 | **S3-02** | **Application Service Unit Testing** | `P0` | 5 pts | **DONE ✅** | Mockito unit tests covering all Use Case orchestration flows, Socratic prompt builders, and domain event publishers across `exam-service`, `auth-service`, and `notification-service`. |
 | **S3-03** | **Spring Security & WebMvc MockMvc Tests** | `P0` | 5 pts | **DONE ✅** | 7 MockMvc test suites (48 tests) across `auth-service`, `exam-service`, and `notification-service` validating HTTP 200 OK, 201 Created, 204 No Content, 400 Validation/Business Errors, 401 Unauthorized CTA, 403 Forbidden RBAC (`@WithMockUser`), 404 Not Found, 429 Daily AI Quota Exhausted, RFC 7807 problem details, and Socratic AI quota headers (`X-AI-Quota-*`). |
-| **S3-04** | **Testcontainers PostgreSQL 16 & Redis Integration Tests** | `P0` | 8 pts | `PENDING ⏳` | Real PostgreSQL 16 (`pgvector`) and Redis container integration tests (`*IT.java` via Maven Failsafe) verifying Flyway migrations, JPA queries, and Redis ZSET operations. |
+| **S3-04** | **Testcontainers PostgreSQL 16 & Redis Integration Tests** | `P0` | 8 pts | **DONE ✅** | Real PostgreSQL 16 (`pgvector`) and Redis container integration tests (`*IT.java` via Maven Failsafe) verifying Flyway migrations, JPA queries, and Redis ZSET operations (5 test suites, 16 integration tests passing). |
 | **S3-05** | **JaCoCo Unified Backend Coverage Enforcement** | `P0` | 3 pts | `PENDING ⏳` | Merged Surefire + Failsafe execution data (`jacoco.exec`); build fails if line coverage $< 80\%$ or branch coverage $< 75\%$. |
 | **S3-06** | **Redis Caching & Latency Benchmarking** | `P1` | 5 pts | `PENDING ⏳` | Verification of sub-2ms L2 cache hit latency, sub-5ms composite index queries, and ZSET ranking performance under concurrent request simulation. |
 | **S3-07** | **Resilience4j Chaos & Fault Injection Testing** | `P1` | 5 pts | `PENDING ⏳` | Verification of Circuit Breaker behavior: simulated Gemini API timeouts, HTTP 429 quota exhaustion, and graceful fallback to static INEP explanations with `isFallback: true`. |
