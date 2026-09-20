@@ -44,6 +44,9 @@ management:
       show-details: always
       probes:
         enabled: true
+  health:
+    mail:
+      enabled: false
   metrics:
     tags:
       application: ${spring.application.name}

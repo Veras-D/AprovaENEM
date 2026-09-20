@@ -263,7 +263,7 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
 ---
 
 ### Epic 6: Gamification, Streaks & Notifications Microservice
-#### `TASK-S2-14`: Student Gamification Engine (XP, Levels & Daily Goals)
+#### `TASK-S2-14`: Student Gamification Engine (XP, Levels & Daily Goals) — **COMPLETED ✅**
 - **Priority**: `P1` | **Estimation**: 5 pts
 - **Description**: Implement event-driven gamification listener reacting to `QuestionAnsweredEvent` and `SessionCompletedEvent` to award XP (+10 per correct answer, +50 per completed session), evaluate daily goals, increment daily streak counters, and handle level promotions.
 - **Acceptance Criteria**:
@@ -271,21 +271,21 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
   - Increments streak days and tracks monthly emergency streak freeze usage.
   - Exposes `GET /api/v1/gamification/profile` and `PUT /api/v1/gamification/daily-goal`.
 
-#### `TASK-S2-15`: Weekly Reset Leaderboard & League Ranking (Redis ZSET)
+#### `TASK-S2-15`: Weekly Reset Leaderboard & League Ranking (Redis ZSET) — **COMPLETED ✅**
 - **Priority**: `P1` | **Estimation**: 5 pts
 - **Description**: Implement weekly leaderboard engine using Redis Sorted Sets (`ZSET`) partitioned by league tiers (Bronze, Silver, Gold, Diamond), and scheduled Sunday 23:59:59 BRT league resets.
 - **Acceptance Criteria**:
   - Sub-5ms query performance on `GET /api/v1/gamification/leaderboard/weekly`.
   - Promotes top 20% to next league and relegates bottom 10% on weekly reset.
 
-#### `TASK-S2-16`: Daily Study Reminder Scheduled Worker
+#### `TASK-S2-16`: Daily Study Reminder Scheduled Worker — **COMPLETED ✅**
 - **Priority**: `P2` | **Estimation**: 3 pts
 - **Description**: Implement Spring `@Scheduled` background worker running daily at 19:00 BRT to query students with pending daily study goals and publish reminder events to RabbitMQ.
 - **Acceptance Criteria**:
   - Only alerts users with `opt_in_reminders = true` and `isCompleted = false`.
   - Emits `DailyGoalReminderEvent` to the RabbitMQ exchange.
 
-#### `TASK-S2-17`: Multi-Channel Notification Microservice (`notification-service`)
+#### `TASK-S2-17`: Multi-Channel Notification Microservice (`notification-service`) — **COMPLETED ✅**
 - **Priority**: `P1` | **Estimation**: 5 pts
 - **Description**: Implement decoupled `notification-service` listening to domain events (`UserRegisteredEvent`, `DailyGoalReminderEvent`, `WeeklyLeagueResetEvent`, `EssayEvaluatedEvent`) via RabbitMQ to dispatch transactional emails (SES/Resend) and Web/Mobile Push notifications (FCM/APNs).
 - **Acceptance Criteria**:
