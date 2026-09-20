@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.7] - 2026-09-20
+### 🛡️ Added (Test Pyramid - Spring Security & WebMvc MockMvc Tests)
+- test(security): Implement comprehensive WebMvc MockMvc test suites across `auth-service`, `exam-service`, and `notification-service` verifying HTTP status codes, security boundaries, and validation rules (7 test suites, 48 tests, 100% passing, total backend tests reach 202 tests) (TASK-S3-03)
+  - `AuthControllerWebMvcTest` (10 tests): Validates registration (201 Created / 400 Bad Request on duplicate/validation error), login (200 OK / 400 Bad Request on invalid credentials), authenticated user profile (200 OK / 401 Unauthorized), LGPD Art. 18 data portability export (200 OK), LGPD account erasure (204 No Content), email verification (200 OK), and resend verification (200 OK)
+  - `GamificationControllerWebMvcTest` (7 tests): Validates authenticated profile retrieval (200 OK / 401 Unauthorized / 403 Forbidden without `ROLE_STUDENT`), daily study goal configuration (200 OK), weekly leaderboard rankings (200 OK), badge catalog (200 OK), and daily activity heatmap (200 OK)
+  - `SessionControllerWebMvcTest` (3 tests): Validates public anonymous session creation with client IP resolution (201 Created), public session retrieval (200 OK), and non-existent session error handling (404 Not Found)
+  - `SocraticTutorControllerWebMvcTest` (6 tests): Validates unauthenticated AI tutor access rejection with registration CTA problem details (401 Unauthorized), authenticated Socratic consultation with dynamic quota response headers `X-AI-Quota-*` (200 OK), daily quota exhaustion with RFC 7807 problem details (429 Too Many Requests), multi-turn chat history retrieval (200 OK), thread reset (200 OK), and daily quota check (200 OK)
+  - `QuestionCatalogControllerWebMvcTest` (5 tests): Validates paginated question catalog retrieval with filter parameters and answer masking to prevent cheating (200 OK), single question detail retrieval (200 OK), question not found (404 Not Found), administrative status update (200 OK), and missing status validation (400 Bad Request)
+  - `PracticeSessionControllerWebMvcTest` (8 tests): Validates starting practice session via `X-Session-Id` header (201 Created), starting session via request body (201 Created), missing session identifier validation (400 Bad Request), session retrieval (200 OK), answer submission with instant grading and explanation (201 Created), missing question ID validation (400 Bad Request), session completion (200 OK), and diagnostic report retrieval (200 OK)
+  - `NotificationControllerWebMvcTest` (9 tests): Validates push token registration via `X-User-Id` header (201 Created), push token registration via Bearer JWT token (201 Created), unauthenticated token registration rejection (401 Unauthorized), invalid platform validation (400 Bad Request), notification feed retrieval (200 OK / 401 Unauthorized), marking notification as read (200 OK / 404 Not Found), and unread count query (200 OK)
+- docs(backlog): Update `docs/BACKLOG.md` marking TASK-S3-03 as DONE, advancing Sprint 3 completion to 42% (5/12 tasks completed), and embedding Mermaid Test Pyramid diagram
+
 ## [0.3.6] - 2026-09-20
 ### 🧪 Added (Test Pyramid - Application Service Unit Tests)
 - test(application): Implement comprehensive Mockito unit test suites for all Application Services and Use Cases across `exam-service`, `auth-service`, and `notification-service` (57 tests, 100% passing, total suite reaches 191 tests across backend) (TASK-S3-02)
