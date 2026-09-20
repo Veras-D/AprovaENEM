@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.6] - 2026-09-20
+### 🧪 Added (Test Pyramid - Application Service Unit Tests)
+- test(application): Implement comprehensive Mockito unit test suites for all Application Services and Use Cases across `exam-service`, `auth-service`, and `notification-service` (57 tests, 100% passing, total suite reaches 191 tests across backend) (TASK-S3-02)
+  - `QuestionCatalogServiceTest` (6 tests): Validates paginated question catalog filtering by subject/difficulty, question detail retrieval, active status updates, and administrative suspension notes
+  - `PracticeSessionServiceTest` (8 tests): Validates session initialization with question randomizer, answer submission with instant grading and duplicate submission rejection, diagnostic report generation with accuracy radar and pedagogical recommendations, and session abandonment
+  - `SocraticTutorServiceTest` (6 tests): Validates Gemini AI Socratic guidance with RAG chunk injection, anonymous user access rejection, daily quota exhaustion guarding, 6-turn interaction threshold enforcement, and conversation thread resets
+  - `AuthServiceTest` (7 tests): Validates student registration with BCrypt hashing and Outbox event dispatch, login authentication with JWT generation, credential rejection, deactivated account guarding, LGPD Art. 18 data portability export, and permanent account erasure
+  - `GamificationServiceTest` (10 tests): Validates initial profile creation, comprehensive profile response DTO, daily goal targets, XP awarding (+10 per correct answer, +50 per session, +20 daily goal bonus), streak tracking with emergency monthly streak freeze consumption, badge unlock verification, Redis ZSET weekly leaderboard rankings with promotion zones, 19:00 BRT daily study goal reminder sweeps, and Sunday weekly league resets
+  - `AnonymousSessionServiceTest` (5 tests): Validates 30-day anonymous session provisioning with SHA-256 IP hashing, session UUID retrieval, and session claiming post-registration
+  - `EmailVerificationServiceTest` (8 tests): Validates 24-hour token email verification, expired token rejection, silent anti-enumeration resend handling, and Outbox event dispatch
+  - `NotificationServiceTest` (7 tests): Validates Android/iOS push token registration with device deduplication, paginated notification feed retrieval with unread status filtering, marking notifications as read, and unread counter queries
+- docs(backlog): Update `docs/BACKLOG.md` marking TASK-S3-02 as DONE and advancing Sprint 3 completion to 33% (4/12 tasks completed)
+
 ## [0.3.5] - 2026-09-20
 ### 🧪 Added (Test Pyramid - Domain Unit Tests)
 - test(domain): Implement pure Java domain unit test suites with JUnit 5 & AssertJ across `exam-service`, `auth-service`, and `common-core` (134 tests, 0 failures, execution time $< 1\text{s}$) (TASK-S3-01)
