@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `EmailVerificationServiceTest` (8 tests): Validates 24-hour token email verification, expired token rejection, silent anti-enumeration resend handling, and Outbox event dispatch
   - `NotificationServiceTest` (7 tests): Validates Android/iOS push token registration with device deduplication, paginated notification feed retrieval with unread status filtering, marking notifications as read, and unread counter queries
 - docs(backlog): Update `docs/BACKLOG.md` marking TASK-S3-02 as DONE and advancing Sprint 3 completion to 33% (4/12 tasks completed)
-- docs(agents): Create and refine `AGENTS.md` repository operating manual establishing inviolable agent rules, English-only communication mandate, Mermaid diagram guidelines for Markdown documentation, zero uncommitted changes policy, Conventional Commits standard, pre-commit changelog updates, proactive web search with zero workarounds policy, error diagnosis protocol, and recursive documentation synchronization
+- docs(agents): Create and expand `AGENTS.md` full-stack repository operating manual covering monorepo architecture (backend, frontend, infrastructure), English-only communication mandate, Mermaid diagram guidelines for Markdown documentation, zero uncommitted changes policy, Conventional Commits standard, pre-commit changelog updates, proactive web search with zero workarounds policy, error diagnosis protocol, and recursive documentation synchronization
 
 ## [0.3.5] - 2026-09-20
 ### 🧪 Added (Test Pyramid - Domain Unit Tests)
