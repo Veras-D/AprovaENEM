@@ -120,16 +120,16 @@ Focus: **Hands-on Implementation of Hexagonal Back-end Microservices, Persistenc
   - [x] Specialized indexes verified: Portuguese Full-Text Search GIN (`idx_questions_statement_fts`), partial active question index (`idx_questions_active_serving`), 19:00 BRT streak reminder index (`idx_gamification_streak_reminder`), HNSW vector index, and JSONB GIN index.
   - [x] Seed script populates initial ENEM editions and subject areas.
 
-#### `TASK-S2-02b`: Data Ingestion & Extraction Microservice (`ingestion-service`)
+#### `TASK-S2-02b`: Data Ingestion & Extraction Microservice (`ingestion-service`) — **COMPLETED ✅**
 - **Priority**: `P0` | **Estimation**: 8 pts
 - **Description**: Build the decoupled on-demand containerized microservice (`ingestion-service`) using Python and **IBM Docling** (DocLayNet + TableFormer) under Docker Compose profile `ingestion` to perform neural layout parsing, automatic two-column reading flow, built-in formula-to-LaTeX conversion, and diagram cropping (WebP), reconciled with INEP `ITENS_PROVA.csv` microdados.
 - **Acceptance Criteria**:
-  - Containerized with `profiles: ["ingestion"]` (zero idle RAM overhead on core cluster).
-  - Employs IBM Docling to parse two-column pages into clean Markdown without interleaved text.
-  - Converts math formulas into KaTeX-compatible LaTeX (`$...$` and `$$...$$`).
-  - Crops diagrams (`PictureItem`) at 300 DPI and outputs lossless WebP assets.
-  - Reconciles extracted answers with official answer key with 100% concordance.
-  - Injects official TRI parameters ($a, b, c$) and generates normalized seed fixtures.
+  - [x] Containerized with `profiles: ["ingestion"]` (zero idle RAM overhead on core cluster).
+  - [x] Employs IBM Docling to parse two-column pages into clean Markdown without interleaved text.
+  - [x] Converts math formulas into KaTeX-compatible LaTeX (`$...$` and `$$...$$`).
+  - [x] Crops diagrams (`PictureItem`) at 300 DPI and outputs lossless WebP assets.
+  - [x] Reconciles extracted answers with official answer key with 100% concordance.
+  - [x] Injects official TRI parameters ($a, b, c$) and generates normalized seed fixtures.
 
 #### `TASK-S2-02c`: Distributed Caching Architecture with Redis 7+ — **COMPLETED ✅**
 - **Priority**: `P0` | **Estimation**: 5 pts

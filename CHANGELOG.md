@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - feat(leaderboard): Implement real-time weekly reset leaderboards with Redis `ZSET` (`leaderboard:weekly:{year}:{week}:{tier}`), sub-5ms rank lookup, top 20% promotion zone calculations, and scheduled Sunday 23:59:59 BRT league reset worker (TASK-S2-15)
 - feat(scheduler): Implement daily 19:00 BRT study reminder scheduled worker in `auth-service` dispatching `DailyGoalReminderEvent` to RabbitMQ for students with pending daily goals (TASK-S2-16)
 - feat(notifications): Implement decoupled `notification-service` microservice consuming RabbitMQ events (`notification.reminders.queue`, `notification.auth.queue`), registering device push tokens (WEB_PUSH, ANDROID, IOS), and serving the in-app notification inbox with read state tracking (TASK-S2-17)
+- feat(ingestion): Implement on-demand data ingestion microservice (`ingestion-service`) with Docker Compose profile `ingestion`, IBM Docling layout parsing, KaTeX formula extraction, 300 DPI WebP diagram cropping, INEP ITENS_PROVA microdados reconciliation, and 5 automated quality gates (TASK-S2-02b)
 - fix(infra): Optimize Nginx health check probe to use IPv4 loopback (`127.0.0.1/health`) and dual IPv4/IPv6 listen binding; disable unused `MailHealthIndicator` in Spring Boot Actuator to ensure 100% container health
 
 ## [0.2.1] - 2026-09-19
