@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.15] - 2026-09-20
+### 🛡️ Added, Hardened & Documented (Governance, CI Execution & Backlog Investigation Scope)
+- docs(license): Created root MIT `LICENSE` file (Copyright (c) 2026 AprovaENEM Contributors).
+- config(env): Added `AUTH_PASSWORD_PEPPER` configuration to `.env.example` under JWT & Password Security section, documenting HMAC-SHA256 secret pepper pre-hashing ($2^{10}$ BCrypt rounds).
+- ci(actions): Hardened GitHub Actions CI workflow in `.github/workflows/ci.yml`:
+  - Fixed YAML scanner syntax error by enclosing all stage names containing colons in double quotes (`"Stage X: ..."`).
+  - Configured `mvn clean install -B -DskipTests` in Stage 1 to install `common-core` into the runner's local repository, resolving multi-module dependencies during static analysis in Stage 2.
+  - Resolved `jacoco:check` missing rules failure on parent `aprovaenem-parent` POM by aligning Stage 5 test execution with Maven lifecycle bindings (`mvn test -B -Dspring.profiles.active=test`).
+  - Fixed global npm installation command in Job 2 (`npm install -g newman`, removing nonexistent `newman-reporter-junitxml` package as JUnit reporting is built into Newman core).
+  - Created `.gitleaks.toml` allowlist to ignore documentation Markdown files (`docs/`, `README.md`) containing sample mock JWT tokens and API contract payloads, preventing false-positive secret detections.
+- docs(backlog): Updated `docs/BACKLOG.md`:
+  - Expanded **`TASK-S3-11`** scope to mandate a deep technical investigation and audit of all rapid changes and potential workarounds made without websearch (Checkstyle `MethodName` regex `^[a-z][a-zA-Z0-9]*(_[a-zA-Z0-9]+)*$` for Spring Data JPA repository traversals vs `@Query`, PMD ruleset configuration $\le 15$ cyclomatic complexity, `QuestionDtoMapper` extraction and domain encapsulation, shell script regex parsing in `preflight-smoke.sh` vs `jq`, Newman `--delay-request 100` rate limiter interactions, and HMAC-SHA256 password pepper backward compatibility).
+  - Marked **`TASK-S3-12`** as **DONE ✅** reflecting that the JAM 1 backend platform deliverable has been officially submitted to the Reconecta Recode platform.
+  - Formally clarified that visual showcase assets (`docs/images/` catalog) are scheduled for Month 4 (Sprint 6/7) during full-stack presentation preparation, not Sprint 3.
+  - Updated Sprint 3 milestone progress to 93% (13/14 tasks completed).
+- docs(readme): Updated `README.md` and `docs/specifications/07-quality-gate-ci.md` to reference `.github/workflows/ci.yml`, document the 7-stage CI quality gate, and align PMD cyclomatic complexity ($\le 15$) and CPD token thresholds (100 tokens).
+
 ## [0.3.14] - 2026-09-20
 ### 🚀 Added & Verified (7-Stage GitHub Actions CI Quality Gate & Pre-Flight Smoke Suite)
 - ci(backend): Implement production-grade 7-stage GitHub Actions CI pipeline in `.github/workflows/ci.yml` (TASK-S3-10)

@@ -106,7 +106,7 @@ jobs:
 
       - name: Install Newman & Reporters
         run: |
-          npm install -g newman newman-reporter-junitxml
+          npm install -g newman
 
       - name: Configure Environment Variables
         run: |
