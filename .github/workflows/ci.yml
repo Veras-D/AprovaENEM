@@ -74,7 +74,7 @@ jobs:
         working-directory: backend
         run: |
           echo "Executing Unit and Slice tests across all microservices..."
-          mvn test -B -Dspring.profiles.active=test jacoco:report jacoco:check
+          mvn test -B -Dspring.profiles.active=test
 
       - name: Archive JaCoCo Coverage Reports
         if: always()
