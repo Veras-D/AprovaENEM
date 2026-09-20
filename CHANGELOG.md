@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### 🔄 Changed
 - refactor(docs): Rename foundational specifications directory from `docs/sprint-1/` to `docs/specifications/` to accurately reflect its permanent role as the platform architecture and technical baseline across all project phases
 - docs(links): Synchronize internal documentation links, project directory tree, and backlog artifact cross-references across `README.md`, `docs/BACKLOG.md`, and `docs/specifications/02-project-charter.md`
+- docs(specs): Synchronize API specification in `05-api-specification.md` with live controllers: added `GET /api/v1/auth/me`, `GET /api/v1/auth/session/{sessionUuid}`, `GET /api/v1/sessions/{id}/diagnostic`, `POST /api/v1/gamification/activity`, `POST /api/v1/gamification/reminders/trigger`, and `GET /api/v1/notifications/unread-count`; corrected question status route to `PATCH /api/v1/questions/{id}/status` and documented anti-cheating resolution encapsulation inside `AttemptResultResponse`
+- docs(architecture): Clarify standard internal container port `5432` across all PostgreSQL databases and port `3000` for Grafana in `03-system-architecture.md`, distinguishing them from host developer overrides
+- docs(data): Update persistence model boundaries in `04-data-modeling.md` to reflect three autonomous databases (`auth_db`, `exam_db`, and `notification_db`)
+- docs(ingestion): Update extraction and reconciliation worker paths in `08-data-ingestion-pipeline.md` to point to the containerized `backend/ingestion-service/` modules and test suites
 
 ## [0.3.0] - 2026-09-20
 ### 🚀 Added

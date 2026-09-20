@@ -97,14 +97,14 @@ ENEM examination booklets present unique layout hurdles that break standard text
   4. **PictureItem Extraction**: Isolates diagram and cartoon bounding boxes, exporting high-resolution crops directly.
 
 ### Stage 2: Visual Asset Optimization & Multimodal Fallback
-* **Worker**: `scripts/ingestion/extract_questions.py`
+* **Microservice Worker**: Layout & Visual Parser (`backend/ingestion-service/src/parser.py` invoked via `backend/ingestion-service/src/cli.py`).
 * **Process**:
-  1. **Docling Picture Extraction**: Bounding boxes tagged as `PictureItem` are cropped and converted to modern lossless **WebP** (`assets/images/enem_{year}_{item}_{idx}.webp`), reducing mobile student data usage by $\approx 65\%$.
+  1. **Docling Picture Extraction**: Bounding boxes tagged as `PictureItem` are cropped and converted to modern lossless **WebP** (`/assets/questions/{year}/q{item}_{idx}.webp`), reducing mobile student data usage by $\approx 65\%$.
   2. **Multimodal LLM Verification (Edge Cases)**: For complex historical documents or degraded scans in older exams (e.g., ENEM 2009–2012), cropped visual regions are verified using Gemini 1.5 Flash Vision to guarantee 100% text fidelity.
   3. **Option Normalization**: Strips option prefixes (`a)`, `b)`, `(A)`) and structures alternatives into discrete items with Markdown support.
 
 ### Stage 3: Ground-Truth Reconciliation with Microdados
-* **Worker**: Data Reconciliation Engine (`scripts/ingestion/reconcile_with_microdados.py`).
+* **Microservice Worker**: Microdados Reconciliation Engine (`backend/ingestion-service/src/reconciler.py`).
 * **Protocol**:
   1. Loads `ITENS_PROVA_{year}.csv` from the official INEP Microdados bundle.
   2. Joins on `year`, `exam_color`, and `item_number`.
@@ -172,7 +172,7 @@ flowchart LR
 
 ## 6. Verification Quality Gates for Extracted Data
 
-Every ingested batch must pass an automated Python/JVM test suite (`tests/ingestion/`) before being committed to production Flyway seeds:
+Every ingested batch must pass an automated Python/JVM test suite ([`backend/ingestion-service/tests/`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/ingestion-service/tests)) before being committed to production Flyway seeds:
 
 1. **Option Cardinality Gate**: Exactly 5 options (`A`, `B`, `C`, `D`, `E`) per question, with exactly one marked `isCorrect: true`.
 2. **LaTeX Syntax Gate**: All `$ ... $` and `$$ ... $$` delimiters must be syntactically valid KaTeX/MathJax expressions.

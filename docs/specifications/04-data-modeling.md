@@ -8,9 +8,10 @@
 
 ## 1. Conceptual Data Model & Domain Boundaries
 
-The persistence layer is split across two database boundaries to maintain microservice autonomy:
-1. **`auth_db`**: Manages user credentials, roles, and anonymous session mapping.
-2. **`exam_db`**: Manages the INEP exam catalog, question taxonomy, practice sessions, student attempt submissions, and diagnostic analytics.
+The persistence layer is split across three database boundaries to maintain microservice autonomy:
+1. **`auth_db`**: Manages user credentials, roles, anonymous session mapping, gamification profiles, streaks, and transactional outbox events.
+2. **`exam_db`**: Manages the INEP exam catalog, question taxonomy, practice sessions, student attempt submissions, diagnostic analytics, Socratic chat threads, and RAG pgvector knowledge embeddings.
+3. **`notification_db`**: Manages user device push tokens (Web Push, Android FCM, iOS APNs) and multi-channel outbound notification delivery logs.
 
 ### 1.1 Examination & Assessment Domain Model (`exam-service`)
 

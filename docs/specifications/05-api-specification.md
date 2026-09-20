@@ -51,7 +51,7 @@ AprovaENEM defines two primary OpenAPI security schemes enforced by Spring Secur
     "title": "Unauthorized",
     "status": 401,
     "detail": "Full authentication is required to access this resource.",
-    "instance": "/api/v1/student/profile",
+    "instance": "/api/v1/auth/me",
     "code": "UNAUTHORIZED",
     "timestamp": "2026-09-18T00:30:00Z",
     "traceId": "4bf92f3577b34da6a3ce929d0e0e4736"
@@ -121,7 +121,24 @@ Vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers
 
 ---
 
-### 2.2 Register Student Account (Optional)
+### 2.2 Retrieve Active Anonymous Session
+* **Method**: `GET`
+* **Path**: `/api/v1/auth/session/{sessionUuid}`
+* **Description**: Verifies if an existing anonymous practice session UUID is valid and returns its TTL and claiming status.
+
+#### Response `200 OK`
+```json
+{
+  "sessionId": "a8b9c0d1-e2f3-4a5b-6c7d-8e9f0a1b2c3d",
+  "isAnonymous": true,
+  "expiresAt": "2026-10-17T19:40:00Z",
+  "message": "Active session retrieved successfully."
+}
+```
+
+---
+
+### 2.3 Register Student Account (Optional)
 * **Method**: `POST`
 * **Path**: `/api/v1/auth/register`
 * **Description**: Creates a registered account to persist diagnostic history across devices.
@@ -154,7 +171,7 @@ Vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers
 
 ---
 
-### 2.3 Student Login
+### 2.4 Student Login
 * **Method**: `POST`
 * **Path**: `/api/v1/auth/login`
 
@@ -179,7 +196,29 @@ Vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers
 
 ---
 
-### 2.4 Verify Student Email
+### 2.5 Get Current Authenticated User Profile
+* **Method**: `GET`
+* **Path**: `/api/v1/auth/me`
+* **Headers**: `Authorization: Bearer <token>` (Requires `ROLE_STUDENT`, `ROLE_PREMIUM_STUDENT`, or `ROLE_ADMIN`)
+* **Description**: Returns personal profile, educational metadata, role, and verification status of the authenticated caller.
+
+#### Response `200 OK`
+```json
+{
+  "id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "email": "lucas.silva@escola.ma.gov.br",
+  "fullName": "Lucas Silva",
+  "schoolType": "PUBLIC_SCHOOL",
+  "targetDegree": "Computer Science",
+  "role": "ROLE_STUDENT",
+  "isEmailVerified": true,
+  "createdAt": "2026-09-18T10:00:00Z"
+}
+```
+
+---
+
+### 2.6 Verify Student Email
 * **Method**: `POST`
 * **Path**: `/api/v1/auth/verify-email`
 * **Description**: Verifies the student's email address using the single-use token delivered via the Transactional Outbox and `notification-service`.
@@ -213,7 +252,7 @@ Vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers
 
 ---
 
-### 2.5 Resend Email Verification Link
+### 2.7 Resend Email Verification Link
 * **Method**: `POST`
 * **Path**: `/api/v1/auth/resend-verification`
 * **Description**: Generates and persists a new verification token in `users` and emits an event via the Transactional Outbox. Rate-limited to 3 requests per hour.
@@ -361,7 +400,7 @@ Returns the question statement, status, and options A–E.
 
 ### 3.5 Update Question Publication Status (Admin Only)
 * **Method**: `PATCH`
-* **Path**: `/api/v1/admin/questions/{id}/status`
+* **Path**: `/api/v1/questions/{id}/status`
 * **Headers**: `Authorization: Bearer <token>` (Requires `ROLE_ADMIN`)
 
 #### Request Body
@@ -474,9 +513,37 @@ Returns the question statement, status, and options A–E.
 
 ---
 
+### 4.4 Get Diagnostic Report by Session ID
+* **Method**: `GET`
+* **Path**: `/api/v1/sessions/{id}/diagnostic` *(alias: `/api/v1/sessions/{id}/report`)*
+* **Description**: Retrieves the generated diagnostic assessment report and skill mastery radar for a completed practice session.
+
+#### Response `200 OK`
+```json
+{
+  "id": "77777777-6666-5555-4444-333333333333",
+  "sessionId": "88888888-9999-aaaa-bbbb-cccccccccccc",
+  "scorePercentage": 80.0,
+  "topicBreakdown": {
+    "Electrical Circuits": { "accuracy": 100.0, "total": 3, "correct": 3, "status": "MASTERED" },
+    "Optics": { "accuracy": 50.0, "total": 2, "correct": 1, "status": "ATTENTION_NEEDED" }
+  },
+  "recommendedTopics": [
+    "Optics",
+    "Thermodynamics"
+  ],
+  "generatedAt": "2026-09-17T19:55:00Z"
+}
+```
+
+---
+
 ## 5. Socratic AI Tutor Endpoints (`exam-service`)
 
-### 5.1 Get Curated Question Resolution
+### 5.1 Curated Question Resolution Delivery
+> [!NOTE]
+> **Anti-Cheating Architectural Design**: Question resolutions (`question_resolutions`) are securely encapsulated inside the `AttemptResultResponse` payload delivered upon submitting an answer attempt (`POST /api/v1/sessions/{sessionId}/attempts`). This guarantees students cannot view explanations or correct options prior to attempting the question. For administrative verification and post-session review:
+
 * **Method**: `GET`
 * **Path**: `/api/v1/questions/{id}/resolution`
 
@@ -943,6 +1010,52 @@ Used by frontend clients (e.g., Socratic AI chat drawer badge) to display remain
 
 ---
 
+### 7.5 Record Practice Activity & Award XP
+* **Method**: `POST`
+* **Path**: `/api/v1/gamification/activity`
+* **Headers**: `Authorization: Bearer <token>`
+* **Description**: Records completed practice activity, updates daily question progression toward goals, advances current streak, awards XP, and recalculates league placement.
+
+#### Request Body
+```json
+{
+  "questionsSolved": 5,
+  "correctCount": 4,
+  "sessionCompleted": true
+}
+```
+
+#### Response `200 OK`
+```json
+{
+  "userId": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "totalXp": 450,
+  "currentLevel": 2,
+  "titleLevel": "Focado no SISU",
+  "currentStreakDays": 7,
+  "dailyGoalQuestions": 10,
+  "todayQuestionsSolved": 5,
+  "dailyGoalCompleted": false
+}
+```
+
+---
+
+### 7.6 Trigger Daily Study Reminders (Scheduled Worker / Admin)
+* **Method**: `POST`
+* **Path**: `/api/v1/gamification/reminders/trigger`
+* **Headers**: `Authorization: Bearer <token>`
+* **Description**: Triggers an on-demand execution of the 19:00 BRT study reminder sweep, querying students with uncompleted daily goals and publishing `DailyGoalReminderEvent` to RabbitMQ.
+
+#### Response `200 OK`
+```json
+{
+  "dispatchedReminders": 18
+}
+```
+
+---
+
 ## 8. Multi-Channel Notification Endpoints (`notification-service`)
 
 > **Access Authorization**: Requires `ROLE_STUDENT` or `ROLE_PREMIUM_STUDENT` (Bearer JWT).
@@ -1024,3 +1137,19 @@ Used by frontend clients (e.g., Socratic AI chat drawer badge) to display remain
   "readAt": "2026-09-18T01:12:00Z"
 }
 ```
+
+---
+
+### 8.4 Get Unread Notifications Count
+* **Method**: `GET`
+* **Path**: `/api/v1/notifications/unread-count`
+* **Headers**: `Authorization: Bearer <token>`
+* **Description**: Returns the aggregate count of unread in-app notifications for header badge rendering.
+
+#### Response `200 OK`
+```json
+{
+  "unreadCount": 2
+}
+```
+

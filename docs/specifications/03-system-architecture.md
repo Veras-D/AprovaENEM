@@ -40,14 +40,14 @@ flowchart TD
 
         subgraph DataLayer ["Internal Persistence & Caching (Zero Host Ports Published)"]
             PostgresAuth[("🗄️ PostgreSQL (Auth DB)<br/>Internal Port 5432 - users, gamification")]
-            PostgresExam[("🗄️ PostgreSQL 16 + pgvector (Exam DB)<br/>Internal Port 5433 - questions, sessions, embeddings")]
-            PostgresNotif[("🗄️ PostgreSQL (Notification DB)<br/>Internal Port 5434 - device tokens, notification logs")]
+            PostgresExam[("🗄️ PostgreSQL 16 + pgvector (Exam DB)<br/>Internal Port 5432 - questions, sessions, embeddings")]
+            PostgresNotif[("🗄️ PostgreSQL (Notification DB)<br/>Internal Port 5432 - device tokens, notification logs")]
             RedisCache[("⚡ Redis 7+ In-Memory Cache & State<br/>Internal Port 6379 - L2 Cache, ZSET Ranks, Rate Limits")]
         end
 
         subgraph ObservabilityStack ["Internal Telemetry (Zero Host Ports Published)"]
             Prometheus["📊 Prometheus Server (Internal Port 9090)<br/>Scrapes `/actuator/prometheus`"]
-            Grafana["📈 Grafana Dashboard (Internal Port 3001)<br/>APM Latency & Error Heatmaps"]
+            Grafana["📈 Grafana Dashboard (Internal Port 3000)<br/>APM Latency & Error Heatmaps"]
         end
     end
 
@@ -107,10 +107,10 @@ The core architectural mandate of AprovaENEM is **perimeter isolation**:
 | **`exam-service` (Real API)** | 8082 | **None** | `aprovaenem-internal` | **STRICTLY PRIVATE** |
 | **`notification-service` (Real API)** | 8083 | **None** | `aprovaenem-internal` | **STRICTLY PRIVATE** |
 | **`ingestion-service` (Real API)** | None (Worker) | **None** | `aprovaenem-internal` | **STRICTLY PRIVATE** |
-| **PostgreSQL Databases** | 5432, 5433, 5434 | **None** | `aprovaenem-internal` | **STRICTLY PRIVATE** |
-| **Redis 7+ In-Memory Grid** | 6379 | **None** | `aprovaenem-internal` | **STRICTLY PRIVATE** |
-| **RabbitMQ Event Bus** | 5672, 15672 | **None** | `aprovaenem-internal` | **STRICTLY PRIVATE** |
-| **Prometheus / Grafana**| 9090, 3001 | **None** (SSH Tunnel / VPN only)| `aprovaenem-internal` | **STRICTLY PRIVATE** |
+| **PostgreSQL Databases** | 5432 (per container DNS) | **None** (Dev host overrides: 5432, 5433, 5434) | `aprovaenem-internal` | **STRICTLY PRIVATE** |
+| **Redis 7+ In-Memory Grid** | 6379 | **None** (Dev host override: 6379) | `aprovaenem-internal` | **STRICTLY PRIVATE** |
+| **RabbitMQ Event Bus** | 5672, 15672 | **None** (Dev host overrides: 5672, 15672) | `aprovaenem-internal` | **STRICTLY PRIVATE** |
+| **Prometheus / Grafana**| 9090, 3000 | **None** (Dev host overrides: 9090, 3000) | `aprovaenem-internal` | **STRICTLY PRIVATE** |
 
 #### Docker Compose Resilient Network & Self-Healing Container Topology
 
