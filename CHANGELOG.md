@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.16] - 2026-09-21
+### 🛡️ Audited, Synthesized & Reorganized (Backend Security Audit & JAM 2 Backend Scope Alignment)
+- sec(audit): Completed comprehensive multi-stage backend security, static analysis, and test authenticity audit across 6 independent subagent phases (TASK-S3-11):
+  - **Phase 1 (Static Analysis & Workarounds)**: Audited rapid changes in Checkstyle regex, relaxed PMD CC 15 threshold, SpotBugs absence, `QuestionDtoMapper` static extraction, brittle shell script JSON parsing in `preflight-smoke.sh`, Newman `--delay-request 100` rate limiter masking, and double-BCrypt performance cost during pepper verification. Generated `docs/audit/phase1-static-analysis-workarounds.md` (Score: 52.0% | Grade F).
+  - **Phase 2 (Threat Modeling & OWASP API Top 10)**: Identified 21 security findings (4 Critical, 6 High), including BOLA in `PracticeSessionController`, BFLA in unauthenticated `PATCH /api/v1/questions/{id}/status`, direct XP farming via `POST /api/v1/gamification/activity`, blind `X-User-Id` header trust, and unbounded pagination heap exhaustion. Generated `docs/audit/phase2-threat-modeling-owasp.md` (Score: 58.0% | Grade D+).
+  - **Phase 3 (Automated SAST, SCA & Container Hardening)**: Audited dependencies via Aquasec Trivy discovering 49 High/Critical CVEs in Spring Boot 3.3.3 transitives (10 Critical in Tomcat/Netty), verified clean 82-commit git history via Gitleaks while identifying blanket path allowlist blindspots, flagged root execution in `ingestion-service`, Docker socket mount in `autoheal`, and Nginx header inheritance bugs. Generated `docs/audit/phase3-automated-security-scans.md` (Score: 66.8% | Grade D+).
+  - **Phase 4 (Perimeter & Runtime Security)**: Validated network isolation in `docker-compose.yml` (`internal: true`), flagged `0.0.0.0` exposure in `docker-compose.override.dev.yml`, detected egress blackhole blocking Gemini LLM and SMTP, verified JJWT 0.12 signature enforcement, uncovered `JWT_SECRET` divergence bug in `exam-service`, and verified parameterized SQL queries. Generated `docs/audit/phase4-runtime-penetration-testing.md` (Score: 71.4% | Grade C-).
+  - **Phase 5 (Test Suite Authenticity & Mutation Testing)**: Evaluated 1,148 assertion points across 344 test executions; identified 2 zero-assert tests, detected security filter stripping in 4/5 WebMvc slice tests (`addFilters = false`), and conducted PITest 50-mutant simulation achieving an 80.0% kill rate while identifying surviving mutants in session persistence. Generated `docs/audit/phase5-test-authenticity-mutation.md` (Score: 78.2% | Grade B-).
+  - **Phase 6 (Master Synthesis & Formal Audit Report)**: Compiled unified weighted scorecard (Global Score: 65.58% | Grade D+), analyzed cross-cutting workaround risk cascades, generated Master Prioritized Remediation Backlog (10 Tier P0 Hotfixes), and published formal master audit report at `docs/audit/jam1-backend-security-audit.md` and `docs/audit/phase6-final-synthesis-remediation.md`.
+- docs(backlog): Reorganized project backlog in `docs/BACKLOG.md`:
+  - Marked **`TASK-S3-11`** as **DONE ✅**.
+  - Brought forward **`TASK-S3-13`** (**Historical Question Catalog Bulk Ingestion & Reconciliation 2019–2023**, 5 pts, P1) from JAM 2 Sprint 4 (`S4-00`) to the final of Sprint 3.
+  - Brought forward **`TASK-S3-14`** (**LGPD Art. 18 Data Portability & Irrevocable Account Erasure Backend APIs**, 5 pts, P0) from the backend scope of JAM 2 Sprint 6 (`S6-09`) to the final of Sprint 3.
+  - Re-scoped Sprint 4 to focus 100% on frontend architecture and design tokens (8 tasks starting with `S4-01`).
+  - Re-scoped `S6-09` in Sprint 6 to the frontend **Student Privacy Portal, Terms of Use UI & LGPD Self-Service Dashboard**.
+  - Synchronized the Mermaid Gantt chart and Milestone & Sprint Status Summary table (Sprint 3: 16 tasks total, 14 completed, 2 pending).
+
 ## [0.3.15] - 2026-09-20
 ### 🛡️ Added, Hardened & Documented (Governance, CI Execution & Backlog Investigation Scope)
 - docs(license): Adopted PolyForm Noncommercial License 1.0.0 in root `LICENSE` file and synchronized OpenAPI configs, strictly prohibiting commercial monetization and private prep-course exploitation while preserving 100% free educational access for students, public schools, and non-profits.
