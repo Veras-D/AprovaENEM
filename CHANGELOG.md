@@ -27,7 +27,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - **`docker-compose.yml`**:
     - Injected missing `JWT_SECRET=${JWT_SECRET}` into `exam-service` environment, aligning signature verification with `auth-service` and `frontend-api`.
   - **Postman Newman Suite**:
-    - Updated [`AprovaENEM.postman_collection.json`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/postman/AprovaENEM.postman_collection.json) to obtain an administrative token (`adminToken`) before executing `Update Question Status`, asserting HTTP 200 with RBAC validation.
+    - Expanded [`AprovaENEM.postman_collection.json`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/postman/AprovaENEM.postman_collection.json) to 42 requests and 75 assertions (100% green pass rate) achieving 100% route coverage across all microservices and asserting critical negative and security scenarios:
+      - Added missing endpoints: `POST /api/v1/auth/resend-verification` (200 OK), `POST /api/v1/auth/verify-email` (400 Bad Request on invalid/expired token), `GET /api/v1/questions?discipline=...` (200 OK catalog filter), and `PATCH /api/v1/notifications/{id}/read` (200 OK mark notification read).
+      - Added automated security & negative assertions: BOLA access denial on practice sessions without ownership (403 Forbidden), BFLA access denial on question status updates when requested by student principal (403 Forbidden), bad login credentials (400 Bad Request), duplicate student registration (400 Bad Request), malformed registration payload (400 Bad Request), and daily Socratic AI consultation quota exhaustion (429 Too Many Requests).
 - docs(backlog): Updated `docs/BACKLOG.md` marking `TASK-S3-15` as `DONE ✅`, advancing Sprint 3 completion to 88.9% (16/18 tasks completed).
 
 ## [0.3.17] - 2026-09-23

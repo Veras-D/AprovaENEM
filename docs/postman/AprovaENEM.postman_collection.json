@@ -14,11 +14,28 @@
           "request": {
             "method": "OPTIONS",
             "header": [
-              { "key": "Origin", "value": "http://localhost:3000" },
-              { "key": "Access-Control-Request-Method", "value": "POST" },
-              { "key": "Access-Control-Request-Headers", "value": "Authorization,Content-Type,X-Session-Id" }
+              {
+                "key": "Origin",
+                "value": "http://localhost:3000"
+              },
+              {
+                "key": "Access-Control-Request-Method",
+                "value": "POST"
+              },
+              {
+                "key": "Access-Control-Request-Headers",
+                "value": "Authorization,Content-Type,X-Session-Id"
+              }
             ],
-            "url": { "raw": "{{baseUrl}}/sessions", "host": ["{{baseUrl}}"], "path": ["sessions"] }
+            "url": {
+              "raw": "{{baseUrl}}/sessions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sessions"
+              ]
+            }
           },
           "event": [
             {
@@ -48,9 +65,21 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "url": { "raw": "{{baseUrl}}/auth/session", "host": ["{{baseUrl}}"], "path": ["auth", "session"] }
+            "url": {
+              "raw": "{{baseUrl}}/auth/session",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "session"
+              ]
+            }
           },
           "event": [
             {
@@ -77,7 +106,17 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/auth/session/{{sessionId}}", "host": ["{{baseUrl}}"], "path": ["auth", "session", "{{sessionId}}"] }
+            "url": {
+              "raw": "{{baseUrl}}/auth/session/{{sessionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "session",
+                "{{sessionId}}"
+              ]
+            }
           },
           "event": [
             {
@@ -134,13 +173,25 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{studentEmail}}\",\n  \"password\": \"{{studentPassword}}\",\n  \"fullName\": \"Lucas Silva dos Santos\",\n  \"schoolType\": \"PUBLIC_SCHOOL\",\n  \"targetDegree\": \"Engenharia da Computacao\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
           }
         },
         {
@@ -148,13 +199,25 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{studentEmail}}\",\n  \"password\": \"{{studentPassword}}\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
           },
           "event": [
             {
@@ -180,9 +243,21 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
             ],
-            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
           },
           "event": [
             {
@@ -209,9 +284,21 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
             ],
-            "url": { "raw": "{{baseUrl}}/auth/export", "host": ["{{baseUrl}}"], "path": ["auth", "export"] }
+            "url": {
+              "raw": "{{baseUrl}}/auth/export",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "export"
+              ]
+            }
           },
           "event": [
             {
@@ -233,6 +320,94 @@
               }
             }
           ]
+        },
+        {
+          "name": "Resend Verification Email (POST /api/v1/auth/resend-verification)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/resend-verification",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "resend-verification"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{studentEmail}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Verification email link dispatched', function () {",
+                  "    pm.expect(json.dispatched).to.be.true;",
+                  "    pm.expect(json.message).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify Email Token - Expired/Invalid Token (POST /api/v1/auth/verify-email)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/verify-email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "verify-email"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"invalid-token-12345\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Adheres to RFC 7807 problem details', function () {",
+                  "    pm.expect(json.status).to.eql(400);",
+                  "    pm.expect(json.message).to.include('token is invalid or has expired');",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -246,11 +421,21 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/questions?page=0&size=5",
-              "host": ["{{baseUrl}}"],
-              "path": ["questions"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "questions"
+              ],
               "query": [
-                { "key": "page", "value": "0" },
-                { "key": "size", "value": "5" }
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                }
               ]
             }
           },
@@ -274,11 +459,71 @@
           ]
         },
         {
+          "name": "Filter Questions by Discipline (GET /api/v1/questions?discipline=...)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/questions?discipline=Matem%C3%A1tica&page=0&size=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "questions"
+              ],
+              "query": [
+                {
+                  "key": "discipline",
+                  "value": "Matem%C3%A1tica"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Filtered questions returned', function () {",
+                  "    pm.expect(json.items).to.be.an('array');",
+                  "    pm.expect(json.totalElements).to.be.at.least(0);",
+                  "    if (json.items.length > 0) {",
+                  "        pm.expect(json.items[0].discipline).to.eql('Matemática');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Get Question Detail (GET /api/v1/questions/:id)",
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/questions/{{questionId}}", "host": ["{{baseUrl}}"], "path": ["questions", "{{questionId}}"] }
+            "url": {
+              "raw": "{{baseUrl}}/questions/{{questionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "questions",
+                "{{questionId}}"
+              ]
+            }
           },
           "event": [
             {
@@ -306,14 +551,30 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"status\": \"ACTIVE\",\n  \"suspensionReason\": null\n}"
             },
-            "url": { "raw": "{{baseUrl}}/questions/{{questionId}}/status", "host": ["{{baseUrl}}"], "path": ["questions", "{{questionId}}", "status"] }
+            "url": {
+              "raw": "{{baseUrl}}/questions/{{questionId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "questions",
+                "{{questionId}}",
+                "status"
+              ]
+            }
           },
           "event": [
             {
@@ -367,15 +628,32 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "X-Session-Id", "value": "{{sessionId}}" },
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Session-Id",
+                "value": "{{sessionId}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"sessionType\": \"TOPIC_PRACTICE\",\n  \"totalQuestions\": 5\n}"
             },
-            "url": { "raw": "{{baseUrl}}/sessions", "host": ["{{baseUrl}}"], "path": ["sessions"] }
+            "url": {
+              "raw": "{{baseUrl}}/sessions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sessions"
+              ]
+            }
           },
           "event": [
             {
@@ -405,9 +683,21 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
             ],
-            "url": { "raw": "{{baseUrl}}/sessions/{{practiceSessionId}}", "host": ["{{baseUrl}}"], "path": ["sessions", "{{practiceSessionId}}"] }
+            "url": {
+              "raw": "{{baseUrl}}/sessions/{{practiceSessionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sessions",
+                "{{practiceSessionId}}"
+              ]
+            }
           },
           "event": [
             {
@@ -428,14 +718,30 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"questionId\": \"{{questionId}}\",\n  \"selectedOption\": \"A\",\n  \"timeSpentSeconds\": 45\n}"
             },
-            "url": { "raw": "{{baseUrl}}/sessions/{{practiceSessionId}}/attempts", "host": ["{{baseUrl}}"], "path": ["sessions", "{{practiceSessionId}}", "attempts"] }
+            "url": {
+              "raw": "{{baseUrl}}/sessions/{{practiceSessionId}}/attempts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sessions",
+                "{{practiceSessionId}}",
+                "attempts"
+              ]
+            }
           },
           "event": [
             {
@@ -462,9 +768,22 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
             ],
-            "url": { "raw": "{{baseUrl}}/sessions/{{practiceSessionId}}/complete", "host": ["{{baseUrl}}"], "path": ["sessions", "{{practiceSessionId}}", "complete"] }
+            "url": {
+              "raw": "{{baseUrl}}/sessions/{{practiceSessionId}}/complete",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sessions",
+                "{{practiceSessionId}}",
+                "complete"
+              ]
+            }
           },
           "event": [
             {
@@ -490,9 +809,22 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
             ],
-            "url": { "raw": "{{baseUrl}}/sessions/{{practiceSessionId}}/diagnostic", "host": ["{{baseUrl}}"], "path": ["sessions", "{{practiceSessionId}}", "diagnostic"] }
+            "url": {
+              "raw": "{{baseUrl}}/sessions/{{practiceSessionId}}/diagnostic",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sessions",
+                "{{practiceSessionId}}",
+                "diagnostic"
+              ]
+            }
           },
           "event": [
             {
@@ -522,9 +854,21 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
             ],
-            "url": { "raw": "{{baseUrl}}/questions/ai-quota", "host": ["{{baseUrl}}"], "path": ["questions", "ai-quota"] }
+            "url": {
+              "raw": "{{baseUrl}}/questions/ai-quota",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "questions",
+                "ai-quota"
+              ]
+            }
           },
           "event": [
             {
@@ -550,14 +894,30 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"message\": \"Por que a alternativa A esta incorreta?\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/questions/{{questionId}}/chat", "host": ["{{baseUrl}}"], "path": ["questions", "{{questionId}}", "chat"] }
+            "url": {
+              "raw": "{{baseUrl}}/questions/{{questionId}}/chat",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "questions",
+                "{{questionId}}",
+                "chat"
+              ]
+            }
           },
           "event": [
             {
@@ -584,9 +944,22 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
             ],
-            "url": { "raw": "{{baseUrl}}/questions/{{questionId}}/chat", "host": ["{{baseUrl}}"], "path": ["questions", "{{questionId}}", "chat"] }
+            "url": {
+              "raw": "{{baseUrl}}/questions/{{questionId}}/chat",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "questions",
+                "{{questionId}}",
+                "chat"
+              ]
+            }
           },
           "event": [
             {
@@ -611,9 +984,22 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
             ],
-            "url": { "raw": "{{baseUrl}}/questions/{{questionId}}/chat", "host": ["{{baseUrl}}"], "path": ["questions", "{{questionId}}", "chat"] }
+            "url": {
+              "raw": "{{baseUrl}}/questions/{{questionId}}/chat",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "questions",
+                "{{questionId}}",
+                "chat"
+              ]
+            }
           },
           "event": [
             {
@@ -639,9 +1025,21 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
             ],
-            "url": { "raw": "{{baseUrl}}/gamification/profile", "host": ["{{baseUrl}}"], "path": ["gamification", "profile"] }
+            "url": {
+              "raw": "{{baseUrl}}/gamification/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "gamification",
+                "profile"
+              ]
+            }
           },
           "event": [
             {
@@ -668,14 +1066,29 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"targetQuestions\": 15,\n  \"optInReminders\": true\n}"
             },
-            "url": { "raw": "{{baseUrl}}/gamification/daily-goal", "host": ["{{baseUrl}}"], "path": ["gamification", "daily-goal"] }
+            "url": {
+              "raw": "{{baseUrl}}/gamification/daily-goal",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "gamification",
+                "daily-goal"
+              ]
+            }
           },
           "event": [
             {
@@ -700,14 +1113,29 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"questionsSolved\": 5,\n  \"correctCount\": 4,\n  \"sessionCompleted\": true\n}"
             },
-            "url": { "raw": "{{baseUrl}}/gamification/activity", "host": ["{{baseUrl}}"], "path": ["gamification", "activity"] }
+            "url": {
+              "raw": "{{baseUrl}}/gamification/activity",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "gamification",
+                "activity"
+              ]
+            }
           },
           "event": [
             {
@@ -728,9 +1156,22 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
             ],
-            "url": { "raw": "{{baseUrl}}/gamification/leaderboard/weekly", "host": ["{{baseUrl}}"], "path": ["gamification", "leaderboard", "weekly"] }
+            "url": {
+              "raw": "{{baseUrl}}/gamification/leaderboard/weekly",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "gamification",
+                "leaderboard",
+                "weekly"
+              ]
+            }
           },
           "event": [
             {
@@ -756,9 +1197,21 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
             ],
-            "url": { "raw": "{{baseUrl}}/gamification/badges", "host": ["{{baseUrl}}"], "path": ["gamification", "badges"] }
+            "url": {
+              "raw": "{{baseUrl}}/gamification/badges",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "gamification",
+                "badges"
+              ]
+            }
           },
           "event": [
             {
@@ -783,9 +1236,22 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
             ],
-            "url": { "raw": "{{baseUrl}}/gamification/reminders/trigger", "host": ["{{baseUrl}}"], "path": ["gamification", "reminders", "trigger"] }
+            "url": {
+              "raw": "{{baseUrl}}/gamification/reminders/trigger",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "gamification",
+                "reminders",
+                "trigger"
+              ]
+            }
           },
           "event": [
             {
@@ -815,14 +1281,29 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"deviceToken\": \"fcm_token_contract_test_sample\",\n  \"platform\": \"ANDROID\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/notifications/push-tokens", "host": ["{{baseUrl}}"], "path": ["notifications", "push-tokens"] }
+            "url": {
+              "raw": "{{baseUrl}}/notifications/push-tokens",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "push-tokens"
+              ]
+            }
           },
           "event": [
             {
@@ -843,9 +1324,20 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
             ],
-            "url": { "raw": "{{baseUrl}}/notifications", "host": ["{{baseUrl}}"], "path": ["notifications"] }
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications"
+              ]
+            }
           },
           "event": [
             {
@@ -869,13 +1361,80 @@
           ]
         },
         {
+          "name": "Mark Notification as Read (PATCH /api/v1/notifications/:id/read)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/{{notificationId}}/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "{{notificationId}}",
+                "read"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get('notificationId')) {",
+                  "    pm.environment.set('notificationId', '00000000-0000-0000-0000-000000000000');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('Status code is 200 OK or 404 Not Found if empty feed', function () {",
+                  "    pm.expect([200, 404]).to.include(status);",
+                  "});",
+                  "if (status === 200) {",
+                  "    const json = pm.response.json();",
+                  "    pm.test('Notification marked as READ', function () {",
+                  "        pm.expect(json.status).to.eql('READ');",
+                  "        pm.expect(json.readAt).to.not.be.null;",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Get Unread Count (GET /api/v1/notifications/unread-count)",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
             ],
-            "url": { "raw": "{{baseUrl}}/notifications/unread-count", "host": ["{{baseUrl}}"], "path": ["notifications", "unread-count"] }
+            "url": {
+              "raw": "{{baseUrl}}/notifications/unread-count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "unread-count"
+              ]
+            }
           },
           "event": [
             {
@@ -905,7 +1464,16 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
           },
           "event": [
             {
@@ -926,7 +1494,16 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/questions/00000000-0000-0000-0000-000000000000", "host": ["{{baseUrl}}"], "path": ["questions", "00000000-0000-0000-0000-000000000000"] }
+            "url": {
+              "raw": "{{baseUrl}}/questions/00000000-0000-0000-0000-000000000000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "questions",
+                "00000000-0000-0000-0000-000000000000"
+              ]
+            }
           },
           "event": [
             {
@@ -948,13 +1525,283 @@
           ]
         },
         {
+          "name": "BOLA Access Denied (GET /api/v1/sessions/:id without Ownership)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/sessions/{{practiceSessionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sessions",
+                "{{practiceSessionId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 403 Forbidden (BOLA Prevention)', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('BOLA response indicates access denied', function () {",
+                  "    pm.expect(json.status).to.eql(403);",
+                  "    pm.expect(json.message).to.include('not authorized to access this practice session');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "BFLA Access Denied (PATCH /api/v1/questions/:id/status as Student)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/questions/{{questionId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "questions",
+                "{{questionId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"SUSPENDED\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 403 Forbidden (BFLA RBAC Prevention)', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('BFLA response requires admin role', function () {",
+                  "    pm.expect(json.status).to.eql(403);",
+                  "    pm.expect(json.message).to.include('ROLE_ADMIN');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalid Login Credentials (POST /api/v1/auth/login with Wrong Password)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{studentEmail}}\",\n  \"password\": \"WrongPassword123!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request (Invalid Credentials)', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Invalid credentials error message', function () {",
+                  "    pm.expect(json.message).to.include('Invalid email or credentials');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Duplicate Student Registration (POST /api/v1/auth/register with Existing Email)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{studentEmail}}\",\n  \"password\": \"{{studentPassword}}\",\n  \"fullName\": \"Duplicate Student\",\n  \"schoolType\": \"PUBLIC_SCHOOL\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request (Duplicate Email)', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Error indicates email already registered', function () {",
+                  "    pm.expect(json.message).to.include('already exists');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registration Validation Error (POST /api/v1/auth/register with Malformed Payload)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"not-an-email\",\n  \"password\": \"\",\n  \"fullName\": \"\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request (Validation Errors)', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Daily Socratic AI Quota Exhausted (POST /api/v1/questions/:id/chat Turn 2)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/questions/44444444-0000-0000-0000-000000000001/chat",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "questions",
+                "44444444-0000-0000-0000-000000000001",
+                "chat"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Como resolver este problema de fisica?\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 429 Too Many Requests', function () {",
+                  "    pm.response.to.have.status(429);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Returns DAILY_AI_QUOTA_EXHAUSTED problem details', function () {",
+                  "    pm.expect(json.type).to.eql('https://aprovaenem.org/errors/DAILY_AI_QUOTA_EXHAUSTED');",
+                  "    pm.expect(json.status).to.eql(429);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Delete User Account (DELETE /api/v1/auth/me - LGPD Art. 18 Purge)",
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
             ],
-            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
           },
           "event": [
             {
