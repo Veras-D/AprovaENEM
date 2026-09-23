@@ -117,8 +117,14 @@ jobs:
 
       - name: Build and Launch Docker Compose Ecosystem
         run: |
+          echo "Pre-pulling base images with defensive retry..."
+          for i in 1 2 3; do
+            docker compose pull && break || { echo "Docker pull attempt $i failed, retrying in 5s..."; sleep 5; }
+          done
           echo "Building and starting microservices in detached mode..."
-          docker compose up -d --build
+          for i in 1 2 3; do
+            docker compose up -d --build && break || { echo "Docker compose up attempt $i failed, retrying in 5s..."; sleep 5; }
+          done
 
       - name: "Stage 6a: Wait for Microservices Healthy State"
         run: |

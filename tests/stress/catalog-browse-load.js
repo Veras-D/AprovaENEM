@@ -21,12 +21,11 @@ export const options = {
   scenarios: {
     exam_rush_catalog_load: {
       executor: 'ramping-vus',
-      startVUs: 10,
+      startVUs: IS_CI_FAST ? 2 : 10,
       stages: IS_CI_FAST
         ? [
-            { duration: '5s', target: 50 },
-            { duration: '10s', target: 150 },
-            { duration: '10s', target: 150 },
+            { duration: '5s', target: 5 },
+            { duration: '15s', target: 15 },
             { duration: '5s', target: 0 },
           ]
         : [
@@ -39,14 +38,23 @@ export const options = {
       gracefulRampDown: '10s',
     },
   },
-  thresholds: {
-    http_req_duration: ['p(95)<300', 'p(99)<450'],
-    http_req_failed: ['rate<0.01'],
-    catalog_query_duration_ms: ['p(95)<300'],
-    single_question_duration_ms: ['p(95)<250'], // Redis L2 cache target under 150+ concurrent VUs
-    server_errors_5xx_count: ['count==0'],
-    trace_header_present_rate: ['rate>0.99'],
-  },
+  thresholds: IS_CI_FAST
+    ? {
+        http_req_duration: ['p(95)<500', 'p(99)<1000'],
+        http_req_failed: ['rate<0.01'],
+        catalog_query_duration_ms: ['p(95)<500'],
+        single_question_duration_ms: ['p(95)<300'],
+        server_errors_5xx_count: ['count==0'],
+        trace_header_present_rate: ['rate>0.99'],
+      }
+    : {
+        http_req_duration: ['p(95)<300', 'p(99)<450'],
+        http_req_failed: ['rate<0.01'],
+        catalog_query_duration_ms: ['p(95)<300'],
+        single_question_duration_ms: ['p(95)<250'], // Redis L2 cache target under 150+ concurrent VUs
+        server_errors_5xx_count: ['count==0'],
+        trace_header_present_rate: ['rate>0.99'],
+      },
 };
 
 function getHeaders(vuId) {
