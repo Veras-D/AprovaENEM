@@ -69,7 +69,12 @@ class RabbitMQNotificationPublisherAdapterTest {
                 eq(event)
         );
 
-        // Must not throw
-        adapter.publishStudyReminder(event);
+        org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> adapter.publishStudyReminder(event));
+
+        verify(rabbitTemplate).convertAndSend(
+                eq(RabbitMQConfig.NOTIFICATION_EXCHANGE),
+                eq(RabbitMQConfig.STUDY_REMINDER_ROUTING_KEY),
+                eq(event)
+        );
     }
 }

@@ -2,6 +2,7 @@ package com.aprovaenem.auth.application.service;
 
 import com.aprovaenem.auth.domain.model.AchievementBadge;
 import com.aprovaenem.auth.domain.model.OutboxEvent;
+import com.aprovaenem.auth.domain.model.PasswordVerificationResult;
 import com.aprovaenem.auth.domain.model.SchoolType;
 import com.aprovaenem.auth.domain.model.User;
 import com.aprovaenem.auth.domain.model.UserGamificationProfile;
@@ -129,7 +130,7 @@ class AuthServiceTest {
                 .build();
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches(rawPassword, passwordHash)).thenReturn(true);
+        when(passwordEncoder.verify(rawPassword, passwordHash)).thenReturn(PasswordVerificationResult.matched());
         when(tokenProvider.generateToken(user)).thenReturn("jwt.token.here");
         when(tokenProvider.getExpirationSeconds()).thenReturn(86400L);
 
@@ -159,8 +160,7 @@ class AuthServiceTest {
                 .build();
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches(rawPassword, legacyHash)).thenReturn(true);
-        when(passwordEncoder.isLegacyHash(rawPassword, legacyHash)).thenReturn(true);
+        when(passwordEncoder.verify(rawPassword, legacyHash)).thenReturn(PasswordVerificationResult.upgradeNeeded());
         when(passwordEncoder.encode(rawPassword)).thenReturn(pepperedHash);
         when(tokenProvider.generateToken(user)).thenReturn("jwt.token.migrated");
         when(tokenProvider.getExpirationSeconds()).thenReturn(86400L);
@@ -185,7 +185,7 @@ class AuthServiceTest {
                 .build();
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("WrongPassword", user.getPasswordHash())).thenReturn(false);
+        when(passwordEncoder.verify("WrongPassword", user.getPasswordHash())).thenReturn(PasswordVerificationResult.failed());
 
         assertThatThrownBy(() -> authService.login(email, "WrongPassword"))
                 .isInstanceOf(BusinessException.class)
@@ -206,7 +206,7 @@ class AuthServiceTest {
                 .build();
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("pass", user.getPasswordHash())).thenReturn(true);
+        when(passwordEncoder.verify("pass", user.getPasswordHash())).thenReturn(PasswordVerificationResult.matched());
 
         assertThatThrownBy(() -> authService.login(email, "pass"))
                 .isInstanceOf(BusinessException.class)

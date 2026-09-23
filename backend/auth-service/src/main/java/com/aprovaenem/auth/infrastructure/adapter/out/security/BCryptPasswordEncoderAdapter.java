@@ -1,8 +1,12 @@
 package com.aprovaenem.auth.infrastructure.adapter.out.security;
 
+import com.aprovaenem.auth.domain.model.PasswordVerificationResult;
 import com.aprovaenem.auth.domain.port.out.PasswordEncoderPort;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -12,6 +16,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Base64;
 
 @Slf4j
@@ -22,6 +27,10 @@ public class BCryptPasswordEncoderAdapter implements PasswordEncoderPort {
     private final PasswordEncoder passwordEncoder;
     private final String pepper;
 
+    @Autowired(required = false)
+    private Environment environment;
+
+    @Autowired
     public BCryptPasswordEncoderAdapter(
             @Value("${auth.password-pepper:}") String pepper
     ) {
@@ -33,8 +42,14 @@ public class BCryptPasswordEncoderAdapter implements PasswordEncoderPort {
         }
     }
 
-    public BCryptPasswordEncoderAdapter() {
-        this("");
+    @PostConstruct
+    public void validatePepper() {
+        if (this.pepper.isEmpty()) {
+            boolean isTest = environment != null && Arrays.asList(environment.getActiveProfiles()).contains("test");
+            if (!isTest) {
+                throw new IllegalStateException("Production security violation: auth.password-pepper must be configured in non-test profiles.");
+            }
+        }
     }
 
     @Override
@@ -47,35 +62,35 @@ public class BCryptPasswordEncoderAdapter implements PasswordEncoderPort {
     }
 
     @Override
-    public boolean matches(String rawPassword, String encodedPassword) {
+    public PasswordVerificationResult verify(String rawPassword, String encodedPassword) {
         if (rawPassword == null || encodedPassword == null) {
-            return false;
+            return PasswordVerificationResult.failed();
         }
 
         // 1. Primary check: verify against HMAC-SHA256 peppered password hash
         if (!pepper.isEmpty()) {
             String peppered = applyPepper(rawPassword);
             if (passwordEncoder.matches(peppered, encodedPassword)) {
-                return true;
+                return PasswordVerificationResult.matched();
             }
         }
 
         // 2. Dual-check fallback: verify legacy unpeppered password for seamless backward compatibility
-        return passwordEncoder.matches(rawPassword, encodedPassword);
+        if (passwordEncoder.matches(rawPassword, encodedPassword)) {
+            return pepper.isEmpty() ? PasswordVerificationResult.matched() : PasswordVerificationResult.upgradeNeeded();
+        }
+
+        return PasswordVerificationResult.failed();
+    }
+
+    @Override
+    public boolean matches(String rawPassword, String encodedPassword) {
+        return verify(rawPassword, encodedPassword).matches();
     }
 
     @Override
     public boolean isLegacyHash(String rawPassword, String encodedPassword) {
-        if (pepper.isEmpty() || rawPassword == null || encodedPassword == null) {
-            return false;
-        }
-        String peppered = applyPepper(rawPassword);
-        // If it matches the peppered version, it's already using the pepper
-        if (passwordEncoder.matches(peppered, encodedPassword)) {
-            return false;
-        }
-        // If it matches unpeppered, it is a legacy hash that can be upgraded
-        return passwordEncoder.matches(rawPassword, encodedPassword);
+        return verify(rawPassword, encodedPassword).needsUpgrade();
     }
 
     private String applyPepper(String rawPassword) {

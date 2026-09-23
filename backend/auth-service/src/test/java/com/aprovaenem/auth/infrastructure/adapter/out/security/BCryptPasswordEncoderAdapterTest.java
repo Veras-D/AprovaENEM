@@ -115,7 +115,7 @@ class BCryptPasswordEncoderAdapterTest {
     }
 
     @Test
-    @DisplayName("7. Should verify default isLegacyHash method on PasswordEncoderPort interface")
+    @DisplayName("7. Should verify default isLegacyHash and verify methods on PasswordEncoderPort interface")
     void shouldVerifyDefaultInterfaceMethod() {
         com.aprovaenem.auth.domain.port.out.PasswordEncoderPort port = new com.aprovaenem.auth.domain.port.out.PasswordEncoderPort() {
             @Override
@@ -129,5 +129,65 @@ class BCryptPasswordEncoderAdapterTest {
             }
         };
         assertThat(port.isLegacyHash("pass", "hash")).isFalse();
+        assertThat(port.verify("pass", "hash").matches()).isFalse();
+    }
+
+    @Test
+    @DisplayName("8. Single-pass verify: Should return matched for modern peppered password")
+    void shouldReturnMatchedForPepperedPasswordInSinglePass() {
+        String raw = "SenhaModerna@2026";
+        String encoded = pepperedAdapter.encode(raw);
+
+        var result = pepperedAdapter.verify(raw, encoded);
+        assertThat(result.matches()).isTrue();
+        assertThat(result.needsUpgrade()).isFalse();
+    }
+
+    @Test
+    @DisplayName("9. Single-pass verify: Should return upgradeNeeded for legacy unpeppered password")
+    void shouldReturnUpgradeNeededForLegacyPasswordInSinglePass() {
+        String raw = "SenhaAntiga@2024";
+        String legacyHash = new BCryptPasswordEncoder(10).encode(raw);
+
+        var result = pepperedAdapter.verify(raw, legacyHash);
+        assertThat(result.matches()).isTrue();
+        assertThat(result.needsUpgrade()).isTrue();
+    }
+
+    @Test
+    @DisplayName("10. Single-pass verify: Should return failed for invalid or null credentials")
+    void shouldReturnFailedForInvalidOrNullCredentials() {
+        var wrongPass = pepperedAdapter.verify("WrongPass", "$2a$10$abcdefghijklmnopqrstuu");
+        assertThat(wrongPass.matches()).isFalse();
+        assertThat(wrongPass.needsUpgrade()).isFalse();
+
+        var nullPass = pepperedAdapter.verify(null, "$2a$10$abcdefghijklmnopqrstuu");
+        assertThat(nullPass.matches()).isFalse();
+    }
+
+    @Test
+    @DisplayName("11. Fail-fast: validatePepper should throw in non-test profiles when pepper is empty")
+    void shouldFailFastWhenPepperIsEmptyInNonTestProfile() {
+        org.springframework.mock.env.MockEnvironment prodEnv = new org.springframework.mock.env.MockEnvironment();
+        prodEnv.setActiveProfiles("production");
+
+        BCryptPasswordEncoderAdapter emptyAdapter = new BCryptPasswordEncoderAdapter("");
+        org.springframework.test.util.ReflectionTestUtils.setField(emptyAdapter, "environment", prodEnv);
+
+        assertThatThrownBy(emptyAdapter::validatePepper)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Production security violation");
+    }
+
+    @Test
+    @DisplayName("12. Fail-fast: validatePepper should succeed in test profile even if pepper is empty")
+    void shouldAllowEmptyPepperInTestProfile() {
+        org.springframework.mock.env.MockEnvironment testEnv = new org.springframework.mock.env.MockEnvironment();
+        testEnv.setActiveProfiles("test");
+
+        BCryptPasswordEncoderAdapter emptyAdapter = new BCryptPasswordEncoderAdapter("");
+        org.springframework.test.util.ReflectionTestUtils.setField(emptyAdapter, "environment", testEnv);
+
+        org.junit.jupiter.api.Assertions.assertDoesNotThrow(emptyAdapter::validatePepper);
     }
 }

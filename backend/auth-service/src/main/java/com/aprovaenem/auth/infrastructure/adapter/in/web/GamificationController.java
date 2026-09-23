@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,9 +38,8 @@ public class GamificationController {
     @GetMapping("/profile")
     @PreAuthorize("hasAnyRole('STUDENT', 'PREMIUM_STUDENT')")
     public ResponseEntity<GamificationProfileResponse> getProfile(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestHeader(value = "X-User-Id", required = false) String xUserId) {
-        UUID userId = resolveUserId(userDetails, xUserId);
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UUID userId = resolveUserId(userDetails);
         GamificationProfileResponse profile = gamificationUseCase.getProfileResponse(userId);
         return ResponseEntity.ok(profile);
     }
@@ -50,9 +48,8 @@ public class GamificationController {
     @PreAuthorize("hasAnyRole('STUDENT', 'PREMIUM_STUDENT')")
     public ResponseEntity<UpdateDailyGoalResponse> updateDailyGoal(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestHeader(value = "X-User-Id", required = false) String xUserId,
             @Valid @RequestBody UpdateDailyGoalRequest request) {
-        UUID userId = resolveUserId(userDetails, xUserId);
+        UUID userId = resolveUserId(userDetails);
         UserGamificationProfile profile = gamificationUseCase.updateDailyGoal(
                 userId,
                 request.getTargetQuestions(),
@@ -72,11 +69,10 @@ public class GamificationController {
     @PreAuthorize("hasAnyRole('STUDENT', 'PREMIUM_STUDENT')")
     public ResponseEntity<WeeklyLeaderboardResponse> getWeeklyLeaderboard(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestHeader(value = "X-User-Id", required = false) String xUserId,
             @RequestParam(value = "league", required = false) String leagueStr,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size) {
-        UUID userId = resolveUserId(userDetails, xUserId);
+        UUID userId = resolveUserId(userDetails);
         LeagueTier leagueTier = null;
         if (leagueStr != null && !leagueStr.isBlank()) {
             try {
@@ -101,9 +97,8 @@ public class GamificationController {
     @GetMapping("/badges")
     @PreAuthorize("hasAnyRole('STUDENT', 'PREMIUM_STUDENT')")
     public ResponseEntity<BadgesResponse> getBadges(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestHeader(value = "X-User-Id", required = false) String xUserId) {
-        UUID userId = resolveUserId(userDetails, xUserId);
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UUID userId = resolveUserId(userDetails);
         BadgesResponse response = gamificationUseCase.getBadges(userId);
         return ResponseEntity.ok(response);
     }
@@ -112,9 +107,8 @@ public class GamificationController {
     @PreAuthorize("hasAnyRole('STUDENT', 'PREMIUM_STUDENT')")
     public ResponseEntity<GamificationProfileResponse> recordActivity(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestHeader(value = "X-User-Id", required = false) String xUserId,
             @Valid @RequestBody RecordActivityRequest request) {
-        UUID userId = resolveUserId(userDetails, xUserId);
+        UUID userId = resolveUserId(userDetails);
         gamificationUseCase.awardXpForActivity(
                 userId,
                 request.getQuestionsSolved(),
@@ -133,15 +127,13 @@ public class GamificationController {
         return ResponseEntity.ok(Map.of("dispatchedReminders", count));
     }
 
-    private UUID resolveUserId(UserDetails userDetails, String xUserId) {
-        if (xUserId != null && !xUserId.isBlank()) {
+    private UUID resolveUserId(UserDetails userDetails) {
+        if (userDetails != null && userDetails.getUsername() != null && !userDetails.getUsername().isBlank()) {
             try {
-                return UUID.fromString(xUserId);
-            } catch (IllegalArgumentException ignored) {
+                return UUID.fromString(userDetails.getUsername());
+            } catch (IllegalArgumentException ex) {
+                throw new IllegalArgumentException("Authenticated user identity is not a valid UUID", ex);
             }
-        }
-        if (userDetails != null) {
-            return UUID.fromString(userDetails.getUsername());
         }
         throw new IllegalArgumentException("Authenticated user could not be identified");
     }

@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.18] - 2026-09-23
+### 🔒 Fixed & Hardened (Backend Security Audit Critical P0 Remediation & Hardening)
+- fix(security): Remediated critical security vulnerabilities, architectural flaws, and test integrity gaps identified during the multi-stage security audit (TASK-S3-15):
+  - **`common-core`**:
+    - Created [`AccessDeniedException`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/common-core/src/main/java/com/aprovaenem/common/exception/AccessDeniedException.java) representing RFC 7807 403 Forbidden domain access denial; installed into local repository with unit test coverage.
+  - **`exam-service`**:
+    - **BOLA Remediation (`PracticeSessionController`)**: Enforced principal ownership validation on all session interaction endpoints (`GET /api/v1/sessions/{id}`, `POST /api/v1/sessions/{id}/attempts`, `POST /api/v1/sessions/{id}/complete`, `GET /api/v1/sessions/{id}/diagnostic`). Rejects cross-student access with HTTP 403 Forbidden (`AccessDeniedException`).
+    - **Session Creation Spoofing Fix**: Resolved student `userId` strictly from verified JWT Bearer claims (or generated a guest `anonymousSessionId`), actively ignoring untrusted `userId` passed in request payloads.
+    - **Cyclomatic Complexity Decomposition**: Decomposed `startSession` into clean private helpers (`resolveUserIdFromToken`, `resolveSessionId`, `buildStartSessionCommand`), dropping cyclomatic complexity from 15 to $\le 5$ and cleanly satisfying PMD.
+    - **BFLA Remediation (`QuestionCatalogController`)**: Enforced administrator authorization (`ROLE_ADMIN`) on `PATCH /api/v1/questions/{id}/status`, rejecting student and unauthenticated requests with HTTP 403 Forbidden.
+    - **RFC 7807 Error Handling**: Added `handleAccessDeniedException` to [`GlobalExceptionHandler`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/in/web/GlobalExceptionHandler.java) mapping to HTTP 403 Forbidden Problem Detail.
+    - **Test Suite Authenticity**: Added explicit verification assertion (`verify(threadRepository, never()).save(any())`) to `TutorChatRepositoryAdapterTest` eliminating zero-assertion smells.
+  - **`auth-service`**:
+    - **Double-BCrypt Overhead Elimination**: Introduced [`PasswordVerificationResult`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/src/main/java/com/aprovaenem/auth/domain/model/PasswordVerificationResult.java) and refactored [`BCryptPasswordEncoderAdapter`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/src/main/java/com/aprovaenem/auth/infrastructure/adapter/out/security/BCryptPasswordEncoderAdapter.java) to single-pass verification. Eliminated 50% CPU overhead and timing side-channels while preserving dual backward-compatibility and automatic pepper re-hashing.
+    - **Fail-Fast Pepper Startup Check**: Added `@PostConstruct validatePepper()` in `BCryptPasswordEncoderAdapter` to halt application startup if `auth.password-pepper` is unset in non-test profiles, preventing silent unpeppered deployments.
+    - **Downstream `X-User-Id` Trust Elimination**: Removed unauthenticated `X-User-Id` header fallback in [`GamificationController`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/src/main/java/com/aprovaenem/auth/infrastructure/adapter/in/web/GamificationController.java), relying strictly on authenticated `userDetails`.
+    - **Seed Passwords**: Added Flyway migration [`V4__fix_seed_passwords.sql`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/src/main/resources/db/migration/V4__fix_seed_passwords.sql) resetting placeholder hashes for `student@aprovaenem.com.br` and `admin@aprovaenem.com.br` to valid BCrypt hashes for `Password123!`.
+    - **Test Suite Assertion Fix**: Added explicit `assertDoesNotThrow` and `verify(rabbitTemplate).convertAndSend(...)` to `RabbitMQNotificationPublisherAdapterTest`.
+  - **`notification-service`**:
+    - **Downstream `X-User-Id` Trust Elimination**: Removed unauthenticated `X-User-Id` header fallback in [`NotificationController`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/notification-service/src/main/java/com/aprovaenem/notification/infrastructure/adapter/in/web/NotificationController.java), strictly requiring verified JWT Bearer token resolution.
+  - **`docker-compose.yml`**:
+    - Injected missing `JWT_SECRET=${JWT_SECRET}` into `exam-service` environment, aligning signature verification with `auth-service` and `frontend-api`.
+  - **Postman Newman Suite**:
+    - Updated [`AprovaENEM.postman_collection.json`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/postman/AprovaENEM.postman_collection.json) to obtain an administrative token (`adminToken`) before executing `Update Question Status`, asserting HTTP 200 with RBAC validation.
+- docs(backlog): Updated `docs/BACKLOG.md` marking `TASK-S3-15` as `DONE ✅`, advancing Sprint 3 completion to 88.9% (16/18 tasks completed).
+
 ## [0.3.17] - 2026-09-23
 ### 🔒 Added & Hardened (LGPD Art. 18 Data Portability & Irrevocable Account Erasure Backend APIs)
 - feat(lgpd): Implemented comprehensive LGPD Art. 18 data portability and account erasure endpoints across backend microservices (TASK-S3-14):

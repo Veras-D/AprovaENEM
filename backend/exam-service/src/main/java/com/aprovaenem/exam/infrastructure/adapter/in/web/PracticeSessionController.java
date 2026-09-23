@@ -18,6 +18,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.aprovaenem.common.exception.AccessDeniedException;
+import com.aprovaenem.exam.infrastructure.security.JwtTokenValidator;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,45 +41,85 @@ import java.util.UUID;
 public class PracticeSessionController {
 
     private final PracticeSessionUseCase sessionUseCase;
+    private final JwtTokenValidator jwtValidator;
 
     @PostMapping
     public ResponseEntity<PracticeSessionResponse> startSession(
             @Valid @RequestBody(required = false) StartSessionRequest request,
             @RequestHeader(value = "X-Session-Id", required = false) String sessionHeader,
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
             HttpServletRequest httpRequest
     ) {
-        String sessionId = (request != null && request.getAnonymousSessionId() != null && !request.getAnonymousSessionId().isBlank())
-                ? request.getAnonymousSessionId()
-                : sessionHeader;
-
-        if (sessionId == null || sessionId.isBlank()) {
-            throw new BusinessException("Session ID is required (either in request body or X-Session-Id header).");
-        }
-
-        StartSessionCommand command = new StartSessionCommand(
-                request != null ? request.getUserId() : null,
-                sessionId,
-                request != null ? request.getSessionType() : null,
-                request != null ? request.getTopicId() : null,
-                request != null ? request.getDifficulty() : null,
-                request != null ? request.getTotalQuestions() : 10
-        );
+        UUID resolvedUserId = resolveUserIdFromToken(authHeader);
+        String sessionId = resolveSessionId(request, sessionHeader, resolvedUserId);
+        StartSessionCommand command = buildStartSessionCommand(request, resolvedUserId, sessionId);
 
         PracticeSession session = sessionUseCase.startSession(command);
         return ResponseEntity.status(HttpStatus.CREATED).body(toSessionResponse(session));
     }
 
+    private UUID resolveUserIdFromToken(String authHeader) {
+        String token = resolveToken(authHeader);
+        if (token == null) {
+            return null;
+        }
+        if (!jwtValidator.validateToken(token)) {
+            throw new AccessDeniedException("Invalid or expired authentication token.");
+        }
+        return jwtValidator.extractUserId(token);
+    }
+
+    private String resolveSessionId(StartSessionRequest request, String sessionHeader, UUID resolvedUserId) {
+        String sessionId = null;
+        if (request != null && request.getAnonymousSessionId() != null && !request.getAnonymousSessionId().isBlank()) {
+            sessionId = request.getAnonymousSessionId();
+        } else if (sessionHeader != null && !sessionHeader.isBlank()) {
+            sessionId = sessionHeader;
+        } else if (resolvedUserId != null) {
+            sessionId = resolvedUserId.toString();
+        }
+
+        if (sessionId == null) {
+            throw new BusinessException("Session ID is required (either in request body or X-Session-Id header).");
+        }
+        return sessionId;
+    }
+
+    private StartSessionCommand buildStartSessionCommand(StartSessionRequest request, UUID resolvedUserId, String sessionId) {
+        if (request == null) {
+            return new StartSessionCommand(resolvedUserId, sessionId, null, null, null, 10);
+        }
+        return new StartSessionCommand(
+                resolvedUserId,
+                sessionId,
+                request.getSessionType(),
+                request.getTopicId(),
+                request.getDifficulty(),
+                request.getTotalQuestions()
+        );
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<PracticeSessionResponse> getSession(@PathVariable UUID id) {
+    public ResponseEntity<PracticeSessionResponse> getSession(
+            @PathVariable UUID id,
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+            @RequestHeader(value = "X-Session-Id", required = false) String sessionHeader
+    ) {
         PracticeSession session = sessionUseCase.getSession(id);
+        validateSessionOwnership(session, authHeader, sessionHeader);
         return ResponseEntity.ok(toSessionResponse(session));
     }
 
     @PostMapping("/{id}/attempts")
     public ResponseEntity<AttemptResultResponse> submitAnswer(
             @PathVariable UUID id,
-            @Valid @RequestBody SubmitAnswerRequest request
+            @Valid @RequestBody SubmitAnswerRequest request,
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+            @RequestHeader(value = "X-Session-Id", required = false) String sessionHeader
     ) {
+        PracticeSession session = sessionUseCase.getSession(id);
+        validateSessionOwnership(session, authHeader, sessionHeader);
+
         SubmitAnswerCommand command = new SubmitAnswerCommand(
                 id,
                 request.getQuestionId(),
@@ -102,15 +145,55 @@ public class PracticeSessionController {
     }
 
     @PostMapping("/{id}/complete")
-    public ResponseEntity<DiagnosticReportResponse> completeSession(@PathVariable UUID id) {
+    public ResponseEntity<DiagnosticReportResponse> completeSession(
+            @PathVariable UUID id,
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+            @RequestHeader(value = "X-Session-Id", required = false) String sessionHeader
+    ) {
+        PracticeSession session = sessionUseCase.getSession(id);
+        validateSessionOwnership(session, authHeader, sessionHeader);
+
         DiagnosticReport report = sessionUseCase.completeSession(id);
         return ResponseEntity.ok(toDiagnosticResponse(report));
     }
 
     @GetMapping({"/{id}/diagnostic", "/{id}/report"})
-    public ResponseEntity<DiagnosticReportResponse> getDiagnosticReport(@PathVariable UUID id) {
+    public ResponseEntity<DiagnosticReportResponse> getDiagnosticReport(
+            @PathVariable UUID id,
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+            @RequestHeader(value = "X-Session-Id", required = false) String sessionHeader
+    ) {
+        PracticeSession session = sessionUseCase.getSession(id);
+        validateSessionOwnership(session, authHeader, sessionHeader);
+
         DiagnosticReport report = sessionUseCase.getDiagnosticReport(id);
         return ResponseEntity.ok(toDiagnosticResponse(report));
+    }
+
+    private void validateSessionOwnership(PracticeSession session, String authHeader, String sessionHeader) {
+        String token = resolveToken(authHeader);
+        if (token != null && jwtValidator.validateToken(token)) {
+            String role = jwtValidator.extractRole(token);
+            if ("ROLE_ADMIN".equals(role)) {
+                return;
+            }
+            if (session.getUserId() != null && session.getUserId().equals(jwtValidator.extractUserId(token))) {
+                return;
+            }
+        }
+
+        if (session.getUserId() == null && sessionHeader != null && sessionHeader.equals(session.getAnonymousSessionId())) {
+            return;
+        }
+
+        throw new AccessDeniedException("You are not authorized to access this practice session.");
+    }
+
+    private String resolveToken(String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7).trim();
+        }
+        return null;
     }
 
     private PracticeSessionResponse toSessionResponse(PracticeSession session) {

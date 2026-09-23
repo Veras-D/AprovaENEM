@@ -2,6 +2,7 @@ package com.aprovaenem.auth.application.service;
 
 import com.aprovaenem.auth.domain.model.AchievementBadge;
 import com.aprovaenem.auth.domain.model.OutboxEvent;
+import com.aprovaenem.auth.domain.model.PasswordVerificationResult;
 import com.aprovaenem.auth.domain.model.SchoolType;
 import com.aprovaenem.auth.domain.model.User;
 import com.aprovaenem.auth.domain.model.UserGamificationProfile;
@@ -113,7 +114,8 @@ public class AuthService implements AuthUseCase {
         User user = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new BusinessException("Invalid email or credentials."));
 
-        if (!passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
+        PasswordVerificationResult verification = passwordEncoder.verify(rawPassword, user.getPasswordHash());
+        if (!verification.matches()) {
             throw new BusinessException("Invalid email or credentials.");
         }
 
@@ -121,7 +123,7 @@ public class AuthService implements AuthUseCase {
             throw new BusinessException("Your account has been deactivated. Please contact support.");
         }
 
-        if (passwordEncoder.isLegacyHash(rawPassword, user.getPasswordHash())) {
+        if (verification.needsUpgrade()) {
             user.setPasswordHash(passwordEncoder.encode(rawPassword));
             userRepository.save(user);
             log.info("Seamlessly upgraded legacy password hash with HMAC-SHA256 pepper for user [{}]", user.getId());

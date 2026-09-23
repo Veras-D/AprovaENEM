@@ -142,7 +142,7 @@ class QuestionCatalogControllerWebMvcTest {
     }
 
     @Test
-    @DisplayName("PATCH /api/v1/questions/{id}/status should update question status and return HTTP 200")
+    @DisplayName("PATCH /api/v1/questions/{id}/status should update question status and return HTTP 200 when admin")
     void shouldUpdateQuestionStatusSuccessfully() throws Exception {
         UUID questionId = UUID.randomUUID();
         Question q = createSampleQuestion(questionId);
@@ -153,10 +153,15 @@ class QuestionCatalogControllerWebMvcTest {
                 .suspensionReason("Contains typographical errors in equation")
                 .build();
 
+        String token = "admin-jwt-token";
+        when(jwtValidator.validateToken(token)).thenReturn(true);
+        when(jwtValidator.extractRole(token)).thenReturn("ROLE_ADMIN");
+
         when(catalogUseCase.updateQuestionStatus(eq(questionId), eq(QuestionStatus.SUSPENDED), eq("Contains typographical errors in equation")))
                 .thenReturn(q);
 
         mockMvc.perform(patch("/api/v1/questions/" + questionId + "/status")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -166,12 +171,50 @@ class QuestionCatalogControllerWebMvcTest {
     }
 
     @Test
+    @DisplayName("PATCH /api/v1/questions/{id}/status without authentication should return HTTP 403 Forbidden")
+    void shouldReturnForbiddenWhenUpdatingStatusWithoutAuth() throws Exception {
+        UUID questionId = UUID.randomUUID();
+        UpdateQuestionStatusRequest request = UpdateQuestionStatusRequest.builder()
+                .status(QuestionStatus.SUSPENDED)
+                .build();
+
+        mockMvc.perform(patch("/api/v1/questions/" + questionId + "/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/questions/{id}/status with non-admin role should return HTTP 403 Forbidden")
+    void shouldReturnForbiddenWhenUpdatingStatusWithStudentRole() throws Exception {
+        UUID questionId = UUID.randomUUID();
+        UpdateQuestionStatusRequest request = UpdateQuestionStatusRequest.builder()
+                .status(QuestionStatus.SUSPENDED)
+                .build();
+
+        String token = "student-jwt-token";
+        when(jwtValidator.validateToken(token)).thenReturn(true);
+        when(jwtValidator.extractRole(token)).thenReturn("ROLE_STUDENT");
+
+        mockMvc.perform(patch("/api/v1/questions/" + questionId + "/status")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @DisplayName("PATCH /api/v1/questions/{id}/status with missing status should return HTTP 400 Validation Error")
     void shouldReturnBadRequestWhenStatusIsMissing() throws Exception {
         UUID questionId = UUID.randomUUID();
         UpdateQuestionStatusRequest request = new UpdateQuestionStatusRequest(); // null status
 
+        String token = "admin-jwt-token";
+        when(jwtValidator.validateToken(token)).thenReturn(true);
+        when(jwtValidator.extractRole(token)).thenReturn("ROLE_ADMIN");
+
         mockMvc.perform(patch("/api/v1/questions/" + questionId + "/status")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())

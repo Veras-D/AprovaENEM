@@ -153,6 +153,7 @@ services:
       - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_DEFAULT_PASS:-rabbit_secure_password_2026}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - GEMINI_MODEL=${GEMINI_MODEL:-gemini-1.5-flash}
+      - JWT_SECRET=${JWT_SECRET}
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8082/actuator/health || exit 1"]
       interval: 15s

@@ -37,9 +37,8 @@ public class NotificationController {
     @PostMapping("/push-tokens")
     public ResponseEntity<RegisterDeviceTokenResponse> registerDeviceToken(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestHeader(value = "X-User-Id", required = false) String xUserId,
             @Valid @RequestBody RegisterDeviceTokenRequest request) {
-        UUID userId = resolveUserId(authHeader, xUserId);
+        UUID userId = resolveUserId(authHeader);
         RegisterDeviceTokenResponse response = notificationService.registerDeviceToken(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -47,11 +46,10 @@ public class NotificationController {
     @GetMapping
     public ResponseEntity<NotificationFeedResponse> getNotifications(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestHeader(value = "X-User-Id", required = false) String xUserId,
             @RequestParam(value = "status", defaultValue = "ALL") String status,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size) {
-        UUID userId = resolveUserId(authHeader, xUserId);
+        UUID userId = resolveUserId(authHeader);
         NotificationFeedResponse response = notificationService.getFeed(userId, status, page, size);
         return ResponseEntity.ok(response);
     }
@@ -59,9 +57,8 @@ public class NotificationController {
     @PatchMapping("/{id}/read")
     public ResponseEntity<MarkNotificationReadResponse> markAsRead(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestHeader(value = "X-User-Id", required = false) String xUserId,
             @PathVariable("id") UUID notificationId) {
-        UUID userId = resolveUserId(authHeader, xUserId);
+        UUID userId = resolveUserId(authHeader);
         try {
             MarkNotificationReadResponse response = notificationService.markAsRead(userId, notificationId);
             return ResponseEntity.ok(response);
@@ -72,26 +69,19 @@ public class NotificationController {
 
     @GetMapping("/unread-count")
     public ResponseEntity<Map<String, Object>> getUnreadCount(
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestHeader(value = "X-User-Id", required = false) String xUserId) {
-        UUID userId = resolveUserId(authHeader, xUserId);
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        UUID userId = resolveUserId(authHeader);
         long count = notificationService.getUnreadCount(userId);
         return ResponseEntity.ok(Map.of("unreadCount", count));
     }
 
-    private UUID resolveUserId(String authHeader, String xUserId) {
-        if (xUserId != null && !xUserId.isBlank()) {
-            try {
-                return UUID.fromString(xUserId);
-            } catch (IllegalArgumentException ignored) {
-            }
-        }
+    private UUID resolveUserId(String authHeader) {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
+            String token = authHeader.substring(7).trim();
             if (jwtTokenValidator.validateToken(token)) {
                 return jwtTokenValidator.extractUserId(token);
             }
         }
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Valid Bearer JWT token or authenticated identity required.");
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Valid Bearer JWT token is required.");
     }
 }

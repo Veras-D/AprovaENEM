@@ -97,4 +97,18 @@ class ExceptionAndEventTest {
         assertThat(event.getVerificationToken()).isEqualTo("token-abc");
         assertThat(event.getOccurredAt()).isNotNull();
     }
+
+    @Test
+    @DisplayName("Should instantiate AccessDeniedException with message and optional cause")
+    void shouldHandleAccessDeniedException() {
+        com.aprovaenem.common.exception.AccessDeniedException ex1 =
+                new com.aprovaenem.common.exception.AccessDeniedException("Access denied");
+        assertThat(ex1.getMessage()).isEqualTo("Access denied");
+
+        IllegalArgumentException cause = new IllegalArgumentException("Root cause");
+        com.aprovaenem.common.exception.AccessDeniedException ex2 =
+                new com.aprovaenem.common.exception.AccessDeniedException("Forbidden", cause);
+        assertThat(ex2.getMessage()).isEqualTo("Forbidden");
+        assertThat(ex2.getCause()).isEqualTo(cause);
+    }
 }

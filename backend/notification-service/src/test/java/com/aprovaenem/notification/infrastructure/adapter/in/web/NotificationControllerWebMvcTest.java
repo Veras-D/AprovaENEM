@@ -50,25 +50,16 @@ class NotificationControllerWebMvcTest {
     private JwtTokenValidator jwtTokenValidator;
 
     @Test
-    @DisplayName("POST /api/v1/notifications/push-tokens with X-User-Id header should register token and return HTTP 201")
-    void shouldRegisterTokenWithUserIdHeader() throws Exception {
+    @DisplayName("POST /api/v1/notifications/push-tokens with only X-User-Id header should return HTTP 401 Unauthorized")
+    void shouldRejectXUserIdHeaderWithoutBearerToken() throws Exception {
         UUID userId = UUID.randomUUID();
         RegisterDeviceTokenRequest request = new RegisterDeviceTokenRequest("device_token_abc_123", "ANDROID");
-
-        RegisterDeviceTokenResponse response = new RegisterDeviceTokenResponse(
-                "Device token registered successfully", "ANDROID", Instant.now()
-        );
-
-        when(notificationService.registerDeviceToken(eq(userId), any(RegisterDeviceTokenRequest.class)))
-                .thenReturn(response);
 
         mockMvc.perform(post("/api/v1/notifications/push-tokens")
                         .header("X-User-Id", userId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.message", is("Device token registered successfully")))
-                .andExpect(jsonPath("$.platform", is("ANDROID")));
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -112,10 +103,14 @@ class NotificationControllerWebMvcTest {
     @DisplayName("POST /api/v1/notifications/push-tokens with invalid platform should return HTTP 400")
     void shouldReturnBadRequestWhenInvalidPlatform() throws Exception {
         UUID userId = UUID.randomUUID();
+        String token = "valid.jwt.token";
+        when(jwtTokenValidator.validateToken(token)).thenReturn(true);
+        when(jwtTokenValidator.extractUserId(token)).thenReturn(userId);
+
         RegisterDeviceTokenRequest request = new RegisterDeviceTokenRequest("device_token_123", "WINDOWS_PHONE");
 
         mockMvc.perform(post("/api/v1/notifications/push-tokens")
-                        .header("X-User-Id", userId.toString())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -126,6 +121,9 @@ class NotificationControllerWebMvcTest {
     void shouldGetNotificationFeedSuccessfully() throws Exception {
         UUID userId = UUID.randomUUID();
         UUID notifId = UUID.randomUUID();
+        String token = "valid.jwt.token";
+        when(jwtTokenValidator.validateToken(token)).thenReturn(true);
+        when(jwtTokenValidator.extractUserId(token)).thenReturn(userId);
 
         NotificationFeedResponse.NotificationItemDto item = NotificationFeedResponse.NotificationItemDto.builder()
                 .id(notifId)
@@ -146,7 +144,7 @@ class NotificationControllerWebMvcTest {
                 .thenReturn(feedResponse);
 
         mockMvc.perform(get("/api/v1/notifications")
-                        .header("X-User-Id", userId.toString()))
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.unreadCount", is(1)))
                 .andExpect(jsonPath("$.notifications", hasSize(1)))
@@ -166,6 +164,9 @@ class NotificationControllerWebMvcTest {
     void shouldMarkNotificationAsReadSuccessfully() throws Exception {
         UUID userId = UUID.randomUUID();
         UUID notifId = UUID.randomUUID();
+        String token = "valid.jwt.token";
+        when(jwtTokenValidator.validateToken(token)).thenReturn(true);
+        when(jwtTokenValidator.extractUserId(token)).thenReturn(userId);
 
         MarkNotificationReadResponse readResponse = new MarkNotificationReadResponse(
                 notifId, "READ", Instant.now()
@@ -174,7 +175,7 @@ class NotificationControllerWebMvcTest {
         when(notificationService.markAsRead(userId, notifId)).thenReturn(readResponse);
 
         mockMvc.perform(patch("/api/v1/notifications/" + notifId + "/read")
-                        .header("X-User-Id", userId.toString()))
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(notifId.toString())))
                 .andExpect(jsonPath("$.status", is("READ")));
@@ -185,12 +186,15 @@ class NotificationControllerWebMvcTest {
     void shouldReturnNotFoundWhenNotificationDoesNotExist() throws Exception {
         UUID userId = UUID.randomUUID();
         UUID notifId = UUID.randomUUID();
+        String token = "valid.jwt.token";
+        when(jwtTokenValidator.validateToken(token)).thenReturn(true);
+        when(jwtTokenValidator.extractUserId(token)).thenReturn(userId);
 
         when(notificationService.markAsRead(userId, notifId))
                 .thenThrow(new IllegalArgumentException("Notification not found with ID: " + notifId));
 
         mockMvc.perform(patch("/api/v1/notifications/" + notifId + "/read")
-                        .header("X-User-Id", userId.toString()))
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isNotFound());
     }
 
@@ -198,10 +202,14 @@ class NotificationControllerWebMvcTest {
     @DisplayName("GET /api/v1/notifications/unread-count should return HTTP 200 with unread count")
     void shouldGetUnreadCountSuccessfully() throws Exception {
         UUID userId = UUID.randomUUID();
+        String token = "valid.jwt.token";
+        when(jwtTokenValidator.validateToken(token)).thenReturn(true);
+        when(jwtTokenValidator.extractUserId(token)).thenReturn(userId);
+
         when(notificationService.getUnreadCount(userId)).thenReturn(7L);
 
         mockMvc.perform(get("/api/v1/notifications/unread-count")
-                        .header("X-User-Id", userId.toString()))
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.unreadCount", is(7)));
     }

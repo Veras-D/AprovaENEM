@@ -129,7 +129,8 @@ class PracticeSessionControllerWebMvcTest {
 
         when(sessionUseCase.getSession(sessionId)).thenReturn(session);
 
-        mockMvc.perform(get("/api/v1/practice/sessions/" + sessionId))
+        mockMvc.perform(get("/api/v1/practice/sessions/" + sessionId)
+                        .header("X-Session-Id", "anon-123"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(sessionId.toString())))
                 .andExpect(jsonPath("$.status", is("IN_PROGRESS")));
@@ -141,6 +142,9 @@ class PracticeSessionControllerWebMvcTest {
         UUID sessionId = UUID.randomUUID();
         UUID questionId = UUID.randomUUID();
         UUID attemptId = UUID.randomUUID();
+
+        PracticeSession session = new PracticeSession(sessionId, null, "anon-123", SessionType.TOPIC_PRACTICE, 10);
+        when(sessionUseCase.getSession(sessionId)).thenReturn(session);
 
         SubmitAnswerRequest request = SubmitAnswerRequest.builder()
                 .questionId(questionId)
@@ -163,6 +167,7 @@ class PracticeSessionControllerWebMvcTest {
         when(sessionUseCase.submitAnswer(any(SubmitAnswerCommand.class))).thenReturn(result);
 
         mockMvc.perform(post("/api/v1/practice/sessions/" + sessionId + "/attempts")
+                        .header("X-Session-Id", "anon-123")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -179,11 +184,15 @@ class PracticeSessionControllerWebMvcTest {
     @DisplayName("POST /api/v1/practice/sessions/{id}/attempts with missing questionId should return HTTP 400 Validation Error")
     void shouldReturnBadRequestWhenSubmittingAnswerWithoutQuestionId() throws Exception {
         UUID sessionId = UUID.randomUUID();
+        PracticeSession session = new PracticeSession(sessionId, null, "anon-123", SessionType.TOPIC_PRACTICE, 10);
+        when(sessionUseCase.getSession(sessionId)).thenReturn(session);
+
         SubmitAnswerRequest request = SubmitAnswerRequest.builder()
                 .selectedOption('B')
                 .build(); // questionId is null
 
         mockMvc.perform(post("/api/v1/practice/sessions/" + sessionId + "/attempts")
+                        .header("X-Session-Id", "anon-123")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -197,6 +206,9 @@ class PracticeSessionControllerWebMvcTest {
         UUID sessionId = UUID.randomUUID();
         UUID reportId = UUID.randomUUID();
 
+        PracticeSession session = new PracticeSession(sessionId, null, "anon-123", SessionType.TOPIC_PRACTICE, 10);
+        when(sessionUseCase.getSession(sessionId)).thenReturn(session);
+
         DiagnosticReport report = new DiagnosticReport(
                 reportId,
                 sessionId,
@@ -207,7 +219,8 @@ class PracticeSessionControllerWebMvcTest {
 
         when(sessionUseCase.completeSession(sessionId)).thenReturn(report);
 
-        mockMvc.perform(post("/api/v1/practice/sessions/" + sessionId + "/complete"))
+        mockMvc.perform(post("/api/v1/practice/sessions/" + sessionId + "/complete")
+                        .header("X-Session-Id", "anon-123"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(reportId.toString())))
                 .andExpect(jsonPath("$.sessionId", is(sessionId.toString())))
@@ -221,6 +234,9 @@ class PracticeSessionControllerWebMvcTest {
         UUID sessionId = UUID.randomUUID();
         UUID reportId = UUID.randomUUID();
 
+        PracticeSession session = new PracticeSession(sessionId, null, "anon-123", SessionType.TOPIC_PRACTICE, 10);
+        when(sessionUseCase.getSession(sessionId)).thenReturn(session);
+
         DiagnosticReport report = new DiagnosticReport(
                 reportId,
                 sessionId,
@@ -231,10 +247,79 @@ class PracticeSessionControllerWebMvcTest {
 
         when(sessionUseCase.getDiagnosticReport(sessionId)).thenReturn(report);
 
-        mockMvc.perform(get("/api/v1/practice/sessions/" + sessionId + "/diagnostic"))
+        mockMvc.perform(get("/api/v1/practice/sessions/" + sessionId + "/diagnostic")
+                        .header("X-Session-Id", "anon-123"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(reportId.toString())))
                 .andExpect(jsonPath("$.sessionId", is(sessionId.toString())))
                 .andExpect(jsonPath("$.scorePercentage", is(85.00)));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/practice/sessions/{id} should return HTTP 403 Forbidden on anonymous session ownership mismatch")
+    void shouldDenyAccessWhenAnonymousSessionHeaderMismatch() throws Exception {
+        UUID sessionId = UUID.randomUUID();
+        PracticeSession session = new PracticeSession(sessionId, null, "owner-anon-id", SessionType.TOPIC_PRACTICE, 10);
+        when(sessionUseCase.getSession(sessionId)).thenReturn(session);
+
+        mockMvc.perform(get("/api/v1/practice/sessions/" + sessionId)
+                        .header("X-Session-Id", "wrong-anon-id"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/practice/sessions/{id} should return HTTP 403 Forbidden when student accesses another student session")
+    void shouldDenyAccessWhenUserTokenDoesNotMatchSessionOwner() throws Exception {
+        UUID sessionId = UUID.randomUUID();
+        UUID ownerId = UUID.randomUUID();
+        UUID attackerId = UUID.randomUUID();
+        PracticeSession session = new PracticeSession(sessionId, ownerId, "session-1", SessionType.TOPIC_PRACTICE, 10);
+        when(sessionUseCase.getSession(sessionId)).thenReturn(session);
+
+        String attackerToken = "attacker-jwt-token";
+        when(jwtValidator.validateToken(attackerToken)).thenReturn(true);
+        when(jwtValidator.extractRole(attackerToken)).thenReturn("ROLE_STUDENT");
+        when(jwtValidator.extractUserId(attackerToken)).thenReturn(attackerId);
+
+        mockMvc.perform(get("/api/v1/practice/sessions/" + sessionId)
+                        .header("Authorization", "Bearer " + attackerToken))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/practice/sessions/{id} should return HTTP 200 when student accesses own session")
+    void shouldAllowAccessWhenTokenMatchesSessionOwner() throws Exception {
+        UUID sessionId = UUID.randomUUID();
+        UUID ownerId = UUID.randomUUID();
+        PracticeSession session = new PracticeSession(sessionId, ownerId, "session-1", SessionType.TOPIC_PRACTICE, 10);
+        when(sessionUseCase.getSession(sessionId)).thenReturn(session);
+
+        String ownerToken = "owner-jwt-token";
+        when(jwtValidator.validateToken(ownerToken)).thenReturn(true);
+        when(jwtValidator.extractRole(ownerToken)).thenReturn("ROLE_STUDENT");
+        when(jwtValidator.extractUserId(ownerToken)).thenReturn(ownerId);
+
+        mockMvc.perform(get("/api/v1/practice/sessions/" + sessionId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(sessionId.toString())));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/practice/sessions/{id} should return HTTP 200 when admin accesses any session")
+    void shouldAllowAdminToAccessAnySession() throws Exception {
+        UUID sessionId = UUID.randomUUID();
+        UUID ownerId = UUID.randomUUID();
+        PracticeSession session = new PracticeSession(sessionId, ownerId, "session-1", SessionType.TOPIC_PRACTICE, 10);
+        when(sessionUseCase.getSession(sessionId)).thenReturn(session);
+
+        String adminToken = "admin-jwt-token";
+        when(jwtValidator.validateToken(adminToken)).thenReturn(true);
+        when(jwtValidator.extractRole(adminToken)).thenReturn("ROLE_ADMIN");
+
+        mockMvc.perform(get("/api/v1/practice/sessions/" + sessionId)
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(sessionId.toString())));
     }
 }
