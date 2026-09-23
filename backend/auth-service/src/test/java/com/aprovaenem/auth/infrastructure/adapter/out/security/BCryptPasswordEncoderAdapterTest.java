@@ -76,11 +76,11 @@ class BCryptPasswordEncoderAdapterTest {
         String pass2 = base72 + "Tail-Secret-2";
 
         // Verification of BCrypt limitation without pepper:
+        // In patched Spring Security (Spring Boot 3.3.11+ / CVE-2025-22228), raw BCrypt throws IllegalArgumentException
         BCryptPasswordEncoder rawBcrypt = new BCryptPasswordEncoder(10);
-        String rawBcryptHash = rawBcrypt.encode(pass1);
-        assertThat(rawBcrypt.matches(pass2, rawBcryptHash))
-                .as("Standard BCrypt demonstrates 72-byte truncation collision flaw")
-                .isTrue();
+        assertThatThrownBy(() -> rawBcrypt.encode(pass1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("72 bytes");
 
         // Verification that our HMAC-SHA256 pepper adapter eliminates this vulnerability:
         String pepperedHash1 = pepperedAdapter.encode(pass1);
@@ -88,6 +88,10 @@ class BCryptPasswordEncoderAdapterTest {
         assertThat(pepperedAdapter.matches(pass2, pepperedHash1))
                 .as("Peppered adapter must NOT collide when passwords differ after 72 bytes")
                 .isFalse();
+
+        // Verification that matching >72 bytes password against legacy hash fails safely without exception:
+        String legacyShortHash = new BCryptPasswordEncoder(10).encode("short-password");
+        assertThat(pepperedAdapter.matches(pass1, legacyShortHash)).isFalse();
     }
 
     @Test

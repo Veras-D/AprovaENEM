@@ -118,6 +118,13 @@ class DomainCommandsAndModelsTest {
         assertThat(cmd.getSize()).isEqualTo(20);
         cmd.setSize(50);
         assertThat(cmd.getSize()).isEqualTo(50);
+        cmd.setSize(100);
+        assertThat(cmd.getSize()).isEqualTo(50);
+
+        QuestionFilterCommand boundedCmd = new QuestionFilterCommand(
+                topicId, "Física", DifficultyLevel.MEDIUM, "óptica", QuestionStatus.ACTIVE, 0, 1000
+        );
+        assertThat(boundedCmd.getSize()).isEqualTo(50);
 
         QuestionFilterCommand empty = new QuestionFilterCommand();
         empty.setTopicId(topicId);

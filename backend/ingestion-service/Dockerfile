@@ -15,6 +15,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Security: Run as unprivileged non-root user
+RUN groupadd -g 1000 appuser && useradd -u 1000 -g appuser -s /bin/bash -m appuser \
+    && mkdir -p /app/extracted_assets \
+    && chown -R appuser:appuser /app
+
+USER appuser:appuser
+
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 

@@ -1,5 +1,3 @@
-version: '3.8'
-
 networks:
   frontend-edge:
     driver: bridge
@@ -15,6 +13,11 @@ services:
     image: willfarrell/autoheal:latest
     container_name: aprovaenem-autoheal
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 64M
     environment:
       - AUTOHEAL_CONTAINER_LABEL=all
       - AUTOHEAL_INTERVAL=10
@@ -28,9 +31,14 @@ services:
   # 2. Edge Ingress Proxy (The ONLY public entrypoint)
   # ============================================================================
   nginx-proxy:
-    image: nginx:1.25-alpine
+    image: nginx:1.27-alpine
     container_name: aprovaenem-nginx
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 128M
     ports:
       - "80:80"
       - "443:443"
@@ -60,6 +68,11 @@ services:
     image: aprovaenem/frontend-api:latest
     container_name: aprovaenem-frontend-api
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 768M
     expose:
       - "8080"
     networks:
@@ -95,6 +108,11 @@ services:
     image: aprovaenem/auth-service:latest
     container_name: aprovaenem-auth-service
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 768M
     expose:
       - "8081"
     networks:
@@ -135,6 +153,11 @@ services:
     image: aprovaenem/exam-service:latest
     container_name: aprovaenem-exam-service
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1024M
     expose:
       - "8082"
     networks:
@@ -175,6 +198,11 @@ services:
     image: aprovaenem/notification-service:latest
     container_name: aprovaenem-notification-service
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 512M
     expose:
       - "8083"
     networks:
@@ -207,6 +235,11 @@ services:
     image: redis:7.2-alpine
     container_name: aprovaenem-redis
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 512M
     command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-redis_secure_password_2026}", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
     expose:
       - "6379"
@@ -228,6 +261,11 @@ services:
     image: postgres:16-alpine
     container_name: aprovaenem-postgres-auth
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
     expose:
       - "5432"
     networks:
@@ -249,6 +287,11 @@ services:
     image: pgvector/pgvector:pg16
     container_name: aprovaenem-postgres-exam
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 768M
     expose:
       - "5432"
     networks:
@@ -270,6 +313,11 @@ services:
     image: postgres:16-alpine
     container_name: aprovaenem-postgres-notification
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
     expose:
       - "5432"
     networks:
@@ -294,6 +342,11 @@ services:
     image: rabbitmq:3.13-management-alpine
     container_name: aprovaenem-rabbitmq
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-aprovaenem_rabbit}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-rabbit_secure_password_2026}
@@ -322,6 +375,11 @@ services:
     container_name: aprovaenem-ingestion-service
     profiles: ["ingestion"]
     restart: "no" # On-demand batch execution
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
     networks:
       - aprovaenem-internal
     volumes:
@@ -334,6 +392,11 @@ services:
     image: prom/prometheus:v2.51.0
     container_name: aprovaenem-prometheus
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
     expose:
       - "9090"
     networks:
@@ -347,6 +410,11 @@ services:
     image: grafana/grafana:10.4.0
     container_name: aprovaenem-grafana
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
     expose:
       - "3000"
     networks:

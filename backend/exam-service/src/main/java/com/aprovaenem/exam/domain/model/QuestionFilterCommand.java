@@ -7,10 +7,13 @@ public class QuestionFilterCommand {
     private UUID topicId;
     private String discipline;
     private DifficultyLevel difficulty;
+    public static final int MAX_PAGE_SIZE = 50;
+    public static final int DEFAULT_PAGE_SIZE = 20;
+
     private String search;
     private QuestionStatus status;
     private int page = 0;
-    private int size = 20;
+    private int size = DEFAULT_PAGE_SIZE;
 
     public QuestionFilterCommand() {
     }
@@ -22,7 +25,7 @@ public class QuestionFilterCommand {
         this.search = search;
         this.status = status;
         this.page = Math.max(0, page);
-        this.size = size > 0 ? size : 20;
+        this.size = clampSize(size);
     }
 
     public UUID getTopicId() {
@@ -78,6 +81,13 @@ public class QuestionFilterCommand {
     }
 
     public void setSize(int size) {
-        this.size = size > 0 ? size : 20;
+        this.size = clampSize(size);
+    }
+
+    private static int clampSize(int size) {
+        if (size <= 0) {
+            return DEFAULT_PAGE_SIZE;
+        }
+        return Math.min(size, MAX_PAGE_SIZE);
     }
 }

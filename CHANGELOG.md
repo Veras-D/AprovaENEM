@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.19] - 2026-09-23
+### 🛡️ Hardened & Secured (Supply Chain, Ingress Perimeter & Resource Boundary Hardening)
+- fix(security): Implemented supply chain BOM alignment, ingress proxy hardening, and container resource limits (TASK-S3-16):
+  - **`backend/pom.xml`**:
+    - Upgraded parent Spring Boot version from `3.3.3` to `3.3.11`.
+    - Pinned `<tomcat.version>10.1.35</tomcat.version>` and `<netty.version>4.1.118.Final</netty.version>` to patch critical runtime CVEs in embedded web server components (Tomcat RCE `CVE-2025-24813`, Netty SNI bypass `CVE-2026-75595`, Spring Security 72-byte limit enforcement `CVE-2025-22228`).
+  - **`backend/auth-service`**:
+    - Defensively safeguarded legacy BCrypt password matching in [`BCryptPasswordEncoderAdapter`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/src/main/java/com/aprovaenem/auth/infrastructure/adapter/out/security/BCryptPasswordEncoderAdapter.java) against `IllegalArgumentException` thrown on inputs exceeding 72 bytes in Spring Security 6.3.8+.
+    - Updated [`BCryptPasswordEncoderAdapterTest`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/src/test/java/com/aprovaenem/auth/infrastructure/adapter/out/security/BCryptPasswordEncoderAdapterTest.java) to assert raw BCrypt rejection of $>72$ byte inputs while verifying that the HMAC-SHA256 peppered encoder processes arbitrary password lengths without collision.
+  - **`backend/exam-service`**:
+    - Clamped maximum page size to `MAX_PAGE_SIZE = 50` on [`QuestionFilterCommand`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/main/java/com/aprovaenem/exam/domain/model/QuestionFilterCommand.java) to eliminate heap exhaustion / OOM denial-of-service risks via excessive `size` query parameters.
+    - Updated [`DomainCommandsAndModelsTest`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/test/java/com/aprovaenem/exam/domain/model/DomainCommandsAndModelsTest.java) to assert clamping behavior on oversized pagination queries.
+  - **`backend/ingestion-service`**:
+    - Hardened [`Dockerfile`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/ingestion-service/Dockerfile) by adding unprivileged non-root user `appuser:appuser` (`uid=1000`) and dropping root privileges at runtime.
+  - **`infrastructure/nginx/nginx.conf`**:
+    - Added `server_tokens off;` to suppress Nginx version banners and server information leakage.
+    - Explicitly restored security headers (`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `X-XSS-Protection: 1; mode=block`, `Referrer-Policy: strict-origin-when-cross-origin`) inside `location /assets/questions/` to prevent Nginx child block header inheritance dropping.
+  - **`docker-compose.yml`**:
+    - Upgraded `nginx-proxy` image from `nginx:1.25-alpine` to `nginx:1.27-alpine` (Alpine 3.20+ with patched `musl` and `libexpat`).
+    - Removed obsolete `version: '3.8'` tag to align with Compose Specification v2.
+    - Added explicit CPU and memory resource constraints (`deploy.resources.limits`) across all 14 container definitions to safeguard host memory against container exhaustion.
+  - **Verification & Testing**:
+    - Maven clean compile and unit test suite verified: **100% green pass rate** across all 6 modules.
+    - Static analysis verified: **0 Checkstyle violations, 0 PMD violations** across all 6 modules.
+    - Automated pre-flight smoke suite verified: **7/7 probes passed** in 657ms.
+    - Automated Postman Newman contract suite verified: **42/42 requests, 75/75 assertions passed** with zero failures in 14.0s.
+- docs(backlog): Updated `docs/BACKLOG.md` marking `TASK-S3-16` as `DONE ✅`, advancing Sprint 3 completion to 94.4% (17/18 tasks completed).
+
 ## [0.3.18] - 2026-09-23
 ### 🔒 Fixed & Hardened (Backend Security Audit Critical P0 Remediation & Hardening)
 - fix(security): Remediated critical security vulnerabilities, architectural flaws, and test integrity gaps identified during the multi-stage security audit (TASK-S3-15):

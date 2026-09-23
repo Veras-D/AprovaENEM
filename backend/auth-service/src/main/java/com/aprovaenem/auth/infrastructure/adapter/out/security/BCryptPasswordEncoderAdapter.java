@@ -76,8 +76,12 @@ public class BCryptPasswordEncoderAdapter implements PasswordEncoderPort {
         }
 
         // 2. Dual-check fallback: verify legacy unpeppered password for seamless backward compatibility
-        if (passwordEncoder.matches(rawPassword, encodedPassword)) {
-            return pepper.isEmpty() ? PasswordVerificationResult.matched() : PasswordVerificationResult.upgradeNeeded();
+        try {
+            if (passwordEncoder.matches(rawPassword, encodedPassword)) {
+                return pepper.isEmpty() ? PasswordVerificationResult.matched() : PasswordVerificationResult.upgradeNeeded();
+            }
+        } catch (IllegalArgumentException e) {
+            log.debug("Password exceeds BCrypt 72-byte limit; skipping legacy check: {}", e.getMessage());
         }
 
         return PasswordVerificationResult.failed();
