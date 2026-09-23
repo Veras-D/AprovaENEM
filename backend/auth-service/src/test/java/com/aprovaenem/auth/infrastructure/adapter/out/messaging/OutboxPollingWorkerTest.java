@@ -48,7 +48,7 @@ class OutboxPollingWorkerTest {
 
         worker.processOutboxEvents();
 
-        verify(rabbitTemplate, never()).convertAndSend(anyString(), anyString(), (Object) any());
+        verify(rabbitTemplate, never()).send(anyString(), anyString(), any(org.springframework.amqp.core.Message.class));
     }
 
     @Test
@@ -88,28 +88,46 @@ class OutboxPollingWorkerTest {
                 .createdAt(Instant.now())
                 .build();
 
-        when(outboxRepository.findPendingEventsWithLock(50)).thenReturn(List.of(event1, event2, event3));
+        UUID id4 = UUID.randomUUID();
+        OutboxEvent event4 = OutboxEvent.builder()
+                .id(id4)
+                .aggregateType("USER")
+                .aggregateId(UUID.randomUUID())
+                .eventType("UserDeletedEvent")
+                .payload("{\"userId\": \"456\", \"email\": \"student@escola.gov.br\"}")
+                .status("PENDING")
+                .createdAt(Instant.now())
+                .build();
+
+        when(outboxRepository.findPendingEventsWithLock(50)).thenReturn(List.of(event1, event2, event3, event4));
 
         worker.processOutboxEvents();
 
-        verify(rabbitTemplate).convertAndSend(
+        verify(rabbitTemplate).send(
                 eq(RabbitMQConfig.AUTH_EXCHANGE),
                 eq(RabbitMQConfig.USER_REGISTERED_ROUTING_KEY),
-                eq(event1.getPayload())
+                any(org.springframework.amqp.core.Message.class)
         );
         verify(outboxRepository).markPublished(id1);
 
-        verify(rabbitTemplate).convertAndSend(
+        verify(rabbitTemplate).send(
                 eq(RabbitMQConfig.AUTH_EXCHANGE),
                 eq(RabbitMQConfig.EMAIL_VERIFICATION_ROUTING_KEY),
-                eq(event2.getPayload())
+                any(org.springframework.amqp.core.Message.class)
         );
         verify(outboxRepository).markPublished(id2);
 
-        verify(rabbitTemplate).convertAndSend(
+        verify(rabbitTemplate).send(
+                eq(RabbitMQConfig.AUTH_EXCHANGE),
+                eq(RabbitMQConfig.USER_DELETED_ROUTING_KEY),
+                any(org.springframework.amqp.core.Message.class)
+        );
+        verify(outboxRepository).markPublished(id4);
+
+        verify(rabbitTemplate).send(
                 eq(RabbitMQConfig.AUTH_EXCHANGE),
                 eq("auth.unknown"),
-                eq(event3.getPayload())
+                any(org.springframework.amqp.core.Message.class)
         );
         verify(outboxRepository).markPublished(id3);
     }
@@ -129,8 +147,8 @@ class OutboxPollingWorkerTest {
                 .build();
 
         when(outboxRepository.findPendingEventsWithLock(50)).thenReturn(List.of(event));
-        doThrow(new AmqpException("Broker timeout")).when(rabbitTemplate).convertAndSend(
-                anyString(), anyString(), (Object) any()
+        doThrow(new AmqpException("Broker timeout")).when(rabbitTemplate).send(
+                anyString(), anyString(), any(org.springframework.amqp.core.Message.class)
         );
 
         worker.processOutboxEvents();

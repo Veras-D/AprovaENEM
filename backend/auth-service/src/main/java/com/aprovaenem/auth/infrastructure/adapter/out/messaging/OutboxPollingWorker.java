@@ -4,11 +4,14 @@ import com.aprovaenem.auth.domain.model.OutboxEvent;
 import com.aprovaenem.auth.domain.port.out.OutboxRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Slf4j
@@ -33,10 +36,14 @@ public class OutboxPollingWorker {
         for (OutboxEvent event : pendingEvents) {
             try {
                 String routingKey = determineRoutingKey(event.getEventType());
-                rabbitTemplate.convertAndSend(
+                MessageProperties props = new MessageProperties();
+                props.setContentType(MessageProperties.CONTENT_TYPE_JSON);
+                Message message = new Message(event.getPayload().getBytes(StandardCharsets.UTF_8), props);
+
+                rabbitTemplate.send(
                         RabbitMQConfig.AUTH_EXCHANGE,
                         routingKey,
-                        event.getPayload()
+                        message
                 );
 
                 outboxRepository.markPublished(event.getId());
@@ -54,6 +61,8 @@ public class OutboxPollingWorker {
             return RabbitMQConfig.USER_REGISTERED_ROUTING_KEY;
         } else if ("EmailVerificationRequestedEvent".equals(eventType)) {
             return RabbitMQConfig.EMAIL_VERIFICATION_ROUTING_KEY;
+        } else if ("UserDeletedEvent".equals(eventType)) {
+            return RabbitMQConfig.USER_DELETED_ROUTING_KEY;
         }
         return "auth.unknown";
     }

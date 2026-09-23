@@ -2,8 +2,10 @@ package com.aprovaenem.notification.infrastructure.adapter.in.messaging;
 
 import com.aprovaenem.common.events.DailyGoalReminderEvent;
 import com.aprovaenem.common.events.EmailVerificationRequestedEvent;
+import com.aprovaenem.common.events.UserDeletedEvent;
 import com.aprovaenem.notification.infrastructure.persistence.entity.NotificationLogEntity;
 import com.aprovaenem.notification.infrastructure.persistence.repository.NotificationLogRepository;
+import com.aprovaenem.notification.infrastructure.persistence.repository.UserDeviceTokenRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,11 +16,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -30,13 +32,16 @@ class NotificationEventListenerTest {
     @Mock
     private NotificationLogRepository notificationLogRepository;
 
+    @Mock
+    private UserDeviceTokenRepository userDeviceTokenRepository;
+
     private ObjectMapper objectMapper = new ObjectMapper();
 
     private NotificationEventListener listener;
 
     @BeforeEach
     void setUp() {
-        listener = new NotificationEventListener(notificationLogRepository, objectMapper);
+        listener = new NotificationEventListener(notificationLogRepository, userDeviceTokenRepository, objectMapper);
     }
 
     @Test
@@ -113,12 +118,30 @@ class NotificationEventListenerTest {
     }
 
     @Test
+    @DisplayName("Should handle UserDeletedEvent and purge notification logs and device tokens under LGPD Art. 18")
+    void shouldHandleUserDeletedEvent() {
+        UUID userId = UUID.randomUUID();
+        UserDeletedEvent event = UserDeletedEvent.builder()
+                .userId(userId)
+                .email("student.deleted@escola.gov.br")
+                .legalBasis("Art. 18, VI da Lei 13.709/2018 (LGPD)")
+                .occurredAt(Instant.now())
+                .build();
+
+        listener.handleUserDeleted(event);
+
+        verify(notificationLogRepository).deleteByUserId(userId);
+        verify(userDeviceTokenRepository).deleteByUserId(userId);
+    }
+
+    @Test
     @DisplayName("Should return empty JSON object string if serialization throws JsonProcessingException")
     void shouldFallbackToEmptyJsonOnSerializationError() throws Exception {
         ObjectMapper failingMapper = mock(ObjectMapper.class);
         when(failingMapper.writeValueAsString(any())).thenThrow(new JsonProcessingException("mock-err") {});
 
-        NotificationEventListener customListener = new NotificationEventListener(notificationLogRepository, failingMapper);
+        NotificationEventListener customListener = new NotificationEventListener(
+                notificationLogRepository, userDeviceTokenRepository, failingMapper);
 
         DailyGoalReminderEvent event = DailyGoalReminderEvent.builder()
                 .userId(UUID.randomUUID())

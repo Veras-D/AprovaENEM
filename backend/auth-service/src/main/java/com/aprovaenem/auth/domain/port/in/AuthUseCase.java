@@ -3,6 +3,9 @@ package com.aprovaenem.auth.domain.port.in;
 import com.aprovaenem.auth.domain.model.SchoolType;
 import com.aprovaenem.auth.domain.model.User;
 
+import java.io.Serializable;
+import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public interface AuthUseCase {
@@ -19,6 +22,28 @@ public interface AuthUseCase {
 
     record AuthResult(User user, String token, long expiresInSeconds) {}
 
+    record BadgeExport(
+            String code,
+            String name,
+            String description,
+            String icon,
+            boolean unlocked,
+            Instant unlockedAt
+    ) implements Serializable {}
+
+    record GamificationExport(
+            int currentLevel,
+            String levelTitle,
+            int currentXp,
+            int xpNextLevel,
+            double levelProgressPercentage,
+            int streakDays,
+            int streakFreezeAvailable,
+            int dailyGoalQuestions,
+            int dailyQuestionsCompleted,
+            List<BadgeExport> badges
+    ) implements Serializable {}
+
     record UserDataExport(
             UUID userId,
             String email,
@@ -27,9 +52,10 @@ public interface AuthUseCase {
             String targetDegree,
             String role,
             boolean isEmailVerified,
-            java.time.Instant createdAt,
-            java.time.Instant exportTimestamp,
+            Instant createdAt,
+            Instant exportTimestamp,
             String legalBasis,
-            String privacyPolicyVersion
-    ) {}
+            String privacyPolicyVersion,
+            GamificationExport gamification
+    ) implements Serializable {}
 }

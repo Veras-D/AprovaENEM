@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.17] - 2026-09-23
+### 🔒 Added & Hardened (LGPD Art. 18 Data Portability & Irrevocable Account Erasure Backend APIs)
+- feat(lgpd): Implemented comprehensive LGPD Art. 18 data portability and account erasure endpoints across backend microservices (TASK-S3-14):
+  - **`common-core`**: Created [`UserDeletedEvent`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/common-core/src/main/java/com/aprovaenem/common/events/UserDeletedEvent.java) event contract (`userId`, `email`, `legalBasis`, `occurredAt`) installed into local `.m2` repository.
+  - **`auth-service`**:
+    - Implemented self-service Data Portability endpoint `GET /api/v1/auth/export` returning portable JSON payload aggregating personal identity, academic preferences, school type, target degree, legal basis (`Art. 7º, I e Art. 14 da Lei 13.709/2018 - Consentimento e Melhor Interesse do Estudante`), privacy policy version, and full gamification snapshot (`GamificationExport`: current level, level title, XP progress, streak days, streak freeze available, daily goal targets, and unlocked achievement badges).
+    - Implemented Irrevocable Account Erasure endpoint `DELETE /api/v1/auth/me` (HTTP 204 No Content), cascading deletion of user account, credentials, gamification profile, and unlocked badges, and persisting a `UserDeletedEvent` to `outbox_events` within the same transaction.
+    - Updated [`OutboxPollingWorker`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/src/main/java/com/aprovaenem/auth/infrastructure/adapter/out/messaging/OutboxPollingWorker.java): sends raw JSON bytes directly with `MessageProperties.CONTENT_TYPE_JSON` using `rabbitTemplate.send()`, resolving Jackson double-string escaping and allowing downstream consumers to deserialize clean domain event POJOs without TypeId mismatch.
+    - Updated RabbitMQ routing configuration binding `user.deleted` to exchange `auth.events`.
+  - **`notification-service`**:
+    - Added durable queue `notification.lgpd.queue` bound to `auth.events` with routing key `user.deleted`.
+    - Added `@RabbitListener` in [`NotificationEventListener`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/notification-service/src/main/java/com/aprovaenem/notification/infrastructure/adapter/in/messaging/NotificationEventListener.java) to delete all notification logs and registered device tokens for `userId` upon receiving `UserDeletedEvent`.
+    - Added null-safe metadata serialization in `handleEmailVerification`.
+  - **`exam-service`**:
+    - Added durable queue `exam.lgpd.queue` bound to `auth.events` with routing key `user.deleted`.
+    - Implemented [`ExamEventListener`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/in/messaging/ExamEventListener.java) to anonymize practice sessions (`UPDATE practice_sessions SET user_id = null WHERE user_id = :userId`) preserving psychometric TRI item calibration data under LGPD Art. 16, II (research exemption) without retaining PII, while irrevocably purging AI tutor chat threads and message history.
+    - Added Flyway migrations [`V5__add_figure_alt_text.sql`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/main/resources/db/migration/V5__add_figure_alt_text.sql) and [`V6__add_figure_url.sql`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/main/resources/db/migration/V6__add_figure_url.sql) aligning live schema with JPA entity definitions.
+  - **Verification & Testing**:
+    - Unit tests passing across all modified modules (19 tests in `auth-service`, 23 tests in `notification-service`, and `ExamEventListenerTest` in `exam-service`).
+    - Pre-flight smoke test verified with 100% green pass rate (7/7 probes in 238ms).
+    - Postman Newman contract suite verified with 100% pass rate (31 requests, 56 assertions, 0 failures).
+    - End-to-end multi-service event dispatch verified live across Docker stack.
+- docs(backlog): Synchronized `docs/BACKLOG.md` marking `TASK-S3-14` as `DONE ✅`, advancing Sprint 3 completion to 83.3% (15/18 tasks completed).
+
 ## [0.3.16] - 2026-09-21
 ### 🛡️ Audited, Synthesized & Reorganized (Backend Security Audit & JAM 2 Backend Scope Alignment)
 - sec(audit): Completed comprehensive multi-stage backend security, static analysis, and test authenticity audit across 6 independent subagent phases (TASK-S3-11):

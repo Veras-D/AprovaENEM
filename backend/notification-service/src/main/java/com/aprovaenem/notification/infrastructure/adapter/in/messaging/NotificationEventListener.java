@@ -2,9 +2,11 @@ package com.aprovaenem.notification.infrastructure.adapter.in.messaging;
 
 import com.aprovaenem.common.events.DailyGoalReminderEvent;
 import com.aprovaenem.common.events.EmailVerificationRequestedEvent;
+import com.aprovaenem.common.events.UserDeletedEvent;
 import com.aprovaenem.notification.infrastructure.config.RabbitMQConfig;
 import com.aprovaenem.notification.infrastructure.persistence.entity.NotificationLogEntity;
 import com.aprovaenem.notification.infrastructure.persistence.repository.NotificationLogRepository;
+import com.aprovaenem.notification.infrastructure.persistence.repository.UserDeviceTokenRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import java.util.Map;
 public class NotificationEventListener {
 
     private final NotificationLogRepository notificationLogRepository;
+    private final UserDeviceTokenRepository userDeviceTokenRepository;
     private final ObjectMapper objectMapper;
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_REMINDERS_QUEUE)
@@ -68,8 +71,8 @@ public class NotificationEventListener {
                 event.getVerificationToken());
 
         String metadataJson = toJson(Map.of(
-                "email", event.getEmail(),
-                "token", event.getVerificationToken()
+                "email", event.getEmail() != null ? event.getEmail() : "",
+                "token", event.getVerificationToken() != null ? event.getVerificationToken() : ""
         ));
 
         NotificationLogEntity entity = NotificationLogEntity.builder()
@@ -86,6 +89,15 @@ public class NotificationEventListener {
 
         notificationLogRepository.save(entity);
         log.info("Persisted EMAIL verification notification log for [{}]", event.getEmail());
+    }
+
+    @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_LGPD_QUEUE)
+    public void handleUserDeleted(UserDeletedEvent event) {
+        log.info("Received UserDeletedEvent for user [{}]. Purging notification logs and device tokens under LGPD Art. 18",
+                event.getUserId());
+        notificationLogRepository.deleteByUserId(event.getUserId());
+        userDeviceTokenRepository.deleteByUserId(event.getUserId());
+        log.info("Successfully scrubbed notification logs and device tokens for user [{}]", event.getUserId());
     }
 
     private String toJson(Object obj) {

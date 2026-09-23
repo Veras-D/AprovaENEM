@@ -1,9 +1,13 @@
 package com.aprovaenem.auth.application.service;
 
+import com.aprovaenem.auth.domain.model.AchievementBadge;
+import com.aprovaenem.auth.domain.model.OutboxEvent;
 import com.aprovaenem.auth.domain.model.SchoolType;
 import com.aprovaenem.auth.domain.model.User;
+import com.aprovaenem.auth.domain.model.UserGamificationProfile;
 import com.aprovaenem.auth.domain.model.UserRole;
 import com.aprovaenem.auth.domain.port.in.AuthUseCase;
+import com.aprovaenem.auth.domain.port.out.GamificationRepositoryPort;
 import com.aprovaenem.auth.domain.port.out.OutboxRepositoryPort;
 import com.aprovaenem.auth.domain.port.out.PasswordEncoderPort;
 import com.aprovaenem.auth.domain.port.out.TokenProviderPort;
@@ -15,11 +19,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -41,6 +48,9 @@ class AuthServiceTest {
 
     @Mock
     private OutboxRepositoryPort outboxRepository;
+
+    @Mock
+    private GamificationRepositoryPort gamificationRepository;
 
     @Mock
     private PasswordEncoderPort passwordEncoder;
@@ -218,7 +228,28 @@ class AuthServiceTest {
                 .isActive(true)
                 .build();
 
+        UserGamificationProfile profile = UserGamificationProfile.builder()
+                .userId(userId)
+                .currentLevel(3)
+                .currentXp(540)
+                .streakDays(5)
+                .streakFreezeAvailable(1)
+                .dailyGoalQuestions(10)
+                .dailyQuestionsCompleted(8)
+                .build();
+
+        AchievementBadge badge = AchievementBadge.builder()
+                .code("STREAK_7_DAYS")
+                .name("Guerreiro da Semana")
+                .description("Estudou 7 dias consecutivos")
+                .icon("🔥")
+                .unlocked(true)
+                .unlockedAt(Instant.now())
+                .build();
+
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(gamificationRepository.findProfileByUserId(userId)).thenReturn(Optional.of(profile));
+        when(gamificationRepository.findBadgesByUserId(userId)).thenReturn(List.of(badge));
 
         AuthUseCase.UserDataExport export = authService.exportUserData(userId);
 
@@ -227,6 +258,40 @@ class AuthServiceTest {
         assertThat(export.email()).isEqualTo("student@escola.gov.br");
         assertThat(export.legalBasis()).contains("LGPD");
         assertThat(export.exportTimestamp()).isNotNull();
+        assertThat(export.gamification()).isNotNull();
+        assertThat(export.gamification().currentLevel()).isEqualTo(3);
+        assertThat(export.gamification().currentXp()).isEqualTo(540);
+        assertThat(export.gamification().streakDays()).isEqualTo(5);
+        assertThat(export.gamification().badges()).hasSize(1);
+        assertThat(export.gamification().badges().get(0).code()).isEqualTo("STREAK_7_DAYS");
+    }
+
+    @Test
+    @DisplayName("Should export user data with default gamification profile when profile not found")
+    void shouldExportUserDataWithDefaultGamificationWhenProfileNotFound() {
+        UUID userId = UUID.randomUUID();
+        User user = User.builder()
+                .id(userId)
+                .email("newbie@escola.gov.br")
+                .fullName("Novo Aluno")
+                .schoolType(SchoolType.PUBLIC_SCHOOL)
+                .targetDegree("Medicina")
+                .role(UserRole.ROLE_STUDENT)
+                .isEmailVerified(false)
+                .isActive(true)
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(gamificationRepository.findProfileByUserId(userId)).thenReturn(Optional.empty());
+        when(gamificationRepository.findBadgesByUserId(userId)).thenReturn(List.of());
+
+        AuthUseCase.UserDataExport export = authService.exportUserData(userId);
+
+        assertThat(export).isNotNull();
+        assertThat(export.gamification()).isNotNull();
+        assertThat(export.gamification().currentLevel()).isEqualTo(1);
+        assertThat(export.gamification().currentXp()).isEqualTo(0);
+        assertThat(export.gamification().badges()).isEmpty();
     }
 
     @Test
@@ -241,6 +306,14 @@ class AuthServiceTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         authService.deleteAccount(userId);
+
+        ArgumentCaptor<OutboxEvent> outboxCaptor = ArgumentCaptor.forClass(OutboxEvent.class);
+        verify(outboxRepository).save(outboxCaptor.capture());
+        OutboxEvent outboxEvent = outboxCaptor.getValue();
+        assertThat(outboxEvent.getEventType()).isEqualTo("UserDeletedEvent");
+        assertThat(outboxEvent.getAggregateId()).isEqualTo(userId);
+        assertThat(outboxEvent.getPayload()).contains("delete.me@escola.gov.br");
+        assertThat(outboxEvent.getPayload()).contains("Art. 18, VI da Lei 13.709/2018 (LGPD)");
 
         verify(userRepository).deleteById(userId);
     }

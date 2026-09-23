@@ -24,6 +24,9 @@ public class RabbitMQConfig {
     public static final String USER_REGISTERED_ROUTING_KEY = "user.registered";
     public static final String EMAIL_VERIFICATION_ROUTING_KEY = "auth.email_verification";
     public static final String STUDY_REMINDER_ROUTING_KEY = "notification.reminder.study";
+    public static final String USER_DELETED_ROUTING_KEY = "user.deleted";
+
+    public static final String NOTIFICATION_LGPD_QUEUE = "notification.lgpd.queue";
 
     @Bean
     public TopicExchange authExchange() {
@@ -46,6 +49,11 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Queue notificationLgpdQueue() {
+        return QueueBuilder.durable(NOTIFICATION_LGPD_QUEUE).build();
+    }
+
+    @Bean
     public Binding bindingUserRegistered(Queue notificationAuthQueue, TopicExchange authExchange) {
         return BindingBuilder.bind(notificationAuthQueue).to(authExchange).with(USER_REGISTERED_ROUTING_KEY);
     }
@@ -58,6 +66,11 @@ public class RabbitMQConfig {
     @Bean
     public Binding bindingStudyReminder(Queue notificationRemindersQueue, TopicExchange notificationExchange) {
         return BindingBuilder.bind(notificationRemindersQueue).to(notificationExchange).with(STUDY_REMINDER_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding bindingUserDeleted(Queue notificationLgpdQueue, TopicExchange authExchange) {
+        return BindingBuilder.bind(notificationLgpdQueue).to(authExchange).with(USER_DELETED_ROUTING_KEY);
     }
 
     @Bean

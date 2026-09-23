@@ -29,6 +29,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.containsString;
@@ -211,6 +212,26 @@ class AuthControllerWebMvcTest {
     @DisplayName("GET /api/v1/auth/export should return HTTP 200 with LGPD Art. 18 data export payload")
     void shouldExportUserDataUnderLgpd() throws Exception {
         UUID userId = UUID.fromString("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11");
+        AuthUseCase.GamificationExport gamificationExport = new AuthUseCase.GamificationExport(
+                2,
+                "Calouro Iniciante",
+                250,
+                400,
+                25.0,
+                3,
+                1,
+                10,
+                5,
+                List.of(new AuthUseCase.BadgeExport(
+                        "STREAK_3_DAYS",
+                        "Começando Firme",
+                        "3 dias de estudo",
+                        "🔥",
+                        true,
+                        Instant.now()
+                ))
+        );
+
         AuthUseCase.UserDataExport export = new AuthUseCase.UserDataExport(
                 userId,
                 "student@escola.gov.br",
@@ -222,7 +243,8 @@ class AuthControllerWebMvcTest {
                 Instant.now(),
                 Instant.now(),
                 "LGPD Art. 18, V - Data Portability",
-                "2026.1-v1.0"
+                "2026.1-v1.0",
+                gamificationExport
         );
 
         when(authUseCase.exportUserData(userId)).thenReturn(export);
@@ -231,7 +253,11 @@ class AuthControllerWebMvcTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId", is(userId.toString())))
                 .andExpect(jsonPath("$.email", is("student@escola.gov.br")))
-                .andExpect(jsonPath("$.legalBasis", containsString("LGPD")));
+                .andExpect(jsonPath("$.legalBasis", containsString("LGPD")))
+                .andExpect(jsonPath("$.gamification.currentLevel", is(2)))
+                .andExpect(jsonPath("$.gamification.currentXp", is(250)))
+                .andExpect(jsonPath("$.gamification.streakDays", is(3)))
+                .andExpect(jsonPath("$.gamification.badges[0].code", is("STREAK_3_DAYS")));
     }
 
     @Test

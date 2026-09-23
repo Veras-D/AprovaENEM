@@ -4,7 +4,9 @@ import com.aprovaenem.notification.infrastructure.persistence.entity.Notificatio
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -19,4 +21,8 @@ public interface NotificationLogRepository extends JpaRepository<NotificationLog
     long countByUserIdAndStatus(UUID userId, String status);
 
     Optional<NotificationLogEntity> findByIdAndUserId(UUID id, UUID userId);
+
+    @Modifying
+    @Transactional
+    void deleteByUserId(UUID userId);
 }

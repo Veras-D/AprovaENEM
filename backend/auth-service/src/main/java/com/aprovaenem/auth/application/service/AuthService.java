@@ -1,15 +1,19 @@
 package com.aprovaenem.auth.application.service;
 
+import com.aprovaenem.auth.domain.model.AchievementBadge;
 import com.aprovaenem.auth.domain.model.OutboxEvent;
 import com.aprovaenem.auth.domain.model.SchoolType;
 import com.aprovaenem.auth.domain.model.User;
+import com.aprovaenem.auth.domain.model.UserGamificationProfile;
 import com.aprovaenem.auth.domain.model.UserRole;
 import com.aprovaenem.auth.domain.port.in.AuthUseCase;
+import com.aprovaenem.auth.domain.port.out.GamificationRepositoryPort;
 import com.aprovaenem.auth.domain.port.out.OutboxRepositoryPort;
 import com.aprovaenem.auth.domain.port.out.PasswordEncoderPort;
 import com.aprovaenem.auth.domain.port.out.TokenProviderPort;
 import com.aprovaenem.auth.domain.port.out.UserRepositoryPort;
 import com.aprovaenem.common.events.EmailVerificationRequestedEvent;
+import com.aprovaenem.common.events.UserDeletedEvent;
 import com.aprovaenem.common.events.UserRegisteredEvent;
 import com.aprovaenem.common.exception.BusinessException;
 import com.aprovaenem.common.exception.ResourceNotFoundException;
@@ -22,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -31,6 +37,7 @@ public class AuthService implements AuthUseCase {
 
     private final UserRepositoryPort userRepository;
     private final OutboxRepositoryPort outboxRepository;
+    private final GamificationRepositoryPort gamificationRepository;
     private final PasswordEncoderPort passwordEncoder;
     private final TokenProviderPort tokenProvider;
     private final ObjectMapper objectMapper;
@@ -137,6 +144,45 @@ public class AuthService implements AuthUseCase {
     @Transactional(readOnly = true)
     public UserDataExport exportUserData(UUID userId) {
         User user = getCurrentUser(userId);
+
+        Optional<UserGamificationProfile> profileOpt = gamificationRepository.findProfileByUserId(userId);
+        List<AchievementBadge> badges = gamificationRepository.findBadgesByUserId(userId);
+
+        List<BadgeExport> badgeExports = badges.stream()
+                .map(b -> new BadgeExport(
+                        b.getCode(),
+                        b.getName(),
+                        b.getDescription(),
+                        b.getIcon(),
+                        b.isUnlocked(),
+                        b.getUnlockedAt()
+                ))
+                .toList();
+
+        GamificationExport gamificationExport = profileOpt.map(profile -> new GamificationExport(
+                profile.getCurrentLevel(),
+                profile.getLevelTitle(),
+                profile.getCurrentXp(),
+                profile.getXpNextLevel(),
+                profile.getLevelProgressPercentage(),
+                profile.getStreakDays(),
+                profile.getStreakFreezeAvailable(),
+                profile.getDailyGoalQuestions(),
+                profile.getDailyQuestionsCompleted(),
+                badgeExports
+        )).orElseGet(() -> new GamificationExport(
+                1,
+                "Calouro Iniciante",
+                0,
+                200,
+                0.0,
+                0,
+                1,
+                10,
+                0,
+                badgeExports
+        ));
+
         return new UserDataExport(
                 user.getId(),
                 user.getEmail(),
@@ -148,7 +194,8 @@ public class AuthService implements AuthUseCase {
                 user.getCreatedAt(),
                 Instant.now(),
                 "Art. 7º, I e Art. 14 (Consentimento e Melhor Interesse do Estudante / LGPD)",
-                "2026.1-v1.0"
+                "2026.1-v1.0",
+                gamificationExport
         );
     }
 
@@ -156,6 +203,20 @@ public class AuthService implements AuthUseCase {
     @Transactional
     public void deleteAccount(UUID userId) {
         User user = getCurrentUser(userId);
+
+        // Transactional Outbox Event for downstream scrubbing (notification-service, exam-service)
+        publishOutboxEvent(
+                "USER",
+                user.getId(),
+                "UserDeletedEvent",
+                UserDeletedEvent.builder()
+                        .userId(user.getId())
+                        .email(user.getEmail())
+                        .legalBasis("Art. 18, VI da Lei 13.709/2018 (LGPD) - Eliminação dos dados pessoais")
+                        .occurredAt(Instant.now())
+                        .build()
+        );
+
         userRepository.deleteById(user.getId());
         log.info("LGPD Art. 18 Purge: User [{}] account and personal identifiers permanently deleted", userId);
     }
