@@ -1,0 +1,777 @@
+[
+  {
+    "examYear": 2023,
+    "editionTitle": "ENEM 2023 — Prova Regular (Caderno Azul)",
+    "itemNumber": 136,
+    "subjectArea": "MATHEMATICS",
+    "discipline": "Matemática",
+    "topicName": "Geometria Espacial",
+    "difficultyLevel": "EASY",
+    "status": "ACTIVE",
+    "statementMarkdown": "Uma indústria fabrica reservatórios de água com formato de cilindro circular reto com raio da base igual a 2 metros e altura de 5 metros. Com o objetivo de triplicar a capacidade volumétrica desse reservatório mantendo a mesma altura, o raio da base deve ser alterado para:",
+    "figureUrl": null,
+    "figureAltText": null,
+    "options": [
+      { "letter": "A", "text": "6 metros", "isCorrect": false },
+      { "letter": "B", "text": "4 metros", "isCorrect": false },
+      { "letter": "C", "text": "2 * raiz(2) metros", "isCorrect": false },
+      { "letter": "D", "text": "2 * raiz(3) metros", "isCorrect": true },
+      { "letter": "E", "text": "12 metros", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.420,
+      "difficultyB": -0.650,
+      "guessingC": 0.180
+    },
+    "inepHabilidade": "H8",
+    "resolution": {
+      "stepByStep": "O volume de um cilindro circular reto é dado por $V = \\pi r^2 h$. O volume inicial é $V_1 = \\pi (2)^2 \\cdot 5 = 20\\pi\\text{ m}^3$. O novo volume desejado deve ser o triplo: $V_2 = 3 \\cdot V_1 = 60\\pi\\text{ m}^3$. Mantendo a altura $h = 5\\text{ m}$: $\\pi (r_{novo})^2 \\cdot 5 = 60\\pi \\Rightarrow 5(r_{novo})^2 = 60 \\Rightarrow (r_{novo})^2 = 12 \\Rightarrow r_{novo} = \\sqrt{12} = 2\\sqrt{3}\\text{ metros}$.",
+      "keyConcepts": "Geometria Espacial; Volume do Cilindro; Proporcionalidade Quadrática do Raio.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2023,
+    "editionTitle": "ENEM 2023 — Prova Regular (Caderno Azul)",
+    "itemNumber": 95,
+    "subjectArea": "NATURAL_SCIENCES",
+    "discipline": "Física",
+    "topicName": "Eletrodinâmica e Circuitos",
+    "difficultyLevel": "MEDIUM",
+    "status": "ACTIVE",
+    "statementMarkdown": "Um circuito elétrico residencial de 220 V alimenta um chuveiro elétrico de potência 5 500 W. Para proteger a instalação contra sobrecargas térmicas e riscos de curto-circuito, deve-se instalar um disjuntor termomagnético no quadro de distribuição. Considerando que o disjuntor deve ser dimensionado com uma margem de segurança de aproximadamente 20% a 25% acima da corrente nominal de operação, qual deve ser a corrente nominal mínima recomendada para esse disjuntor?",
+    "figureUrl": null,
+    "figureAltText": null,
+    "options": [
+      { "letter": "A", "text": "16 A", "isCorrect": false },
+      { "letter": "B", "text": "20 A", "isCorrect": false },
+      { "letter": "C", "text": "30 A", "isCorrect": true },
+      { "letter": "D", "text": "40 A", "isCorrect": false },
+      { "letter": "E", "text": "50 A", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.850,
+      "difficultyB": 0.420,
+      "guessingC": 0.200
+    },
+    "inepHabilidade": "H17",
+    "resolution": {
+      "stepByStep": "Pela relação de potência elétrica P = V * I, a corrente de operação do chuveiro é $I = P / V = 5500 / 220 = 25\\text{ A}$. Com margem de segurança entre 20% e 25%: $I_{min} = 25 \\times 1,20 = 30\\text{ A}$. O disjuntor comercial padrão adequado é de 30 A.",
+      "keyConcepts": "Potência Elétrica ($P = V \\cdot I$); Disjuntores Termomagnéticos; Norma NBR 5410.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2023,
+    "editionTitle": "ENEM 2023 — Prova Regular (Caderno Azul)",
+    "itemNumber": 112,
+    "subjectArea": "NATURAL_SCIENCES",
+    "discipline": "Química",
+    "topicName": "Estequiometria e Soluções",
+    "difficultyLevel": "EASY",
+    "status": "ACTIVE",
+    "statementMarkdown": "O hidróxido de magnésio, $\\text{Mg(OH)}_2$, é comumente utilizado como antiácido estomacal na forma de suspensão aquosa conhecida como leite de magnésia. Sabendo que a reação de neutralização total com o ácido clorídrico estomacal ($\\text{HCl}$) produz cloreto de magnésio ($\\text{MgCl}_2$) e água, qual é a quantidade de matéria de $\\text{HCl}$, em mol, neutralizada por 0,5 mol de $\\text{Mg(OH)}_2$?",
+    "figureUrl": null,
+    "figureAltText": null,
+    "options": [
+      { "letter": "A", "text": "0,25 mol", "isCorrect": false },
+      { "letter": "B", "text": "0,50 mol", "isCorrect": false },
+      { "letter": "C", "text": "1,00 mol", "isCorrect": true },
+      { "letter": "D", "text": "1,50 mol", "isCorrect": false },
+      { "letter": "E", "text": "2,00 mol", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.920,
+      "difficultyB": 0.150,
+      "guessingC": 0.170
+    },
+    "inepHabilidade": "H18",
+    "resolution": {
+      "stepByStep": "A equação química balanceada de neutralização é: $\\text{Mg(OH)}_2 + 2\\,\\text{HCl} \\rightarrow \\text{MgCl}_2 + 2\\,\\text{H}_2\\text{O}$. A proporção estequiométrica entre $\\text{Mg(OH)}_2$ e $\\text{HCl}$ é de $1 : 2$. Logo, para neutralizar 0,5 mol de $\\text{Mg(OH)}_2$, são necessários $0,5 \\times 2 = 1,00\\text{ mol de HCl}$.",
+      "keyConcepts": "Estequiometria; Reação Ácido-Base; Neutralização Total.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2023,
+    "editionTitle": "ENEM 2023 — Prova Regular (Caderno Azul)",
+    "itemNumber": 52,
+    "subjectArea": "HUMANITIES",
+    "discipline": "História",
+    "topicName": "Brasil República",
+    "difficultyLevel": "EASY",
+    "status": "ACTIVE",
+    "statementMarkdown": "Durante o Estado Novo (1937–1945), o Departamento de Imprensa e Propaganda (DIP) exerceu um papel crucial na sustentação política do regime varguista. Além de exercer rigorosa censura sobre os meios de comunicação, o órgão atuava estrategicamente na construção da imagem pública de Getúlio Vargas como o 'Pai dos Pobres' e patrono da classe trabalhadora. Essa estratégia de comunicação política fundamentava-se na:",
+    "figureUrl": null,
+    "figureAltText": null,
+    "options": [
+      { "letter": "A", "text": "eliminação total do sindicalismo e proibição das leis trabalhistas", "isCorrect": false },
+      { "letter": "B", "text": "associação personalista entre as conquistas da legislação social e a figura do governante", "isCorrect": true },
+      { "letter": "C", "text": "adoção irrestrita dos ideais anarcossindicais no meio operário", "isCorrect": false },
+      { "letter": "D", "text": "descentralização da propaganda política para os governos estaduais", "isCorrect": false },
+      { "letter": "E", "text": "recusa de qualquer manifestação de cultura popular pelo Estado", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.650,
+      "difficultyB": -0.350,
+      "guessingC": 0.190
+    },
+    "inepHabilidade": "H11",
+    "resolution": {
+      "stepByStep": "O trabalhismo varguista caracterizou-se pela vinculação direta e personalista entre a figura de Getúlio Vargas e a concessão de direitos sociais (CLT, salário mínimo, carteira de trabalho), apresentando as conquistas sindicais como uma dádiva do presidente e consolidando o fenômeno do populismo.",
+      "keyConcepts": "Era Vargas; Estado Novo; DIP; Trabalhismo e Populismo.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2023,
+    "editionTitle": "ENEM 2023 — Prova Regular (Caderno Azul)",
+    "itemNumber": 18,
+    "subjectArea": "LANGUAGES",
+    "discipline": "Língua Portuguesa",
+    "topicName": "Variação Linguística e Gêneros Textuais",
+    "difficultyLevel": "EASY",
+    "status": "ACTIVE",
+    "statementMarkdown": "Na comunicação digital contemporânea, o uso de recursos semióticos multimodais, como emojis, figurinhas e abreviações (internetês), desempenha um papel expressivo nas trocas interpessoais. Do ponto de vista dos estudos linguísticos modernos, esses fenômenos comunicativos devem ser compreendidos como:",
+    "figureUrl": null,
+    "figureAltText": null,
+    "options": [
+      { "letter": "A", "text": "empobrecimento semântico irreversível da norma culta da língua", "isCorrect": false },
+      { "letter": "B", "text": "inadequação gramatical que impede a transmissão eficaz de sentido", "isCorrect": false },
+      { "letter": "C", "text": "adaptação contextual da língua às necessidades de agilidade e economia do meio digital", "isCorrect": true },
+      { "letter": "D", "text": "desvio patológico resultante da falta de leitura literária clássica", "isCorrect": false },
+      { "letter": "E", "text": "código artificial incompatível com as regras morfológicas do português", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.520,
+      "difficultyB": -0.800,
+      "guessingC": 0.200
+    },
+    "inepHabilidade": "H25",
+    "resolution": {
+      "stepByStep": "A linguística contemporânea compreende as linguagens digitais e variações situacionais como recursos expressivos adequados ao contexto comunicativo de rapidez, dinamismo e multimodalidade característico da internet, e não como degradação gramatical.",
+      "keyConcepts": "Variação Linguística Diafásica (Situacional); Multimodalidade; Gêneros Digitais.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2022,
+    "editionTitle": "ENEM 2022 — Prova Regular (Caderno Azul)",
+    "itemNumber": 142,
+    "subjectArea": "MATHEMATICS",
+    "discipline": "Matemática",
+    "topicName": "Funções e Álgebra",
+    "difficultyLevel": "EASY",
+    "status": "ACTIVE",
+    "statementMarkdown": "Uma empresa de entregas expressas cobra uma taxa fixa de R\\$ 12,00 adicionada de R\\$ 2,50 por quilômetro rodado. Um cliente contratou esse serviço e pagou um valor total de R\\$ 67,00 pelo transporte de uma encomenda. A distância percorrida pelo veículo para realizar essa entrega foi de:",
+    "figureUrl": null,
+    "figureAltText": null,
+    "options": [
+      { "letter": "A", "text": "18 km", "isCorrect": false },
+      { "letter": "B", "text": "20 km", "isCorrect": false },
+      { "letter": "C", "text": "22 km", "isCorrect": true },
+      { "letter": "D", "text": "24 km", "isCorrect": false },
+      { "letter": "E", "text": "26 km", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.550,
+      "difficultyB": -0.450,
+      "guessingC": 0.180
+    },
+    "inepHabilidade": "H19",
+    "resolution": {
+      "stepByStep": "A função afim do custo em função da distância $x$ é dada por $C(x) = 12 + 2,5x$. Sabendo que o custo total foi $67$: $12 + 2,5x = 67 \\Rightarrow 2,5x = 55 \\Rightarrow x = 55 / 2,5 = 22\\text{ km}$.",
+      "keyConcepts": "Função Afim (1º Grau); Modelagem Matemática; Equações Lineares.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2022,
+    "editionTitle": "ENEM 2022 — Prova Regular (Caderno Azul)",
+    "itemNumber": 103,
+    "subjectArea": "NATURAL_SCIENCES",
+    "discipline": "Biologia",
+    "topicName": "Ecologia e Meio Ambiente",
+    "difficultyLevel": "MEDIUM",
+    "status": "ACTIVE",
+    "statementMarkdown": "A bioacumulação ou biomagnificação trófica é o fenômeno pelo qual substâncias químicas persistentes e lipossolúveis (como certos pesticidas organoclorados e metais pesados) acumulam-se progressivamente ao longo dos níveis tróficos de uma cadeia alimentar. Em um ecossistema aquático contaminado por mercúrio, a maior concentração relativa dessa substância será encontrada no tecido de:",
+    "figureUrl": null,
+    "figureAltText": null,
+    "options": [
+      { "letter": "A", "text": "fitoplâncton", "isCorrect": false },
+      { "letter": "B", "text": "zooplâncton", "isCorrect": false },
+      { "letter": "C", "text": "peixes herbívoros", "isCorrect": false },
+      { "letter": "D", "text": "peixes carnívoros de topo de cadeia", "isCorrect": true },
+      { "letter": "E", "text": "moluscos filtradores", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.780,
+      "difficultyB": 0.280,
+      "guessingC": 0.160
+    },
+    "inepHabilidade": "H15",
+    "resolution": {
+      "stepByStep": "Por não serem biodegradáveis e não serem excretados pelos organismos vivos, os metais pesados acumulam-se em concentrações crescentes nos níveis tróficos superiores (magnificação trófica). Portanto, os carnívoros de topo de cadeia apresentam a maior concentração.",
+      "keyConcepts": "Magnificação Trófica; Bioacumulação de Metais Pesados; Cadeia Alimentar.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2022,
+    "editionTitle": "ENEM 2022 — Prova Regular (Caderno Azul)",
+    "itemNumber": 120,
+    "subjectArea": "NATURAL_SCIENCES",
+    "discipline": "Física",
+    "topicName": "Termodinâmica e Calorimetria",
+    "difficultyLevel": "EASY",
+    "status": "ACTIVE",
+    "statementMarkdown": "Um bloco de gelo de 200 g à temperatura de $0^\\circ\\text{C}$ é colocado em um calorímetro ideal e aquecido até se transformar completamente em água líquida a $0^\\circ\\text{C}$. Sabendo que o calor latente de fusão do gelo é $L_f = 80\\text{ cal/g}$, a quantidade total de calor necessária para essa transformação de fase é de:\n\n![Curva de Aquecimento da Água](/assets/questions/2022_q120_calorimetria.webp)",
+    "figureUrl": "/assets/questions/2022_q120_calorimetria.webp",
+    "figureAltText": "Gráfico de Curva de Aquecimento da Água mostrando variação de temperatura em função do calor recebido",
+    "options": [
+      { "letter": "A", "text": "1 600 cal", "isCorrect": false },
+      { "letter": "B", "text": "8 000 cal", "isCorrect": false },
+      { "letter": "C", "text": "16 000 cal", "isCorrect": true },
+      { "letter": "D", "text": "24 000 cal", "isCorrect": false },
+      { "letter": "E", "text": "32 000 cal", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.820,
+      "difficultyB": 0.100,
+      "guessingC": 0.150
+    },
+    "inepHabilidade": "H20",
+    "resolution": {
+      "stepByStep": "A quantidade de calor latente para mudança de fase sem variação de temperatura é dada por $Q = m \\cdot L_f$. Substituindo os dados: $Q = 200\\text{ g} \\times 80\\text{ cal/g} = 16\\,000\\text{ cal}$.",
+      "keyConcepts": "Calorimetria; Calor Latente de Fusão; Mudança de Estado Físico.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2022,
+    "editionTitle": "ENEM 2022 — Prova Regular (Caderno Azul)",
+    "itemNumber": 70,
+    "subjectArea": "HUMANITIES",
+    "discipline": "Geografia",
+    "topicName": "Geografia Urbana e Agrária",
+    "difficultyLevel": "MEDIUM",
+    "status": "ACTIVE",
+    "statementMarkdown": "O processo de modernização conservadora da agricultura brasileira, intensificado a partir da década de 1970 com a expansão dos pacotes tecnológicos da Revolução Verde no Centro-Oeste, resultou em profundas transformações socioespaciais. Dentre os principais impactos socioeconômicos decorrentes dessa dinâmica no campo, destaca-se:",
+    "figureUrl": null,
+    "figureAltText": null,
+    "options": [
+      { "letter": "A", "text": "a desconcentração fundiária e ampliação da agricultura familiar de subsistência", "isCorrect": false },
+      { "letter": "B", "text": "o aumento da demanda por mão de obra não qualificada no cultivo da soja", "isCorrect": false },
+      { "letter": "C", "text": "a intensificação do êxodo rural e a concentração de terras em grandes propriedades mecanizadas", "isCorrect": true },
+      { "letter": "D", "text": "a erradicação definitiva dos conflitos agrários nas áreas de fronteira agrícola", "isCorrect": false },
+      { "letter": "E", "text": "a redução do desmatamento e preservação integral dos ecossistemas de Cerrado", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.600,
+      "difficultyB": 0.400,
+      "guessingC": 0.190
+    },
+    "inepHabilidade": "H6",
+    "resolution": {
+      "stepByStep": "A mecanização intensiva da lavoura e a expansão do agronegócio de grãos substituíram a mão de obra no campo, gerando desemprego estrutural, expropriação de pequenos posseiros e aceleração da migração para as periferias urbanas (êxodo rural).",
+      "keyConcepts": "Modernização Conservadora; Revolução Verde; Estrutura Fundiária Brasileira; Êxodo Rural.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2022,
+    "editionTitle": "ENEM 2022 — Prova Regular (Caderno Azul)",
+    "itemNumber": 32,
+    "subjectArea": "LANGUAGES",
+    "discipline": "Literatura",
+    "topicName": "Literatura Brasileira e Arte",
+    "difficultyLevel": "MEDIUM",
+    "status": "ACTIVE",
+    "statementMarkdown": "O Manifesto Antropófago (1928), escrito por Oswald de Andrade, propõe metaforicamente a deglutição da cultura estrangeira e sua assimilação crítica em benefício da criação de uma arte genuinamente brasileira. Essa proposta estética modernista caracteriza-se fundamentalmente pela:",
+    "figureUrl": null,
+    "figureAltText": null,
+    "options": [
+      { "letter": "A", "text": "rejeição purista e xenófoba a qualquer influência artística proveniente da Europa", "isCorrect": false },
+      { "letter": "B", "text": "imitação fidedigna dos modelos parnasianos e simbolistas portugueses", "isCorrect": false },
+      { "letter": "C", "text": "apropriação seletiva das vanguardas europeias ressignificadas a partir da realidade e identidade nacional", "isCorrect": true },
+      { "letter": "D", "text": "defesa da subordinação da arte brasileira às diretrizes culturais norte-americanas", "isCorrect": false },
+      { "letter": "E", "text": "recusa de temas folclóricos e indígenas na produção poética nacional", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.700,
+      "difficultyB": 0.550,
+      "guessingC": 0.170
+    },
+    "inepHabilidade": "H14",
+    "resolution": {
+      "stepByStep": "A Antropofagia modernista não prega o isolacionismo cultural, mas sim a deglutição crítica das inovações estéticas internacionais para fundi-las à matriz identitária brasileira, criando uma arte autônoma e híbrida.",
+      "keyConcepts": "Modernismo de 1922; Movimento Antropofágico; Oswald de Andrade; Vanguardas Europeias.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2021,
+    "editionTitle": "ENEM 2021 — Prova Regular (Caderno Azul)",
+    "itemNumber": 155,
+    "subjectArea": "MATHEMATICS",
+    "discipline": "Matemática",
+    "topicName": "Estatística e Probabilidade",
+    "difficultyLevel": "EASY",
+    "status": "ACTIVE",
+    "statementMarkdown": "Em uma turma de 20 estudantes, as notas obtidas em uma avaliação de matemática foram: 5 alunos obtiveram nota 6,0; 8 alunos obtiveram nota 7,0; 5 alunos obtiveram nota 8,0; e 2 alunos obtiveram nota 10,0. A nota média aritmética ponderada dessa turma foi de:",
+    "figureUrl": null,
+    "figureAltText": null,
+    "options": [
+      { "letter": "A", "text": "7,0", "isCorrect": false },
+      { "letter": "B", "text": "7,3", "isCorrect": true },
+      { "letter": "C", "text": "7,5", "isCorrect": false },
+      { "letter": "D", "text": "7,8", "isCorrect": false },
+      { "letter": "E", "text": "8,0", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.620,
+      "difficultyB": 0.050,
+      "guessingC": 0.180
+    },
+    "inepHabilidade": "H28",
+    "resolution": {
+      "stepByStep": "A soma ponderada das notas é: $(5 \\times 6,0) + (8 \\times 7,0) + (5 \\times 8,0) + (2 \\times 10,0) = 30 + 56 + 40 + 20 = 146$. Dividindo pelo total de 20 alunos: $\\bar{x} = 146 / 20 = 7,3$.",
+      "keyConcepts": "Estatística Básica; Média Aritmética Ponderada; Medidas de Tendência Central.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2021,
+    "editionTitle": "ENEM 2021 — Prova Regular (Caderno Azul)",
+    "itemNumber": 98,
+    "subjectArea": "NATURAL_SCIENCES",
+    "discipline": "Física",
+    "topicName": "Ondulatória e Acústica",
+    "difficultyLevel": "MEDIUM",
+    "status": "ACTIVE",
+    "statementMarkdown": "Uma ambulância se aproxima de um observador parado com sua sirene ligada, emitindo um som de frequência constante $f_0$. Devido ao movimento relativo entre a fonte sonora e o receptor (efeito Doppler), o observador percebe o som com uma frequência $f$ que é:",
+    "figureUrl": null,
+    "figureAltText": null,
+    "options": [
+      { "letter": "A", "text": "menor que f_0, porque o comprimento de onda aparente aumenta", "isCorrect": false },
+      { "letter": "B", "text": "maior que f_0, porque as frentes de onda se comprimem na direção do movimento", "isCorrect": true },
+      { "letter": "C", "text": "igual a f_0, pois a velocidade do som no ar permanece constante", "isCorrect": false },
+      { "letter": "D", "text": "nula, pois as ondas se cancelam por interferência destrutiva", "isCorrect": false },
+      { "letter": "E", "text": "infrassônica, independentemente da velocidade do veículo", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.750,
+      "difficultyB": 0.350,
+      "guessingC": 0.150
+    },
+    "inepHabilidade": "H21",
+    "resolution": {
+      "stepByStep": "Na aproximação entre a fonte emissora e o observador estacionário, as frentes de onda são comprimidas espacialmente, reduzindo o comprimento de onda aparente ($\\lambda' < \\lambda$). Como a velocidade de propagação no meio independe do movimento da fonte, a frequência aparente percebida pelo observador é mais alta (som mais agudo: $f' > f_0$).",
+      "keyConcepts": "Ondulatória; Efeito Doppler Acústico; Frequência Aparente.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2021,
+    "editionTitle": "ENEM 2021 — Prova Regular (Caderno Azul)",
+    "itemNumber": 127,
+    "subjectArea": "NATURAL_SCIENCES",
+    "discipline": "Química",
+    "topicName": "Química Orgânica e Funções",
+    "difficultyLevel": "MEDIUM",
+    "status": "ACTIVE",
+    "statementMarkdown": "O paracetamol (acetaminofeno) é um dos analgésicos e antipiréticos mais consumidos no mundo. Sua estrutura molecular apresenta um anel aromático ligado a dois substituintes em posições relativas para: um grupo hidroxila ($-OH$) e um grupo acetamido ($-NH-CO-CH_3$). As funções orgânicas oxigenada e nitrogenada presentes nessa molécula são, respectivamente:\n\n![Estrutura do Paracetamol](/assets/questions/2021_q127_quimica_organica.webp)",
+    "figureUrl": "/assets/questions/2021_q127_quimica_organica.webp",
+    "figureAltText": "Fórmula estrutural do paracetamol destacando os grupos hidroxila fenólica e amida",
+    "options": [
+      { "letter": "A", "text": "álcool e amina", "isCorrect": false },
+      { "letter": "B", "text": "fenol e amida", "isCorrect": true },
+      { "letter": "C", "text": "éter e nitrila", "isCorrect": false },
+      { "letter": "D", "text": "aldeído e amida", "isCorrect": false },
+      { "letter": "E", "text": "ácido carboxílico e amina", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.800,
+      "difficultyB": 0.600,
+      "guessingC": 0.180
+    },
+    "inepHabilidade": "H24",
+    "resolution": {
+      "stepByStep": "A hidroxila ($-OH$) ligada diretamente ao anel benzênico caracteriza a função Fenol (e não álcool). O nitrogênio ligado diretamente a uma carbonila ($R-CO-NH-R'$) caracteriza a função Amida (e não amina).",
+      "keyConcepts": "Química Orgânica; Funções Orgânicas Oxigenadas e Nitrogenadas; Fenol e Amida.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2021,
+    "editionTitle": "ENEM 2021 — Prova Regular (Caderno Azul)",
+    "itemNumber": 65,
+    "subjectArea": "HUMANITIES",
+    "discipline": "Filosofia",
+    "topicName": "Filosofia Política e Ética",
+    "difficultyLevel": "MEDIUM",
+    "status": "ACTIVE",
+    "statementMarkdown": "Na obra 'Ética a Nicômaco', Aristóteles define a virtude moral (excelência) como uma disposição habitual de escolher o justo meio (justa medida) relativo a nós, evitando tanto o excesso quanto a falta. Segundo essa concepção filosófica, a virtude da coragem localiza-se entre quais extremos?",
+    "figureUrl": null,
+    "figureAltText": null,
+    "options": [
+      { "letter": "A", "text": "a ambição e a apatia", "isCorrect": false },
+      { "letter": "B", "text": "a avareza e a prodigalidade", "isCorrect": false },
+      { "letter": "C", "text": "a covardia e a temeridade", "isCorrect": true },
+      { "letter": "D", "text": "o orgulho e a humildade", "isCorrect": false },
+      { "letter": "E", "text": "a inveja e o despeito", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.580,
+      "difficultyB": 0.450,
+      "guessingC": 0.200
+    },
+    "inepHabilidade": "H23",
+    "resolution": {
+      "stepByStep": "Na ética aristotélica, a coragem é o justo meio em relação aos sentimentos de medo e audácia. A falta de coragem diante do perigo é a covardia (vício por deficiência), enquanto a audácia imprudente e excessiva é a temeridade (vício por excesso).",
+      "keyConcepts": "Ética Aristotélica; Teoria da Justa Medida; Virtudes Morais.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2021,
+    "editionTitle": "ENEM 2021 — Prova Regular (Caderno Azul)",
+    "itemNumber": 24,
+    "subjectArea": "LANGUAGES",
+    "discipline": "Língua Portuguesa",
+    "topicName": "Interpretação e Argumentação",
+    "difficultyLevel": "EASY",
+    "status": "ACTIVE",
+    "statementMarkdown": "Em um editorial jornalístico, o autor recorre frequentemente a operadores argumentativos (conjunções e locuções conjuntivas) para articular as teses defendidas e refutar contra-argumentos. No trecho: 'Embora os investimentos em educação básica tenham crescido na última década, os índices de proficiência leitora permanecem estagnados', o conectivo destacado ('Embora') estabelece entre as orações uma relação de:",
+    "figureUrl": null,
+    "figureAltText": null,
+    "options": [
+      { "letter": "A", "text": "consequência", "isCorrect": false },
+      { "letter": "B", "text": "proporcionalidade", "isCorrect": false },
+      { "letter": "C", "text": "concessão", "isCorrect": true },
+      { "letter": "D", "text": "temporalidade", "isCorrect": false },
+      { "letter": "E", "text": "condição", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.480,
+      "difficultyB": -0.700,
+      "guessingC": 0.190
+    },
+    "inepHabilidade": "H18",
+    "resolution": {
+      "stepByStep": "A conjunção subordinativa 'Embora' introduz uma oração subordinada adverbial concessiva, que expressa um fato contrário à oração principal, mas incapaz de anular ou impedir a sua realização.",
+      "keyConcepts": "Coesão Sequencial; Conectivos e Operadores Argumentativos; Oração Subordinada Concessiva.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2020,
+    "editionTitle": "ENEM 2020 — Prova Regular (Caderno Azul)",
+    "itemNumber": 160,
+    "subjectArea": "MATHEMATICS",
+    "discipline": "Matemática",
+    "topicName": "Matemática Financeira e Porcentagem",
+    "difficultyLevel": "MEDIUM",
+    "status": "ACTIVE",
+    "statementMarkdown": "Um consumidor deseja comprar um televisor cujo preço à vista é de R\\$ 2 000,00. A loja oferece uma opção de pagamento a prazo em duas parcelas iguais: a primeira parcela de R\\$ 1 000,00 é paga no ato da compra (como entrada) e a segunda parcela de R\\$ 1 100,00 é paga exatamente um mês após a compra. A taxa mensal de juros simples cobrada pela loja sobre o saldo devedor financiado é de:",
+    "figureUrl": null,
+    "figureAltText": null,
+    "options": [
+      { "letter": "A", "text": "5%", "isCorrect": false },
+      { "letter": "B", "text": "8%", "isCorrect": false },
+      { "letter": "C", "text": "10%", "isCorrect": true },
+      { "letter": "D", "text": "12%", "isCorrect": false },
+      { "letter": "E", "text": "15%", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.850,
+      "difficultyB": 0.800,
+      "guessingC": 0.170
+    },
+    "inepHabilidade": "H26",
+    "resolution": {
+      "stepByStep": "O preço à vista é R\\$ 2 000,00. Pagando R\\$ 1 000,00 de entrada, o saldo devedor real financiado é de $2000 - 1000 = 1000$ reais. Após um mês, o cliente paga R\\$ 1 100,00, gerando $1100 - 1000 = 100$ reais de juros. A taxa de juros sobre o saldo devedor financiado é: $i = 100 / 1000 = 0,10 = 10\\%$.",
+      "keyConcepts": "Matemática Financeira; Saldo Devedor Financiado; Juros Simples.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2020,
+    "editionTitle": "ENEM 2020 — Prova Regular (Caderno Azul)",
+    "itemNumber": 115,
+    "subjectArea": "NATURAL_SCIENCES",
+    "discipline": "Biologia",
+    "topicName": "Genética e Evolução",
+    "difficultyLevel": "EASY",
+    "status": "ACTIVE",
+    "statementMarkdown": "A teoria sintética da evolução (neodarwinismo) integra os princípios da seleção natural postulados por Charles Darwin aos conhecimentos modernos de genética mendeliana e biologia molecular. De acordo com essa teoria, a principal fonte primária geradora de nova variabilidade genética em uma população biológica é a:",
+    "figureUrl": null,
+    "figureAltText": null,
+    "options": [
+      { "letter": "A", "text": "deriva genética provocada por catástrofes naturais", "isCorrect": false },
+      { "letter": "B", "text": "mutação gênica espontânea ou induzida", "isCorrect": true },
+      { "letter": "C", "text": "reprodução assexuada por cissiparidade", "isCorrect": false },
+      { "letter": "D", "text": "migração de indivíduos entre comunidades isoladas", "isCorrect": false },
+      { "letter": "E", "text": "seleção artificial orientada pelo ser humano", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.700,
+      "difficultyB": -0.100,
+      "guessingC": 0.160
+    },
+    "inepHabilidade": "H16",
+    "resolution": {
+      "stepByStep": "A mutação gênica é o único mecanismo evolutivo capaz de criar novos alelos, constituindo a fonte primária original de variabilidade genética. Os outros fatores (recombinação gênica, migração, seleção) atuam reorganizando ou selecionando a variação pré-existente.",
+      "keyConcepts": "Neodarwinismo; Variabilidade Genética; Mutação Gênica; Seleção Natural.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2020,
+    "editionTitle": "ENEM 2020 — Prova Regular (Caderno Azul)",
+    "itemNumber": 130,
+    "subjectArea": "NATURAL_SCIENCES",
+    "discipline": "Física",
+    "topicName": "Mecânica e Leis de Newton",
+    "difficultyLevel": "EASY",
+    "status": "ACTIVE",
+    "statementMarkdown": "Um bloco homogêneo de massa $m = 4\\text{ kg}$ repousa sobre uma superfície horizontal perfeitamente lisa (sem atrito). Uma força constante e horizontal $F = 12\\text{ N}$ passa a atuar sobre o bloco durante um intervalo de tempo de 5 segundos. Considerando que o bloco partiu do repouso, a velocidade final atingida ao final desse intervalo é de:\n\n![Diagrama de forças no plano](/assets/questions/2020_q130_plano_inclinado.webp)",
+    "figureUrl": "/assets/questions/2020_q130_plano_inclinado.webp",
+    "figureAltText": "Diagrama de corpo livre de um bloco sobre superfície horizontal submetido a força constante",
+    "options": [
+      { "letter": "A", "text": "3 m/s", "isCorrect": false },
+      { "letter": "B", "text": "8 m/s", "isCorrect": false },
+      { "letter": "C", "text": "15 m/s", "isCorrect": true },
+      { "letter": "D", "text": "20 m/s", "isCorrect": false },
+      { "letter": "E", "text": "60 m/s", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.650,
+      "difficultyB": -0.250,
+      "guessingC": 0.180
+    },
+    "inepHabilidade": "H20",
+    "resolution": {
+      "stepByStep": "Pela Segunda Lei de Newton: $F = m \\cdot a \\Rightarrow a = F / m = 12 / 4 = 3\\text{ m/s}^2$. Pela equação da velocidade no movimento retilíneo uniformemente variado (MRUV): $v = v_0 + a \\cdot t = 0 + 3 \\times 5 = 15\\text{ m/s}$.",
+      "keyConcepts": "Dinâmica Newtoniana; 2ª Lei de Newton ($F = m \\cdot a$); Cinemática Escalar (MRUV).",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2020,
+    "editionTitle": "ENEM 2020 — Prova Regular (Caderno Azul)",
+    "itemNumber": 75,
+    "subjectArea": "HUMANITIES",
+    "discipline": "História",
+    "topicName": "Cidadania e Direitos Humanos",
+    "difficultyLevel": "EASY",
+    "status": "ACTIVE",
+    "statementMarkdown": "A promulgação da Constituição da República Federativa do Brasil de 1988, conhecida como 'Constituição Cidadã', representou o marco jurídico e institucional da redemocratização brasileira após 21 anos de ditadura militar. Entre seus avanços democráticos fundamentais no campo dos direitos humanos e da cidadania, destaca-se:",
+    "figureUrl": null,
+    "figureAltText": null,
+    "options": [
+      { "letter": "A", "text": "a restrição do direito de voto exclusivamente aos cidadãos alfabetizados com renda comprovada", "isCorrect": false },
+      { "letter": "B", "text": "a instituição do habeas corpus e a criminalização expressa do racismo como crime inafiançável e imprescritível", "isCorrect": true },
+      { "letter": "C", "text": "a concentração dos poderes de emergência no Executivo federal", "isCorrect": false },
+      { "letter": "D", "text": "a extinção dos partidos políticos de orientação trabalhista", "isCorrect": false },
+      { "letter": "E", "text": "a eliminação do controle de constitucionalidade exercido pelo STF", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.500,
+      "difficultyB": -0.500,
+      "guessingC": 0.190
+    },
+    "inepHabilidade": "H8",
+    "resolution": {
+      "stepByStep": "A Constituição de 1988 ampliou significativamente os direitos e garantias fundamentais (Art. 5º), estabelecendo o racismo como crime inafiançável e imprescritível, garantindo o sufrágio universal (incluindo o voto facultativo aos analfabetos e jovens de 16 a 17 anos) e consolidando o Estado Democrático de Direito.",
+      "keyConcepts": "Constituição Cidadã de 1988; Redemocratização; Direitos Fundamentais e Cidadania.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2020,
+    "editionTitle": "ENEM 2020 — Prova Regular (Caderno Azul)",
+    "itemNumber": 35,
+    "subjectArea": "LANGUAGES",
+    "discipline": "Língua Inglesa",
+    "topicName": "Leitura e Competência Leitora",
+    "difficultyLevel": "MEDIUM",
+    "status": "ACTIVE",
+    "statementMarkdown": "In the context of modern environmental discourse, the term 'greenwashing' refers to the deceptive marketing practice employed by corporations to persuade the public that an organization's products, aims, and policies are environmentally friendly when, in reality, they are not. The primary objective of greenwashing is to:",
+    "figureUrl": null,
+    "figureAltText": null,
+    "options": [
+      { "letter": "A", "text": "enhance actual environmental investments without public acknowledgment", "isCorrect": false },
+      { "letter": "B", "text": "mislead consumers to gain an unfair market advantage through superficial eco-claims", "isCorrect": true },
+      { "letter": "C", "text": "support non-profit ecological preservation projects globally", "isCorrect": false },
+      { "letter": "D", "text": "comply rigorously with international carbon credit protocols", "isCorrect": false },
+      { "letter": "E", "text": "eliminate all industrial emissions from production facilities", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.600,
+      "difficultyB": 0.200,
+      "guessingC": 0.160
+    },
+    "inepHabilidade": "H7",
+    "resolution": {
+      "stepByStep": "O termo 'greenwashing' é formado pelo trocadilho com 'whitewash' (encobrir ou disfarçar) e 'green' (ecológico), designando a propaganda enganosa em que empresas constroem uma falsa imagem sustentável para enganar os consumidores e lucrar sem promover reais melhorias ambientais.",
+      "keyConcepts": "Competência Leitora em Língua Estrangeira; Vocabulário Temático; Discurso Corporativo Ambiental.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2019,
+    "editionTitle": "ENEM 2019 — Prova Regular (Caderno Azul)",
+    "itemNumber": 148,
+    "subjectArea": "MATHEMATICS",
+    "discipline": "Matemática",
+    "topicName": "Geometria Plana e Trigonometria",
+    "difficultyLevel": "MEDIUM",
+    "status": "ACTIVE",
+    "statementMarkdown": "Um observador situado a 60 metros de distância da base de uma torre de transmissão vertical visualiza o topo dessa torre sob um ângulo de elevação de $30^\\circ$ em relação ao solo horizontal. Desprezando a altura do observador e adotando $\\tan(30^\\circ) \\approx 0,58$, a altura estimada dessa torre é de aproximadamente:\n\n![Torre de transmissão e triângulo retângulo](/assets/questions/2019_q148_trigonometria.webp)",
+    "figureUrl": "/assets/questions/2019_q148_trigonometria.webp",
+    "figureAltText": "Triângulo retângulo formado por um observador, o topo de uma torre e o solo com ângulo de 30 graus",
+    "options": [
+      { "letter": "A", "text": "25,4 metros", "isCorrect": false },
+      { "letter": "B", "text": "34,8 metros", "isCorrect": true },
+      { "letter": "C", "text": "42,0 metros", "isCorrect": false },
+      { "letter": "D", "text": "51,9 metros", "isCorrect": false },
+      { "letter": "E", "text": "60,0 metros", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.750,
+      "difficultyB": 0.300,
+      "guessingC": 0.170
+    },
+    "inepHabilidade": "H7",
+    "resolution": {
+      "stepByStep": "No triângulo retângulo formado pela torre, o solo e a linha de visada: $\\tan(30^\\circ) = \\text{cateto oposto} / \\text{cateto adjacente} = h / 60$. Portanto: $h = 60 \\times \\tan(30^\\circ) \\approx 60 \\times 0,58 = 34,8\\text{ metros}$.",
+      "keyConcepts": "Trigonometria no Triângulo Retângulo; Razões Trigonométricas (Tangente).",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2019,
+    "editionTitle": "ENEM 2019 — Prova Regular (Caderno Azul)",
+    "itemNumber": 105,
+    "subjectArea": "NATURAL_SCIENCES",
+    "discipline": "Física",
+    "topicName": "Óptica Geométrica",
+    "difficultyLevel": "EASY",
+    "status": "ACTIVE",
+    "statementMarkdown": "A miopia é uma anomalia visual na qual a imagem de objetos distantes é focalizada antes da retina, provocando visão embaçada para objetos longe. Para corrigir essa anomalia e fazer com que os raios luminosos convirjam exatamente sobre a retina, deve-se prescrever o uso de óculos com lentes:",
+    "figureUrl": null,
+    "figureAltText": null,
+    "options": [
+      { "letter": "A", "text": "convergentes de bordos finos", "isCorrect": false },
+      { "letter": "B", "text": "divergentes", "isCorrect": true },
+      { "letter": "C", "text": "planas sem curvatura", "isCorrect": false },
+      { "letter": "D", "text": "cilíndricas reflexivas", "isCorrect": false },
+      { "letter": "E", "text": "bifocais convergentes", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.680,
+      "difficultyB": -0.150,
+      "guessingC": 0.180
+    },
+    "inepHabilidade": "H17",
+    "resolution": {
+      "stepByStep": "No olho míope, o globo ocular é excessivamente longo ou a curvatura da córnea é excessiva, fazendo com que a convergência ocorra antes da retina. O uso de lentes divergentes afasta os raios incidentes, permitindo que o foco final se forme exatamente na retina.",
+      "keyConcepts": "Óptica da Visão; Ametropias; Miopia e Lentes Divergentes.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2019,
+    "editionTitle": "ENEM 2019 — Prova Regular (Caderno Azul)",
+    "itemNumber": 122,
+    "subjectArea": "NATURAL_SCIENCES",
+    "discipline": "Química",
+    "topicName": "Físico-Química e Eletroquímica",
+    "difficultyLevel": "MEDIUM",
+    "status": "ACTIVE",
+    "statementMarkdown": "Na clássica pilha galvânica de Daniell, eletrodos metálicos de zinco ($\\text{Zn}$) e cobre ($\\text{Cu}$) são imersos em soluções de seus respectivos sulfatos. Sabendo que o potencial padrão de redução do cobre ($E^\\circ = +0,34\\text{ V}$) é maior que o do zinco ($E^\\circ = -0,76\\text{ V}$), durante a descarga espontânea da pilha ocorre:\n\n![Esquema da Pilha de Daniell](/assets/questions/2019_q122_pilha_daniel.webp)",
+    "figureUrl": "/assets/questions/2019_q122_pilha_daniel.webp",
+    "figureAltText": "Esquema de uma pilha de Daniell com eletrodos de zinco e cobre imersos em soluções aquosas e ponte salina",
+    "options": [
+      { "letter": "A", "text": "oxidação do cobre no ânodo", "isCorrect": false },
+      { "letter": "B", "text": "redução dos íons Zn(2+) no cátodo", "isCorrect": false },
+      { "letter": "C", "text": "oxidação do zinco metálico no ânodo e redução dos íons Cu(2+) no cátodo", "isCorrect": true },
+      { "letter": "D", "text": "migração de elétrons do cobre para o zinco pelo circuito externo", "isCorrect": false },
+      { "letter": "E", "text": "aumento contínuo da massa da barra de zinco", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.880,
+      "difficultyB": 0.750,
+      "guessingC": 0.160
+    },
+    "inepHabilidade": "H21",
+    "resolution": {
+      "stepByStep": "A espécie química de maior potencial de redução (o cobre, $E^\\circ = +0,34\\text{ V}$) sofre redução no cátodo (polo positivo): $\\text{Cu}^{2+} + 2e^- \\rightarrow \\text{Cu}_{(s)}$. A de menor potencial de redução (o zinco, $E^\\circ = -0,76\\text{ V}$) sofre oxidação no ânodo (polo negativo): $\\text{Zn}_{(s)} \\rightarrow \\text{Zn}^{2+} + 2e^-$.",
+      "keyConcepts": "Eletroquímica; Pilha de Daniell; Potenciais Padrão de Redução; Ânodo e Cátodo.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2019,
+    "editionTitle": "ENEM 2019 — Prova Regular (Caderno Azul)",
+    "itemNumber": 80,
+    "subjectArea": "HUMANITIES",
+    "discipline": "Geografia",
+    "topicName": "Cartografia e Climatologia",
+    "difficultyLevel": "EASY",
+    "status": "ACTIVE",
+    "statementMarkdown": "O fenômeno climático de grande escala conhecido como El Niño caracteriza-se pelo aquecimento anômalo das águas superficiais do Oceano Pacífico Equatorial. No Brasil, esse fenômeno meteorológico acarreta historicamente impactos climáticos expressivos, provocando tipicamente:",
+    "figureUrl": null,
+    "figureAltText": null,
+    "options": [
+      { "letter": "A", "text": "secas severas no Sul e enchentes recordes no semiárido nordestino", "isCorrect": false },
+      { "letter": "B", "text": "chuvas intensas e inundações na Região Sul e estiagem prolongada em partes das regiões Norte e Nordeste", "isCorrect": true },
+      { "letter": "C", "text": "redução generalizada das temperaturas em todo o território nacional", "isCorrect": false },
+      { "letter": "D", "text": "nevascas frequentes na Região Centro-Oeste", "isCorrect": false },
+      { "letter": "E", "text": "estabilidade climática absoluta sem alterações no regime pluvial", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.550,
+      "difficultyB": 0.100,
+      "guessingC": 0.190
+    },
+    "inepHabilidade": "H9",
+    "resolution": {
+      "stepByStep": "A alteração na circulação atmosférica (célula de Walker) causada pelo El Niño bloqueia as frentes frias no Sul do Brasil (provocando chuvas torrenciais e cheias de rios) e inibe a formação de nuvens de chuva no Semiárido Nordestino e no leste da Amazônia.",
+      "keyConcepts": "Climatologia Dinâmica; Fenômeno El Niño; Regime Pluviométrico Brasileiro.",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  },
+  {
+    "examYear": 2019,
+    "editionTitle": "ENEM 2019 — Prova Regular (Caderno Azul)",
+    "itemNumber": 40,
+    "subjectArea": "HUMANITIES",
+    "discipline": "Filosofia",
+    "topicName": "Filosofia Moderna e Iluminismo",
+    "difficultyLevel": "MEDIUM",
+    "status": "ACTIVE",
+    "statementMarkdown": "No ensaio 'Resposta à pergunta: O que é o Esclarecimento?' (1784), Immanuel Kant define o Iluminismo como a saída do ser humano de sua menoridade, da qual ele próprio é culpado. A menoridade é a incapacidade de fazer uso de seu próprio entendimento sem a direção de outro. A divisa do Iluminismo preconizada por Kant é:",
+    "figureUrl": null,
+    "figureAltText": null,
+    "options": [
+      { "letter": "A", "text": "'Homo homini lupus' - O homem é o lobo do homem", "isCorrect": false },
+      { "letter": "B", "text": "'Sapere aude!' - Ouse saber, tenha coragem de fazer uso de seu próprio entendimento", "isCorrect": true },
+      { "letter": "C", "text": "'Cogito, ergo sum' - Penso, logo existo", "isCorrect": false },
+      { "letter": "D", "text": "'Tabula rasa' - A mente como uma folha em branco", "isCorrect": false },
+      { "letter": "E", "text": "'Panem et circenses' - Pão e circo", "isCorrect": false }
+    ],
+    "triParameters": {
+      "discriminationA": 1.650,
+      "difficultyB": 0.400,
+      "guessingC": 0.180
+    },
+    "inepHabilidade": "H24",
+    "resolution": {
+      "stepByStep": "Kant conclama a humanidade a romper com a tutela intelectual e a submissão cega à autoridade religiosa ou política com a célebre divisa em latim 'Sapere aude!' ('Ouse saber!' ou 'Tenha a coragem de servir-te de tua própria razão!').",
+      "keyConcepts": "Filosofia Iluminista; Immanuel Kant; Autonomia da Razão; Esclarecimento (Aufklärung).",
+      "authorAttribution": "Equipe Pedagógica AprovaENEM / INEP"
+    }
+  }
+]

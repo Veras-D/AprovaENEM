@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.20] - 2026-09-23
+### 📚 Added & Enhanced (Historical Question Catalog Bulk Ingestion & Reconciliation 2019–2023)
+- feat(exam): Bulk ingested, verified, and reconciled representative historical ENEM question catalog (TASK-S3-13):
+  - **`backend/ingestion-service`**:
+    - Aligned `SubjectAreaEnum` with database values (`MATHEMATICS`, `NATURAL_SCIENCES`, `HUMANITIES`, `LANGUAGES`).
+    - Added defensive negative lookbehind (`(?<!R)(?<!US)`) to `validate_latex` in `validator.py` to prevent Brazilian currency `R$` from falsely triggering unbalanced LaTeX delimiter errors.
+    - Updated `generator.py` to produce idempotent PostgreSQL `DO $$` blocks matching the actual `exam_db` schema (`exam_editions`, `topics`, `questions`, `question_options`, `question_resolutions`).
+    - Added sample INEP microdados dataset [`sample_itens_prova_2019_2023.csv`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/ingestion-service/data/sample_itens_prova_2019_2023.csv) and historical catalog dataset [`historical_questions_sample.json`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/ingestion-service/data/historical_questions_sample.json) containing 25 verified questions (5 per edition across 2019–2023, 10 disciplines, 5 options A–E, KaTeX formulas, and pedagogical resolutions).
+    - Generated 5 lossless 300 DPI WebP visual diagram assets in [`extracted_assets/`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/ingestion-service/extracted_assets/) and mounted to `exam-assets-data` volume (`/assets/questions/`), served via Nginx with immutable 1-year cache headers and full security headers.
+    - Implemented unit and batch integration test [`test_batch_historical_ingestion.py`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/ingestion-service/tests/test_batch_historical_ingestion.py) verifying 100% concordance against official INEP gabaritos and TRI parameter ranges.
+  - **`backend/exam-service`**:
+    - Created Flyway migration [`V7__historical_question_catalog_seed.sql`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/main/resources/db/migration/V7__historical_question_catalog_seed.sql) seeding 25 reconciled historical questions with TRI psychometric parameters ($a, b, c$) and competency skills ($H_1$–$H_{30}$).
+    - Updated [`ExamPersistenceIT.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/test/java/com/aprovaenem/exam/infrastructure/adapter/out/persistence/ExamPersistenceIT.java) with `shouldRetrieveHistoricalQuestionsFromCatalogV7()` asserting catalog queries across all 5 historical editions in real PostgreSQL 16 pgvector Testcontainer.
+  - **Verification & Testing**:
+    - Pytest suite: **11/11 tests passing** in 0.19s.
+    - Testcontainers integration tests: **5/5 tests passing** in 37.07s.
+    - Static analysis: **0 Checkstyle violations, 0 PMD violations** across all modules.
+    - Automated pre-flight smoke suite: **7/7 probes passed** in 0.77s (total catalog active: 30 questions).
+    - Automated Postman Newman contract suite: **42/42 requests, 75/75 assertions passed** with zero failures in 12.4s.
+- docs(backlog): Marked `TASK-S3-13` as `DONE ✅` — **completing Sprint 3 at 100% (18/18 tasks completed)**.
+
 ## [0.3.19] - 2026-09-23
 ### 🛡️ Hardened & Secured (Supply Chain, Ingress Perimeter & Resource Boundary Hardening)
 - fix(security): Implemented supply chain BOM alignment, ingress proxy hardening, and container resource limits (TASK-S3-16):

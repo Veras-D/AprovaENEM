@@ -36,6 +36,14 @@ buildNumber.properties
 .gradle/
 build/
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
 # Environment variables & secrets
 .env
 .env.*
@@ -46,6 +54,7 @@ build/
 # Local database data
 postgres-data/
 data/
+!backend/ingestion-service/data/
 
 # IDE & Editor files
 .idea/

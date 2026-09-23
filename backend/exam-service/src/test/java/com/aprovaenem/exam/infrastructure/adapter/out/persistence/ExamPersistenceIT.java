@@ -229,4 +229,46 @@ class ExamPersistenceIT {
         assertThat(completed.getCorrectCount()).isEqualTo(1);
         assertThat(completed.getCompletedAt()).isNotNull();
     }
+
+    @Test
+    @DisplayName("Historical question catalog (V7) should load 25 questions across 2019-2023 with full TRI and options")
+    void shouldRetrieveHistoricalQuestionsFromCatalogV7() {
+        QuestionFilterCommand filterAll = new QuestionFilterCommand(
+                null, null, null, null, QuestionStatus.ACTIVE, 0, 50
+        );
+        PagedResult<Question> allQuestions = questionRepository.findAll(filterAll);
+        assertThat(allQuestions.getContent()).hasSizeGreaterThanOrEqualTo(25);
+        assertThat(allQuestions.getTotalElements()).isGreaterThanOrEqualTo(25);
+
+        // Verify mathematics questions
+        QuestionFilterCommand mathFilter = new QuestionFilterCommand(
+                null, "Matemática", null, null, QuestionStatus.ACTIVE, 0, 20
+        );
+        PagedResult<Question> mathQuestions = questionRepository.findAll(mathFilter);
+        assertThat(mathQuestions.getContent()).isNotEmpty();
+        assertThat(mathQuestions.getContent()).allMatch(q -> "Matemática".equals(q.getDiscipline()));
+
+        // Verify natural sciences questions
+        QuestionFilterCommand physicsFilter = new QuestionFilterCommand(
+                null, "Física", null, null, QuestionStatus.ACTIVE, 0, 20
+        );
+        PagedResult<Question> physicsQuestions = questionRepository.findAll(physicsFilter);
+        assertThat(physicsQuestions.getContent()).isNotEmpty();
+        assertThat(physicsQuestions.getContent()).allMatch(q -> "Física".equals(q.getDiscipline()));
+
+        // Verify full-text search across historical questions
+        QuestionFilterCommand searchVargas = new QuestionFilterCommand(
+                null, null, null, "Vargas", QuestionStatus.ACTIVE, 0, 10
+        );
+        PagedResult<Question> vargasQuestions = questionRepository.findAll(searchVargas);
+        assertThat(vargasQuestions.getContent()).isNotEmpty();
+        assertThat(vargasQuestions.getContent().get(0).getStatement()).contains("Estado Novo");
+
+        // Verify figure url preservation
+        Optional<Question> figureQuestion = allQuestions.getContent().stream()
+                .filter(q -> q.getFigureUrl() != null && q.getFigureUrl().contains("calorimetria"))
+                .findFirst();
+        assertThat(figureQuestion).isPresent();
+        assertThat(figureQuestion.get().getFigureAltText()).contains("Curva de Aquecimento");
+    }
 }

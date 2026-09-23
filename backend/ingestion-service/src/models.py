@@ -4,10 +4,13 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class SubjectAreaEnum(str, Enum):
-    NATURAL_SCIENCES = "NATURAL_SCIENCES"
-    HUMAN_SCIENCES = "HUMAN_SCIENCES"
-    LANGUAGES_CODES = "LANGUAGES_CODES"
     MATHEMATICS = "MATHEMATICS"
+    NATURAL_SCIENCES = "NATURAL_SCIENCES"
+    HUMANITIES = "HUMANITIES"
+    LANGUAGES = "LANGUAGES"
+    # Backward compatibility aliases
+    HUMAN_SCIENCES = "HUMANITIES"
+    LANGUAGES_CODES = "LANGUAGES"
 
 
 class DifficultyLevelEnum(str, Enum):
@@ -46,7 +49,9 @@ class TriParametersModel(BaseModel):
 
 class ResolutionModel(BaseModel):
     stepByStep: str = Field(..., min_length=1)
+    keyConcepts: Optional[str] = None
     pedagogicalTip: Optional[str] = None
+    authorAttribution: Optional[str] = "INEP / Equipe Pedagógica AprovaENEM"
 
 
 class QuestionExtractionModel(BaseModel):
@@ -59,6 +64,8 @@ class QuestionExtractionModel(BaseModel):
     difficultyLevel: DifficultyLevelEnum = DifficultyLevelEnum.MEDIUM
     status: QuestionStatusEnum = QuestionStatusEnum.ACTIVE
     statementMarkdown: str = Field(..., min_length=1)
+    figureUrl: Optional[str] = None
+    figureAltText: Optional[str] = None
     options: List[OptionModel] = Field(..., min_length=5, max_length=5)
     triParameters: Optional[TriParametersModel] = None
     inepHabilidade: Optional[str] = Field(None, pattern="^H([1-9]|[12][0-9]|30)$")

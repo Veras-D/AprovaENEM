@@ -24,8 +24,8 @@ class IngestionQualityGate:
         # Strip valid blocks before checking inline $ ... $
         text_without_blocks = re.sub(r"\$\$.*?\$\$", "", markdown_text, flags=re.DOTALL)
         
-        # Check inline math $ ... $ (ignoring escaped \$)
-        inline_delimiters = re.findall(r"(?<!\\)\$", text_without_blocks)
+        # Check inline math $ ... $ (ignoring escaped \$ and common currency signs like R$ or US$)
+        inline_delimiters = re.findall(r"(?<!\\)(?<!R)(?<!US)\$", text_without_blocks)
         if len(inline_delimiters) % 2 != 0:
             errors.append("Unbalanced inline LaTeX delimiters ($).")
 
