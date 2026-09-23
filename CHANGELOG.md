@@ -17,9 +17,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Marked **`TASK-S3-11`** as **DONE ✅**.
   - Brought forward **`TASK-S3-13`** (**Historical Question Catalog Bulk Ingestion & Reconciliation 2019–2023**, 5 pts, P1) from JAM 2 Sprint 4 (`S4-00`) to the final of Sprint 3.
   - Brought forward **`TASK-S3-14`** (**LGPD Art. 18 Data Portability & Irrevocable Account Erasure Backend APIs**, 5 pts, P0) from the backend scope of JAM 2 Sprint 6 (`S6-09`) to the final of Sprint 3.
+  - Added **`TASK-S3-15`** (**Backend Security Audit Critical P0 Remediation & Hardening**, 5 pts, P0) to remediate real operational vulnerabilities: Practice Session BOLA, Question Catalog BFLA, `JWT_SECRET` Docker Compose divergence, double-BCrypt login overhead elimination, and test suite zero-assert fixes.
+  - Added **`TASK-S3-16`** (**Supply Chain, Ingress Perimeter & Resource Boundary Hardening**, 3 pts, P1) for Spring Boot BOM patch upgrades, Nginx 1.27 perimeter header inheritance fixes, and question catalog max pagination limits.
   - Re-scoped Sprint 4 to focus 100% on frontend architecture and design tokens (8 tasks starting with `S4-01`).
   - Re-scoped `S6-09` in Sprint 6 to the frontend **Student Privacy Portal, Terms of Use UI & LGPD Self-Service Dashboard**.
-  - Synchronized the Mermaid Gantt chart and Milestone & Sprint Status Summary table (Sprint 3: 16 tasks total, 14 completed, 2 pending).
+  - Synchronized the Mermaid Gantt chart and Milestone & Sprint Status Summary table (Sprint 3: 18 tasks total, 14 completed, 4 pending).
 
 ## [0.3.15] - 2026-09-20
 ### 🛡️ Added, Hardened & Documented (Governance, CI Execution & Backlog Investigation Scope)
