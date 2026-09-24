@@ -23,9 +23,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Static analysis: **0 Checkstyle violations, 0 PMD violations** across all modules.
     - Automated pre-flight smoke suite: **7/7 probes passed** in 0.77s (total catalog active: 30 questions).
     - Automated Postman Newman contract suite: **42/42 requests, 75/75 assertions passed** with zero failures in 12.4s.
-- fix(ci): Calibrated Grafana k6 performance smoke verification and hardened Docker pull in CI pipeline:
+- fix(ci): Calibrated Grafana k6 performance smoke verification, hardened Docker pull, and parallelized CI pipeline:
   - **`tests/stress/catalog-browse-load.js`**: Differentiated `IS_CI_FAST` stages (2 to 15 VUs over 25s) and calibrated smoke thresholds (`p(95) < 500ms`, `p(99) < 1000ms`, single question `p(95) < 300ms`) from full 1,000 VU production stress runs, eliminating false-positive threshold exits caused by CPU scheduling contention on shared 2-vCPU GitHub Actions runners. Verified 100% green pass locally in 25.4s (P95 latency: 35.84ms, 0 errors across 1,457 requests).
-  - **`.github/workflows/ci.yml`**: Added automated retry loops to `docker compose pull` and `docker compose up -d --build` to defend against transient Docker Hub "connection reset by peer" network drops during CI ecosystem launch.
+  - **`.github/workflows/ci.yml`**:
+    - Decoupled `e2e-smoke-and-contracts` from `backend-quality-gate` by removing sequential `needs` blocking, allowing backend unit/static analysis and full Docker ecosystem contract/smoke testing to execute completely concurrently across independent GitHub runners.
+    - Enabled parallel Docker container compilation via `DOCKER_BUILDKIT=1 docker compose build --parallel`.
+    - Accelerated Maven multi-module compilation and testing with multi-core `-T 1C` thread allocation.
+    - Added automated retry loops to `docker compose pull` to defend against transient Docker Hub "connection reset by peer" drops.
+    - Optimized Newman CLI installation with `--no-audit --no-fund`.
 - docs(backlog): Synchronized `docs/BACKLOG.md` marking `TASK-S3-13` as `DONE ✅`, updating the Mermaid Gantt roadmap (`S3-13` and `S3-16` marked done), and updating the `Milestone & Sprint Status Summary` to **18/18 completed (100% COMPLETED ✅)**.
 
 ## [0.3.19] - 2026-09-23
