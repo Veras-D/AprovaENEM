@@ -1,7 +1,7 @@
 # REST API Specification — AprovaENEM
 
 > **Specification Standard**: OpenAPI 3.0 / RESTful JSON  
-> **Base URL (Public Ingress via Nginx)**: `https://aprovaenem.com.br/api/v1` (Production) / `http://localhost/api/v1` (Local Docker Compose Port 80)  
+> **Base URL (Public Ingress via Nginx)**: `http://localhost/api/v1` (Local Docker Compose Port 80)  
 > **Base URL (Internal `frontend-api` BFF)**: `http://frontend-api:8080/api/v1` (Internal Docker network only; zero public host port exposure)  
 > **Perimeter Security**: External clients have network access ONLY to the frontend (port 80/443). Downstream domain microservices ("Real APIs") are completely hidden, unexposed, and inaccessible from the internet.  
 > **Headers**: `X-Session-Id` (UUID), `Accept-Language` (`pt-BR` | `en`), `Authorization` (`Bearer <token>`)  
@@ -79,8 +79,8 @@ All endpoints exposed by the `frontend-api` microservice implement strict W3C CO
 Clients issue an `OPTIONS` preflight request prior to non-simple requests (e.g., `POST` with `Content-Type: application/json` or custom headers like `X-Session-Id`):
 ```http
 OPTIONS /api/v1/sessions HTTP/1.1
-Host: aprovaenem.com.br
-Origin: https://aprovaenem.com.br
+Host: localhost
+Origin: http://localhost:5173
 Access-Control-Request-Method: POST
 Access-Control-Request-Headers: Authorization, Content-Type, X-Session-Id
 ```
@@ -89,7 +89,7 @@ Access-Control-Request-Headers: Authorization, Content-Type, X-Session-Id
 The `frontend-api` evaluates the origin against its whitelist and emits caching directives:
 ```http
 HTTP/1.1 200 OK
-Access-Control-Allow-Origin: https://aprovaenem.com.br
+Access-Control-Allow-Origin: http://localhost:5173
 Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS
 Access-Control-Allow-Headers: Authorization, Content-Type, Accept, X-Session-Id, X-Requested-With, traceparent, X-Trace-Id
 Access-Control-Expose-Headers: Authorization, X-Trace-Id, X-Session-Id, X-RateLimit-Remaining, X-RateLimit-Retry-After-Seconds
@@ -405,7 +405,7 @@ Vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers
       "statement": "Um eletricista precisa instalar um disjuntor para proteger um circuito de chuveiro elétrico de potência $P = 5500\\text{ W}$ conectado a uma rede de $V = 220\\text{ V}$. Considerando a corrente nominal calculada por $I = P/V$, determine a corrente e selecione o disjuntor comercial adequado.",
       "difficulty": "MEDIUM",
       "status": "ACTIVE",
-      "figureUrl": "https://assets.aprovaenem.com.br/figures/2023_105_circuit.webp",
+      "figureUrl": "/assets/questions/2023_105_circuit.webp",
       "figureAltText": "Esquema elétrico mostrando um circuito monofásico de 220V com disjuntor em série e chuveiro de 5500W como carga resistiva.",
       "options": [
         { "optionLetter": "A", "text": "Corrente de 15 A; disjuntor de 15 A." },
@@ -670,7 +670,7 @@ Returned when an unauthenticated guest attempts to call the Socratic AI Tutor:
   "title": "Registration Required For AI Tutor",
   "status": 401,
   "detail": "A free student account is required to use the Socratic AI Tutor. Create a free account to unlock 1 free AI consultation per day, or log in.",
-  "signupUrl": "https://aprovaenem.com.br/register",
+  "signupUrl": "/register",
   "timestamp": "2026-09-18T14:30:00Z"
 }
 ```
@@ -688,7 +688,7 @@ Returned when an unauthenticated guest attempts to call the Socratic AI Tutor:
     "remainingToday": 0,
     "resetsAt": "2026-09-19T03:00:00Z"
   },
-  "upgradeUrl": "https://aprovaenem.com.br/pro",
+  "upgradeUrl": "/pro",
   "timestamp": "2026-09-18T14:30:00Z"
 }
 ```

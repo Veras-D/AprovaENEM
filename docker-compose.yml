@@ -79,7 +79,7 @@ services:
       - aprovaenem-internal
     environment:
       - SERVER_PORT=8080
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost,http://localhost:3000,http://localhost:5173,https://aprovaenem.com.br}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost,http://localhost:3000,http://localhost:5173}
       - AUTH_SERVICE_URL=http://auth-service:8081
       - EXAM_SERVICE_URL=http://exam-service:8082
       - NOTIFICATION_SERVICE_URL=http://notification-service:8083

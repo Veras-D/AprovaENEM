@@ -178,7 +178,7 @@ services:
     networks:
       - aprovaenem-internal
     environment:
-      - CORS_ALLOWED_ORIGINS=http://localhost,http://localhost:3000,http://localhost:5173,https://aprovaenem.com.br
+      - CORS_ALLOWED_ORIGINS=http://localhost,http://localhost:3000,http://localhost:5173
       - AUTH_SERVICE_URL=http://auth-service:8081
       - EXAM_SERVICE_URL=http://exam-service:8082
       - NOTIFICATION_SERVICE_URL=http://notification-service:8083
@@ -466,7 +466,7 @@ The user client never communicates directly with the real domain microservices. 
 
 ```mermaid
 flowchart LR
-    Browser["Student Browser / Client<br/>(https://aprovaenem.com.br)"] -->|1. Request with Bearer JWT| Nginx["Nginx Ingress (Port 443)"]
+    Browser["Student Browser / Client<br/>(http://localhost)"] -->|1. Request with Bearer JWT| Nginx["Nginx Ingress (Port 443)"]
     Nginx -->|2. Proxy /api/**| FrontendAPI["⚡ frontend-api (BFF Microservice)"]
 
     subgraph FrontendAPIResponsibilities ["frontend-api Perimeter Security & Shielding"]
@@ -506,13 +506,13 @@ flowchart LR
 
 #### Why Strict CORS is Essential
 When the student browser executes asynchronous JavaScript requests (`fetch` or `axios`), modern browsers enforce the **W3C Same-Origin Policy**.
-- **In Production**: Nginx serves the React SPA at `/` and proxies `/api/**` to `frontend-api`, which means browser requests are technically same-origin (`https://aprovaenem.com.br/api/...`). However, a strict CORS configuration is still mandatory to prevent unauthorized third-party websites from making cross-origin requests using a logged-in student's credentials (CSRF / unauthorized data exfiltration).
-- **In Development / Staging / Multi-Client**: The frontend may run on a distinct origin (e.g., Vite dev server at `http://localhost:5173`, local preview at `http://localhost:3000`, staging environment at `https://staging.aprovaenem.com.br`, or Android native clients). The `frontend-api` microservice must strictly validate and respond with correct CORS headers.
+- **In Production**: Nginx serves the React SPA at `/` and proxies `/api/**` to `frontend-api`, which means browser requests are technically same-origin (`http://localhost/api/...`). However, a strict CORS configuration is still mandatory to prevent unauthorized third-party websites from making cross-origin requests using a logged-in student's credentials (CSRF / unauthorized data exfiltration).
+- **In Development / Staging / Multi-Client**: The frontend may run on a distinct origin (e.g., Vite dev server at `http://localhost:5173`, local preview at `http://localhost:3000`, staging environment, or Android native clients). The `frontend-api` microservice must strictly validate and respond with correct CORS headers.
 
 #### Comprehensive CORS Policy Specification
 | CORS Directive | Configured Value | Architectural Justification |
 | :--- | :--- | :--- |
-| **Allowed Origins** | Whitelist via `${CORS_ALLOWED_ORIGINS}`:<br/>`http://localhost:3000`, `http://localhost:5173`, `http://localhost`, `https://aprovaenem.com.br`, `https://staging.aprovaenem.com.br` | Strict origin matching. **Wildcard `*` is strictly forbidden** when credentials are used (violates W3C Fetch standard and causes browser rejection). |
+| **Allowed Origins** | Whitelist via `${CORS_ALLOWED_ORIGINS}`:<br/>`http://localhost:3000`, `http://localhost:5173`, `http://localhost` | Strict origin matching. **Wildcard `*` is strictly forbidden** when credentials are used (violates W3C Fetch standard and causes browser rejection). |
 | **Allowed Methods** | `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS` | Restricts HTTP verbs to standard REST operations; explicitly forbids dangerous methods (`TRACE`, `CONNECT`). |
 | **Allowed Headers** | `Authorization`, `Content-Type`, `Accept`, `X-Session-Id`, `X-Requested-With`, `traceparent`, `X-Trace-Id` | Explicitly permits required operational, authentication, and W3C distributed tracing headers. |
 | **Exposed Headers** | `Authorization`, `X-Trace-Id`, `X-Session-Id`, `X-RateLimit-Remaining`, `X-RateLimit-Retry-After-Seconds` | Explicitly authorizes browser JavaScript to read correlation IDs, refreshed tokens, and rate-limiting headers. |
@@ -530,12 +530,12 @@ sequenceDiagram
     participant RealAPI as Real Domain APIs (Internal)
 
     Note over Browser,Gateway: Browser initiates preflight before POST /api/v1/sessions
-    Browser->>Nginx: OPTIONS /api/v1/sessions<br/>Origin: https://aprovaenem.com.br<br/>Access-Control-Request-Method: POST<br/>Access-Control-Request-Headers: Authorization, Content-Type
+    Browser->>Nginx: OPTIONS /api/v1/sessions<br/>Origin: http://localhost:5173<br/>Access-Control-Request-Method: POST<br/>Access-Control-Request-Headers: Authorization, Content-Type
     Nginx->>Gateway: Forward OPTIONS request internally
     
     alt Origin is Whitelisted
         Note over Gateway: Evaluates CorsWebFilter / CorsFilter.<br/>Matches origin in whitelist.
-        Gateway-->>Nginx: 200 OK / 204 No Content<br/>Access-Control-Allow-Origin: https://aprovaenem.com.br<br/>Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS<br/>Access-Control-Allow-Headers: Authorization, Content-Type, ...<br/>Access-Control-Allow-Credentials: true<br/>Access-Control-Max-Age: 3600
+        Gateway-->>Nginx: 200 OK / 204 No Content<br/>Access-Control-Allow-Origin: http://localhost:5173<br/>Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS<br/>Access-Control-Allow-Headers: Authorization, Content-Type, ...<br/>Access-Control-Allow-Credentials: true<br/>Access-Control-Max-Age: 3600
         Nginx-->>Browser: Return Preflight Response (Cached for 1 hour)
         
         Note over Browser: Preflight approved! Now sends actual request
@@ -573,7 +573,7 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Value("${cors.allowed-origins:http://localhost,http://localhost:3000,http://localhost:5173,https://aprovaenem.com.br}")
+    @Value("${cors.allowed-origins:http://localhost,http://localhost:3000,http://localhost:5173}")
     private String allowedOriginsConfig;
 
     @Bean
@@ -679,14 +679,14 @@ http {
     server {
         listen 80;
         listen [::]:80;
-        server_name aprovaenem.com.br www.aprovaenem.com.br localhost;
+        server_name localhost;
 
         # Edge Security Headers
         add_header X-Frame-Options "DENY" always;
         add_header X-Content-Type-Options "nosniff" always;
         add_header X-XSS-Protection "1; mode=block" always;
         add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-        add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://aprovaenem.com.br;" always;
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self';" always;
 
         # 1. Frontend React SPA: Static File Delivery
         location / {
@@ -828,7 +828,7 @@ When an unauthenticated guest attempts to call the Socratic AI Tutor:
   "title": "Registration Required For AI Tutor",
   "status": 401,
   "detail": "A free student account is required to use the Socratic AI Tutor. Create a free account to unlock 1 free AI consultation per day, or log in.",
-  "signupUrl": "https://aprovaenem.com.br/register",
+  "signupUrl": "/register",
   "timestamp": "2026-09-18T14:30:00Z"
 }
 ```
@@ -847,7 +847,7 @@ When a free student exhausts their single daily AI tutor credit:
     "remainingToday": 0,
     "resetsAt": "2026-09-19T03:00:00Z"
   },
-  "upgradeUrl": "https://aprovaenem.com.br/pro",
+  "upgradeUrl": "/pro",
   "timestamp": "2026-09-18T14:30:00Z"
 }
 ```
@@ -1038,9 +1038,7 @@ public class SecurityConfiguration {
         configuration.setAllowedOrigins(List.of(
             "http://localhost",
             "http://localhost:3000",
-            "http://localhost:5173",
-            "https://aprovaenem.com.br",
-            "https://staging.aprovaenem.com.br"
+            "http://localhost:5173"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of(

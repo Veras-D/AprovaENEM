@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
         body.put("title", "Registration Required For AI Tutor");
         body.put("status", HttpStatus.UNAUTHORIZED.value());
         body.put("detail", ex.getMessage());
-        body.put("signupUrl", "https://aprovaenem.com.br/register");
+        body.put("signupUrl", "/register");
         body.put("path", request.getRequestURI());
         body.put("timestamp", Instant.now());
 
@@ -64,7 +64,7 @@ public class GlobalExceptionHandler {
         body.put("status", HttpStatus.TOO_MANY_REQUESTS.value());
         body.put("detail", ex.getMessage());
         body.put("quota", quotaMap);
-        body.put("upgradeUrl", "https://aprovaenem.com.br/pro");
+        body.put("upgradeUrl", "/pro");
         body.put("path", request.getRequestURI());
         body.put("timestamp", Instant.now());
 

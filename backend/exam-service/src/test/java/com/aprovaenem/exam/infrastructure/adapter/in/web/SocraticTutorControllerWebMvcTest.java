@@ -74,7 +74,7 @@ class SocraticTutorControllerWebMvcTest {
                 .andExpect(jsonPath("$.type", is("https://aprovaenem.org/errors/REGISTRATION_REQUIRED_FOR_AI")))
                 .andExpect(jsonPath("$.title", is("Registration Required For AI Tutor")))
                 .andExpect(jsonPath("$.detail", containsString("A free student account is required")))
-                .andExpect(jsonPath("$.signupUrl", is("https://aprovaenem.com.br/register")));
+                .andExpect(jsonPath("$.signupUrl", is("/register")));
     }
 
     @Test
@@ -160,7 +160,7 @@ class SocraticTutorControllerWebMvcTest {
                 .andExpect(jsonPath("$.type", is("https://aprovaenem.org/errors/DAILY_AI_QUOTA_EXHAUSTED")))
                 .andExpect(jsonPath("$.title", is("Daily AI Tutor Quota Exhausted")))
                 .andExpect(jsonPath("$.detail", containsString("You have used your 1 free Socratic AI consultation")))
-                .andExpect(jsonPath("$.upgradeUrl", is("https://aprovaenem.com.br/pro")));
+                .andExpect(jsonPath("$.upgradeUrl", is("/pro")));
     }
 
     @Test

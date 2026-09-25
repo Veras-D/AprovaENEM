@@ -318,7 +318,7 @@ docker compose up -d --build
 
 #### 🌐 Public Production Ingress (Host Port 80 / 443 Only)
 In strict adherence to **Perimeter Isolation**, external clients (browsers and mobile devices) interact strictly with the Nginx edge proxy:
-- **Student Web Application (Frontend)**: `http://localhost` (or `https://aprovaenem.com.br`)
+- **Student Web Application (Frontend)**: `http://localhost`
 - **Public REST API (via frontend-api BFF)**: `http://localhost/api/v1/...`
 - **OpenAPI Swagger UI (Dev Ingress)**: `http://localhost/swagger-ui.html`
 

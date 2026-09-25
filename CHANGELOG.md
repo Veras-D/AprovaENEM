@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.21] - 2026-09-25
+### 🌐 Config & Perimeter (Domain Reference Cleanup)
+- chore(domain): Purged all premature production domain references (`https://aprovaenem.com.br`) across configurations, documentation, and error responses:
+  - **`docker-compose.yml`**, **`.env`**, **`.env.example`**: Removed `https://aprovaenem.com.br` from default and active `CORS_ALLOWED_ORIGINS` whitelists.
+  - **`backend/frontend-api`**: Updated `allowedOrigins` in [`application.yml`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/frontend-api/src/main/resources/application.yml) to restrict origins to local developer frontends (`http://localhost:3000`, `http://localhost:5173`, `http://localhost:80`, `http://localhost`).
+  - **`backend/exam-service`**: Switched Socratic AI Tutor error redirects (`signupUrl`, `upgradeUrl`) in [`GlobalExceptionHandler.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/in/web/GlobalExceptionHandler.java) and [`SocraticTutorControllerWebMvcTest.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/test/java/com/aprovaenem/exam/infrastructure/adapter/in/web/SocraticTutorControllerWebMvcTest.java) from absolute domain URLs to relative application paths (`/register`, `/pro`).
+  - **Documentation & Specifications**: Cleaned up ingress diagrams, CORS specifications, and API examples in [`README.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/README.md), [`03-system-architecture.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/specifications/03-system-architecture.md), [`05-api-specification.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/specifications/05-api-specification.md), [`phase3-automated-security-scans.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/audit/phase3-automated-security-scans.md), and [`phase4-runtime-penetration-testing.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/audit/phase4-runtime-penetration-testing.md).
+
 ## [0.3.20] - 2026-09-23
 ### 📚 Added & Enhanced (Historical Question Catalog Bulk Ingestion & Reconciliation 2019–2023)
 - feat(exam): Bulk ingested, verified, and reconciled representative historical ENEM question catalog (TASK-S3-13):

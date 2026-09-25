@@ -209,8 +209,7 @@ While this establishes high internal containment, it creates a fatal conflict wi
                 - "http://localhost:3000"
                 - "http://localhost:5173"
                 - "http://localhost:80"
-                - "https://aprovaenem.com.br"
-                - "https://app.aprovaenem.com.br"
+                - "http://localhost"
               allowedMethods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
               allowedHeaders: [Authorization, Content-Type, Accept, X-Session-Id, traceparent, X-Trace-Id]
               exposedHeaders: [Authorization, X-Trace-Id, X-Session-Id, X-RateLimit-Remaining, X-AI-Quota-Limit, X-AI-Quota-Remaining, X-AI-Quota-Reset]
@@ -255,7 +254,7 @@ While this establishes high internal containment, it creates a fatal conflict wi
 4. **Configuration Blind Spot (`SEC-P4-07`)**:
    [`docker-compose.yml:69`](file:///home/verivi/Veras/Projects/ReconectaRecode/docker-compose.yml#L69) supplies:
    ```yaml
-   - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost,http://localhost:3000,http://localhost:5173,https://aprovaenem.com.br}
+   - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost,http://localhost:3000,http://localhost:5173}
    ```
    However, `frontend-api`'s [`application.yml`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/frontend-api/src/main/resources/application.yml#L18-L23) never binds `${CORS_ALLOWED_ORIGINS}`. It uses a static YAML list. Runtime modifications to the environment variable have no effect on the running Gateway.
 
@@ -714,7 +713,7 @@ In [`infrastructure/nginx/nginx.conf`](file:///home/verivi/Veras/Projects/Recone
 #### Remediation 8: Bind `CORS_ALLOWED_ORIGINS` in Gateway Configuration
 Update `frontend-api` [`application.yml`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/frontend-api/src/main/resources/application.yml#L18-L23) to read from the environment:
 ```yaml
-allowedOrigins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,https://aprovaenem.com.br}
+allowedOrigins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
 ```
 
 ---
