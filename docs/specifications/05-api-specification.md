@@ -13,6 +13,7 @@
 ### Request Headers
 | Header Name | Type | Requirement | Description |
 | :--- | :--- | :--- | :--- |
+| `X-Tenant-Id` | `string (UUID/slug)` | Optional | Tenant identifier for multi-tenant white-label branding and institutional data scoping. Automatically injected by Edge Gateway from Host header. |
 | `X-Session-Id` | `string (UUID)` | **Recommended** | Anonymous or authenticated session identifier for attempt tracking. |
 | `Accept-Language` | `string` | Optional | Locale preference (`pt-BR` default, `en` supported). |
 | `Authorization` | `string` | Optional | `Bearer <JWT>` for registered student sessions. |
@@ -76,13 +77,13 @@ AprovaENEM defines two primary OpenAPI security schemes enforced by Spring Secur
 All endpoints exposed by the `frontend-api` microservice implement strict W3C CORS compliance:
 
 #### Inbound Preflight Request (`OPTIONS`)
-Clients issue an `OPTIONS` preflight request prior to non-simple requests (e.g., `POST` with `Content-Type: application/json` or custom headers like `X-Session-Id`):
+Clients issue an `OPTIONS` preflight request prior to non-simple requests (e.g., `POST` with `Content-Type: application/json` or custom headers like `X-Session-Id` and `X-Tenant-Id`):
 ```http
 OPTIONS /api/v1/sessions HTTP/1.1
 Host: localhost
 Origin: http://localhost:5173
 Access-Control-Request-Method: POST
-Access-Control-Request-Headers: Authorization, Content-Type, X-Session-Id
+Access-Control-Request-Headers: Authorization, Content-Type, X-Session-Id, X-Tenant-Id
 ```
 
 #### Outbound Preflight Response (`200 OK` / `204 No Content`)
@@ -91,8 +92,8 @@ The `frontend-api` evaluates the origin against its whitelist and emits caching 
 HTTP/1.1 200 OK
 Access-Control-Allow-Origin: http://localhost:5173
 Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS
-Access-Control-Allow-Headers: Authorization, Content-Type, Accept, X-Session-Id, X-Requested-With, traceparent, X-Trace-Id
-Access-Control-Expose-Headers: Authorization, X-Trace-Id, X-Session-Id, X-RateLimit-Remaining, X-RateLimit-Retry-After-Seconds
+Access-Control-Allow-Headers: Authorization, Content-Type, Accept, X-Session-Id, X-Tenant-Id, X-Requested-With, traceparent, X-Trace-Id
+Access-Control-Expose-Headers: Authorization, X-Trace-Id, X-Session-Id, X-Tenant-Id, X-RateLimit-Remaining, X-RateLimit-Retry-After-Seconds
 Access-Control-Allow-Credentials: true
 Access-Control-Max-Age: 3600
 Vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers
@@ -1231,6 +1232,142 @@ AprovaENEM complies with the Brazilian General Data Protection Law (LGPD) across
 ### 10.3 Data Subject Rights Self-Service APIs (Art. 18)
 * **Access & Portability (Art. 18, II e V)**: `GET /api/v1/auth/export` produces an open, standardized JSON bundle containing all stored user metadata, role, and verification history.
 * **Account Erasure & Anonymization (Art. 18, VI)**: `DELETE /api/v1/auth/me` irrevocably purges student PII from `auth_db` while anonymizing historical psychometric exam data in `exam_db` (`user_id = NULL`).
+
+---
+
+## 11. White-Label Multi-Tenant Branding & Institutional Endpoints
+
+### 11.1 Resolve Tenant Branding by Ingress Host / Domain
+* **Method**: `GET`
+* **Path**: `/api/v1/tenants/branding`
+* **Headers**: `Host: <tenant-domain>`, optional `X-Tenant-Id: <slug-or-uuid>`
+* **Description**: Returns the active white-label tenant styling tokens, visual assets, institution metadata, and feature toggles. Resolved dynamically by the Edge Gateway via `Host` header reverse lookup in Redis cache (< 2ms) with zero client recompilation.
+
+#### Response `200 OK`
+```json
+{
+  "tenantId": "c0e9b9d1-3b7d-4bad-9bdd-2b0d7b3dcb01",
+  "slug": "colegio-alfa",
+  "name": "Colégio Alfa Integrado",
+  "customDomain": "simulado.colegioalfa.com.br",
+  "theme": {
+    "primaryColor": "#1E40AF",
+    "primaryHoverColor": "#1D4ED8",
+    "secondaryColor": "#0F172A",
+    "accentColor": "#F59E0B",
+    "surfaceColor": "#FFFFFF",
+    "backgroundColor": "#F8FAFC",
+    "textColor": "#0F172A",
+    "fontFamily": "Inter, sans-serif",
+    "borderRadius": "8px",
+    "logoUrl": "https://assets.colegioalfa.com.br/branding/logo.svg",
+    "faviconUrl": "https://assets.colegioalfa.com.br/branding/favicon.ico"
+  },
+  "features": {
+    "socraticTutorEnabled": true,
+    "gamificationEnabled": true,
+    "customQuestionBankEnabled": true,
+    "institutionalReportsEnabled": true
+  },
+  "supportContact": {
+    "email": "suporte@colegioalfa.com.br",
+    "portalUrl": "https://colegioalfa.com.br"
+  }
+}
+```
+
+---
+
+### 11.2 Retrieve Tenant Branding by Tenant ID
+* **Method**: `GET`
+* **Path**: `/api/v1/tenants/{tenantId}/branding`
+* **Description**: Direct query for a specific tenant's branding tokens, used in administrative previews and tenant management dashboards.
+
+#### Response `200 OK`
+```json
+{
+  "tenantId": "c0e9b9d1-3b7d-4bad-9bdd-2b0d7b3dcb01",
+  "slug": "colegio-alfa",
+  "name": "Colégio Alfa Integrado",
+  "customDomain": "simulado.colegioalfa.com.br",
+  "theme": {
+    "primaryColor": "#1E40AF",
+    "primaryHoverColor": "#1D4ED8",
+    "secondaryColor": "#0F172A",
+    "accentColor": "#F59E0B",
+    "surfaceColor": "#FFFFFF",
+    "backgroundColor": "#F8FAFC",
+    "textColor": "#0F172A",
+    "fontFamily": "Inter, sans-serif",
+    "borderRadius": "8px",
+    "logoUrl": "https://assets.colegioalfa.com.br/branding/logo.svg",
+    "faviconUrl": "https://assets.colegioalfa.com.br/branding/favicon.ico"
+  },
+  "features": {
+    "socraticTutorEnabled": true,
+    "gamificationEnabled": true,
+    "customQuestionBankEnabled": true,
+    "institutionalReportsEnabled": true
+  }
+}
+```
+
+---
+
+### 11.3 Institutional Cohort Diagnostic Summary
+* **Method**: `GET`
+* **Path**: `/api/v1/institutional/cohorts/{cohortId}/diagnostics`
+* **Headers**: `Authorization: Bearer <token>`, `X-Tenant-Id: <uuid>` (Requires `ROLE_EDUCATOR` or `ROLE_ADMIN`)
+* **Description**: Returns aggregated diagnostic metrics for a specific institutional classroom/cohort, showing participation velocity, overall accuracy, competency skill breakdown, and the top distractor fallacies misleading students.
+
+#### Response `200 OK`
+```json
+{
+  "cohortId": "e1f2a3b4-c5d6-7e8f-9a0b-1c2d3e4f5a6b",
+  "cohortName": "3º Ano EM - Turma Medicina",
+  "tenantId": "c0e9b9d1-3b7d-4bad-9bdd-2b0d7b3dcb01",
+  "totalEnrolledStudents": 42,
+  "activeParticipants": 39,
+  "participationRate": 92.8,
+  "averageScorePercentage": 74.5,
+  "areasBreakdown": [
+    {
+      "subjectArea": "MATHEMATICS",
+      "averageScorePercentage": 68.2,
+      "status": "ATTENTION_NEEDED",
+      "topWeakTopic": "Funções Trigonométricas"
+    },
+    {
+      "subjectArea": "NATURAL_SCIENCES",
+      "averageScorePercentage": 71.0,
+      "status": "MASTERED",
+      "topWeakTopic": "Termodinâmica"
+    },
+    {
+      "subjectArea": "HUMANITIES",
+      "averageScorePercentage": 82.4,
+      "status": "MASTERED",
+      "topWeakTopic": "Cidadania e Direitos no Brasil República"
+    },
+    {
+      "subjectArea": "LANGUAGES",
+      "averageScorePercentage": 76.5,
+      "status": "MASTERED",
+      "topWeakTopic": "Variação Linguística e Norma Culta"
+    }
+  ],
+  "commonDistractorPitfalls": [
+    {
+      "questionId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "correctOption": "C",
+      "misleadingOption": "B",
+      "failedPercentage": 46.2,
+      "pedagogicalExplanation": "Confusão frequente entre aceleração centrípeta e aceleração tangencial."
+    }
+  ],
+  "generatedAt": "2026-10-07T18:00:00Z"
+}
+```
 
 
 

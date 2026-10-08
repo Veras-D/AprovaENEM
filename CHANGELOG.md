@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.4.0] - 2026-10-07
+### 🏢 Strategic & Architecture Evolution (White-Label Multi-Tenant B2B Engine)
+- feat(docs): Transitioned frontend architecture and platform business strategy to a **White-Label B2B Multi-Tenant Engine** across all technical specifications, backlog, and root project documentation:
+  - **`docs/specifications/01-business-and-market-strategy.md`**:
+    - Expanded Business Model Canvas to incorporate B2B SaaS licensing for private school networks (*redes de ensino*), municipal and state education departments (*Secretarias de Educação*), and prep course franchises.
+    - Added B2B Institutional Persona: *Dr. Roberto Mendes (Academic Vice-President / School Network Director)*.
+    - Updated Value Proposition Canvas with Institutional Tenant Profile and defined B2B KPIs (Tenant onboarding $< 10\text{min}$, cohort diagnostic utilization, NRR).
+  - **`docs/specifications/02-project-charter.md`**:
+    - Added **Module 8: White-Label Multi-Tenant Frontend & Institutional Management** (`FR-27` Dynamic Theme Injection, `FR-28` Multi-Tenant Domain Routing, `FR-29` Ingress & Gateway Header Propagation, `FR-30` Institutional Cohort Dashboards, `FR-31` Tenant Isolation & Data Governance).
+    - Added `NFR-08` White-Label Theming Performance (sub-50ms theme hydration, zero FOUC/FOIC).
+    - Updated JAM 2 Scope Boundaries to formalize the single-build white-label client engine.
+  - **`docs/specifications/03-system-architecture.md`**:
+    - Added **Section 10: White-Label Multi-Tenant Frontend Architecture (B2B Engine)** with comprehensive sequence diagram, runtime CSS Custom Properties token design system (`--brand-primary`, `--brand-secondary`, etc.), 4-tier domain resolution pipeline (CNAME, Subdomain, Path, Default), dynamic Gateway CORS origin whitelisting in Redis, and `X-Tenant-Id` header propagation.
+  - **`docs/specifications/05-api-specification.md`**:
+    - Added `X-Tenant-Id` header to global request headers and CORS allowed headers.
+    - Added **Section 11: White-Label Multi-Tenant Branding & Institutional Endpoints** (`GET /api/v1/tenants/branding`, `GET /api/v1/tenants/{tenantId}/branding`, `GET /api/v1/institutional/cohorts/{cohortId}/diagnostics`).
+  - **`docs/BACKLOG.md`**:
+    - Refined Sprint 4 (`S4-01` to `S4-04`), Sprint 5 (`S5-06`), and Sprint 6 (`S6-01`, `S6-04`, `S6-05`, `S6-07`) task descriptions, deliverables, and acceptance criteria to reflect the White-Label Design Token engine, tenant resolver, and institutional diagnostic views.
+  - **`README.md`**:
+    - Updated Overview and Features with the White-Label B2B Institutional Engine.
+    - Added white-label dynamic token architecture to Frontend Tech Stack and updated Core API Routes summary with tenant branding endpoints.
+
 ## [0.3.21] - 2026-09-25
 ### 🌐 Config & Perimeter (Domain Reference Cleanup)
 - chore(domain): Purged all premature production domain references (`https://aprovaenem.com.br`) across configurations, documentation, and error responses:

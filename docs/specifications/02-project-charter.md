@@ -92,6 +92,13 @@ flowchart LR
 - **FR-25**: The system must dispatch transactional emails (registration welcome, email verification, password recovery, and Sunday weekly diagnostic summary) via an asynchronous notification microservice.
 - **FR-26**: The system must dispatch multi-channel push notifications (Web Push protocol for browser PWA, and Firebase Cloud Messaging FCM / Apple APNs for native mobile) to alert students about daily streak preservation, league promotions, and completed essay evaluations.
 
+### Module 8: White-Label Multi-Tenant Frontend & Institutional Management
+- **FR-27 (Dynamic White-Label Design System & Theme Injection)**: The frontend application must implement a tokenized theming engine supporting dynamic runtime brand injection. The application must dynamically apply custom primary, secondary, and accent colors, surface palettes, typography, institutional logos, and custom favicons via CSS Custom Properties (`--brand-primary`, `--brand-secondary`, etc.) fetched from the backend without requiring client recompilation or manual redeployment.
+- **FR-28 (Multi-Tenant Institutional Routing & Domain Resolution)**: The frontend must resolve tenant identity at runtime based on incoming request hostnames (subdomains e.g., `colegio-alfa.aprovaenem.com.br`, custom CNAME domains e.g., `simulado.escola.com.br`, or route prefix `/t/{tenantSlug}`), caching tenant metadata in memory and local storage to prevent visual styling flickers.
+- **FR-29 (Ingress & Gateway Tenant Propagation)**: The Edge Gateway (`frontend-api`) and ingress perimeter must detect or validate the tenant identity, validate dynamic tenant CORS origins, and propagate the `X-Tenant-Id` header downstream to microservices.
+- **FR-30 (B2B Institutional Class/Cohort Diagnostic Dashboards)**: The frontend must provide an institutional educator/coordinator view displaying aggregated cohort diagnostics (class accuracy rates per ENEM discipline/topic, student participation velocity, common distractor pitfalls) for partner school networks and cursinho administrators.
+- **FR-31 (Tenant Isolation & Data Governance)**: Student enrollments, institutional cohort analytics, and tenant-specific configurations must maintain strict logical multi-tenant isolation, ensuring institutional data confidentiality in compliance with the LGPD.
+
 ### Module 7: Future Scope — AI Essay Evaluation & OCR (*Redação Nota 1000*)
 - **FR-14**: The system must accept photo uploads of handwritten student essays (`image/jpeg`, `image/png`, PDF) via `multipart/form-data`.
 - **FR-15**: The system must extract handwritten Portuguese text using a provider-agnostic multimodal vision pipeline benchmarked through an evaluation harness (`evals/`) to select the model with the highest accuracy (lowest WER/CER) and lowest cost.
@@ -117,12 +124,13 @@ flowchart LR
 | **NFR-05** | **Internationalization** | API response localization for multilingual maintainers and students. | Spring Boot `MessageSource` supporting `Accept-Language: pt-BR` and `en` |
 | **NFR-06** | **Code Quality** | Automated continuous inspection and test coverage. | 6-Stage GitHub Actions Quality Gate: 0 compiler warnings (`-Werror`), 0 PMD duplicates, 80%+ JaCoCo coverage |
 | **NFR-07** | **Containerization** | Completely reproducible developer setup. | 1-command startup via `docker compose up` for PostgreSQL, Prometheus, and microservices |
+| **NFR-08** | **White-Label Theming** | Runtime tenant branding resolution and CSS token hydration speed. | Hydration $< 50\text{ms}$ on initial load; zero visual flicker (FOUT/FOIC) |
 
 ---
 
 ## 5. Scope Boundaries
 
-### In Scope (Sprint 1 to Sprint 3: The Base App)
+### In Scope: JAM 1 (Sprint 1 to Sprint 3: The Base Backend — COMPLETED ✅)
 - Fully functional REST APIs for question bank, practice sessions, instant grading, diagnostics, and Socratic AI resolutions.
 - Complete PostgreSQL database schemas with B-tree indices and relational integrity.
 - Nginx Edge Ingress (Ports 80/443 as the ONLY publicly exposed host ports) and dedicated `frontend-api` BFF microservice with Token Bucket rate limiting, strict CORS whitelisting, and zero-exposure perimeter network isolation shielding internal domain microservices ("Real APIs").
@@ -130,7 +138,15 @@ flowchart LR
 - Gamification Engine (XP, Levels, Daily Goals, Streak Tracking, and Weekly Leaderboards).
 - Asynchronous multi-channel Notification Microservice (`notification-service` for email and push).
 - Docker Compose environment with Prometheus and Grafana telemetry.
-- Comprehensive automated test suite (Unit, Testcontainers Integration, Frontend Vitest, Cypress E2E, Playwright, Newman Postman) with GitHub Actions CI.
+- Comprehensive automated test suite (Unit, Testcontainers Integration, Newman Postman) with GitHub Actions CI.
+
+### In Scope: JAM 2 (Sprint 4 to Sprint 6: White-Label Frontend & Full-Stack Deployment — PLANNED 📅)
+- **White-Label Multi-Tenant Frontend Engine**: Single React 18 + TypeScript codebase supporting dynamic institutional theming, custom CSS tokens, institutional logos, and subdomain/CNAME routing.
+- **Dynamic Tenant Context & Branding API**: Client-side `TenantContext` resolving branding metadata (`GET /api/v1/tenants/branding`) and injecting custom styling tokens into `:root` without recompilation.
+- **Student Assessment & Diagnostic UI**: Interactive question card, KaTeX LaTeX math formulas, instant feedback accordion, Socratic AI chat drawer, and diagnostic radar charts.
+- **B2B Institutional Cohort Views**: Class-level diagnostic dashboards for school coordinators and teachers.
+- **Digital Accessibility**: WCAG 2.1 AA compliance, VLibras Brazilian Sign Language widget, OpenDyslexic font switcher, and INEP exam accommodations.
+- **Full-Stack Testing & Production Deployment**: Vitest component testing, Cypress/Playwright E2E suites, multi-stage Nginx container packaging, and cloud production HTTPS deployment.
 
 ### Out of Scope (Phase 2 Roadmap: After Base App Delivery)
 - **AI Essay Evaluator & Handwritten OCR (*Redação Nota 1000*)**: Multimodal vision ingestion, 5-competency grading, and paid tier billing integration.

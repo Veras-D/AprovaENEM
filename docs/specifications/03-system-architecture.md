@@ -1473,3 +1473,174 @@ flowchart TD
 - **Streak Freeze (*Bloqueio de Ofensiva*)**: Students receive 1 emergency streak freeze per calendar month to accommodate school exam weeks or emergencies without losing motivation.
 - **Smart Push Reminders**: An asynchronous Spring `@Scheduled` worker scans for active registered users with `opt_in_reminders = true` who have not completed their daily goal by 19:00 BRT, triggering a friendly reminder notification.
 
+---
+
+## 10. White-Label Multi-Tenant Frontend Architecture (B2B Engine)
+
+To support the strategic B2B expansion into private school networks, educational municipal departments (*Secretarias de Educação*), and prep course franchises, AprovaENEM implements a **turnkey, multi-tenant white-label frontend architecture**. 
+
+Educational institutions license the platform to provide their students with a diagnostic exam portal completely customized under their own corporate identity (custom color palette, typography, institutional logos, favicons, and dedicated domain names), while utilizing the shared, high-performance Hexagonal backend cluster with zero infrastructure management.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Student as 📱 Student / Browser
+    participant Nginx as 🛡️ Nginx Edge Ingress
+    participant Gateway as ⚡ frontend-api (BFF)
+    participant Redis as ⚡ Redis 7 (Tenant Cache)
+    participant AuthSvc as 🔐 auth-service (Tenant Registry)
+    participant ReactApp as 🖥️ React 18 TenantProvider
+
+    Student->>Nginx: HTTP GET https://simulado.colegioalfa.com.br/
+    Nginx->>Gateway: Forward Host: simulado.colegioalfa.com.br
+    Nginx-->>Student: Serve Static React 18 SPA (Vite Build)
+    
+    rect rgb(240, 248, 255)
+        Note over Student,ReactApp: Bootstrap & Dynamic Theme Hydration (< 50ms)
+        Student->>ReactApp: Initialize Application
+        ReactApp->>Gateway: GET /api/v1/tenants/branding (Host / X-Tenant-Domain)
+        Gateway->>Redis: GET tenant:domain:simulado.colegioalfa.com.br
+        alt Cache Hit (< 2ms)
+            Redis-->>Gateway: Return Cached Tenant Branding JSON
+        else Cache Miss
+            Gateway->>AuthSvc: Resolve Tenant by Domain / Subdomain
+            AuthSvc-->>Gateway: Return Tenant Record & Styling Tokens
+            Gateway->>Redis: SETEX tenant:domain:... 86400 (24h TTL)
+        end
+        Gateway-->>ReactApp: 200 OK (Theme Tokens, Logo, Favicon, Features)
+        ReactApp->>ReactApp: Inject CSS Custom Properties into :root
+        ReactApp->>ReactApp: Update document.title & favicon link
+        ReactApp-->>Student: Render School-Branded UI (Zero Visual FOUC)
+    end
+
+    rect rgb(255, 245, 238)
+        Note over Student,Gateway: Authenticated Multi-Tenant Request
+        Student->>Gateway: POST /api/v1/sessions (Authorization, Host: ...)
+        Gateway->>Gateway: Inject Header: X-Tenant-Id = c0e9b9d1-3b7d...
+        Gateway->>Gateway: Validate CORS against Tenant Whitelisted Origin
+        Gateway->>AuthSvc: Proxy Request with Trusted X-Tenant-Id
+    end
+```
+
+### 10.1 Core Architecture Principles
+
+1. **Single-Build, Zero-Recompilation Multi-Tenancy**:
+   - The entire platform compiles into a single, optimized static React 18 production bundle (`frontend/dist`).
+   - Onboarding a new institutional client (e.g., adding a new school or cursinho) requires **zero CI/CD runs, zero container rebuilds, and zero code deployments**. The frontend dynamically shapes its identity based on the tenant branding payload resolved at runtime.
+
+2. **Zero FOUC/FOIC Hydration Guarantee**:
+   - To eliminate Flash of Unstyled Content (FOUC) and Flash of Incorrect Colors (FOIC), tenant branding metadata is resolved prior to initial view paint.
+   - Branding tokens are cached in `localStorage` with an ETag/timestamp check, allowing instant repeat loads in $< 10\text{ms}$.
+
+3. **Strict Logical Isolation & LGPD Boundaries**:
+   - Educational cohorts, student attempt histories, and teacher diagnostic metrics remain strictly partitioned by `tenant_id`.
+   - Cross-tenant data bleed is strictly prohibited at both the database level (PostgreSQL tenant scoping) and the Edge Gateway level.
+
+---
+
+### 10.2 Tenant Resolution & Routing Engine
+
+The client application detects and resolves the active tenant through a 4-tier hierarchical resolution strategy implemented in `TenantResolver.ts`:
+
+| Resolution Tier | Strategy | Example URL | Resolution Mechanism |
+| :--- | :--- | :--- | :--- |
+| **Tier 1: Custom CNAME** | Custom Domain | `https://simulado.colegioelite.com.br` | Exact domain lookup against `tenant_domains` database / Redis cache. |
+| **Tier 2: Subdomain** | Platform Subdomain | `https://alfa.aprovaenem.com.br` | Regex extraction of subdomain (`alfa`) matching `tenant_slug`. |
+| **Tier 3: Route Prefix** | Path Parameter | `https://aprovaenem.org/t/colegio-alfa` | Client router parses `/t/{tenantSlug}` for iframe embeds and demo portals. |
+| **Tier 4: Default Fallback** | Root Platform | `https://aprovaenem.org` | Serves standard AprovaENEM open-access public high school branding. |
+
+---
+
+### 10.3 Dynamic Tokenized Design System (Tailwind CSS + CSS Variables)
+
+The frontend styling engine uses Tailwind CSS parameterized entirely via CSS Custom Properties. Rather than compiling hardcoded Hex colors into stylesheets, utilities resolve against runtime variables:
+
+#### Tailwind Token Configuration (`tailwind.config.js`)
+```javascript
+module.exports = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          primary: 'rgb(var(--brand-primary) / <alpha-value>)',
+          'primary-hover': 'rgb(var(--brand-primary-hover) / <alpha-value>)',
+          secondary: 'rgb(var(--brand-secondary) / <alpha-value>)',
+          accent: 'rgb(var(--brand-accent) / <alpha-value>)',
+          surface: 'rgb(var(--brand-surface) / <alpha-value>)',
+          background: 'rgb(var(--brand-background) / <alpha-value>)',
+          text: 'rgb(var(--brand-text) / <alpha-value>)'
+        }
+      },
+      fontFamily: {
+        brand: ['var(--brand-font-family)', 'system-ui', 'sans-serif']
+      },
+      borderRadius: {
+        brand: 'var(--brand-border-radius)'
+      }
+    }
+  }
+}
+```
+
+#### Runtime Token Injection (`ThemeProvider.tsx`)
+```typescript
+export function applyTenantTheme(theme: TenantTheme): void {
+  const root = document.documentElement;
+  
+  // Inject RGB color triplets into root CSS custom properties
+  root.style.setProperty('--brand-primary', hexToRgb(theme.primaryColor));
+  root.style.setProperty('--brand-primary-hover', hexToRgb(theme.primaryHoverColor));
+  root.style.setProperty('--brand-secondary', hexToRgb(theme.secondaryColor));
+  root.style.setProperty('--brand-accent', hexToRgb(theme.accentColor));
+  root.style.setProperty('--brand-surface', hexToRgb(theme.surfaceColor));
+  root.style.setProperty('--brand-background', hexToRgb(theme.backgroundColor));
+  root.style.setProperty('--brand-text', hexToRgb(theme.textColor));
+  root.style.setProperty('--brand-border-radius', theme.borderRadius || '8px');
+  root.style.setProperty('--brand-font-family', theme.fontFamily || 'Inter');
+
+  // Update dynamic browser tab artifacts
+  document.title = `${theme.institutionName} — Simulado ENEM`;
+  const favicon = document.querySelector<HTMLLinkElement>("link[rel*='icon']");
+  if (favicon && theme.faviconUrl) {
+    favicon.href = theme.faviconUrl;
+  }
+}
+```
+
+---
+
+### 10.4 Edge Gateway & Perimeter Multi-Tenant Orchestration
+
+The `frontend-api` Spring Cloud Gateway microservice acts as the perimeter orchestrator for white-label traffic:
+
+1. **Dynamic Tenant CORS Whitelisting**:
+   - The Gateway's `DynamicCorsConfigurationSource` evaluates incoming `Origin` headers against active tenant domains stored in Redis (`tenant:origins`).
+   - Prevents unauthorized external origins while dynamically permitting registered partner school domains without gateway restarts.
+
+2. **Ingress Header Stamping (`X-Tenant-Id`)**:
+   - The Gateway inspects incoming `Host` or `X-Forwarded-Host` headers from Nginx.
+   - Maps the hostname to the canonical `tenant_id` UUID via Redis.
+   - Strips any untrusted client-supplied `X-Tenant-Id` header and injects the authenticated, verified `X-Tenant-Id: <uuid>` into the internal request forwarded to downstream microservices.
+
+3. **Tenant Feature Toggles**:
+   - The tenant branding payload controls client-side feature visibility (e.g., enabling/disabling the Socratic AI drawer, public leaderboards, or custom institutional exam packs).
+
+---
+
+### 10.5 Institutional B2B Cohort Diagnostics & Analytics
+
+For institutional partners (school coordinators, department heads, and classroom teachers), the white-label frontend provides dedicated diagnostic cohort views:
+
+1. **Class-Level Skill Radar**:
+   - Aggregated accuracy curves across the 4 ENEM knowledge areas and 30 curriculum competencies.
+   - Highlights specific disciplines where the cohort performs below regional benchmarks.
+
+2. **Distractor Fallacy Heatmap**:
+   - Visualizes which alternative options (distractors) misled the largest percentage of students in a simulated exam.
+   - Provides teachers with immediate pedagogical talking points for their next review session.
+
+3. **Student Participation Velocity**:
+   - Real-time tracking of active student sessions, completion rates, and average time spent per question.
+
+

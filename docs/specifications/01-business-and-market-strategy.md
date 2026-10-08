@@ -1,16 +1,18 @@
 # Business & Market Strategy — AprovaENEM
 
-> **Strategic Framework Alignment**: Business Model Canvas (Osterwalder), Value Proposition Canvas, Jobs-to-be-Done (JTBD), and UN Sustainable Development Goals (SDG 4 & SDG 10).
+> **Strategic Framework Alignment**: Business Model Canvas (Osterwalder), Value Proposition Canvas, Jobs-to-be-Done (JTBD), B2B White-Label SaaS Multi-Tenancy, and UN Sustainable Development Goals (SDG 4 & SDG 10).
 
 ---
 
 ## 1. Executive Summary & Social Mission
 
-**AprovaENEM** is an open-source, non-profit digital learning and diagnostic assessment platform built to democratize high-quality ENEM (*Exame Nacional do Ensino Médio*) preparation for Brazilian public high school students (*estudantes de escola pública*) and community prep initiatives (*cursinhos populares*).
+**AprovaENEM** is an open-source, multi-tenant digital learning and diagnostic assessment platform built with a **White-Label B2B / B2B2C architectural engine**. The platform enables educational institutions—including private school networks (*redes de ensino*), municipal and state education departments (*Secretarias de Educação*), university-affiliated preparatory programs (*cursinhos comunitários*), and commercial EdTechs—to deploy their own fully branded, turnkey ENEM diagnostic assessment portals with zero frontend recompilation.
 
 In Brazil, **84.3% of secondary school students attend public high schools** (INEP Censo Escolar), yet they represent a fraction of admissions to high-demand programs in federal universities. While online commercial platforms charge between R$ 30 and R$ 200+/month (often locking up annual credit card limits) and private physical preparatory courses (*cursinhos*) cost between R$ 1,000 and R$ 2,500/month, public school students are left with static, confusing PDFs and fragmented YouTube videos.
 
-AprovaENEM bridges this gap by leveraging 100% public, official open data from INEP (historical exams spanning 2009 to 2025, official answer keys, and Item Response Theory / TRI metadata) packaged into a modern, frictionless API that enables practice-based learning, diagnostic skill-gap mapping, and Socratic concept explanations.
+AprovaENEM bridges this gap through a dual-engine model:
+1. **Direct Open Access**: 100% public, official open data from INEP (historical exams spanning 2009 to 2025, official answer keys, and Item Response Theory / TRI metadata) packaged into a modern, frictionless API for self-directed public school students.
+2. **White-Label B2B Institutional Engine**: Partner institutions, schools, and educational secretariats deploy the platform under their own institutional identity (custom brand colors, typography, institutional logos, and custom CNAME subdomains). The white-label frontend resolves tenant configuration dynamically at runtime, delivering institutional cohort tracking, class-level diagnostic analytics, and zero infrastructure overhead for educators, while cross-subsidizing free public school access.
 
 ---
 
@@ -19,24 +21,24 @@ AprovaENEM bridges this gap by leveraging 100% public, official open data from I
 ```mermaid
 flowchart TD
     subgraph Infrastructure ["1. Key Partners & 2. Key Activities & 3. Key Resources"]
-        KP["Key Partners<br/>• Public schools & educators<br/>• Cursinhos Populares<br/>• INEP (Open Data source)<br/>• Open Source contributors"]
-        KA["Key Activities<br/>• INEP Exam Ingestion & Parsing<br/>• Diagnostic Engine Algorithms<br/>• Platform API Maintenance<br/>• Pedagogical Content Curation"]
-        KR["Key Resources<br/>• Ingested Question Bank (2009-2025)<br/>• Hexagonal Backend Microservices<br/>• Socratic AI Tutor Integration (Gemini API)<br/>• Open Community Documentation"]
+        KP["Key Partners<br/>• B2B School Networks & Private Franchises<br/>• Municipal & State Secretarias de Educação<br/>• Cursinhos Comunitários & Populares<br/>• INEP (Open Data source)<br/>• Open Source contributors"]
+        KA["Key Activities<br/>• White-Label Multi-Tenant Frontend Engine<br/>• INEP Exam Ingestion & Normalization<br/>• Diagnostic Engine Algorithms<br/>• Dynamic Branding API & Tenant Routing<br/>• Institutional Analytics & SLA Maintenance"]
+        KR["Key Resources<br/>• Ingested Question Bank (2009-2025)<br/>• White-Label Tokenized Design System<br/>• Hexagonal Backend Microservices<br/>• Socratic AI Tutor Integration (Gemini API)<br/>• Dynamic Tenant Resolver & Redis Cache"]
     end
 
     subgraph Core ["4. Value Propositions"]
-        VP["Value Propositions<br/>• Frictionless diagnostic exam practice<br/>• 100% Free & Unlimited past question training (2009-2025)<br/>• Curated step-by-step resolution breakdowns<br/>• Daily Free Socratic AI tutor credit (1/day reset at 00:00 BRT for registered students)<br/>• Pro Plan: Unlimited Socratic AI Tutoring & Essay OCR<br/>• Low-bandwidth, mobile-first API"]
+        VP["Value Propositions<br/>• White-Label Turnkey Portal (Subdomains, custom logos, CSS theme tokens)<br/>• Zero-recompilation dynamic branding injection<br/>• Institutional cohort diagnostics & class skill-gap heatmaps<br/>• 100% Free & Unlimited core question training for public students<br/>• Socratic AI tutor credit & Pro multi-turn threads<br/>• Low-bandwidth, mobile-first PWA architecture"]
     end
 
     subgraph Market ["5. Relationships & 6. Channels & 7. Segments"]
-        CR["Customer Relationships<br/>• Frictionless anonymous practice for all exam content<br/>• Free registration funnel unlocking 1 daily AI consultation<br/>• Trust-driven community support & open source governance"]
-        CH["Channels<br/>• Progressive Web Apps & Partner Apps<br/>• WhatsApp & Telegram study networks<br/>• Cursinhos populares & public school labs<br/>• GitHub Open Source repo"]
-        CS["Customer Segments<br/>• Public high school seniors (Periphery)<br/>• Low-income vestibular repeaters<br/>• Volunteer teachers at Cursinhos Populares"]
+        CR["Customer Relationships<br/>• B2B Institutional Account Management & SLAs<br/>• Self-service white-label onboarding for schools<br/>• Frictionless anonymous student practice<br/>• Trust-driven community governance & LGPD compliance"]
+        CH["Channels<br/>• Institutional White-Label Subdomains & CNAMEs<br/>• Direct B2B Sales to School Networks & Secretarias<br/>• Progressive Web Apps & Mobile Clients<br/>• WhatsApp/Telegram study networks & GitHub repo"]
+        CS["Customer Segments<br/>• B2B: Private School Networks & EdTech Franchises<br/>• B2B: Public Municipal/State Education Secretariats<br/>• B2B: Cursinhos Populares (Sponsored/Pro-Bono)<br/>• B2C/End-Users: Public high school students & teachers"]
     end
 
     subgraph Finance ["8. Cost Structure & 9. Revenue Streams"]
-        CST["Cost Structure<br/>• Micro-cloud / VPS hosting<br/>• Upstream LLM token costs (Protected via free registration gate, 1/day quota & Pro plans)<br/>• Open-source CI/CD automation<br/>• Domain & DNS maintenance"]
-        REV["Revenue & Sustainability Streams<br/>• 100% Free Core: Unlimited question practice (no login required)<br/>• Free Account: 1 daily Socratic AI consultation (midnight reset)<br/>• Rewarded Ads: +1 bonus AI consultation (Mobile opt-in)<br/>• Pro Plan: Unlimited Socratic AI Tutoring & Redação AI OCR<br/>• Philanthropic grants & CSR sponsorships"]
+        CST["Cost Structure<br/>• Multi-tenant Edge Cloud & Ingress Infrastructure<br/>• LLM token costs (Protected via Redis quotas & paid tiers)<br/>• White-label domain SSL orchestration & DNS<br/>• Open-source CI/CD quality gate automation"]
+        REV["Revenue & Sustainability Streams<br/>• B2B SaaS Subscriptions: Tiered per-school / active student seat/year<br/>• White-Label Enterprise Licensing: Custom domains, dedicated branding & SLAs<br/>• Public Sector Government Contracts: Secretarias de Educação tenders<br/>• B2C Pro Tier: Unlimited Socratic AI Tutoring & Essay OCR<br/>• Corporate CSR Sponsorships & Philanthropic Grants"]
     end
 
     KP --- KA --- KR
@@ -51,15 +53,15 @@ flowchart TD
 
 | Canvas Block                            | Strategy & Implementation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | :-------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **1. Key Partners**                     | • **Community Preparatory Courses (*Cursinhos Comunitários & Populares*)**: Partner with initiatives like Educafro, Uneafro, and university student-run cursinhos.<br>• **Public School STEM Teachers**: Provide automated diagnostic reports for their classrooms.<br>• **INEP**: Public provider of open exam datasets, guidelines, and answer keys.<br>• **Open-Source Tech Community**: Developers contributing code, translations, and hosting optimizations.                                                                                                                                    |
-| **2. Key Activities**                   | • Data extraction, cleaning, and normalization of historical ENEM exams (2009 to present).<br>• Maintaining high-availability REST APIs with sub-100ms response times.<br>• Developing adaptive diagnostic algorithms mapping skill deficiencies per topic.<br>• Ensuring 100% uptime during pre-ENEM peak traffic periods.                                                                                                                                                                                                                                                                             |
-| **3. Key Resources**                    | • Structured relational question repository categorized by discipline, topic, and difficulty.<br>• High-performance Spring Boot Hexagonal backend with PostgreSQL.<br>• Automated deployment scripts and Docker Compose environments.<br>• Comprehensive documentation and developer guides.                                                                                                                                                                                                                                                                                                           |
-| **4. Value Propositions**               | • **Zero Financial Barrier for Core Training**: All 17 years of objective questions, answer validations, and curated step-by-step resolutions are 100% free and unlimited for all students with zero mandatory registration.<br>• **Daily Free AI Tutor Quota**: 1 free Socratic AI Tutor consultation per day for every registered student (resets daily at 00:00 BRT), protected by a free registration gate to prevent cookie-clearing quota abuse while keeping practice frictionless.<br>• **Frictionless Onboarding**: Start practicing exam questions in 1 click without mandatory sign-up or credit card.<br>• **Targeted Diagnostic Feedback**: Identifies *why* an answer is wrong and which fundamental concept to review.<br>• **Accessible Performance**: Lightweight API designed to function seamlessly over 3G/4G mobile connections.<br>• **AprovaENEM Pro Tier**: Unlimited Socratic AI consultations and Phase 2 multimodal handwritten essay grading (*Redação Nota 1000*). |
-| **5. Customer Relationships**           | • Anonymous, respectful, privacy-focused interactions for core practice.<br>• Organic conversion funnel: anonymous practice $\rightarrow$ free account (unlocks 1 daily AI consultation + streak tracking) $\rightarrow$ rewarded video ads / Pro subscription.<br>• Community-driven feature requests via public GitHub discussions.<br>• Transparent educational data handling (no student data selling or tracking).                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| **6. Channels**                         | • Direct API integration for frontend mobile and web clients.<br>• Community outreach via student WhatsApp/Telegram study groups.<br>• Partnerships with public school computer labs and NGOs.                                                                                                                                                                                                                                                                                                                                                                                                         |
-| **7. Customer Segments**                | • **Primary**: Brazilian public high school seniors (ages 16–19) from low-income households.<br>• **Secondary**: Adult learners and workers studying after hours for university entry.<br>• **Tertiary**: Volunteer educators needing question sets and diagnostic tracking for their classes.                                                                                                                                                                                                                                                                                                         |
-| **8. Cost Structure**                   | • Minimal infrastructure: Designed to operate comfortably on low-cost virtual private servers or cloud instances.<br>• Open-source software stack (Linux, PostgreSQL, Spring Boot, Prometheus, Docker).<br>• Upstream LLM token costs: Strictly protected from runaway costs or quota exhaustion by requiring a free registered account and enforcing a Redis-backed 1-per-day rate limit; high-volume queries funded via Pro subscriptions and AdMob rewarded video ads.<br>• Zero commercial database licensing or paid third-party proprietary software fees.                                                                                                                               |
-| **9. Revenue Streams & Sustainability** | • **Core App (100% Free & Unlimited)**: Full past question catalog, quizzes, instant grading, TRI scoring, and written resolutions with zero login required.<br>• **Free Student Account**: Unlocks 1 free Socratic AI consultation per day, diagnostic history, and streak gamification.<br>• **Rewarded Video Ads (Mobile Opt-in / Brazil eCPM)**: Voluntary 30-second rewarded video ads (AdMob) granting +1 bonus AI Socratic credit to students without credit cards. Calibrated for Brazilian ad yields ($1.50–$3.50 USD eCPM $\approx$ R$ 0.010/view), generating ~9x the cost of a Gemini 1.5 Flash query (~$0.00017 USD $\approx$ R$ 0.0009) to guarantee platform sustainability while maintaining inclusion.<br>• **AprovaENEM Pro Plan**: Affordable monthly subscription or subsidized voucher unlocking **Unlimited Socratic AI Tutoring** and multimodal handwritten essay photo OCR evaluation (5 official INEP competencies).<br>• **Grant Funding & CSR**: Educational foundations (e.g., Fundação Lemann) and corporate tech sponsorships to fund free Pro vouchers for low-income public school students. |
+| **1. Key Partners**                     | • **Private School Networks & EdTech Franchises**: Private educational groups seeking an turnkey, institutional-branded ENEM diagnostic solution without developing proprietary question-bank engines from scratch.<br>• **Municipal & State Secretarias de Educação**: Public educational departments implementing large-scale diagnostic exam preparation across public school networks.<br>• **Community Preparatory Courses (*Cursinhos Comunitários & Populares*)**: Partner with initiatives like Educafro, Uneafro, and university student-run cursinhos for pro-bono white-label portals.<br>• **INEP**: Public provider of open exam datasets, guidelines, and answer keys.<br>• **Open-Source Tech Community**: Developers contributing code, integrations, and hosting optimizations.                                                                                                                                    |
+| **2. Key Activities**                   | • Developing and maintaining the **White-Label Multi-Tenant Frontend Engine** (runtime CSS token injection, tenant routing, dynamic logo/favicon swaps).<br>• Ingesting, cleaning, and normalizing historical ENEM exams (2009 to present).<br>• Maintaining high-availability REST APIs and Edge Gateway with sub-100ms response times and tenant routing.<br>• Developing adaptive diagnostic algorithms mapping skill deficiencies per student and per institutional cohort.<br>• Ensuring 100% uptime and enterprise SLAs during pre-ENEM peak traffic periods.                                                                                                                                                 |
+| **3. Key Resources**                    | • White-label design token system allowing instant dynamic CSS custom property injection.<br>• Structured relational question repository categorized by discipline, topic, and difficulty.<br>• High-performance Spring Boot Hexagonal backend with PostgreSQL and Redis 7 multi-tenant caching.<br>• Automated deployment scripts, Docker Compose environments, and tenant routing proxies.<br>• Comprehensive documentation and developer guides.                                                                                                                                                                                                                                                                                                           |
+| **4. Value Propositions**               | • **Turnkey White-Label Branding**: Educational institutions deploy their own branded platform (custom palette, logo, favicon, institution typography, and custom CNAME domain) in under 10 minutes with zero code changes or client rebuilds.<br>• **Institutional Cohort Analytics**: School directors and coordinators receive aggregate class diagnostics, identifying common student pitfalls per ENEM competency and topic.<br>• **Zero Financial Barrier for Core Public Training**: All historical questions, answer validations, and curated step-by-step resolutions are 100% free and unlimited for students with zero paywalls.<br>• **Daily Free AI Tutor Quota**: 1 free Socratic AI Tutor consultation per day for every registered student (resets daily at 00:00 BRT).<br>• **Frictionless Onboarding**: Students start practicing exam questions in 1 click without mandatory sign-up or credit card.<br>• **Accessible Performance**: Lightweight API and PWA designed to function seamlessly over 3G/4G mobile connections. |
+| **5. Customer Relationships**           | • **B2B Institutional Accounts**: Dedicated technical support, tenant onboarding portal, custom domain configuration assistance, and institutional SLAs.<br>• **End-User Students**: Anonymous, respectful, privacy-focused interactions for core practice with organic conversion funnels.<br>• **Community Governance**: Public open-source transparency, community-driven feature roadmaps, and privacy compliance (LGPD).                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **6. Channels**                         | • **White-Label Institutional Portals**: Custom subdomains (e.g., `colegio-alfa.aprovaenem.com.br`) and CNAME custom domains (`simulado.escola.com.br`).<br>• **B2B Direct Institutional Outreach**: Engagement with school network directors, private education congresses, and public education procurement tenders.<br>• **Direct Digital Channels**: Progressive Web Apps (PWA), student study networks on WhatsApp/Telegram, and open-source GitHub repository.                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **7. Customer Segments**                | • **B2B Institutional Tier 1 (Private School Networks)**: K-12 private school groups and prep course franchises seeking white-label student portals and cohort diagnostic reports.<br>• **B2B Institutional Tier 2 (Public Secretarias de Educação)**: Municipal and state government education departments delivering centralized exam prep across hundreds of public schools.<br>• **B2B Pro-Bono (Cursinhos Populares)**: Non-profit community prep organizations receiving sponsored white-label instances.<br>• **End-Users (Students & Teachers)**: Public school seniors, vestibular repeaters, and classroom educators.                                                                                                                                                                                                                                                                                                         |
+| **8. Cost Structure**                   | • Multi-tenant edge infrastructure: Scalable cloud instances, multi-tenant database clusters, and Nginx reverse proxy edge.<br>• Upstream LLM token costs: Strictly protected via Redis rate limiters, 1-per-day quotas, and institutional B2B enterprise allowances.<br>• DNS, automated SSL certificate issuance (Let's Encrypt / ACME) for custom tenant domains.<br>• Open-source CI/CD quality gate automation and maintenance.                                                                                                                               |
+| **9. Revenue Streams & Sustainability** | • **B2B White-Label SaaS Subscriptions**: Annual or monthly subscription fees tiered by institutional student seats (e.g., Starter School: up to 500 active students; Enterprise Network: 5,000+ students with custom CNAME and SLA).<br>• **Public Sector Educational Contracts**: Government procurement agreements with state secretarias de educação for subsidized public network rollouts.<br>• **Institutional Feature Add-ons**: Custom question bank ingestion, proprietary mock-exam authoring, and advanced predictive TRI analytics.<br>• **AprovaENEM Pro Plan (B2C Direct)**: Optional individual student subscription for unlimited Socratic AI tutoring and essay photo OCR evaluation.<br>• **Philanthropic Grants & CSR**: Corporate technology sponsorships funding pro-bono white-label instances for cursinhos populares. |
 
 ---
 
@@ -118,25 +120,59 @@ flowchart TD
 
 ---
 
+### Persona 3: Dr. Roberto Mendes — The Institutional Academic Director
+
+> [!NOTE]
+> **Dr. Roberto Mendes (52 years old)**  
+> *Academic Vice-President — Rede de Ensino Horizonte (18 K-12 Campuses)*
+
+* **Demographics**: 52 years old, Ed.D. in Curriculum Development, oversees academic outcomes, pedagogical tooling, and national ENEM rankings for 18 private high school campuses (12,000+ enrolled students).
+* **Tech Access**: Enterprise MacBook, iPad Pro, integrated Google Workspace and Canvas LMS environment.
+* **Goal**: Equip every high school senior across the network with an institutional-branded ENEM diagnostic simulator while obtaining real-time cohort weakness dashboards for department heads—without contracting multi-million dollar software factories.
+
+#### Jobs to Be Done (JTBD)
+* **Functional Job**: Deliver a modern exam diagnostic app fully branded with his school network's visual identity (custom colors, logo, typography, domain `simulado.redehorizonte.com.br`), with aggregated cohort analytics showing which campuses and classrooms are lagging behind in specific TRI matrix competencies.
+* **Emotional Job**: Project innovation, prestige, and academic leadership to prospective parents during the school admissions season; remove friction between teachers and tech tools.
+* **Social Job**: Elevate the institution's position in regional ENEM benchmark tables and university admissions statistics.
+
+#### Top Pain Points
+1. **Excessive Custom Development Costs**: Quotes from software houses to build an internal diagnostic platform exceeded R$ 450,000 with a 9-month delivery timeline.
+2. **Fragmented Off-the-Shelf Tools**: Existing EdTech platforms enforce their own intrusive brand logos, confusing students and diluting the school network's institutional brand equity.
+3. **Data Silos**: Inability to extract class-level diagnostic data or map cohort gaps back into weekly teacher lesson planning.
+
+#### What Delights Roberto in AprovaENEM White-Label
+* Turnkey White-Label architecture: The frontend injects Rede Horizonte's visual tokens and assets dynamically in real-time.
+* Subdomain and custom CNAME routing: Students access the platform directly at `simulado.redehorizonte.com.br`.
+* Real-time institutional diagnostic dashboards breaking down accuracy by classroom, teacher, and ENEM knowledge area.
+* Complete LGPD data segregation and enterprise SLA guarantees.
+
+---
+
 ## 4. Value Proposition Canvas
 
 ```mermaid
 flowchart LR
-    subgraph CustomerProfile ["Customer Profile (Public School Student)"]
-        Gains["Customer Gains<br/>• Score improvement on ENEM<br/>• Clear grasp of weak subjects<br/>• Motivation through quick wins"]
-        Pains["Customer Pains<br/>• Cannot afford paid prep<br/>• Static PDFs with no explanations<br/>• Slow 4G mobile data<br/>• Overwhelmed by exam breadth"]
-        Jobs["Customer Jobs<br/>• Practice real past exam items<br/>• Learn from mistakes immediately<br/>• Build exam timing stamina"]
+    subgraph B2BProfile ["B2B Institutional Profile (School Networks & Secretarias)"]
+        B2BGains["Institutional Gains<br/>• Strong brand equity with white-label portal<br/>• Real-time cohort diagnostic intelligence<br/>• Rapid turnkey launch with zero dev overhead"]
+        B2BPains["Institutional Pains<br/>• Prohibitive custom dev costs<br/>• Diluted branding with generic EdTechs<br/>• Lack of granular classroom skill metrics"]
+        B2BJobs["Institutional Jobs<br/>• Provide ENEM practice under school brand<br/>• Map cohort skill deficits across campuses<br/>• Improve university admissions results"]
     end
 
-    subgraph ValueMap ["AprovaENEM Value Map"]
-        Products["Products & Services<br/>• Lightweight REST API<br/>• Structured ENEM Question Bank<br/>• Diagnostic Assessment Service<br/>• Step-by-step Solution Assistant"]
-        PainRelievers["Pain Relievers<br/>• 100% Free with zero ads<br/>• Mobile-optimized JSON payloads<br/>• Detailed distractor rationale<br/>• Anonymous instant session access"]
-        GainCreators["Gain Creators<br/>• Topic-level mastery radar<br/>• Socratic guided hints<br/>• Authentic INEP difficulty ranking<br/>• Rapid feedback loop"]
+    subgraph EndUserProfile ["End-User Profile (High School Student)"]
+        Gains["Student Gains<br/>• Score improvement on ENEM<br/>• Clear grasp of weak subjects<br/>• Motivation through quick wins"]
+        Pains["Student Pains<br/>• Cannot afford paid prep<br/>• Static PDFs with no explanations<br/>• Slow 4G mobile data"]
+        Jobs["Student Jobs<br/>• Practice real past exam items<br/>• Learn from mistakes immediately<br/>• Build exam timing stamina"]
     end
 
-    PainRelievers -. Relieves .-> Pains
-    GainCreators -. Creates .-> Gains
-    Products -. Addresses .-> Jobs
+    subgraph PlatformValue ["AprovaENEM White-Label Platform Value"]
+        Products["Products & Services<br/>• White-Label Dynamic Theming Engine<br/>• Subdomain & Custom CNAME Routing<br/>• Ingested ENEM Question Catalog (2009-2025)<br/>• Socratic AI Tutor & Diagnostic Engine<br/>• Institutional Cohort Dashboards"]
+        PainRelievers["Pain Relievers<br/>• Zero client recompilation for re-branding<br/>• 100% Free core practice for public learners<br/>• Mobile-optimized JSON & PWA performance<br/>• Complete LGPD multi-tenant isolation"]
+        GainCreators["Gain Creators<br/>• Dynamic CSS token injection<br/>• Teacher cohort diagnostic heatmaps<br/>• Socratic conceptual hints<br/>• Authentic INEP difficulty ranking"]
+    end
+
+    PainRelievers -. Relieves .-> B2BPains & Pains
+    GainCreators -. Creates .-> B2BGains & Gains
+    Products -. Addresses .-> B2BJobs & Jobs
 ```
 
 ---
@@ -145,17 +181,24 @@ flowchart LR
 
 | SDG Target | How AprovaENEM Delivers Direct Impact |
 | :--- | :--- |
-| **SDG 4: Quality Education**<br>*(Target 4.1 & 4.3)* | • **Equal Access to Higher Education**: Eliminates the preparation quality gap between private and public school students.<br>• **Pedagogical Integrity**: Promotes deep conceptual understanding through step-by-step problem resolutions rather than rote memorization.<br>• **Digital Educational Commons**: Creates an open-source, reusable digital public good (*Public Good Software*) for the Brazilian educational ecosystem. |
-| **SDG 10: Reduced Inequalities**<br>*(Target 10.2 & 10.3)* | • **Socioeconomic Mobility**: University graduation in Brazil increases lifetime earnings by over 150%, making higher education the single most powerful lever against intergenerational poverty.<br>• **Equitable Opportunity**: Levels the playing field by providing the exact same diagnostic capability previously reserved for high-fee private academies. |
+| **SDG 4: Quality Education**<br>*(Target 4.1 & 4.3)* | • **Equal Access to Higher Education**: Eliminates the preparation quality gap between private and public school students.<br>• **Pedagogical Integrity**: Promotes deep conceptual understanding through step-by-step problem resolutions rather than rote memorization.<br>• **Digital Educational Commons**: Creates an open-source, reusable digital public good (*Public Good Software*) for the Brazilian educational ecosystem.<br>• **Institutional Enablement**: Equips public schools and municipal secretarias with institutional-grade diagnostic capabilities previously exclusive to elite private networks. |
+| **SDG 10: Reduced Inequalities**<br>*(Target 10.2 & 10.3)* | • **Socioeconomic Mobility**: University graduation in Brazil increases lifetime earnings by over 150%, making higher education the single most powerful lever against intergenerational poverty.<br>• **Cross-Subsidization Engine**: B2B SaaS licensing fees from private school networks fund the ongoing infrastructure, pro-bono white-label deployments for cursinhos populares, and free AI tokens for public students. |
 
 ---
 
 ## 6. Key Performance Indicators (KPIs)
 
-To evaluate platform success and social impact, the backend tracks the following metrics:
+To evaluate platform success, B2B institutional adoption, and social impact, the platform tracks the following metrics:
 
+### 6.1 Student Engagement & Pedagogical KPIs
 1. **Practice Velocity**: Total questions answered per session (target: $\ge 8$ questions/session).
 2. **Diagnostic Completion Rate**: Percentage of users who complete a targeted 10-question diagnostic quiz (target: $\ge 65\%$).
 3. **Weak-Spot Remediation Ratio**: Rate at which a student correctly answers a question in a topic they previously failed within a 14-day window (target: $\ge 40\%$).
 4. **Latency Budget & Mobile Accessibility**: API response time at `p95 < 120ms` for payload sizes $< 25\text{ KB}$, ensuring smooth performance on constrained mobile connections.
 5. **System Reliability**: Service availability $\ge 99.9\%$ with automated Prometheus bug and error rate alerting.
+
+### 6.2 B2B Institutional & White-Label KPIs
+6. **Tenant Onboarding Velocity**: Time required to provision a new institutional tenant with full branding, theme injection, and subdomain resolution (target: $< 10\text{ minutes}$).
+7. **Institutional Cohort Coverage**: Active students practicing under an institutional tenant domain (target: $\ge 80\%$ enrolled high school cohort).
+8. **Classroom Diagnostic Utilization**: Percentage of partner school educators accessing cohort diagnostic heatmaps at least once bi-weekly (target: $\ge 70\%$).
+9. **Net Revenue Retention (NRR) / Renewal Rate**: Institutional B2B annual subscription retention (target: $\ge 110\%$ NRR).

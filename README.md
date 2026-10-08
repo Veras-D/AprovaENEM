@@ -29,11 +29,18 @@
 
 According to INEP's Censo Escolar, **84.3% of Brazilian secondary students attend public high schools**, yet they remain heavily underrepresented in competitive admissions to federal universities. Commercial online preparatory platforms charge between **R$ 30 and R$ 200+/month** (often requiring full-year credit card debt commitments), while physical prep academies exceed **R$ 1,000/month**, systematically pricing out low-income students from urban peripheries.
 
-**AprovaENEM** is a full-stack open educational platform. It transforms official, public-domain exam archives from **INEP (spanning 2009 to 2025)** into an interactive, mobile-optimized learning ecosystem. Students can practice authentic exam questions on their phones, receive instant step-by-step resolution breakdowns, track diagnostic weak-spot radars, and interact with a Socratic AI study tutor — **100% free, mobile-first, and with zero registration barriers for core question training**.
+**AprovaENEM** is a full-stack open educational platform and **White-Label B2B EdTech engine**. It transforms official, public-domain exam archives from **INEP (spanning 2009 to 2025)** into an interactive, mobile-optimized learning ecosystem. Beyond open public access for self-directed students, educational institutions (private school networks, municipal and state *Secretarias de Educação*, and prep course franchises) can license and deploy AprovaENEM under their own visual identity—custom brand colors, typography, institutional logos, and custom CNAME domains—with zero client rebuilds, complete LGPD data isolation, and class-level diagnostic analytics.
 
 ---
 
 ## ✨ Features
+
+### 🏢 White-Label B2B & Institutional Engine (`frontend/`)
+- 🎨 **Dynamic Tokenized Theming**: Zero-recompilation brand injection; CSS Custom Properties (`--brand-primary`, `--brand-secondary`, etc.) inject custom school palettes, surface colors, typography, logos, and favicons at runtime in $< 50\text{ms}$.
+- 🌐 **Multi-Tenant Domain Resolution**: Automatic tenant identification via custom CNAMEs (e.g., `simulado.escola.com.br`), subdomains (`colegio-alfa.aprovaenem.com.br`), or route paths (`/t/{slug}`).
+- 📊 **Institutional Cohort Diagnostics**: Dedicated dashboards for educators and coordinators displaying class participation rates, competency accuracy curves, and common distractor pitfalls across student cohorts.
+- 🛡️ **Edge Gateway Header Propagation**: Secure injection and propagation of `X-Tenant-Id` by `frontend-api` BFF with dynamic tenant CORS origin whitelisting in Redis.
+- 🔒 **LGPD Multi-Tenant Isolation**: Strict logical partitioning between educational networks, protecting student cohort confidentiality.
 
 ### 🛡️ LGPD Compliance & Privacy by Design (Lei nº 13.709/2018)
 - 🔒 **Privacy by Default**: Practice past exams, simulate tests, and view INEP resolutions with **zero login, zero CPF, and zero personal data collection**.
@@ -79,9 +86,11 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 
 ### Frontend Application
 - **Framework**: React 18+ with TypeScript (Strict mode, zero `any`)
-- **Styling**: Tailwind CSS with custom Dark Design Tokens
+- **Architecture**: **White-Label Multi-Tenant Engine** (Single-build zero-recompilation client with instant brand hydration)
+- **Styling**: Tailwind CSS with **Dynamic CSS Custom Properties** (`--brand-primary`, `--brand-secondary`, etc.) & Dark Mode Design Tokens
+- **Tenant Context**: Runtime Subdomain & Custom CNAME Resolution via `TenantProvider` with Redis-backed branding cache
 - **Icons**: Lucide React
-- **Data Visualization**: Recharts / Chart.js for diagnostic skill radars
+- **Data Visualization**: Recharts / Chart.js for student skill radars & institutional classroom diagnostic heatmaps
 - **Math Rendering**: KaTeX / MathJax for scientific expressions
 - **Build Tool**: Vite 5
 - **Mobile Roadmap**: **Native Android (Kotlin / Java & Jetpack Compose)** + **Kotlin Multiplatform (KMP)** (Room SQLite offline question bank, CameraX essay scanner, Firebase Cloud Messaging)
@@ -374,6 +383,8 @@ In production, all domain services, databases, caches, and telemetry run within 
 | `POST` | `/api/v1/notifications/push-tokens` | Register Web Push, Android FCM or iOS device token | Bearer / `X-User-Id` |
 | `PATCH` | `/api/v1/notifications/{id}/read` | Mark notification alert as read | Bearer / `X-User-Id` |
 | `GET` | `/api/v1/notifications/unread-count` | Query unread notification counter | Bearer / `X-User-Id` |
+| `GET` | `/api/v1/tenants/branding` | Resolve active white-label theme, logos & feature flags | `Host` / `X-Tenant-Id` |
+| `GET` | `/api/v1/institutional/cohorts/{id}/diagnostics` | Aggregate class diagnostic radar & distractor analysis | Bearer (`ROLE_EDUCATOR` / `ROLE_ADMIN`) |
 | `POST` | `/api/v1/essays/upload` | Upload handwritten essay for OCR evaluation (Phase 2) | Bearer (`ROLE_PREMIUM_STUDENT`) |
 | `GET` | `/api/v1/essays/{id}` | Get 5-competency breakdown & thesis feedback (Phase 2) | Bearer (`ROLE_PREMIUM_STUDENT`) |
 
