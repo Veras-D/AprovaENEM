@@ -1545,9 +1545,9 @@ The client application detects and resolves the active tenant through a 4-tier h
 | Resolution Tier | Strategy | Example URL | Resolution Mechanism |
 | :--- | :--- | :--- | :--- |
 | **Tier 1: Custom CNAME** | Custom Domain | `https://simulado.colegioelite.com.br` | Exact domain lookup against `tenant_domains` database / Redis cache. |
-| **Tier 2: Subdomain** | Platform Subdomain | `https://alfa.aprovaenem.com.br` | Regex extraction of subdomain (`alfa`) matching `tenant_slug`. |
-| **Tier 3: Route Prefix** | Path Parameter | `https://aprovaenem.org/t/colegio-alfa` | Client router parses `/t/{tenantSlug}` for iframe embeds and demo portals. |
-| **Tier 4: Default Fallback** | Root Platform | `https://aprovaenem.org` | Serves standard AprovaENEM open-access public high school branding. |
+| **Tier 2: Subdomain** | Platform Subdomain | `https://alfa.example.com` (or `alfa.${BASE_DOMAIN}`) | Regex extraction of subdomain (`alfa`) matching `tenant_slug`. |
+| **Tier 3: Route Prefix** | Path Parameter | `http://localhost/t/colegio-alfa` | Client router parses `/t/{tenantSlug}` for iframe embeds and demo portals. |
+| **Tier 4: Default Fallback** | Root Platform | `http://localhost` (or root domain) | Serves standard default open-access public student branding. |
 
 ---
 

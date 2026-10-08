@@ -37,7 +37,7 @@ According to INEP's Censo Escolar, **84.3% of Brazilian secondary students atten
 
 ### 🏢 White-Label B2B & Institutional Engine (`frontend/`)
 - 🎨 **Dynamic Tokenized Theming**: Zero-recompilation brand injection; CSS Custom Properties (`--brand-primary`, `--brand-secondary`, etc.) inject custom school palettes, surface colors, typography, logos, and favicons at runtime in $< 50\text{ms}$.
-- 🌐 **Multi-Tenant Domain Resolution**: Automatic tenant identification via custom CNAMEs (e.g., `simulado.escola.com.br`), subdomains (`colegio-alfa.aprovaenem.com.br`), or route paths (`/t/{slug}`).
+- 🌐 **Multi-Tenant Domain Resolution**: Automatic tenant identification via custom CNAMEs (e.g., `simulado.escola.com.br`), subdomains (`colegio-alfa.example.com` or `*.${BASE_DOMAIN}`), or path-based route prefixes (`/t/{slug}`).
 - 📊 **Institutional Cohort Diagnostics**: Dedicated dashboards for educators and coordinators displaying class participation rates, competency accuracy curves, and common distractor pitfalls across student cohorts.
 - 🛡️ **Edge Gateway Header Propagation**: Secure injection and propagation of `X-Tenant-Id` by `frontend-api` BFF with dynamic tenant CORS origin whitelisting in Redis.
 - 🔒 **LGPD Multi-Tenant Isolation**: Strict logical partitioning between educational networks, protecting student cohort confidentiality.
