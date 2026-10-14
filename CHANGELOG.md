@@ -18,7 +18,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - **Dynamic Metadata & Favicon Swapper**: Implemented `updateDocumentMetadata` updating `<title>`, `<link rel="icon">`, `<meta name="theme-color">`, and `<meta name="description">` on tenant switches.
   - **Accessibility Modes**: Added support for class-based Dark Mode (`.dark`), High Contrast Mode (`data-high-contrast`), and OpenDyslexic Typography Mode (`data-dyslexic-font`) with custom line/word spacing rules.
   - **Interactive Customizer UI**: Built `<ThemeCustomizer />` component with live contrast ratio badge, tenant presets (AprovaENEM, Colégio Bandeirantes, SEDUC-SP, Instituto Federal, Colégio Positivo), and accessible toggle controls.
-  - **Testing & Verification**: Created 3 new test suites (`color-contrast.test.ts`, `metadata-updater.test.ts`, `ThemeCustomizer.test.tsx`), achieving 41 tests passing (100% green) and 97.05% test line coverage.
+- feat(api): Implemented Multi-Tenant API Client SDK & TanStack Query Integration ([`TASK-S4-03`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/BACKLOG.md#task-s4-03)):
+  - **Typed Client & Error Mapping**: Configured Axios client strictly targeting `frontend-api` BFF (`/api/v1`) with automated `Authorization: Bearer`, `X-Session-Id`, and `X-Tenant-Id` header injection; parsed RFC 7807 problem details into `ApiError` with status, code, and rate-limiting `retryAfterSeconds`.
+  - **Microservice Service Adapters**: Implemented 5 service modules covering all backend endpoints: `examService` (questions, resolutions, sessions, attempts, diagnostics), `tutorService` (multi-turn Socratic thread, chat query, thread reset), `gamificationService` (profile, leaderboard, daily goals), `tenantService` (white-label branding), and `authService` (login, register, me, LGPD export, delete account).
+  - **TanStack Query Hooks**: Created centralized query key factory (`queryKeys`) and custom hooks: `useQuestionsQuery`, `useQuestionByIdQuery`, `useQuestionResolutionQuery`, `useCreateSessionMutation`, `useSubmitAnswerMutation`, `useCompleteSessionMutation`, `useDiagnosticReportQuery`, `useSocraticThreadQuery`, `useAskSocraticTutorMutation`, `useResetSocraticThreadMutation`, `useGamificationProfileQuery`, `useLeaderboardQuery`, and `useTenantBrandingQuery`.
+  - **Offline Mock Data**: Created realistic mock fixtures (`mock-data.ts`) supporting offline component testing and mock fallbacks.
+  - **Testing & Verification**: 13 test suites / 64 unit tests passing 100% green; test line coverage increased to 98.36% (100% lines for services and hooks).
 
 ## [0.4.0] - 2026-10-07
 ### 🏢 Strategic & Architecture Evolution (White-Label Multi-Tenant B2B Engine)

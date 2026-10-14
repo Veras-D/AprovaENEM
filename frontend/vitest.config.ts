@@ -24,6 +24,7 @@ export default defineConfig({
         '.*rc.*',
         'src/test/**',
         'src/types/**',
+        'src/api/mocks/**',
         'src/main.tsx',
         'src/App.tsx',
         'src/features/**',
