@@ -46,6 +46,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - **Testing & Verification**: 23 Vitest test suites (141 tests passing, 0 failures, 96.28% line coverage, 98.03% layout coverage), 0 ESLint warnings, and clean Vite production build.
 - fix(ci): Resolved PMD `UnusedPrivateMethod` false-positive under multi-threaded reactor execution:
   - Replaced method reference `this::toValidationError` with explicit lambda expression `fieldError -> toValidationError(fieldError)` in `GlobalExceptionHandler` across `exam-service` and `auth-service`, ensuring PMD 7.0.0 parses explicit AST method call nodes without requiring complex type resolution in parallel CI runs.
+- feat(accessibility): Implemented Digital Accessibility Baseline, WCAG 2.1 AA Compliance & VLibras Integration ([`TASK-S4-07`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/BACKLOG.md#task-s4-07)):
+  - **Universal Accessibility Floating Toolbar**: Built `<AccessibilityToolbar />` floating action widget (`Alt+A` shortcut, focus trapping, `Escape` key close) providing accessible controls for text scaling, typography switching, contrast adjustments, Daltonism filters, and reading aids.
+  - **Text Scaling Engine**: Implemented 5 font zoom levels (100%, 125%, 150%, 175%, 200%) satisfying WCAG 2.1 Success Criterion 1.4.4 (Resize Text up to 200%) without clipping or layout degradation.
+  - **Neurodivergent & Dyslexia Typography**: Added support for OpenDyslexic and Atkinson Hyperlegible accessible fonts alongside standard UI sans-serif fonts.
+  - **Daltonism Color Matrix Filters**: Created SVG matrix filter component `<ColorBlindFilters />` with transformations for Protanopia, Deuteranopia, Tritanopia, and Achromatopsia.
+  - **ADHD & Dyslexia Reading Ruler**: Built interactive horizontal focus guide `<ReadingRuler />` following pointer tracking across dense text to assist reading comprehension.
+  - **WCAG 2.1 SC 1.4.12 Text Spacing**: Added expanded text spacing mode enforcing line-height $\ge 1.9$, letter-spacing $\ge 0.12\text{em}$, and word-spacing $\ge 0.16\text{em}$.
+  - **Link Highlighting**: Added high-visibility link underline and accent coloring mode.
+  - **VLibras 3D Avatar Sign Language Integration**: Integrated official Brazilian Sign Language widget `<VLibras />` (Federal Government / UFPB) translating Portuguese text to 3D avatar Libras gestures for deaf and hard-of-hearing students.
+  - **Keyboard Bypass Blocks (WCAG 2.1 SC 2.4.1)**: Built accessible skip link `<SkipToContent />` bypassing header navigation directly to `#main-content`.
+  - **State Management & Persistence**: Implemented `useAccessibilityStore` Zustand store with automatic DOM data-attribute hydration and 100% localStorage preference persistence.
+  - **Testing & Verification**: 29 Vitest test suites (171 tests passing, 0 failures, 96.85% line coverage, 99.26% accessibility coverage), 0 ESLint warnings, and clean Vite production build.
 
 ## [0.4.0] - 2026-10-07
 ### 🏢 Strategic & Architecture Evolution (White-Label Multi-Tenant B2B Engine)

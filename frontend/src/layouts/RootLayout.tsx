@@ -4,6 +4,13 @@ import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { MobileDrawer } from '@/components/layout/MobileDrawer';
 import { BandwidthNotice } from '@/components/layout/BandwidthNotice';
+import {
+  SkipToContent,
+  ColorBlindFilters,
+  ReadingRuler,
+  VLibras,
+  AccessibilityToolbar,
+} from '@/components/accessibility';
 import { ShieldCheck } from 'lucide-react';
 
 export interface RootLayoutProps {
@@ -21,6 +28,18 @@ export const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-brand">
+      {/* Keyboard Accessibility: Skip link to bypass header blocks (WCAG 2.1 SC 2.4.1) */}
+      <SkipToContent />
+
+      {/* Invisible Daltonism SVG Filters */}
+      <ColorBlindFilters />
+
+      {/* ADHD & Dyslexia Visual Reading Ruler */}
+      <ReadingRuler />
+
+      {/* VLibras 3D Avatar Brazilian Sign Language Translation */}
+      <VLibras />
+
       {/* Low-Bandwidth / 3G/4G Data Saver Optimization Banner */}
       <BandwidthNotice />
 
@@ -40,9 +59,16 @@ export const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
       />
 
       {/* Main Page Content (with bottom padding for sticky mobile nav) */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-20 md:pb-8">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-20 md:pb-8 focus:outline-none"
+      >
         {children}
       </main>
+
+      {/* Universal Floating Accessibility Toolbar Widget */}
+      <AccessibilityToolbar />
 
       {/* Sticky Bottom Navigation Bar for Smartphones */}
       <BottomNav

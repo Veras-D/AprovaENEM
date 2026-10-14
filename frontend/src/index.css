@@ -53,3 +53,52 @@
   word-spacing: 0.1em !important;
   line-height: 1.8 !important;
 }
+
+/* Inverted Contrast Mode */
+[data-inverted="true"] {
+  filter: invert(100%) hue-rotate(180deg) !important;
+}
+
+[data-inverted="true"] img,
+[data-inverted="true"] video {
+  filter: invert(100%) hue-rotate(180deg) !important;
+}
+
+/* Daltonism (Color Blindness) SVG Matrix Filters */
+[data-colorblind="protanopia"] {
+  filter: url('#filter-protanopia') !important;
+}
+
+[data-colorblind="deuteranopia"] {
+  filter: url('#filter-deuteranopia') !important;
+}
+
+[data-colorblind="tritanopia"] {
+  filter: url('#filter-tritanopia') !important;
+}
+
+[data-colorblind="achromatopsia"] {
+  filter: grayscale(100%) !important;
+}
+
+/* Expanded Text Spacing (WCAG 2.1 Success Criterion 1.4.12) */
+[data-expanded-spacing="true"] p,
+[data-expanded-spacing="true"] span,
+[data-expanded-spacing="true"] h1,
+[data-expanded-spacing="true"] h2,
+[data-expanded-spacing="true"] h3,
+[data-expanded-spacing="true"] button,
+[data-expanded-spacing="true"] a {
+  line-height: 1.9 !important;
+  letter-spacing: 0.12em !important;
+  word-spacing: 0.16em !important;
+}
+
+/* Highlight Links Mode */
+[data-highlight-links="true"] a {
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 4px !important;
+  color: var(--brand-primary) !important;
+  font-weight: 700 !important;
+}

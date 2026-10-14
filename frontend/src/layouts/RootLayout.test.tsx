@@ -34,6 +34,8 @@ describe('RootLayout component', () => {
 
     expect(screen.getByTestId('test-content')).toBeInTheDocument();
     expect(screen.getByText('AprovaENEM Social')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Pular para o conteúdo principal/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Menu de ferramentas de acessibilidade/i })).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: /Navegação móvel inferior/i })).toBeInTheDocument();
     expect(screen.getByText(/Privacidade LGPD \(Lei nº 13\.709\/2018\)/i)).toBeInTheDocument();
   });
