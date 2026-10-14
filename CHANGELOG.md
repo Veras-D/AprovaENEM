@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.5.0] - 2026-10-14
+### 💻 Frontend & Multi-Tenant Architecture Setup (TASK-S4-01)
+- feat(frontend): Initialized React 18, TypeScript, and Vite 5 SPA workspace with white-label multi-tenant architecture ([`TASK-S4-01`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/BACKLOG.md#task-s4-01)):
+  - **Tooling & Build System**: Configured Vite 5 with React plugin, strict TypeScript compiler options (`strict: true`, zero `any`, `noImplicitAny`, path aliases `@/*`), and ESLint (`--max-warnings 0`).
+  - **White-Label Dynamic Theming**: Implemented tokenized CSS custom variables runtime hydration (`applyTenantTheme`), default AprovaENEM tenant configuration, and Tailwind CSS design tokens with class-based dark mode.
+  - **BFF API Client SDK**: Implemented typed Axios client strictly targeting `frontend-api` BFF via `/api/v1` with automated `Authorization: Bearer`, `X-Session-Id`, and `X-Tenant-Id` header injection.
+  - **State Management**: Created Zustand stores for white-label tenant context (`useTenantStore`), student authentication (`useAuthStore`), and anonymous practice sessions (`useSessionStore`).
+  - **Component Library & Layout**: Built accessible UI primitives (`Button`, `Card`, `Badge`), responsive `RootLayout` with mobile navigation and LGPD compliance disclosures, and interactive `PracticeHero` demonstrating live multi-tenant theme switching.
+  - **Testing & Verification**: Created 8 Vitest unit test suites covering components, stores, and API client (23 tests passing, 0 failures, 94.75% line coverage exceeding $\ge 80\%$ threshold), and verified optimized production Vite bundle.
+
 ## [0.4.0] - 2026-10-07
 ### 🏢 Strategic & Architecture Evolution (White-Label Multi-Tenant B2B Engine)
 - feat(docs): Transitioned frontend architecture and platform business strategy to a **White-Label B2B Multi-Tenant Engine** across all technical specifications, backlog, and root project documentation:
