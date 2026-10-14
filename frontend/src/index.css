@@ -5,6 +5,9 @@
 :root {
   --brand-primary: #0284c7;
   --brand-primary-dark: #0369a1;
+  --brand-primary-light: #38bdf8;
+  --brand-primary-subtle: #f0f9ff;
+  --brand-primary-foreground: #ffffff;
   --brand-secondary: #0f172a;
   --brand-accent: #f59e0b;
   --brand-surface: #ffffff;
@@ -29,4 +32,24 @@
 :focus-visible {
   outline: 2px solid var(--brand-primary);
   outline-offset: 2px;
+}
+
+/* High Contrast Mode (WCAG 2.1 AAA) */
+[data-high-contrast="true"] {
+  --brand-surface: #ffffff !important;
+  --brand-surface-dark: #000000 !important;
+}
+
+[data-high-contrast="true"] button,
+[data-high-contrast="true"] [role="radio"],
+[data-high-contrast="true"] .rounded-brand {
+  border-width: 2px !important;
+  border-color: currentColor !important;
+}
+
+/* Dyslexia-Friendly Font mode */
+[data-dyslexic-font="true"] {
+  letter-spacing: 0.05em !important;
+  word-spacing: 0.1em !important;
+  line-height: 1.8 !important;
 }

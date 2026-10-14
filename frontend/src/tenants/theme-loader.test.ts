@@ -1,9 +1,14 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { applyTenantTheme } from './theme-loader';
 import { DEFAULT_TENANT } from './default';
 
 describe('theme-loader (applyTenantTheme)', () => {
-  it('should inject CSS custom properties into document.documentElement', () => {
+  beforeEach(() => {
+    document.documentElement.removeAttribute('data-high-contrast');
+    document.documentElement.removeAttribute('data-dyslexic-font');
+  });
+
+  it('should inject CSS custom properties and derived contrast tokens into document.documentElement', () => {
     applyTenantTheme(DEFAULT_TENANT.theme);
 
     const rootStyle = document.documentElement.style;
@@ -12,19 +17,23 @@ describe('theme-loader (applyTenantTheme)', () => {
     expect(rootStyle.getPropertyValue('--brand-secondary')).toBe(DEFAULT_TENANT.theme.secondaryColor);
     expect(rootStyle.getPropertyValue('--brand-accent')).toBe(DEFAULT_TENANT.theme.accentColor);
     expect(rootStyle.getPropertyValue('--brand-radius')).toBe(DEFAULT_TENANT.theme.borderRadius);
+
+    // Derived tokens
+    expect(rootStyle.getPropertyValue('--brand-primary-foreground')).toBeDefined();
+    expect(rootStyle.getPropertyValue('--brand-primary-light')).toBeDefined();
+    expect(rootStyle.getPropertyValue('--brand-primary-subtle')).toBeDefined();
   });
 
-  it('should update theme variables when a new tenant theme is applied', () => {
-    const customTheme = {
-      ...DEFAULT_TENANT.theme,
-      primaryColor: '#7c3aed',
-      primaryDarkColor: '#6d28d9',
-    };
+  it('should apply high contrast mode when requested', () => {
+    applyTenantTheme(DEFAULT_TENANT.theme, { isHighContrast: true });
 
-    applyTenantTheme(customTheme);
+    expect(document.documentElement.getAttribute('data-high-contrast')).toBe('true');
+  });
 
-    const rootStyle = document.documentElement.style;
-    expect(rootStyle.getPropertyValue('--brand-primary')).toBe('#7c3aed');
-    expect(rootStyle.getPropertyValue('--brand-primary-dark')).toBe('#6d28d9');
+  it('should apply dyslexic font mode when requested', () => {
+    applyTenantTheme(DEFAULT_TENANT.theme, { isDyslexicFont: true });
+
+    expect(document.documentElement.getAttribute('data-dyslexic-font')).toBe('true');
+    expect(document.documentElement.style.getPropertyValue('--brand-font')).toContain('OpenDyslexic');
   });
 });

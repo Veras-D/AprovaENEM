@@ -8,6 +8,9 @@ export default {
         brand: {
           primary: 'var(--brand-primary, #0284c7)',
           'primary-dark': 'var(--brand-primary-dark, #0369a1)',
+          'primary-light': 'var(--brand-primary-light, #38bdf8)',
+          'primary-subtle': 'var(--brand-primary-subtle, #f0f9ff)',
+          'primary-foreground': 'var(--brand-primary-foreground, #ffffff)',
           secondary: 'var(--brand-secondary, #0f172a)',
           accent: 'var(--brand-accent, #f59e0b)',
           surface: 'var(--brand-surface, #ffffff)',

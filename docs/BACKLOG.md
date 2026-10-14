@@ -54,7 +54,7 @@ gantt
 
     section JAM 2 - Front-end (Sprint 4)
     React 18 TypeScript Setup (S4-01)                    :done, s4_1, 2026-10-14, 1d
-    Tailwind Theming Engine (S4-02)                      :s4_1b, after s4_1, 1d
+    Tailwind Theming Engine (S4-02)                      :done, s4_1b, 2026-10-14, 1d
     TanStack Query and Zustand State (S4-03, S4-04)      :s4_2, after s4_1b, 3d
     KaTeX Formula Engine and Mobile Shell (S4-05, S4-06) :s4_3, after s4_2, 3d
     Accessibility Baseline and Terms Modal (S4-07, S4-08):s4_4, after s4_3, 2d
@@ -371,7 +371,7 @@ flowchart TD
 | Task ID | Work Item & Title | Priority | Estimation | Status | Acceptance Criteria |
 | :--- | :--- | :---: | :---: | :---: | :--- |
 | **S4-01** | **React 18 + TypeScript + Vite Multi-Tenant Setup** | `P0` | 5 pts | **DONE ✅** | Strict TypeScript configuration (`strict: true`, zero `any`), ESLint (`--max-warnings 0`), fast Vite 5 HMR, and multi-tenant package architecture in `frontend/`. Verified with 8 Vitest test suites (23 unit tests passing, 0 failures, 94.75% line coverage) and optimized production bundle (`vendor`, `query`, `state`). |
-| **S4-02** | **Tailwind CSS White-Label Dynamic Theming & Token Engine** | `P0` | 5 pts | `PLANNED 📅` | Tokenized CSS Custom Properties (`--brand-primary`, `--brand-secondary`, `--brand-accent`, `--brand-surface`, typography, border radius), dynamic runtime theme hydration (`applyTenantTheme`), dynamic logo/favicon swaps, and dark mode design tokens preserving tenant brand palette with zero client recompilation. |
+| **S4-02** | **Tailwind CSS White-Label Dynamic Theming & Token Engine** | `P0` | 5 pts | **DONE ✅** | Tokenized CSS Custom Properties (`--brand-primary`, `--brand-primary-foreground`, `--brand-primary-light`, `--brand-secondary`, `--brand-accent`, `--brand-surface`, border radius, typography), dynamic runtime theme hydration (`applyTenantTheme`), dynamic logo/favicon and metadata updates (`updateDocumentMetadata`), WCAG 2.1 AA luminance & contrast engine (`getContrastRatio`, `getOptimalForeground`), class-based dark mode (`.dark`), high contrast mode (`data-high-contrast`), and dyslexia font mode (`data-dyslexic-font`). Verified with 11 Vitest test suites (41 tests passing, 0 failures, 97.05% line coverage). |
 | **S4-03** | **Multi-Tenant API Client SDK & TanStack Query Integration** | `P0` | 5 pts | `PLANNED 📅` | Typed Axios/Fetch client connecting to `frontend-api` BFF, automated `X-Tenant-Id` header injection from resolved host, preflight caching, and MSW mock integration for offline development. |
 | **S4-04** | **Tenant Context Resolver & Student Session State Machine** | `P0` | 5 pts | `PLANNED 📅` | Zustand store with `TenantContext` resolving subdomains, custom CNAMEs, or `/t/{slug}` paths via `GET /api/v1/tenants/branding`; manages anonymous practice sessions (`X-Session-Id`), registered JWT auth, and seamless progress migration. |
 | **S4-05** | **KaTeX & MathJax Formula Rendering Engine** | `P0` | 5 pts | `PLANNED 📅` | Flawless inline (`$...$`) and block (`$$...$$`) LaTeX rendering for mathematical formulas, physics equations, and chemical notations. |

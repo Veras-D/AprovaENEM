@@ -3,11 +3,12 @@ import { useTenantStore } from '@/stores/useTenantStore';
 import { Card, CardHeader, CardBody, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { Sparkles, CheckCircle2, XCircle, Palette, RefreshCw } from 'lucide-react';
+import { ThemeCustomizer } from '@/components/ui/ThemeCustomizer';
+import { Sparkles, CheckCircle2, XCircle } from 'lucide-react';
 import type { QuestionOptionLetter } from '@/types';
 
 export const PracticeHero: React.FC = () => {
-  const { currentTenant, setTenant, resetToDefault } = useTenantStore();
+  const { currentTenant } = useTenantStore();
   const [selectedOption, setSelectedOption] = useState<QuestionOptionLetter | null>(null);
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
 
@@ -47,75 +48,24 @@ export const PracticeHero: React.FC = () => {
     setIsSubmitted(false);
   };
 
-  // Demo: Switch between White-Label tenant brand themes
-  const switchTenantDemo = (brandName: string, primaryColor: string) => {
-    setTenant({
-      ...currentTenant,
-      name: brandName,
-      theme: {
-        ...currentTenant.theme,
-        primaryColor,
-        primaryDarkColor: primaryColor,
-      },
-    });
-  };
-
   return (
-    <div className="space-y-8">
-      {/* Hero Introduction & White-Label Demo Bar */}
-      <section className="bg-gradient-to-r from-brand-primary/10 via-brand-surface to-brand-primary/5 rounded-brand p-6 sm:p-8 border border-brand-primary/20">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-brand-primary text-white">
-              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-              White-Label B2B Educational Platform
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-              Prática Inteligente com Alinhamento INEP e Tutor IA Socrático
-            </h1>
-            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl">
-              Arquitetura full-stack de alta acessibilidade com componentização rigorosa, consumo exclusivo via Gateway BFF (<code className="text-xs bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded">frontend-api</code>), e suporte a multi-tenancy customizável.
-            </p>
-          </div>
+    <div className="space-y-6">
+      {/* Dynamic White-Label & Accessibility Customizer */}
+      <ThemeCustomizer />
 
-          {/* Dynamic Theme Switcher demonstration widget */}
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-brand border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-2">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-              <Palette className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
-              Teste de Customização B2B (Tokens em Tempo Real):
-            </span>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => switchTenantDemo('AprovaENEM Padrão', '#0284c7')}
-                className="px-2.5 py-1 text-xs rounded-brand bg-sky-600 text-white font-medium hover:bg-sky-700 transition-colors"
-              >
-                Padrão (Azul)
-              </button>
-              <button
-                type="button"
-                onClick={() => switchTenantDemo('Colégio Bandeirantes', '#15803d')}
-                className="px-2.5 py-1 text-xs rounded-brand bg-emerald-700 text-white font-medium hover:bg-emerald-800 transition-colors"
-              >
-                Escola A (Verde)
-              </button>
-              <button
-                type="button"
-                onClick={() => switchTenantDemo('Secretaria Estadual de Educação', '#7c3aed')}
-                className="px-2.5 py-1 text-xs rounded-brand bg-violet-700 text-white font-medium hover:bg-violet-800 transition-colors"
-              >
-                Rede B (Roxo)
-              </button>
-              <button
-                type="button"
-                onClick={resetToDefault}
-                className="px-2 py-1 text-xs rounded-brand border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                title="Restaurar Padrão"
-              >
-                <RefreshCw className="h-3 w-3" aria-hidden="true" />
-              </button>
-            </div>
+      {/* Hero Introduction */}
+      <section className="bg-gradient-to-r from-brand-primary/10 via-brand-surface to-brand-primary/5 rounded-brand p-6 sm:p-8 border border-brand-primary/20">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-brand-primary text-brand-primary-foreground shadow-sm">
+            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+            White-Label B2B Educational Platform &bull; {currentTenant.name}
           </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            Prática Inteligente com Alinhamento INEP e Tutor IA Socrático
+          </h1>
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-3xl">
+            {currentTenant.tagline}. Arquitetura full-stack de alta acessibilidade com componentização rigorosa, consumo exclusivo via Gateway BFF (<code className="text-xs bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded">frontend-api</code>), e suporte a multi-tenancy customizável.
+          </p>
         </div>
       </section>
 

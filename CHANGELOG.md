@@ -12,7 +12,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - **BFF API Client SDK**: Implemented typed Axios client strictly targeting `frontend-api` BFF via `/api/v1` with automated `Authorization: Bearer`, `X-Session-Id`, and `X-Tenant-Id` header injection.
   - **State Management**: Created Zustand stores for white-label tenant context (`useTenantStore`), student authentication (`useAuthStore`), and anonymous practice sessions (`useSessionStore`).
   - **Component Library & Layout**: Built accessible UI primitives (`Button`, `Card`, `Badge`), responsive `RootLayout` with mobile navigation and LGPD compliance disclosures, and interactive `PracticeHero` demonstrating live multi-tenant theme switching.
-  - **Testing & Verification**: Created 8 Vitest unit test suites covering components, stores, and API client (23 tests passing, 0 failures, 94.75% line coverage exceeding $\ge 80\%$ threshold), and verified optimized production Vite bundle.
+- feat(theming): Implemented Tailwind CSS White-Label Dynamic Theming & Token Engine ([`TASK-S4-02`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/BACKLOG.md#task-s4-02)):
+  - **Dynamic Theme Hydration**: Implemented CSS Custom Properties runtime token engine (`applyTenantTheme`) injecting `--brand-primary`, `--brand-primary-foreground`, `--brand-primary-light`, `--brand-primary-subtle`, `--brand-secondary`, `--brand-accent`, `--brand-surface`, and `--brand-radius` with zero client recompilation.
+  - **WCAG 2.1 AA Contrast Engine**: Created mathematical color luminance and contrast engine (`color-contrast.ts`) computing exact contrast ratios (1:1 to 21:1) and automatically resolving optimal foreground text (`getOptimalForeground`) to guarantee compliance ($> 4.5:1$ for body text, $> 3:1$ for large elements).
+  - **Dynamic Metadata & Favicon Swapper**: Implemented `updateDocumentMetadata` updating `<title>`, `<link rel="icon">`, `<meta name="theme-color">`, and `<meta name="description">` on tenant switches.
+  - **Accessibility Modes**: Added support for class-based Dark Mode (`.dark`), High Contrast Mode (`data-high-contrast`), and OpenDyslexic Typography Mode (`data-dyslexic-font`) with custom line/word spacing rules.
+  - **Interactive Customizer UI**: Built `<ThemeCustomizer />` component with live contrast ratio badge, tenant presets (AprovaENEM, Colégio Bandeirantes, SEDUC-SP, Instituto Federal, Colégio Positivo), and accessible toggle controls.
+  - **Testing & Verification**: Created 3 new test suites (`color-contrast.test.ts`, `metadata-updater.test.ts`, `ThemeCustomizer.test.tsx`), achieving 41 tests passing (100% green) and 97.05% test line coverage.
 
 ## [0.4.0] - 2026-10-07
 ### 🏢 Strategic & Architecture Evolution (White-Label Multi-Tenant B2B Engine)
