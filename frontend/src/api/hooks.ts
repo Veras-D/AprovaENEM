@@ -4,11 +4,15 @@ import { examService } from './services/exam.service';
 import { tutorService } from './services/tutor.service';
 import { gamificationService } from './services/gamification.service';
 import { tenantService } from './services/tenant.service';
+import { authService } from './services/auth.service';
+import { useAuthStore } from '@/stores/useAuthStore';
 import type {
   GetQuestionsParams,
   StartSessionRequest,
   SubmitAnswerRequest,
   SocraticChatRequest,
+  AuthLoginRequest,
+  AuthRegisterRequest,
 } from './types';
 
 // ============================================================================
@@ -145,3 +149,47 @@ export function useTenantBrandingQuery(slug?: string) {
     staleTime: 1000 * 60 * 30, // 30 minutes
   });
 }
+
+// ============================================================================
+// 5. Authentication & LGPD Hooks
+// ============================================================================
+
+export function useLoginMutation() {
+  const queryClient = useQueryClient();
+  const setAuth = useAuthStore((s) => s.setAuth);
+
+  return useMutation({
+    mutationFn: (req: AuthLoginRequest) => authService.login(req),
+    onSuccess: (data) => {
+      setAuth(data.token, data.user);
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gamification.profile });
+    },
+  });
+}
+
+export function useRegisterMutation() {
+  const queryClient = useQueryClient();
+  const setAuth = useAuthStore((s) => s.setAuth);
+
+  return useMutation({
+    mutationFn: (req: AuthRegisterRequest) => authService.register(req),
+    onSuccess: (data) => {
+      setAuth(data.token, data.user);
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gamification.profile });
+    },
+  });
+}
+
+export function useCurrentUserQuery() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  return useQuery({
+    queryKey: queryKeys.auth.me,
+    queryFn: () => authService.getCurrentUser(),
+    enabled: isAuthenticated,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+

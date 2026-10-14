@@ -10,7 +10,9 @@ import type {
   GamificationProfileDto,
   LeaderboardResponseDto,
   TenantBrandingDto,
+  AuthLoginResponse,
 } from '../types';
+import type { UserProfile } from '@/types';
 
 export const MOCK_QUESTIONS: readonly QuestionItemDto[] = [
   {
@@ -189,3 +191,26 @@ export const MOCK_TENANT_BRANDING: TenantBrandingDto = {
     institutionalAnalyticsEnabled: false,
   },
 };
+
+export const MOCK_USER_PROFILE: UserProfile = {
+  id: 'usr-123',
+  email: 'lucas.silva@escola.gov.br',
+  name: 'Lucas Silva',
+  roles: ['ROLE_STUDENT'],
+  isEmailVerified: true,
+  createdAt: '2026-09-01T10:00:00Z',
+};
+
+export const MOCK_AUTH_LOGIN_RESPONSE: AuthLoginResponse = {
+  token: 'mock-jwt-bearer-token-12345',
+  expiresInSeconds: 86400,
+  user: {
+    id: 'usr-123',
+    email: 'lucas.silva@escola.gov.br',
+    name: 'Lucas Silva',
+    roles: ['ROLE_STUDENT'],
+    isEmailVerified: true,
+    createdAt: '2026-09-01T10:00:00Z',
+  },
+};
+

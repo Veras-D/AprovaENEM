@@ -19,6 +19,8 @@ export interface MobileDrawerProps {
   readonly onClose: () => void;
   readonly activeSection?: string;
   readonly onNavigate?: (section: string) => void;
+  readonly onOpenAuthModal?: () => void;
+  readonly onOpenLegalModal?: () => void;
 }
 
 export const MobileDrawer: React.FC<MobileDrawerProps> = ({
@@ -26,6 +28,8 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
   onClose,
   activeSection = 'practice',
   onNavigate,
+  onOpenAuthModal,
+  onOpenLegalModal,
 }) => {
   const { currentTenant, isDarkMode, toggleDarkMode, isHighContrast, toggleHighContrast } =
     useTenantStore();
@@ -139,6 +143,16 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Crie sua conta para salvar seu XP e progresso.
               </p>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenAuthModal?.();
+                }}
+                className="w-full mt-2 py-1.5 px-3 rounded-brand bg-brand-primary text-white text-xs font-semibold hover:bg-brand-primary-dark transition-colors shadow-sm"
+              >
+                Criar Conta ou Entrar
+              </button>
             </div>
           )}
         </div>
@@ -205,10 +219,20 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
         </div>
 
         {/* LGPD Compliance Footer */}
-        <div className="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-2">
-          <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
-          <span>LGPD Art. 18 &bull; Dados protegidos</span>
-        </div>
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+            onOpenLegalModal?.();
+          }}
+          className="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 hover:text-brand-primary dark:hover:text-brand-primary flex items-center justify-between w-full text-left transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
+            <span>LGPD Art. 18 &bull; Dados protegidos</span>
+          </div>
+          <span className="text-[10px] underline font-medium">Ver Termos</span>
+        </button>
       </div>
     </div>
   );

@@ -110,4 +110,38 @@ describe('MobileDrawer component', () => {
     render(<MobileDrawer isOpen={true} onClose={vi.fn()} />);
     expect(screen.getByText(/LGPD Art. 18/i)).toBeInTheDocument();
   });
+
+  it('should call onOpenAuthModal and onClose when clicking Criar Conta ou Entrar', () => {
+    const handleClose = vi.fn();
+    const handleOpenAuth = vi.fn();
+    render(
+      <MobileDrawer
+        isOpen={true}
+        onClose={handleClose}
+        onOpenAuthModal={handleOpenAuth}
+      />
+    );
+
+    const authBtn = screen.getByRole('button', { name: /Criar Conta ou Entrar/i });
+    fireEvent.click(authBtn);
+    expect(handleClose).toHaveBeenCalledTimes(1);
+    expect(handleOpenAuth).toHaveBeenCalledTimes(1);
+  });
+
+  it('should call onOpenLegalModal and onClose when clicking LGPD footer', () => {
+    const handleClose = vi.fn();
+    const handleOpenLegal = vi.fn();
+    render(
+      <MobileDrawer
+        isOpen={true}
+        onClose={handleClose}
+        onOpenLegalModal={handleOpenLegal}
+      />
+    );
+
+    const legalBtn = screen.getByRole('button', { name: /LGPD Art\. 18/i });
+    fireEvent.click(legalBtn);
+    expect(handleClose).toHaveBeenCalledTimes(1);
+    expect(handleOpenLegal).toHaveBeenCalledTimes(1);
+  });
 });

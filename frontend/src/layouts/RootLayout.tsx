@@ -11,6 +11,8 @@ import {
   VLibras,
   AccessibilityToolbar,
 } from '@/components/accessibility';
+import { RegisterModal } from '@/components/auth';
+import { TermsAndPrivacyModal } from '@/components/legal';
 import { ShieldCheck } from 'lucide-react';
 
 export interface RootLayoutProps {
@@ -21,6 +23,22 @@ export const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
   const currentTenant = useTenantStore((s) => s.currentTenant);
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
   const [activeSection, setActiveSection] = useState<string>('practice');
+
+  // Auth & LGPD Legal Modals State
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [authModalMode, setAuthModalMode] = useState<'register' | 'login'>('login');
+  const [isLegalModalOpen, setIsLegalModalOpen] = useState<boolean>(false);
+  const [legalModalTab, setLegalModalTab] = useState<'terms' | 'privacy'>('terms');
+
+  const openAuthModal = (mode: 'register' | 'login' = 'login') => {
+    setAuthModalMode(mode);
+    setIsAuthModalOpen(true);
+  };
+
+  const openLegalModal = (tab: 'terms' | 'privacy' = 'terms') => {
+    setLegalModalTab(tab);
+    setIsLegalModalOpen(true);
+  };
 
   const handleNavigate = (section: string) => {
     setActiveSection(section);
@@ -48,6 +66,7 @@ export const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
         onOpenDrawer={() => setIsDrawerOpen(true)}
         activeSection={activeSection}
         onNavigate={handleNavigate}
+        onOpenAuthModal={() => openAuthModal('login')}
       />
 
       {/* Mobile Slide-Over Drawer Navigation */}
@@ -56,6 +75,8 @@ export const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
         onClose={() => setIsDrawerOpen(false)}
         activeSection={activeSection}
         onNavigate={handleNavigate}
+        onOpenAuthModal={() => openAuthModal('register')}
+        onOpenLegalModal={() => openLegalModal('privacy')}
       />
 
       {/* Main Page Content (with bottom padding for sticky mobile nav) */}
@@ -83,7 +104,14 @@ export const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
             <span>
-              Privacidade LGPD (Lei nº 13.709/2018) &bull; Dados protegidos com minimização rigorosa
+              Privacidade LGPD (Lei nº 13.709/2018) &bull;{' '}
+              <button
+                type="button"
+                onClick={() => openLegalModal('terms')}
+                className="hover:text-brand-primary underline transition-colors focus:outline-none focus:ring-1 focus:ring-brand-primary rounded"
+              >
+                Termos de Uso e Privacidade
+              </button>
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
@@ -91,6 +119,20 @@ export const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
           </p>
         </div>
       </footer>
+
+      {/* Student Authentication & Registration Modal */}
+      <RegisterModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode={authModalMode}
+      />
+
+      {/* Standalone Terms of Use and LGPD Privacy Modal */}
+      <TermsAndPrivacyModal
+        isOpen={isLegalModalOpen}
+        onClose={() => setIsLegalModalOpen(false)}
+        initialTab={legalModalTab}
+      />
     </div>
   );
 };

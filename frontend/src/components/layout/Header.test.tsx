@@ -96,4 +96,13 @@ describe('Header component', () => {
     expect(screen.getByText('Maria Silva')).toBeInTheDocument();
     expect(screen.getByText('M')).toBeInTheDocument();
   });
+
+  it('should call onOpenAuthModal when clicking Entrar', () => {
+    const handleOpenAuth = vi.fn();
+    render(<Header onOpenDrawer={vi.fn()} onOpenAuthModal={handleOpenAuth} />);
+
+    const entrarBtn = screen.getByRole('button', { name: /Entrar/i });
+    fireEvent.click(entrarBtn);
+    expect(handleOpenAuth).toHaveBeenCalledTimes(1);
+  });
 });

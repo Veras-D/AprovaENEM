@@ -58,6 +58,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - **Keyboard Bypass Blocks (WCAG 2.1 SC 2.4.1)**: Built accessible skip link `<SkipToContent />` bypassing header navigation directly to `#main-content`.
   - **State Management & Persistence**: Implemented `useAccessibilityStore` Zustand store with automatic DOM data-attribute hydration and 100% localStorage preference persistence.
   - **Testing & Verification**: 29 Vitest test suites (171 tests passing, 0 failures, 96.85% line coverage, 99.26% accessibility coverage), 0 ESLint warnings, and clean Vite production build.
+- feat(auth): Implemented Student Registration Terms of Use & LGPD Consent Modal ([`TASK-S4-08`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/BACKLOG.md#task-s4-08)):
+  - **Interactive Terms of Use & LGPD Modal**: Built `<TermsAndPrivacyModal />` (`role="dialog"`, `aria-modal="true"`, focus trapping, `Escape` key close) featuring structured tabs for *Termos de Uso* (educational equity, student code of conduct, INEP public domain questions, white-label partner networks) and *Política de Privacidade & LGPD* (Lei nº 13.709/2018).
+  - **Data Minimization Guarantee (Art. 6º, III)**: Prominently disclosed privacy-by-design policy requiring zero sensitive documents (no CPF, no RG, no phone number, no financial data) and guaranteeing zero commercial selling of student educational data to third-party ad networks or commercial prep courses (Art. 14 adolescent protection).
+  - **Self-Service LGPD Data Rights (Art. 18)**: Clarified self-service data portability (`GET /api/v1/auth/export`) and 1-click permanent account erasure (`DELETE /api/v1/auth/me`).
+  - **Student Registration & Authentication Modal**: Built `<RegisterModal />` supporting mode switching (Register / Login), school type dropdown (`PUBLIC_SCHOOL`, `PRIVATE_SCHOLARSHIP`, `PRIVATE_REGULAR`), target ENEM degree, password visibility toggling, and input validation.
+  - **Mandatory LGPD Consent Opt-in Checkbox**: Engineered accessible, mandatory consent checkbox enforcing explicit agreement with Terms of Use and Privacy Policy before registration submission can proceed, with integrated in-modal links opening legal documents without form state loss.
+  - **Layout & Store Integration**: Wired registration and authentication triggers into `<Header />`, mobile `<MobileDrawer />`, and `<RootLayout />` footer legal links, enabling automatic anonymous session progress migration (`useSessionStore.migrateAnonymousProgress`) upon registration.
+  - **TanStack Query Hooks**: Added `useLoginMutation`, `useRegisterMutation`, and `useCurrentUserQuery` to `api/hooks.ts`.
+  - **Testing & Verification**: 31 Vitest test suites (197 tests passing, 0 failures, 95.83% line coverage), 0 ESLint warnings, and clean Vite production build. Sprint 4 completed at 100%.
+
 
 ## [0.4.0] - 2026-10-07
 ### 🏢 Strategic & Architecture Evolution (White-Label Multi-Tenant B2B Engine)

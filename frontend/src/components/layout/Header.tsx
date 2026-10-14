@@ -9,6 +9,7 @@ export interface HeaderProps {
   readonly onOpenDrawer: () => void;
   readonly activeSection?: string;
   readonly onNavigate?: (section: string) => void;
+  readonly onOpenAuthModal?: () => void;
 }
 
 /**
@@ -20,6 +21,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenDrawer,
   activeSection = 'practice',
   onNavigate,
+  onOpenAuthModal,
 }) => {
   const { currentTenant, isDarkMode, toggleDarkMode } = useTenantStore();
   const { user, isAuthenticated } = useAuthStore();
@@ -124,7 +126,12 @@ export const Header: React.FC<HeaderProps> = ({
                   {anonymousSessionId.slice(0, 10)}...
                 </code>
               </span>
-              <Button size="sm" variant="outline" className="text-xs px-2.5 sm:px-3">
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs px-2.5 sm:px-3"
+                onClick={onOpenAuthModal}
+              >
                 <User className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
                 Entrar
               </Button>

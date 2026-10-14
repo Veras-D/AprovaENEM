@@ -1,0 +1,328 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { X, ShieldCheck, FileText, CheckCircle2, Lock, Download, Trash2, HeartHandshake } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+
+export interface TermsAndPrivacyModalProps {
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
+  readonly initialTab?: 'terms' | 'privacy';
+}
+
+export const TermsAndPrivacyModal: React.FC<TermsAndPrivacyModalProps> = ({
+  isOpen,
+  onClose,
+  initialTab = 'terms',
+}) => {
+  const [activeTab, setActiveTab] = useState<'terms' | 'privacy'>(initialTab);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+
+  // Sync initial tab if prop changes when opening
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab(initialTab);
+    }
+  }, [isOpen, initialTab]);
+
+  // Accessibility: Focus trap & Escape key listener
+  useEffect(() => {
+    if (!isOpen) return;
+
+    previouslyFocusedElement.current = document.activeElement as HTMLElement;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        if (!modalRef.current) return;
+        const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey && document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+
+    // Focus initial element
+    const timer = setTimeout(() => {
+      const closeBtn = modalRef.current?.querySelector<HTMLElement>('button[data-autofocus="true"]');
+      closeBtn?.focus();
+    }, 50);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+      clearTimeout(timer);
+      previouslyFocusedElement.current?.focus();
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="legal-modal-title"
+    >
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Modal Dialog Card */}
+      <div
+        ref={modalRef}
+        className="relative w-full max-w-2xl max-h-[90vh] bg-white dark:bg-slate-900 rounded-brand shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col z-10 animate-in fade-in zoom-in-95 duration-200"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-brand bg-brand-primary/10 text-brand-primary">
+              <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <div>
+              <h2
+                id="legal-modal-title"
+                className="text-base sm:text-lg font-bold text-slate-900 dark:text-white"
+              >
+                Termos de Uso e Privacidade LGPD
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                AprovaENEM &bull; Lei Geral de Proteção de Dados (Lei nº 13.709/2018)
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            data-autofocus="true"
+            onClick={onClose}
+            className="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+            aria-label="Fechar termos e privacidade"
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+
+        {/* Tab Navigation */}
+        <div
+          role="tablist"
+          aria-label="Documentos legais"
+          className="flex border-b border-slate-200 dark:border-slate-800 px-4 sm:px-5 shrink-0 bg-slate-50/50 dark:bg-slate-900/50"
+        >
+          <button
+            id="tab-terms"
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'terms'}
+            aria-controls="panel-terms"
+            onClick={() => setActiveTab('terms')}
+            className={`flex items-center gap-2 py-3 px-3 text-xs sm:text-sm font-semibold border-b-2 transition-all ${
+              activeTab === 'terms'
+                ? 'border-brand-primary text-brand-primary'
+                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
+            }`}
+          >
+            <FileText className="h-4 w-4" aria-hidden="true" />
+            Termos de Uso
+          </button>
+
+          <button
+            id="tab-privacy"
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'privacy'}
+            aria-controls="panel-privacy"
+            onClick={() => setActiveTab('privacy')}
+            className={`flex items-center gap-2 py-3 px-3 text-xs sm:text-sm font-semibold border-b-2 transition-all ${
+              activeTab === 'privacy'
+                ? 'border-brand-primary text-brand-primary'
+                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
+            }`}
+          >
+            <Lock className="h-4 w-4" aria-hidden="true" />
+            Política de Privacidade & LGPD
+          </button>
+        </div>
+
+        {/* Scrollable Content Container */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+          {/* TAB 1: TERMOS DE USO */}
+          {activeTab === 'terms' && (
+            <div
+              id="panel-terms"
+              role="tabpanel"
+              aria-labelledby="tab-terms"
+              className="space-y-5 animate-in fade-in duration-150"
+            >
+              <section className="space-y-2">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <HeartHandshake className="h-4 w-4 text-brand-primary" aria-hidden="true" />
+                  1. Finalidade Educacional e Princípio da Equidade
+                </h3>
+                <p>
+                  A plataforma <strong>AprovaENEM</strong> tem como missão exclusiva democratizar a preparação para o Exame Nacional do Ensino Médio (ENEM) e o Sistema de Seleção Unificada (SISU). Nosso compromisso alinha-se aos Objetivos de Desenvolvimento Sustentável da ONU (ODS 4 — Educação de Qualidade e ODS 10 — Redução das Desigualdades). O acesso à biblioteca pública de questões é universal e gratuito.
+                </p>
+              </section>
+
+              <section className="space-y-2">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  2. Conduta do Estudante e Uso Ético
+                </h3>
+                <p>
+                  Ao utilizar a plataforma, você se compromete a:
+                </p>
+                <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                  <li>Não realizar scraping, ataques de negação de serviço (DDoS) ou automação desautorizada de requisições.</li>
+                  <li>Utilizar a tutoria com Inteligência Artificial Socrática de maneira colaborativa e formativa, com foco no aprendizado genuíno e raciocínio crítico.</li>
+                  <li>Manter um ambiente de respeito mútuo nas ligas de ranking e não utilizar apelidos ofensivos, preconceituosos ou ilícitos.</li>
+                </ul>
+              </section>
+
+              <section className="space-y-2">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  3. Acervo de Questões e Propriedade Intelectual
+                </h3>
+                <p>
+                  Os enunciados e figuras das provas históricas do ENEM pertencem ao domínio público e ao acervo oficial do Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira (INEP). As resoluções comentadas passo a passo, algoritmos de cálculo TRI, análises de distratores pedagógicos e software da plataforma são disponibilizados sob licença educacional aberta da AprovaENEM e parceiros.
+                </p>
+              </section>
+
+              <section className="space-y-2">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  4. Redes e Escolas Parceiras (White-Label)
+                </h3>
+                <p>
+                  Instituições de ensino básico e secretarias de educação conveniadas podem adotar a identidade visual white-label da AprovaENEM para suas turmas. Todas as diretrizes éticas, proteção à privacidade e gratuidade para o aluno aplicam-se integralmente a qualquer domínio institucional parceiro.
+                </p>
+              </section>
+            </div>
+          )}
+
+          {/* TAB 2: POLÍTICA DE PRIVACIDADE & LGPD */}
+          {activeTab === 'privacy' && (
+            <div
+              id="panel-privacy"
+              role="tabpanel"
+              aria-labelledby="tab-privacy"
+              className="space-y-5 animate-in fade-in duration-150"
+            >
+              {/* Highlight Banner: Data Minimization */}
+              <div className="p-3.5 sm:p-4 rounded-brand bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30 text-emerald-900 dark:text-emerald-100 flex items-start gap-3">
+                <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" aria-hidden="true" />
+                <div className="text-xs sm:text-sm">
+                  <p className="font-bold">Minimização Extrema de Dados (LGPD Art. 6º, III)</p>
+                  <p className="text-emerald-800 dark:text-emerald-200 mt-1">
+                    Não solicitamos CPF, RG, número de telefone, cartão de crédito ou endereço. Exigimos unicamente nome, e-mail e dados acadêmicos voluntários para salvar seu histórico e calcular sua nota TRI.
+                  </p>
+                </div>
+              </div>
+
+              <section className="space-y-2">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  1. Proteção Integral do Adolescente (Art. 14 da LGPD)
+                </h3>
+                <p>
+                  Todo tratamento de dados na AprovaENEM é realizado estritamente no <strong>melhor interesse do estudante adolescente</strong>.
+                </p>
+                <div className="p-3 rounded-brand bg-slate-100 dark:bg-slate-800 text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-200 border-l-4 border-brand-primary">
+                  <strong>Compromisso de Não-Comercialização:</strong> Jamais vendemos, alugamos ou repassamos seus dados ou histórico de estudos a cursos pré-vestibulares comerciais, faculdades privadas ou redes de publicidade direcionada.
+                </div>
+              </section>
+
+              <section className="space-y-3">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  2. Direitos do Titular de Dados (Artigo 18 da LGPD)
+                </h3>
+                <p>
+                  Você mantém o controle total e soberano sobre os seus dados pessoais, assegurados pelas seguintes ferramentas de auto-atendimento na plataforma:
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
+                  <div className="p-3 rounded-brand border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 space-y-1">
+                    <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
+                      <Download className="h-4 w-4 text-brand-primary" aria-hidden="true" />
+                      Portabilidade (Art. 18, V)
+                    </div>
+                    <p className="text-slate-600 dark:text-slate-300">
+                      Exporte a qualquer momento todos os seus dados cadastrais, XP, ofensivas e diagnósticos em formato JSON aberto (<code className="text-[11px] bg-slate-200 dark:bg-slate-700 px-1 py-0.5 rounded">GET /api/v1/auth/export</code>).
+                    </p>
+                  </div>
+
+                  <div className="p-3 rounded-brand border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 space-y-1">
+                    <div className="flex items-center gap-1.5 font-bold text-rose-600 dark:text-rose-400">
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      Eliminação Definitiva (Art. 18, VI)
+                    </div>
+                    <p className="text-slate-600 dark:text-slate-300">
+                      Exclua sua conta com 1 clique. Todas as suas credenciais, sessões e mensagens de tutoria socrática são expurgadas permanentemente dos nossos servidores.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <section className="space-y-2">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  3. Cookies e Armazenamento Local
+                </h3>
+                <p>
+                  Não usamos cookies de terceiros ou pixels de rastreamento de comportamento publicitário. Utilizamos exclusivamente o <code>localStorage</code> do seu navegador para armazenar informações indispensáveis:
+                </p>
+                <ul className="list-disc pl-5 space-y-1 text-xs text-slate-600 dark:text-slate-300">
+                  <li>Sessão autenticada ou identificador efêmero de simulado anônimo.</li>
+                  <li>Preferências de acessibilidade (escala de fonte, alto contraste, modo dislexia, régua de leitura).</li>
+                  <li>Configurações de tema do parceiro educacional ativo.</li>
+                </ul>
+              </section>
+
+              <section className="space-y-2">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  4. Contato com o Encarregado de Proteção de Dados (DPO)
+                </h3>
+                <p className="text-xs sm:text-sm">
+                  Dúvidas sobre o tratamento de dados pessoais ou solicitações adicionais podem ser encaminhadas diretamente ao nosso Encarregado pelo canal oficial:{' '}
+                  <a
+                    href="mailto:privacidade@aprovaenem.org.br"
+                    className="text-brand-primary underline font-medium hover:opacity-80"
+                  >
+                    privacidade@aprovaenem.org.br
+                  </a>.
+                </p>
+              </section>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 sm:p-5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0 bg-slate-50 dark:bg-slate-900/80">
+          <span className="text-xs text-slate-500 dark:text-slate-400">
+            Última atualização: Outubro de 2026
+          </span>
+          <Button variant="primary" size="sm" onClick={onClose}>
+            Entendido e Fechar
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};

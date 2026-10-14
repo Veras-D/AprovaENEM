@@ -1,5 +1,7 @@
+import React from 'react';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RootLayout } from './RootLayout';
 import { useTenantStore } from '@/stores/useTenantStore';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -7,6 +9,19 @@ import { useSessionStore } from '@/stores/useSessionStore';
 import { DEFAULT_TENANT } from '@/tenants/default';
 
 describe('RootLayout component', () => {
+  let queryClient: QueryClient;
+
+  const renderWithProviders = (ui: React.ReactElement) => {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false, gcTime: 0 },
+        mutations: { retry: false },
+      },
+    });
+
+    return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+  };
+
   beforeEach(() => {
     useTenantStore.setState({
       currentTenant: {
@@ -26,7 +41,7 @@ describe('RootLayout component', () => {
   });
 
   it('should render header, children content, sticky bottom navigation, and footer', () => {
-    render(
+    renderWithProviders(
       <RootLayout>
         <div data-testid="test-content">Conteúdo Principal do Teste</div>
       </RootLayout>
@@ -41,7 +56,7 @@ describe('RootLayout component', () => {
   });
 
   it('should open and close mobile drawer via Header hamburger trigger and close button', () => {
-    render(
+    renderWithProviders(
       <RootLayout>
         <div>Corpo</div>
       </RootLayout>
@@ -58,5 +73,31 @@ describe('RootLayout component', () => {
     fireEvent.click(closeBtn);
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('should open Auth modal when clicking Entrar in header', () => {
+    renderWithProviders(
+      <RootLayout>
+        <div>Corpo</div>
+      </RootLayout>
+    );
+
+    const entrarBtn = screen.getByRole('button', { name: /Entrar/i });
+    fireEvent.click(entrarBtn);
+
+    expect(screen.getByRole('dialog', { name: /Acessar Minha Conta/i })).toBeInTheDocument();
+  });
+
+  it('should open Terms and Privacy modal when clicking footer legal link', () => {
+    renderWithProviders(
+      <RootLayout>
+        <div>Corpo</div>
+      </RootLayout>
+    );
+
+    const legalBtn = screen.getByRole('button', { name: /Termos de Uso e Privacidade/i });
+    fireEvent.click(legalBtn);
+
+    expect(screen.getByRole('dialog', { name: /Termos de Uso e Privacidade LGPD/i })).toBeInTheDocument();
   });
 });

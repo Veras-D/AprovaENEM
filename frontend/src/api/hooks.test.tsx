@@ -16,11 +16,16 @@ import {
   useGamificationProfileQuery,
   useLeaderboardQuery,
   useTenantBrandingQuery,
+  useLoginMutation,
+  useRegisterMutation,
+  useCurrentUserQuery,
 } from './hooks';
 import { examService } from './services/exam.service';
 import { tutorService } from './services/tutor.service';
 import { gamificationService } from './services/gamification.service';
 import { tenantService } from './services/tenant.service';
+import { authService } from './services/auth.service';
+import { useAuthStore } from '@/stores/useAuthStore';
 import {
   MOCK_PAGINATED_QUESTIONS,
   MOCK_QUESTIONS,
@@ -33,6 +38,8 @@ import {
   MOCK_GAMIFICATION_PROFILE,
   MOCK_LEADERBOARD,
   MOCK_TENANT_BRANDING,
+  MOCK_AUTH_LOGIN_RESPONSE,
+  MOCK_USER_PROFILE,
 } from './mocks/mock-data';
 
 describe('TanStack Query Hooks', () => {
@@ -228,5 +235,37 @@ describe('TanStack Query Hooks', () => {
 
     expect(result.current.data).toEqual(MOCK_TENANT_BRANDING);
     expect(tenantService.getTenantBranding).toHaveBeenCalledWith('colegio-bandeirantes');
+  });
+
+  it('useLoginMutation and useRegisterMutation should authenticate and update auth store', async () => {
+    vi.spyOn(authService, 'login').mockResolvedValueOnce(MOCK_AUTH_LOGIN_RESPONSE);
+    vi.spyOn(authService, 'register').mockResolvedValueOnce(MOCK_AUTH_LOGIN_RESPONSE);
+
+    const wrapper = createWrapper();
+
+    const { result: loginResult } = renderHook(() => useLoginMutation(), { wrapper });
+    loginResult.current.mutate({ email: 'lucas@escola.gov.br', password: 'password123' });
+    await waitFor(() => expect(loginResult.current.isSuccess).toBe(true));
+    expect(useAuthStore.getState().token).toBe(MOCK_AUTH_LOGIN_RESPONSE.token);
+    expect(useAuthStore.getState().user?.email).toBe(MOCK_AUTH_LOGIN_RESPONSE.user.email);
+
+    const { result: registerResult } = renderHook(() => useRegisterMutation(), { wrapper });
+    registerResult.current.mutate({
+      fullName: 'Lucas Silva',
+      email: 'lucas@escola.gov.br',
+      password: 'password123',
+    });
+    await waitFor(() => expect(registerResult.current.isSuccess).toBe(true));
+  });
+
+  it('useCurrentUserQuery should fetch profile when authenticated', async () => {
+    useAuthStore.setState({ isAuthenticated: true, token: 'mock-token', user: MOCK_USER_PROFILE });
+    vi.spyOn(authService, 'getCurrentUser').mockResolvedValueOnce(MOCK_USER_PROFILE);
+
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useCurrentUserQuery(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual(MOCK_USER_PROFILE);
   });
 });
