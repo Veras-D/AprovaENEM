@@ -31,6 +31,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - **Student Session State Machine**: Engineered comprehensive Zustand session store (`useSessionStore.ts`) managing explicit session phases (`IDLE` -> `STARTING` -> `ACTIVE` -> `SUBMITTING` -> `REVIEWING` -> `COMPLETED` -> `DIAGNOSTIC`), question navigation (`nextQuestion`, `previousQuestion`, `goToQuestion`), answer evaluation tracking, active timer tracking (`elapsedSeconds`, `questionElapsedSeconds`), and diagnostic report integration.
   - **Seamless Progress Migration**: Automated linking of anonymous practice sessions and attempt records (`anonymousSessionId` in `localStorage`) to authenticated user profiles upon login or registration via `useAuthStore.setAuth()`.
   - **Testing & Verification**: 14 Vitest test suites (95 tests passing, 0 failures), 96.77% overall line coverage (100% on stores/ui), 0 ESLint warnings, and clean Vite production bundle.
+- feat(math): Implemented KaTeX & LaTeX Formula Rendering Engine with Brazilian Currency Protection ([`TASK-S4-05`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/BACKLOG.md#task-s4-05)):
+  - **LaTeX Formula Tokenizer**: Engineered robust regex tokenizer (`latex-parser.ts`) supporting inline formulas (`$...$`, `\(...\)`) and display-mode block formulas (`$$...$$`, `\[...\]`).
+  - **Brazilian Currency Protection**: Implemented defensive lookbehinds preventing Brazilian Real currency amounts (e.g. `R$ 45,00` and `R $ 100,00`) in ENEM question statements and answer keys from being corrupted as LaTeX delimiters.
+  - **Accessible KaTeX UI Components**: Created `<InlineMath />` and `<BlockMath />` components with KaTeX rendering, `role="math"`, semantic `aria-label`, responsive mobile horizontal scrolling (`overflow-x-auto`), and graceful fallback error boundaries.
+  - **Universal Math Renderer**: Implemented `<MathRenderer content={...} />` component parsing mixed text, markdown newlines, and formulas for seamless integration into question statements, options, and explanations.
+  - **Testing & Verification**: 18 Vitest test suites (117 tests passing, 0 failures, 95.81% line coverage), 0 ESLint warnings, and clean Vite production bundle with bundled KaTeX web fonts.
 
 ## [0.4.0] - 2026-10-07
 ### 🏢 Strategic & Architecture Evolution (White-Label Multi-Tenant B2B Engine)
