@@ -3,6 +3,13 @@ import type { TenantConfig } from '@/tenants/types';
 import { DEFAULT_TENANT } from '@/tenants/default';
 import { applyTenantTheme } from '@/tenants/theme-loader';
 import { updateDocumentMetadata } from '@/tenants/metadata-updater';
+import {
+  resolveTenantIdentifier,
+  resolveTenantConfig,
+  type ResolutionTier,
+  type WindowLocationContext,
+  type RemoteTenantFetcher,
+} from '@/tenants/resolver';
 
 interface TenantState {
   readonly currentTenant: TenantConfig;
@@ -10,11 +17,16 @@ interface TenantState {
   readonly isDarkMode: boolean;
   readonly isHighContrast: boolean;
   readonly isDyslexicFont: boolean;
+  readonly resolutionTier: ResolutionTier;
   readonly setTenant: (tenant: TenantConfig) => void;
   readonly resetToDefault: () => void;
   readonly toggleDarkMode: () => void;
   readonly toggleHighContrast: () => void;
   readonly toggleDyslexicFont: () => void;
+  readonly resolveAndApplyTenant: (
+    loc?: WindowLocationContext,
+    fetcher?: RemoteTenantFetcher
+  ) => Promise<TenantConfig>;
 }
 
 export const useTenantStore = create<TenantState>((set, get) => {
@@ -39,6 +51,7 @@ export const useTenantStore = create<TenantState>((set, get) => {
     isDarkMode: false,
     isHighContrast: false,
     isDyslexicFont: false,
+    resolutionTier: 'default',
 
     setTenant: (tenant: TenantConfig) => {
       const { isHighContrast, isDyslexicFont } = get();
@@ -49,7 +62,7 @@ export const useTenantStore = create<TenantState>((set, get) => {
     resetToDefault: () => {
       const { isHighContrast, isDyslexicFont } = get();
       syncTheme(DEFAULT_TENANT, isHighContrast, isDyslexicFont);
-      set({ currentTenant: DEFAULT_TENANT, isLoaded: true });
+      set({ currentTenant: DEFAULT_TENANT, isLoaded: true, resolutionTier: 'default' });
     },
 
     toggleDarkMode: () => {
@@ -76,6 +89,18 @@ export const useTenantStore = create<TenantState>((set, get) => {
       const { currentTenant, isHighContrast } = get();
       syncTheme(currentTenant, isHighContrast, newFont);
       set({ isDyslexicFont: newFont });
+    },
+
+    resolveAndApplyTenant: async (
+      loc?: WindowLocationContext,
+      fetcher?: RemoteTenantFetcher
+    ): Promise<TenantConfig> => {
+      const { tier, identifier } = resolveTenantIdentifier(loc);
+      const tenant = await resolveTenantConfig(identifier, fetcher);
+      const { isHighContrast, isDyslexicFont } = get();
+      syncTheme(tenant, isHighContrast, isDyslexicFont);
+      set({ currentTenant: tenant, isLoaded: true, resolutionTier: tier });
+      return tenant;
     },
   };
 });

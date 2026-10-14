@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { UserProfile } from '@/types';
+import { useSessionStore } from '@/stores/useSessionStore';
 
 interface AuthState {
   readonly token: string | null;
@@ -35,6 +36,7 @@ export const useAuthStore = create<AuthState>((set) => {
     setAuth: (token: string, user: UserProfile) => {
       localStorage.setItem(STORAGE_KEY_TOKEN, token);
       localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
+      useSessionStore.getState().migrateAnonymousProgress(user.id);
       set({ token, user, isAuthenticated: true });
     },
     clearAuth: () => {

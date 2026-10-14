@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useTenantStore } from './useTenantStore';
 import { DEFAULT_TENANT } from '@/tenants/default';
 import type { TenantConfig } from '@/tenants/types';
@@ -9,6 +9,8 @@ describe('useTenantStore', () => {
     document.documentElement.classList.remove('dark');
     document.documentElement.removeAttribute('data-high-contrast');
     document.documentElement.removeAttribute('data-dyslexic-font');
+    localStorage.clear();
+    vi.restoreAllMocks();
   });
 
   it('should initialize with DEFAULT_TENANT', () => {
@@ -18,6 +20,7 @@ describe('useTenantStore', () => {
     expect(state.isDarkMode).toBe(false);
     expect(state.isHighContrast).toBe(false);
     expect(state.isDyslexicFont).toBe(false);
+    expect(state.resolutionTier).toBe('default');
   });
 
   it('should set tenant and update theme variables and document metadata', () => {
@@ -77,5 +80,43 @@ describe('useTenantStore', () => {
 
     useTenantStore.getState().resetToDefault();
     expect(useTenantStore.getState().currentTenant.id).toBe(DEFAULT_TENANT.id);
+    expect(useTenantStore.getState().resolutionTier).toBe('default');
+  });
+
+  it('should resolve and apply tenant from location context', async () => {
+    const tenant = await useTenantStore.getState().resolveAndApplyTenant({
+      search: '?tenant=seduc-sp',
+    });
+
+    expect(tenant.slug).toBe('seduc-sp');
+    const state = useTenantStore.getState();
+    expect(state.currentTenant.slug).toBe('seduc-sp');
+    expect(state.resolutionTier).toBe('query');
+    expect(document.title).toContain('Secretaria da Educação SP');
+  });
+
+  it('should resolve custom tenant with remote fetcher in resolveAndApplyTenant', async () => {
+    const mockRemoteTenant: TenantConfig = {
+      ...DEFAULT_TENANT,
+      id: 'tenant-custom-remote',
+      slug: 'colegio-dynamo',
+      name: 'Colégio Dynamo',
+      theme: {
+        ...DEFAULT_TENANT.theme,
+        primaryColor: '#059669',
+      },
+    };
+
+    const mockFetcher = vi.fn().mockResolvedValue(mockRemoteTenant);
+
+    const tenant = await useTenantStore.getState().resolveAndApplyTenant(
+      { search: '?tenant=colegio-dynamo' },
+      mockFetcher
+    );
+
+    expect(tenant.slug).toBe('colegio-dynamo');
+    expect(useTenantStore.getState().currentTenant.id).toBe('tenant-custom-remote');
+    expect(useTenantStore.getState().resolutionTier).toBe('query');
+    expect(mockFetcher).toHaveBeenCalledWith('colegio-dynamo');
   });
 });
