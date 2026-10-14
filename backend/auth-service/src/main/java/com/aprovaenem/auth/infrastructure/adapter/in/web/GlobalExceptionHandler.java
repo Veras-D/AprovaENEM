@@ -50,7 +50,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
         List<ErrorResponse.ValidationError> validationErrors = ex.getBindingResult().getFieldErrors().stream()
-                .map(this::toValidationError)
+                .map(fieldError -> toValidationError(fieldError))
                 .toList();
 
         ErrorResponse errorResponse = ErrorResponse.builder()

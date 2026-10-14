@@ -44,6 +44,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - **Low-Bandwidth / 3G Optimization Widget**: Built `<BandwidthNotice />` widget detecting `navigator.connection.saveData` and slow 2G/3G connections with accessible status announcements (`role="status"`, `aria-live="polite"`) and user dismissal.
   - **Composed Layout Shell**: Composed `<RootLayout />` with responsive content padding (`pb-20 md:pb-8`) preventing sticky bottom nav overlap on smartphones, integrated LGPD Art. 18 footer, and full test suite.
   - **Testing & Verification**: 23 Vitest test suites (141 tests passing, 0 failures, 96.28% line coverage, 98.03% layout coverage), 0 ESLint warnings, and clean Vite production build.
+- fix(ci): Resolved PMD `UnusedPrivateMethod` false-positive under multi-threaded reactor execution:
+  - Replaced method reference `this::toValidationError` with explicit lambda expression `fieldError -> toValidationError(fieldError)` in `GlobalExceptionHandler` across `exam-service` and `auth-service`, ensuring PMD 7.0.0 parses explicit AST method call nodes without requiring complex type resolution in parallel CI runs.
 
 ## [0.4.0] - 2026-10-07
 ### 🏢 Strategic & Architecture Evolution (White-Label Multi-Tenant B2B Engine)
