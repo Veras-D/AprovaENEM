@@ -103,12 +103,56 @@ export interface CompleteSessionResponse {
   readonly recommendedAction?: string;
 }
 
+export type MasteryLevel = 'MASTERED' | 'ATTENTION_NEEDED' | 'CRITICAL';
+
+export interface DiagnosticRadarAreaDto {
+  readonly knowledgeArea: string; // 'MT' | 'CN' | 'CH' | 'LC'
+  readonly areaName: string;
+  readonly scorePercentage: number;
+  readonly totalQuestions: number;
+  readonly correctQuestions: number;
+  readonly masteryLevel: MasteryLevel;
+  readonly topWeakTopic?: string;
+}
+
 export interface DiagnosticReportDto {
   readonly id: string;
   readonly sessionId: string;
+  readonly studentName?: string;
   readonly scorePercentage: number;
-  readonly topicBreakdown: Readonly<Record<string, TopicAccuracyBreakdown>>;
+  readonly radar?: readonly DiagnosticRadarAreaDto[];
+  readonly topicBreakdown?: Readonly<Record<string, TopicAccuracyBreakdown>>;
   readonly recommendedTopics: readonly string[];
+  readonly generatedAt: string;
+}
+
+export interface InstitutionalAreaBreakdown {
+  readonly subjectArea: string; // 'MATHEMATICS' | 'NATURAL_SCIENCES' | 'HUMANITIES' | 'LANGUAGES'
+  readonly areaName?: string;
+  readonly averageScorePercentage: number;
+  readonly status: MasteryLevel;
+  readonly topWeakTopic: string;
+}
+
+export interface InstitutionalDistractorPitfall {
+  readonly questionId: string;
+  readonly questionTitle?: string;
+  readonly correctOption: string;
+  readonly misleadingOption: string;
+  readonly failedPercentage: number;
+  readonly pedagogicalExplanation: string;
+}
+
+export interface InstitutionalCohortDiagnosticResponse {
+  readonly cohortId: string;
+  readonly cohortName: string;
+  readonly tenantId: string;
+  readonly totalEnrolledStudents: number;
+  readonly activeParticipants: number;
+  readonly participationRate: number;
+  readonly averageScorePercentage: number;
+  readonly areasBreakdown: readonly InstitutionalAreaBreakdown[];
+  readonly commonDistractorPitfalls: readonly InstitutionalDistractorPitfall[];
   readonly generatedAt: string;
 }
 

@@ -43,4 +43,17 @@ describe('App Root Integration Component', () => {
       ).toBeInTheDocument();
     });
   });
+
+  it('switches to DiagnosticDashboard via navigation', async () => {
+    render(<App />);
+
+    const diagNavButtons = screen.getAllByRole('button', { name: /diagnóstico/i });
+    expect(diagNavButtons.length).toBeGreaterThan(0);
+    fireEvent.click(diagNavButtons[0]!);
+
+    await waitFor(() => {
+      expect(screen.getByText('Raio-X Diagnóstico de Habilidades')).toBeInTheDocument();
+    });
+    expect(screen.getByText('Matriz INEP ENEM')).toBeInTheDocument();
+  });
 });

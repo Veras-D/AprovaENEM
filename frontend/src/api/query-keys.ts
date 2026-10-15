@@ -23,6 +23,9 @@ export const queryKeys = {
   tenants: {
     branding: (slug?: string) => ['tenants', 'branding', slug] as const,
   },
+  institutional: {
+    cohortDiagnostics: (cohortId?: string) => ['institutional', 'cohortDiagnostics', cohortId] as const,
+  },
   auth: {
     me: ['auth', 'me'] as const,
   },

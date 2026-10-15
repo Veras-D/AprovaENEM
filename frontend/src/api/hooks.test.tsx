@@ -19,12 +19,14 @@ import {
   useLoginMutation,
   useRegisterMutation,
   useCurrentUserQuery,
+  useCohortDiagnosticsQuery,
 } from './hooks';
 import { examService } from './services/exam.service';
 import { tutorService } from './services/tutor.service';
 import { gamificationService } from './services/gamification.service';
 import { tenantService } from './services/tenant.service';
 import { authService } from './services/auth.service';
+import { institutionalService } from './services/institutional.service';
 import { useAuthStore } from '@/stores/useAuthStore';
 import {
   MOCK_PAGINATED_QUESTIONS,
@@ -40,6 +42,7 @@ import {
   MOCK_TENANT_BRANDING,
   MOCK_AUTH_LOGIN_RESPONSE,
   MOCK_USER_PROFILE,
+  MOCK_COHORT_DIAGNOSTICS,
 } from './mocks/mock-data';
 
 describe('TanStack Query Hooks', () => {
@@ -267,5 +270,16 @@ describe('TanStack Query Hooks', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual(MOCK_USER_PROFILE);
+  });
+
+  it('useCohortDiagnosticsQuery should fetch cohort diagnostic report', async () => {
+    vi.spyOn(institutionalService, 'getCohortDiagnostics').mockResolvedValueOnce(MOCK_COHORT_DIAGNOSTICS);
+
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useCohortDiagnosticsQuery('cohort-med-2026'), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual(MOCK_COHORT_DIAGNOSTICS);
+    expect(result.current.data?.totalEnrolledStudents).toBe(42);
   });
 });

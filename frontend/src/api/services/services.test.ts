@@ -5,6 +5,7 @@ import { tutorService } from './tutor.service';
 import { gamificationService } from './gamification.service';
 import { tenantService } from './tenant.service';
 import { authService } from './auth.service';
+import { institutionalService } from './institutional.service';
 import {
   MOCK_PAGINATED_QUESTIONS,
   MOCK_QUESTIONS,
@@ -17,6 +18,7 @@ import {
   MOCK_GAMIFICATION_PROFILE,
   MOCK_LEADERBOARD,
   MOCK_TENANT_BRANDING,
+  MOCK_COHORT_DIAGNOSTICS,
 } from '../mocks/mock-data';
 
 describe('API Services', () => {
@@ -197,6 +199,21 @@ describe('API Services', () => {
       expect(deleteSpy).toHaveBeenCalledWith('/auth/me');
       expect(user).toEqual(mockAuthResponse.user);
       expect(exported).toEqual({ userId: 'usr-1', exported: true });
+    });
+  });
+
+  describe('institutionalService', () => {
+    it('should query cohort diagnostics by cohortId', async () => {
+      const getSpy = vi
+        .spyOn(apiClient, 'get')
+        .mockResolvedValueOnce({ data: MOCK_COHORT_DIAGNOSTICS });
+
+      const result = await institutionalService.getCohortDiagnostics('cohort-med-2026');
+
+      expect(getSpy).toHaveBeenCalledWith('/institutional/cohorts/cohort-med-2026/diagnostics');
+      expect(result).toEqual(MOCK_COHORT_DIAGNOSTICS);
+      expect(result.participationRate).toBe(92.8);
+      expect(result.areasBreakdown).toHaveLength(4);
     });
   });
 });

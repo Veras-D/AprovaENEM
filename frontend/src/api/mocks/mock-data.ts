@@ -11,6 +11,7 @@ import type {
   LeaderboardResponseDto,
   TenantBrandingDto,
   AuthLoginResponse,
+  InstitutionalCohortDiagnosticResponse,
 } from '../types';
 import type { UserProfile } from '@/types';
 
@@ -233,13 +234,124 @@ export const MOCK_COMPLETE_SESSION: CompleteSessionResponse = {
 export const MOCK_DIAGNOSTIC_REPORT: DiagnosticReportDto = {
   id: 'report-mock-9999',
   sessionId: 'session-mock-1234',
-  scorePercentage: 100.0,
+  studentName: 'Lucas Silva',
+  scorePercentage: 78.5,
+  radar: [
+    {
+      knowledgeArea: 'MT',
+      areaName: 'Matemática e suas Tecnologias',
+      scorePercentage: 85.0,
+      totalQuestions: 20,
+      correctQuestions: 17,
+      masteryLevel: 'MASTERED',
+      topWeakTopic: 'Análise Combinatória',
+    },
+    {
+      knowledgeArea: 'CN',
+      areaName: 'Ciências da Natureza e suas Tecnologias',
+      scorePercentage: 70.0,
+      totalQuestions: 20,
+      correctQuestions: 14,
+      masteryLevel: 'MASTERED',
+      topWeakTopic: 'Circuitos e Eletrodinâmica',
+    },
+    {
+      knowledgeArea: 'CH',
+      areaName: 'Ciências Humanas e suas Tecnologias',
+      scorePercentage: 65.0,
+      totalQuestions: 20,
+      correctQuestions: 13,
+      masteryLevel: 'ATTENTION_NEEDED',
+      topWeakTopic: 'Brasil Colônia e Economia Açucareira',
+    },
+    {
+      knowledgeArea: 'LC',
+      areaName: 'Linguagens, Códigos e suas Tecnologias',
+      scorePercentage: 90.0,
+      totalQuestions: 20,
+      correctQuestions: 18,
+      masteryLevel: 'MASTERED',
+      topWeakTopic: 'Variação Linguística e Figuras de Linguagem',
+    },
+  ],
   topicBreakdown: {
-    'Potência Elétrica': { accuracy: 100.0, total: 1, correct: 1, status: 'MASTERED' },
-    'Cinemática': { accuracy: 100.0, total: 1, correct: 1, status: 'MASTERED' },
+    'Potência Elétrica': { accuracy: 100.0, total: 5, correct: 5, status: 'MASTERED' },
+    'Cinemática': { accuracy: 80.0, total: 5, correct: 4, status: 'MASTERED' },
+    'Cidadania e Direitos': { accuracy: 60.0, total: 5, correct: 3, status: 'ATTENTION_NEEDED' },
+    'Interpretação Textual': { accuracy: 90.0, total: 5, correct: 4, status: 'MASTERED' },
   },
-  recommendedTopics: ['Termodinâmica', 'Funções Quadráticas'],
+  recommendedTopics: ['Brasil Colônia', 'Análise Combinatória', 'Circuitos e Eletrodinâmica'],
   generatedAt: '2026-10-14T10:05:00Z',
+};
+
+export const MOCK_COHORT_DIAGNOSTICS: InstitutionalCohortDiagnosticResponse = {
+  cohortId: 'cohort-med-2026',
+  cohortName: '3º Ano EM - Turma Medicina',
+  tenantId: 'tenant-aprovaenem',
+  totalEnrolledStudents: 42,
+  activeParticipants: 39,
+  participationRate: 92.8,
+  averageScorePercentage: 74.5,
+  areasBreakdown: [
+    {
+      subjectArea: 'MATHEMATICS',
+      areaName: 'Matemática e suas Tecnologias',
+      averageScorePercentage: 68.2,
+      status: 'ATTENTION_NEEDED',
+      topWeakTopic: 'Funções Trigonométricas',
+    },
+    {
+      subjectArea: 'NATURAL_SCIENCES',
+      areaName: 'Ciências da Natureza',
+      averageScorePercentage: 71.0,
+      status: 'MASTERED',
+      topWeakTopic: 'Termodinâmica e Calorimetria',
+    },
+    {
+      subjectArea: 'HUMANITIES',
+      areaName: 'Ciências Humanas',
+      averageScorePercentage: 82.4,
+      status: 'MASTERED',
+      topWeakTopic: 'Cidadania e Direitos no Brasil República',
+    },
+    {
+      subjectArea: 'LANGUAGES',
+      areaName: 'Linguagens e Códigos',
+      averageScorePercentage: 76.5,
+      status: 'MASTERED',
+      topWeakTopic: 'Variação Linguística e Norma Culta',
+    },
+  ],
+  commonDistractorPitfalls: [
+    {
+      questionId: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+      questionTitle: 'ENEM 2023 - Física / Dinâmica Circular',
+      correctOption: 'C',
+      misleadingOption: 'B',
+      failedPercentage: 46.2,
+      pedagogicalExplanation:
+        'Confusão frequente entre aceleração centrípeta e aceleração tangencial decorrente da leitura desatenta do raio de curvatura.',
+    },
+    {
+      questionId: '77777777-8888-9999-aaaa-bbbbbbbbbbbb',
+      questionTitle: 'ENEM 2023 - Matemática / Potência e Consumo',
+      correctOption: 'B',
+      misleadingOption: 'A',
+      failedPercentage: 38.5,
+      pedagogicalExplanation:
+        'Não consideração do fator de 30 dias na multiplicação do consumo diário de energia elétrica em quilowatts-hora.',
+    },
+    {
+      questionId: '99999999-aaaa-bbbb-cccc-dddddddddddd',
+      questionTitle: 'ENEM 2023 - Química / Eletroquímica',
+      correctOption: 'D',
+      misleadingOption: 'E',
+      failedPercentage: 31.0,
+      pedagogicalExplanation:
+        'Inversão dos potenciais de redução padrão na determinação do ânodo e cátodo em pilhas galvânicas.',
+    },
+  ],
+  generatedAt: '2026-10-15T18:00:00Z',
 };
 
 export const MOCK_SOCRATIC_THREAD: SocraticThreadDto = {

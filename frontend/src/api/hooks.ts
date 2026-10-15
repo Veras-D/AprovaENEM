@@ -5,6 +5,7 @@ import { tutorService } from './services/tutor.service';
 import { gamificationService } from './services/gamification.service';
 import { tenantService } from './services/tenant.service';
 import { authService } from './services/auth.service';
+import { institutionalService } from './services/institutional.service';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type {
   GetQuestionsParams,
@@ -190,6 +191,19 @@ export function useCurrentUserQuery() {
     queryFn: () => authService.getCurrentUser(),
     enabled: isAuthenticated,
     staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
+// ============================================================================
+// 6. Institutional Cohort Analytics Hooks
+// ============================================================================
+
+export function useCohortDiagnosticsQuery(cohortId?: string) {
+  return useQuery({
+    queryKey: queryKeys.institutional.cohortDiagnostics(cohortId),
+    queryFn: () => institutionalService.getCohortDiagnostics(cohortId || 'cohort-default'),
+    enabled: Boolean(cohortId),
+    staleTime: 1000 * 60 * 5, // 5 minutes cache
   });
 }
 
