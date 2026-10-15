@@ -69,4 +69,32 @@ describe('GamificationDashboard Component', () => {
 
     expect(handleStartPractice).toHaveBeenCalledTimes(1);
   });
+
+  it('switches to the leaderboard tab when clicking "Ranking da Liga" tab', () => {
+    renderWithProviders(<GamificationDashboard profile={mockProfile} />);
+
+    const leaderboardTab = screen.getByRole('tab', { name: /Ranking da Liga/i });
+    expect(leaderboardTab).toBeInTheDocument();
+    fireEvent.click(leaderboardTab);
+
+    expect(screen.getByRole('heading', { name: /^Liga Ouro$/i })).toBeInTheDocument();
+    expect(screen.getByText(/Reinício do Ranking/i)).toBeInTheDocument();
+  });
+
+  it('switches to leaderboard when clicking the header league badge button', () => {
+    renderWithProviders(<GamificationDashboard profile={mockProfile} />);
+
+    const leagueBadgeBtn = screen.getByRole('button', {
+      name: /Ver classificação da Liga GOLD/i,
+    });
+    fireEvent.click(leagueBadgeBtn);
+
+    expect(screen.getByRole('heading', { name: /^Liga Ouro$/i })).toBeInTheDocument();
+  });
+
+  it('renders leaderboard directly when defaultTab is "leaderboard"', () => {
+    renderWithProviders(<GamificationDashboard profile={mockProfile} defaultTab="leaderboard" />);
+
+    expect(screen.getByRole('heading', { name: /^Liga Ouro$/i })).toBeInTheDocument();
+  });
 });

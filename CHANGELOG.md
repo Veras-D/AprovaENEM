@@ -35,6 +35,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - **Composed Gamification Dashboard**: Implemented `<GamificationDashboard />` orchestrating level progression, daily streak counter, daily study goal progress bar (with completion badge), and badge shelf, with TanStack Query integration (`useGamificationProfileQuery`) and fallback to mock fixture.
   - **Full Platform Integration**: Connected dashboard into `RootLayout` and `App` via navigation (`activeSection === 'leaderboard'`), and wired `<CelebrationOverlay />` into `<PracticeHero />` triggering celebratory confetti upon completing simulated exams with direct navigation to badges and rankings.
   - **Testing & Quality Gate**: 53 Vitest test suites (296 unit tests passing, 0 failures, 96.91% coverage), zero ESLint warnings, zero TypeScript errors, clean Vite production build, and 100% green backend Maven test suite.
+- feat(leaderboard): Implemented Weekly League Leaderboard UI with Promotion Zones & Reset Countdown ([`TASK-S5-05`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/BACKLOG.md#task-s5-05)):
+  - **Ranked Multi-League Tables**: Built `<WeeklyLeagueLeaderboard />` displaying ranked participant tables across all 4 official tiers (`BRONZE`, `SILVER`, `GOLD`, `DIAMOND`) aligned with backend `WeeklyLeaderboard.java`.
+  - **Promotion & Relegation Zone Engine**: Implemented `leaderboard-utils.ts` computing top 20% promotion zone (green indicator `▲`) and bottom 10% relegation zone (rose indicator `▼`), with domain edge cases for Diamond (pinnacle tier, no further promotion) and Bronze (baseline tier, no relegation).
+  - **Live Sunday Reset Countdown**: Created real-time countdown widget calculating remaining time (days, hours, minutes, seconds) to Sunday 23:59:59 BRT league resets, with pulsing live clock icon and accessible time formatting.
+  - **Student Self-Identification & Sticky Footer**: Highlighted current authenticated user with contrasting brand styling (`Lucas Silva (Você)`), rank position indicator, and summary card with quick promotion gap statistics.
+  - **Tabbed League Navigation & Badges**: Provided multi-league tab switcher with tier icons (Shield, Medal, Crown, Sparkles), participant counts, and active tier indicators.
+  - **Gamification Dashboard Integration**: Embedded `<WeeklyLeagueLeaderboard />` inside `<GamificationDashboard />` with accessible tab switching between "Meu Progresso & Conquistas" and "Ranking da Liga", and clickable header league badge shortcuts.
+  - **Testing & Verification**: 55 Vitest test suites (313 unit tests passing, 0 failures, 96.94% line coverage), 0 ESLint warnings, clean Vite production build, and 100% green backend Maven Temurin 21 test suite.
 
 ## [0.5.0] - 2026-10-14
 ### 💻 Frontend & Multi-Tenant Architecture Setup (TASK-S4-01)

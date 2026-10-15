@@ -176,15 +176,24 @@ export interface GamificationProfileDto {
 export interface LeaderboardUserEntryDto {
   readonly rank: number;
   readonly userId: string;
-  readonly studentName: string;
+  readonly studentName?: string;
+  readonly displayName?: string;
   readonly weeklyXp: number;
+  readonly streakDays?: number;
+  readonly promotionZone?: boolean;
   readonly isCurrentUser: boolean;
 }
 
 export interface LeaderboardResponseDto {
-  readonly league: 'BRONZE' | 'SILVER' | 'GOLD' | 'DIAMOND';
+  readonly league?: 'BRONZE' | 'SILVER' | 'GOLD' | 'DIAMOND';
+  readonly leagueTier?: 'BRONZE' | 'SILVER' | 'GOLD' | 'DIAMOND';
+  readonly weekNumber?: number;
+  readonly year?: number;
   readonly resetsAt: string;
-  readonly entries: readonly LeaderboardUserEntryDto[];
+  readonly totalParticipants?: number;
+  readonly currentUserRank?: LeaderboardUserEntryDto;
+  readonly entries?: readonly LeaderboardUserEntryDto[];
+  readonly leaderboard?: readonly LeaderboardUserEntryDto[];
 }
 
 export interface TenantBrandingDto {

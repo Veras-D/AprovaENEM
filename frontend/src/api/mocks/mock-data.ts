@@ -278,15 +278,90 @@ export const MOCK_GAMIFICATION_PROFILE: GamificationProfileDto = {
   unlockedBadges: ['PRIMEIRA_QUESTAO', 'STREAK_3_DIAS', 'MESTRE_MATEMATICA'],
 };
 
-export const MOCK_LEADERBOARD: LeaderboardResponseDto = {
-  league: 'GOLD',
-  resetsAt: '2026-10-18T23:59:59Z',
-  entries: [
-    { rank: 1, userId: 'usr-1', studentName: 'Beatriz Costa', weeklyXp: 820, isCurrentUser: false },
-    { rank: 2, userId: 'usr-123', studentName: 'Lucas Silva', weeklyXp: 350, isCurrentUser: true },
-    { rank: 3, userId: 'usr-3', studentName: 'Carlos Souza', weeklyXp: 290, isCurrentUser: false },
-  ],
+export const MOCK_LEAGUE_LEADERBOARDS: Record<'BRONZE' | 'SILVER' | 'GOLD' | 'DIAMOND', LeaderboardResponseDto> = {
+  BRONZE: {
+    league: 'BRONZE',
+    leagueTier: 'BRONZE',
+    weekNumber: 42,
+    year: 2026,
+    resetsAt: '2026-10-18T23:59:59Z',
+    totalParticipants: 120,
+    entries: [
+      { rank: 1, userId: 'usr-b1', studentName: 'Camila Fernandes', displayName: 'Camila Fernandes', weeklyXp: 480, streakDays: 4, promotionZone: true, isCurrentUser: false },
+      { rank: 2, userId: 'usr-b2', studentName: 'Felipe Martins', displayName: 'Felipe Martins', weeklyXp: 410, streakDays: 3, promotionZone: true, isCurrentUser: false },
+      { rank: 3, userId: 'usr-b3', studentName: 'Larissa Rocha', displayName: 'Larissa Rocha', weeklyXp: 350, streakDays: 2, promotionZone: false, isCurrentUser: false },
+      { rank: 4, userId: 'usr-b4', studentName: 'Thiago Ribeiro', displayName: 'Thiago Ribeiro', weeklyXp: 290, streakDays: 1, promotionZone: false, isCurrentUser: false },
+      { rank: 5, userId: 'usr-b5', studentName: 'Ana Clara', displayName: 'Ana Clara', weeklyXp: 220, streakDays: 1, promotionZone: false, isCurrentUser: false },
+      { rank: 6, userId: 'usr-b6', studentName: 'Gabriel Santos', displayName: 'Gabriel Santos', weeklyXp: 180, streakDays: 0, promotionZone: false, isCurrentUser: false },
+      { rank: 7, userId: 'usr-b7', studentName: 'Juliana Paes', displayName: 'Juliana Paes', weeklyXp: 140, streakDays: 0, promotionZone: false, isCurrentUser: false },
+      { rank: 8, userId: 'usr-b8', studentName: 'Matheus Lima', displayName: 'Matheus Lima', weeklyXp: 110, streakDays: 0, promotionZone: false, isCurrentUser: false },
+      { rank: 9, userId: 'usr-b9', studentName: 'Rafaela Dias', displayName: 'Rafaela Dias', weeklyXp: 80, streakDays: 0, promotionZone: false, isCurrentUser: false },
+      { rank: 10, userId: 'usr-b10', studentName: 'Bruno Carvalho', displayName: 'Bruno Carvalho', weeklyXp: 40, streakDays: 0, promotionZone: false, isCurrentUser: false },
+    ],
+  },
+  SILVER: {
+    league: 'SILVER',
+    leagueTier: 'SILVER',
+    weekNumber: 42,
+    year: 2026,
+    resetsAt: '2026-10-18T23:59:59Z',
+    totalParticipants: 85,
+    entries: [
+      { rank: 1, userId: 'usr-s1', studentName: 'Rodrigo Alencar', displayName: 'Rodrigo Alencar', weeklyXp: 690, streakDays: 6, promotionZone: true, isCurrentUser: false },
+      { rank: 2, userId: 'usr-s2', studentName: 'Fernanda Neves', displayName: 'Fernanda Neves', weeklyXp: 610, streakDays: 5, promotionZone: true, isCurrentUser: false },
+      { rank: 3, userId: 'usr-s3', studentName: 'Vinicius Prado', displayName: 'Vinicius Prado', weeklyXp: 540, streakDays: 4, promotionZone: false, isCurrentUser: false },
+      { rank: 4, userId: 'usr-s4', studentName: 'Mariana Duarte', displayName: 'Mariana Duarte', weeklyXp: 490, streakDays: 3, promotionZone: false, isCurrentUser: false },
+      { rank: 5, userId: 'usr-s5', studentName: 'Eduardo Gomes', displayName: 'Eduardo Gomes', weeklyXp: 420, streakDays: 3, promotionZone: false, isCurrentUser: false },
+      { rank: 6, userId: 'usr-s6', studentName: 'Isabela Monteiro', displayName: 'Isabela Monteiro', weeklyXp: 380, streakDays: 2, promotionZone: false, isCurrentUser: false },
+      { rank: 7, userId: 'usr-s7', studentName: 'Leonardo Cruz', displayName: 'Leonardo Cruz', weeklyXp: 310, streakDays: 2, promotionZone: false, isCurrentUser: false },
+      { rank: 8, userId: 'usr-s8', studentName: 'Carolina Castro', displayName: 'Carolina Castro', weeklyXp: 260, streakDays: 1, promotionZone: false, isCurrentUser: false },
+      { rank: 9, userId: 'usr-s9', studentName: 'Guilherme Silveira', displayName: 'Guilherme Silveira', weeklyXp: 190, streakDays: 1, promotionZone: false, isCurrentUser: false },
+      { rank: 10, userId: 'usr-s10', studentName: 'Paula Guimarães', displayName: 'Paula Guimarães', weeklyXp: 120, streakDays: 0, promotionZone: false, isCurrentUser: false },
+    ],
+  },
+  GOLD: {
+    league: 'GOLD',
+    leagueTier: 'GOLD',
+    weekNumber: 42,
+    year: 2026,
+    resetsAt: '2026-10-18T23:59:59Z',
+    totalParticipants: 60,
+    entries: [
+      { rank: 1, userId: 'usr-1', studentName: 'Beatriz Costa', displayName: 'Beatriz Costa', weeklyXp: 820, streakDays: 12, promotionZone: true, isCurrentUser: false },
+      { rank: 2, userId: 'usr-123', studentName: 'Lucas Silva', displayName: 'Lucas Silva', weeklyXp: 750, streakDays: 7, promotionZone: true, isCurrentUser: true },
+      { rank: 3, userId: 'usr-3', studentName: 'Carlos Souza', displayName: 'Carlos Souza', weeklyXp: 680, streakDays: 9, promotionZone: false, isCurrentUser: false },
+      { rank: 4, userId: 'usr-4', studentName: 'Daniela Barbosa', displayName: 'Daniela Barbosa', weeklyXp: 590, streakDays: 6, promotionZone: false, isCurrentUser: false },
+      { rank: 5, userId: 'usr-5', studentName: 'Renato Farias', displayName: 'Renato Farias', weeklyXp: 520, streakDays: 5, promotionZone: false, isCurrentUser: false },
+      { rank: 6, userId: 'usr-6', studentName: 'Sofia Meireles', displayName: 'Sofia Meireles', weeklyXp: 460, streakDays: 4, promotionZone: false, isCurrentUser: false },
+      { rank: 7, userId: 'usr-7', studentName: 'Gustavo Henrique', displayName: 'Gustavo Henrique', weeklyXp: 390, streakDays: 3, promotionZone: false, isCurrentUser: false },
+      { rank: 8, userId: 'usr-8', studentName: 'Helena Pires', displayName: 'Helena Pires', weeklyXp: 320, streakDays: 3, promotionZone: false, isCurrentUser: false },
+      { rank: 9, userId: 'usr-9', studentName: 'Otávio Mendonça', displayName: 'Otávio Mendonça', weeklyXp: 270, streakDays: 2, promotionZone: false, isCurrentUser: false },
+      { rank: 10, userId: 'usr-10', studentName: 'Vanessa Moreira', displayName: 'Vanessa Moreira', weeklyXp: 180, streakDays: 1, promotionZone: false, isCurrentUser: false },
+    ],
+  },
+  DIAMOND: {
+    league: 'DIAMOND',
+    leagueTier: 'DIAMOND',
+    weekNumber: 42,
+    year: 2026,
+    resetsAt: '2026-10-18T23:59:59Z',
+    totalParticipants: 35,
+    entries: [
+      { rank: 1, userId: 'usr-d1', studentName: 'Arthur Nogueira', displayName: 'Arthur Nogueira', weeklyXp: 1450, streakDays: 32, promotionZone: false, isCurrentUser: false },
+      { rank: 2, userId: 'usr-d2', studentName: 'Yasmin Vasconcelos', displayName: 'Yasmin Vasconcelos', weeklyXp: 1380, streakDays: 28, promotionZone: false, isCurrentUser: false },
+      { rank: 3, userId: 'usr-d3', studentName: 'Marcelo Brandão', displayName: 'Marcelo Brandão', weeklyXp: 1290, streakDays: 25, promotionZone: false, isCurrentUser: false },
+      { rank: 4, userId: 'usr-d4', studentName: 'Clarice Fontes', displayName: 'Clarice Fontes', weeklyXp: 1180, streakDays: 21, promotionZone: false, isCurrentUser: false },
+      { rank: 5, userId: 'usr-d5', studentName: 'Igor Medeiros', displayName: 'Igor Medeiros', weeklyXp: 1050, streakDays: 19, promotionZone: false, isCurrentUser: false },
+      { rank: 6, userId: 'usr-d6', studentName: 'Letícia Xavier', displayName: 'Letícia Xavier', weeklyXp: 960, streakDays: 16, promotionZone: false, isCurrentUser: false },
+      { rank: 7, userId: 'usr-d7', studentName: 'Caio Junqueira', displayName: 'Caio Junqueira', weeklyXp: 880, streakDays: 14, promotionZone: false, isCurrentUser: false },
+      { rank: 8, userId: 'usr-d8', studentName: 'Bruna Takahashi', displayName: 'Bruna Takahashi', weeklyXp: 810, streakDays: 12, promotionZone: false, isCurrentUser: false },
+      { rank: 9, userId: 'usr-d9', studentName: 'Vitor Hugo Abreu', displayName: 'Vitor Hugo Abreu', weeklyXp: 740, streakDays: 10, promotionZone: false, isCurrentUser: false },
+      { rank: 10, userId: 'usr-d10', studentName: 'Milena Barreto', displayName: 'Milena Barreto', weeklyXp: 620, streakDays: 8, promotionZone: false, isCurrentUser: false },
+    ],
+  },
 };
+
+export const MOCK_LEADERBOARD: LeaderboardResponseDto = MOCK_LEAGUE_LEADERBOARDS.GOLD;
 
 export const MOCK_TENANT_BRANDING: TenantBrandingDto = {
   tenantId: 'tenant-bandeirantes',
