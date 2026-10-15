@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.0] - 2026-10-15
+### 📝 Student Practice Experience & Timed Quiz Mode (TASK-S5-01)
+- feat(practice): Implemented Interactive Question Card & Timed Quiz Mode ([`TASK-S5-01`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/BACKLOG.md#task-s5-01)):
+  - **Dynamic KaTeX Formatting**: Rendered ENEM question statements, context citations, and answer choices with mathematical, physical, and chemical LaTeX notation ($10\text{ W}$, $1{,}50\text{ kWh}$, $t = \frac{d}{v_1 + v_2}$, $h(t) = -5t^2 + 20t + 25$).
+  - **High-Definition WebP Diagrams with Lightbox Modal**: Created `<QuestionImage />` featuring responsive image loading skeletons, broken link error fallbacks, accessible captions (`<figcaption>`), and interactive lightbox zoom overlay modal with backdrop dismiss and keyboard escape.
+  - **Accessible Option Selector (A–E)**: Built `<OptionSelector />` using semantic `radiogroup`/`radio` ARIA pattern, keyboard hotkeys (`A`–`E` and numbers `1`–`5`), full LaTeX support inside options, WCAG 2.1 touch targets $\ge 44\times 44\text{px}$, and distinct post-submission green/red correctness indicators.
+  - **Official Countdown & Elapsed Quiz Timer**: Built `<QuizTimer />` supporting countdown mode, elapsed mode, pause/resume toggling, low-time pulse warning alert ($< 60\text{s}$), and screen reader polite announcements (`aria-live="polite"`).
+  - **Question Navigation Carousel & Palette**: Built `<QuestionCarousel />` featuring dynamic question index pills, active/answered/flagged indicators, previous/next controls, smooth centering scroll, and "Marcar para Revisão" bookmark toggle.
+  - **Composed Interactive Practice Experience**: Transformed `<PracticeHero />` into a full-featured multidisciplinary timed ENEM exam simulator replacing previous static placeholder, seamlessly bound to Zustand `useSessionStore` state machine with instant grading feedback, KaTeX explanations, XP awards, and Socratic AI Tutor invitations.
+  - **Testing & Verification**: 38 Vitest test suites (231 unit tests passing, 0 failures, 96.94% coverage), 0 ESLint warnings, and clean Vite production build.
+
 ## [0.5.0] - 2026-10-14
 ### 💻 Frontend & Multi-Tenant Architecture Setup (TASK-S4-01)
 - feat(frontend): Initialized React 18, TypeScript, and Vite 5 SPA workspace with white-label multi-tenant architecture ([`TASK-S4-01`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/BACKLOG.md#task-s4-01)):

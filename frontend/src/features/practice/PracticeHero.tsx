@@ -1,52 +1,123 @@
-import React, { useState } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { useTenantStore } from '@/stores/useTenantStore';
-import { Card, CardHeader, CardBody, CardFooter } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
+import { useSessionStore } from '@/stores/useSessionStore';
+import { MOCK_QUESTIONS, MOCK_RESOLUTIONS } from '@/api/mocks/mock-data';
 import { ThemeCustomizer } from '@/components/ui/ThemeCustomizer';
-import { Sparkles, CheckCircle2, XCircle } from 'lucide-react';
-import type { QuestionOptionLetter } from '@/types';
+import { Button } from '@/components/ui/Button';
+import { Card, CardHeader, CardBody } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { MathRenderer } from '@/components/math/MathRenderer';
+import {
+  QuizTimer,
+  QuestionCard,
+  QuestionCarousel,
+} from './components';
+import {
+  Sparkles,
+  CheckCircle2,
+  XCircle,
+  RotateCcw,
+  Bot,
+  ArrowRight,
+  Award,
+  BookOpen,
+} from 'lucide-react';
+import type { QuestionOptionLetter, PracticeSession } from '@/types';
+import { mapDtoToDomainQuestion } from './practice-mappers';
 
 export const PracticeHero: React.FC = () => {
   const { currentTenant } = useTenantStore();
-  const [selectedOption, setSelectedOption] = useState<QuestionOptionLetter | null>(null);
-  const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+  const {
+    questions,
+    currentQuestionIndex,
+    attempts,
+    selectedAnswers,
+    flaggedQuestions,
+    startSession,
+    recordAttempt,
+    recordAnswer,
+    toggleFlagQuestion,
+    nextQuestion,
+    previousQuestion,
+    goToQuestion,
+    activeSession,
+  } = useSessionStore();
 
-  const sampleQuestion = {
-    knowledgeArea: 'MT' as const,
-    discipline: 'Matemática',
-    difficulty: 'MEDIUM' as const,
-    examYear: 2023,
-    statement:
-      'Um estudante do ensino médio deseja calcular a economia gerada ao substituir lâmpadas incandescentes por lâmpadas LED em sua residência. Considerando que uma lâmpada LED consome 10 W e permanece acesa por 5 horas diárias, determine o consumo mensal (30 dias) em quilowatts-hora (kWh).',
-    options: [
-      { letter: 'A' as const, text: '0,50 kWh' },
-      { letter: 'B' as const, text: '1,50 kWh' },
-      { letter: 'C' as const, text: '5,00 kWh' },
-      { letter: 'D' as const, text: '15,00 kWh' },
-      { letter: 'E' as const, text: '50,00 kWh' },
-    ],
-    correctOption: 'B' as const,
-    explanation:
-      'Consumo = Potência × Tempo = 10 W × 5 h/dia × 30 dias = 1500 Wh = 1,50 kWh. Alternativa correta: B.',
-  };
-
-  const handleSelectOption = (letter: QuestionOptionLetter) => {
-    if (!isSubmitted) {
-      setSelectedOption(letter);
+  // Initialize session with authentic mock questions if empty
+  useEffect(() => {
+    if (questions.length === 0) {
+      const domainQuestions = MOCK_QUESTIONS.map(mapDtoToDomainQuestion);
+      const mockSession: PracticeSession = {
+        id: 'session-demo-enem',
+        title: 'Simulado Rápido Multidisciplinar ENEM',
+        questionCount: domainQuestions.length,
+        status: 'IN_PROGRESS',
+        currentQuestionIndex: 0,
+        correctCount: 0,
+        createdAt: new Date().toISOString(),
+      };
+      startSession(mockSession, domainQuestions);
     }
-  };
+  }, [questions.length, startSession]);
 
-  const handleSubmit = () => {
-    if (selectedOption) {
-      setIsSubmitted(true);
-    }
-  };
+  const currentQuestion = questions[currentQuestionIndex] || null;
+  const currentAttempt = currentQuestion ? attempts[currentQuestion.id] : undefined;
+  const currentSelectedOption = currentQuestion ? selectedAnswers[currentQuestion.id] || null : null;
+  const currentResolution = currentQuestion ? MOCK_RESOLUTIONS[currentQuestion.id] : undefined;
 
-  const handleReset = () => {
-    setSelectedOption(null);
-    setIsSubmitted(false);
-  };
+  const isCurrentSubmitted = Boolean(currentAttempt);
+  const correctOption = currentAttempt?.correctOption ?? currentResolution?.correctOption ?? null;
+
+  const handleSelectOption = useCallback(
+    (letter: QuestionOptionLetter) => {
+      if (currentQuestion && !isCurrentSubmitted) {
+        recordAnswer(currentQuestion.id, letter);
+      }
+    },
+    [currentQuestion, isCurrentSubmitted, recordAnswer]
+  );
+
+  const handleConfirmAnswer = useCallback(() => {
+    if (!currentQuestion || !currentSelectedOption) return;
+    const resolution = MOCK_RESOLUTIONS[currentQuestion.id];
+    const isCorrect = resolution ? currentSelectedOption === resolution.correctOption : false;
+
+    recordAttempt({
+      questionId: currentQuestion.id,
+      selectedOption: currentSelectedOption,
+      correctOption: resolution?.correctOption,
+      isCorrect,
+      explanation: resolution?.baseExplanation,
+      awardedXp: isCorrect ? 15 : 5,
+    });
+  }, [currentQuestion, currentSelectedOption, recordAttempt]);
+
+  const handleRestart = useCallback(() => {
+    const domainQuestions = MOCK_QUESTIONS.map(mapDtoToDomainQuestion);
+    const mockSession: PracticeSession = {
+      id: `session-${Date.now()}`,
+      title: 'Simulado Rápido Multidisciplinar ENEM',
+      questionCount: domainQuestions.length,
+      status: 'IN_PROGRESS',
+      currentQuestionIndex: 0,
+      correctCount: 0,
+      createdAt: new Date().toISOString(),
+    };
+    startSession(mockSession, domainQuestions);
+  }, [startSession]);
+
+  // Session summary calculations
+  const totalQuestions = questions.length;
+  const totalAnswered = useMemo(() => Object.keys(attempts).length, [attempts]);
+  const correctCount = activeSession?.correctCount ?? 0;
+  const isAllAnswered = totalQuestions > 0 && totalAnswered === totalQuestions;
+  const totalXp = useMemo(() => {
+    return Object.values(attempts).reduce((acc, att) => acc + (att.awardedXp ?? 0), 0);
+  }, [attempts]);
+
+  const flaggedCount = useMemo(() => {
+    return Object.values(flaggedQuestions).filter(Boolean).length;
+  }, [flaggedQuestions]);
 
   return (
     <div className="space-y-6">
@@ -64,141 +135,213 @@ export const PracticeHero: React.FC = () => {
             Prática Inteligente com Alinhamento INEP e Tutor IA Socrático
           </h1>
           <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-3xl">
-            {currentTenant.tagline}. Arquitetura full-stack de alta acessibilidade com componentização rigorosa, consumo exclusivo via Gateway BFF (<code className="text-xs bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded">frontend-api</code>), e suporte a multi-tenancy customizável.
+            {currentTenant.tagline}. Simulado rápido com fórmulas KaTeX dinâmicas, imagens em alta definição WebP com zoom, navegação acessível e cronômetro de prova oficial.
           </p>
         </div>
       </section>
 
-      {/* Interactive Question Card */}
-      <section aria-labelledby="question-heading">
-        <Card className="max-w-3xl mx-auto border-2 border-slate-200 dark:border-slate-800">
-          <CardHeader className="flex flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Badge variant="primary">{sampleQuestion.discipline}</Badge>
-              <Badge variant="secondary">ENEM {sampleQuestion.examYear}</Badge>
-              <Badge variant="warning">Nível Médio</Badge>
-            </div>
-            <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
-              Questão #1 de 5
-            </span>
-          </CardHeader>
-
-          <CardBody className="space-y-6">
-            <h2 id="question-heading" className="text-base sm:text-lg font-medium text-slate-800 dark:text-slate-100 leading-relaxed">
-              {sampleQuestion.statement}
+      {/* Timed Quiz Control Bar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-brand bg-brand-primary/10 text-brand-primary">
+            <BookOpen className="h-5 w-5" aria-hidden="true" />
+          </div>
+          <div>
+            <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
+              Simulado Rápido ENEM
             </h2>
-
-            {/* Options Selector List (A to E) */}
-            <div className="space-y-3" role="radiogroup" aria-label="Alternativas da questão">
-              {sampleQuestion.options.map((option) => {
-                const isSelected = selectedOption === option.letter;
-                const isCorrect = isSubmitted && option.letter === sampleQuestion.correctOption;
-                const isWrong = isSubmitted && isSelected && !isCorrect;
-
-                let optionStyles =
-                  'border-slate-200 dark:border-slate-800 hover:border-brand-primary dark:hover:border-brand-primary bg-white dark:bg-slate-900';
-
-                if (isSelected && !isSubmitted) {
-                  optionStyles = 'border-brand-primary bg-brand-primary/5 dark:bg-brand-primary/10 shadow-sm';
-                } else if (isCorrect) {
-                  optionStyles = 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-100';
-                } else if (isWrong) {
-                  optionStyles = 'border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-100';
-                }
-
-                return (
-                  <button
-                    key={option.letter}
-                    type="button"
-                    role="radio"
-                    aria-checked={isSelected}
-                    disabled={isSubmitted}
-                    onClick={() => handleSelectOption(option.letter)}
-                    className={`w-full text-left p-3.5 sm:p-4 rounded-brand border-2 flex items-center justify-between gap-3 transition-all ${optionStyles}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`h-7 w-7 rounded-full flex items-center justify-center font-bold text-xs ${
-                          isSelected
-                            ? 'bg-brand-primary text-white'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                        }`}
-                      >
-                        {option.letter}
-                      </span>
-                      <span className="text-sm font-medium">{option.text}</span>
-                    </div>
-
-                    {isCorrect && (
-                      <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
-                    )}
-                    {isWrong && (
-                      <XCircle className="h-5 w-5 text-rose-600 dark:text-rose-400 shrink-0" aria-hidden="true" />
-                    )}
-                  </button>
-                );
-              })}
+            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <span>{totalAnswered} de {totalQuestions} respondidas</span>
+              {flaggedCount > 0 && (
+                <>
+                  <span>&bull;</span>
+                  <span className="text-amber-600 dark:text-amber-400 font-medium">
+                    {flaggedCount} marcada(s) para revisão
+                  </span>
+                </>
+              )}
             </div>
+          </div>
+        </div>
 
-            {/* Instant Grading Resolution Accordion */}
-            {isSubmitted && (
-              <div
-                className={`p-4 rounded-brand border-2 animate-in fade-in duration-300 ${
-                  selectedOption === sampleQuestion.correctOption
-                    ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-500/40'
-                    : 'bg-amber-50 dark:bg-amber-950/30 border-amber-500/40'
-                }`}
-              >
-                <div className="flex items-center gap-2 font-bold text-sm mb-1">
-                  {selectedOption === sampleQuestion.correctOption ? (
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+          {/* Quiz Timer */}
+          <QuizTimer
+            initialSeconds={180}
+            isCountdown={true}
+          />
+
+          {/* Reset / Restart Quiz */}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleRestart}
+            aria-label="Reiniciar simulado"
+            title="Reiniciar simulado"
+          >
+            <RotateCcw className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />
+            <span className="hidden sm:inline">Reiniciar</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Question Carousel / Palette */}
+      {totalQuestions > 0 && (
+        <QuestionCarousel
+          totalQuestions={totalQuestions}
+          currentIndex={currentQuestionIndex}
+          onSelectIndex={goToQuestion}
+          onNext={nextQuestion}
+          onPrevious={previousQuestion}
+          isAnswered={(idx) => Boolean(questions[idx] && attempts[questions[idx].id])}
+          isFlagged={(idx) => Boolean(questions[idx] && flaggedQuestions[questions[idx].id])}
+          onToggleFlag={() => currentQuestion && toggleFlagQuestion(currentQuestion.id)}
+          isCurrentFlagged={Boolean(currentQuestion && flaggedQuestions[currentQuestion.id])}
+        />
+      )}
+
+      {/* Main Interactive Question Card */}
+      {currentQuestion && (
+        <section aria-labelledby="active-question-section">
+          <h2 id="active-question-section" className="sr-only">
+            Questão ativa do simulado
+          </h2>
+
+          <QuestionCard
+            question={currentQuestion}
+            selectedOption={currentSelectedOption}
+            onSelectOption={handleSelectOption}
+            onSubmitAnswer={handleConfirmAnswer}
+            isSubmitted={isCurrentSubmitted}
+            correctOption={correctOption}
+            isFlagged={Boolean(flaggedQuestions[currentQuestion.id])}
+            onToggleFlag={() => toggleFlagQuestion(currentQuestion.id)}
+          />
+
+          {/* Instant Grading Resolution Accordion */}
+          {isCurrentSubmitted && currentAttempt && (
+            <div
+              className={`mt-4 p-4 sm:p-5 rounded-brand border-2 animate-in fade-in duration-300 ${
+                currentAttempt.isCorrect
+                  ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-500/40 text-emerald-900 dark:text-emerald-100'
+                  : 'bg-amber-50 dark:bg-amber-950/30 border-amber-500/40 text-amber-900 dark:text-amber-100'
+              }`}
+              role="region"
+              aria-label="Resolução e feedback da questão"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2.5">
+                <div className="flex items-center gap-2 font-bold text-sm sm:text-base">
+                  {currentAttempt.isCorrect ? (
                     <>
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden="true" />
-                      <span className="text-emerald-800 dark:text-emerald-300">
-                        Resposta Correta! (+10 XP concedidos)
-                      </span>
+                      <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
+                      <span>Resposta Correta! (+{currentAttempt.awardedXp ?? 15} XP)</span>
                     </>
                   ) : (
                     <>
-                      <XCircle className="h-4 w-4 text-rose-600" aria-hidden="true" />
-                      <span className="text-rose-800 dark:text-rose-300">
-                        Resposta Incorreta. Que tal consultar o Tutor IA Socrático?
+                      <XCircle className="h-5 w-5 text-rose-600 dark:text-rose-400 shrink-0" aria-hidden="true" />
+                      <span>
+                        Resposta Incorreta. A alternativa correta é a letra ({correctOption}).
                       </span>
                     </>
                   )}
                 </div>
-                <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 mt-2">
-                  <strong>Resolução Comentada:</strong> {sampleQuestion.explanation}
-                </p>
+
+                {currentQuestionIndex < totalQuestions - 1 && (
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    onClick={nextQuestion}
+                    className="self-end sm:self-auto"
+                  >
+                    <span>Próxima Questão</span>
+                    <ArrowRight className="h-4 w-4 ml-1.5" aria-hidden="true" />
+                  </Button>
+                )}
               </div>
-            )}
-          </CardBody>
 
-          <CardFooter className="flex items-center justify-between gap-4">
-            <span className="text-xs text-slate-500 dark:text-slate-400">
-              {!selectedOption && 'Selecione uma alternativa para responder'}
-              {selectedOption && !isSubmitted && `Alternativa (${selectedOption}) selecionada`}
-              {isSubmitted && 'Resposta submetida e avaliada'}
-            </span>
-
-            <div className="flex items-center gap-2">
-              {isSubmitted ? (
-                <Button variant="outline" size="sm" onClick={handleReset}>
-                  Tentar Novamente
-                </Button>
-              ) : (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  disabled={!selectedOption}
-                  onClick={handleSubmit}
-                >
-                  Confirmar Resposta
-                </Button>
+              {currentAttempt.explanation && (
+                <div className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 mt-2 space-y-1">
+                  <strong className="block text-slate-900 dark:text-slate-100">
+                    Resolução Comentada:
+                  </strong>
+                  <div className="p-3 rounded-brand bg-white/70 dark:bg-slate-900/70 border border-slate-200/60 dark:border-slate-800/60">
+                    <MathRenderer content={currentAttempt.explanation} />
+                  </div>
+                </div>
               )}
+
+              {/* Socratic AI Tutor Invitation Banner */}
+              <div className="mt-3.5 pt-3 border-t border-slate-200/60 dark:border-slate-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                  <Bot className="h-4 w-4 text-brand-primary shrink-0" aria-hidden="true" />
+                  <span>
+                    Dúvida no conceito? Chame o <strong>Tutor IA Socrático</strong> para tirar dúvidas sem resposta pronta.
+                  </span>
+                </div>
+                <Badge variant="outline" className="self-start sm:self-auto text-xs">
+                  Socratic AI Tutor &bull; Sprint 5
+                </Badge>
+              </div>
             </div>
-          </CardFooter>
+          )}
+        </section>
+      )}
+
+      {/* Session Completed Celebratory Card */}
+      {isAllAnswered && (
+        <Card className="border-2 border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-md">
+          <CardHeader className="flex flex-row items-center gap-3 pb-2">
+            <div className="p-2.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-300">
+              <Award className="h-6 w-6" aria-hidden="true" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-emerald-950 dark:text-emerald-100">
+                Simulado Rápido Concluído!
+              </h3>
+              <p className="text-xs text-emerald-800 dark:text-emerald-300">
+                Você respondeu a todas as {totalQuestions} questões com sucesso.
+              </p>
+            </div>
+          </CardHeader>
+          <CardBody className="space-y-4 pt-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="p-3 rounded-brand bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900 text-center">
+                <span className="block text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                  {correctCount}/{totalQuestions}
+                </span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">Acertos ({Math.round((correctCount / totalQuestions) * 100)}%)</span>
+              </div>
+              <div className="p-3 rounded-brand bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900 text-center">
+                <span className="block text-2xl font-black text-amber-500">
+                  +{totalXp}
+                </span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">Pontos de XP</span>
+              </div>
+              <div className="col-span-2 sm:col-span-1 p-3 rounded-brand bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900 text-center">
+                <span className="block text-2xl font-black text-slate-700 dark:text-slate-300">
+                  {flaggedCount}
+                </span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">Marcadas para Revisão</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="md"
+                onClick={handleRestart}
+                className="w-full sm:w-auto"
+              >
+                <RotateCcw className="h-4 w-4 mr-2" aria-hidden="true" />
+                Refazer Simulado
+              </Button>
+            </div>
+          </CardBody>
         </Card>
-      </section>
+      )}
     </div>
   );
 };

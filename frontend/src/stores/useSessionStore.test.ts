@@ -263,6 +263,17 @@ describe('useSessionStore — Student Session State Machine', () => {
       expect(state.selectedAnswers).toEqual({});
       expect(state.activeSession).toBeNull();
       expect(state.attempts).toEqual({});
+      expect(state.flaggedQuestions).toEqual({});
+    });
+
+    it('should toggle question bookmark/flag status', () => {
+      expect(useSessionStore.getState().flaggedQuestions['q-1']).toBeFalsy();
+
+      useSessionStore.getState().toggleFlagQuestion('q-1');
+      expect(useSessionStore.getState().flaggedQuestions['q-1']).toBe(true);
+
+      useSessionStore.getState().toggleFlagQuestion('q-1');
+      expect(useSessionStore.getState().flaggedQuestions['q-1']).toBe(false);
     });
   });
 

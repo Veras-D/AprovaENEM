@@ -54,12 +54,14 @@ export interface SessionState {
   readonly diagnosticReport: DiagnosticReport | null;
   readonly elapsedSeconds: number;
   readonly questionElapsedSeconds: number;
+  readonly flaggedQuestions: Readonly<Record<string, boolean>>;
   readonly isMigratingProgress: boolean;
 
   readonly startSession: (session: PracticeSession, questions?: readonly Question[]) => void;
   readonly setPhase: (phase: SessionPhase) => void;
   readonly recordAttempt: (payload: RecordAttemptPayload) => void;
   readonly recordAnswer: (questionId: string, option: QuestionOptionLetter) => void;
+  readonly toggleFlagQuestion: (questionId: string) => void;
   readonly nextQuestion: () => boolean;
   readonly previousQuestion: () => boolean;
   readonly goToQuestion: (index: number) => boolean;
@@ -94,6 +96,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   questions: [],
   attempts: {},
   selectedAnswers: {},
+  flaggedQuestions: {},
   diagnosticReport: null,
   elapsedSeconds: 0,
   questionElapsedSeconds: 0,
@@ -107,12 +110,21 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       currentQuestionIndex: session.currentQuestionIndex || 0,
       attempts: {},
       selectedAnswers: {},
+      flaggedQuestions: {},
       diagnosticReport: null,
       elapsedSeconds: 0,
       questionElapsedSeconds: 0,
     }),
 
   setPhase: (phase) => set({ phase }),
+
+  toggleFlagQuestion: (questionId) =>
+    set((state) => ({
+      flaggedQuestions: {
+        ...state.flaggedQuestions,
+        [questionId]: !state.flaggedQuestions[questionId],
+      },
+    })),
 
   recordAttempt: (payload) => {
     const { activeSession, attempts, selectedAnswers, questionElapsedSeconds } = get();
@@ -253,6 +265,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       questions: [],
       attempts: {},
       selectedAnswers: {},
+      flaggedQuestions: {},
       diagnosticReport: null,
       elapsedSeconds: 0,
       questionElapsedSeconds: 0,

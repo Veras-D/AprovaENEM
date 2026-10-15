@@ -14,17 +14,21 @@ export interface PaginatedResponse<T> {
 }
 
 export interface QuestionOptionDto {
+  readonly id?: string;
   readonly optionLetter: QuestionOptionLetter;
   readonly text: string;
 }
 
 export interface QuestionItemDto {
   readonly id: string;
+  readonly externalId?: string;
   readonly year: number;
   readonly subject: KnowledgeArea | string;
+  readonly knowledgeArea?: KnowledgeArea;
   readonly discipline: string;
   readonly topic?: string;
   readonly itemNumber?: number;
+  readonly contextText?: string;
   readonly statement: string;
   readonly difficulty: QuestionDifficulty;
   readonly status: 'ACTIVE' | 'SUSPENDED' | 'NEEDS_REVIEW' | 'DRAFT' | 'ANNULLED';

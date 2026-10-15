@@ -23,15 +23,15 @@ export const MOCK_QUESTIONS: readonly QuestionItemDto[] = [
     topic: 'Potência e Consumo de Energia',
     itemNumber: 105,
     statement:
-      'Um estudante do ensino médio deseja calcular a economia gerada ao substituir lâmpadas incandescentes por lâmpadas LED em sua residência. Considerando que uma lâmpada LED consome 10 W e permanece acesa por 5 horas diárias, determine o consumo mensal (30 dias) em quilowatts-hora (kWh).',
+      'Um estudante do ensino médio deseja calcular a economia gerada ao substituir lâmpadas incandescentes por lâmpadas LED em sua residência. Considerando que uma lâmpada LED consome $10\\text{ W}$ e permanece acesa por $5\\text{ h}$ diárias, determine o consumo mensal (30 dias) em quilowatts-hora ($1\\text{ kWh} = 1000\\text{ Wh}$):',
     difficulty: 'MEDIUM',
     status: 'ACTIVE',
     options: [
-      { optionLetter: 'A', text: '0,50 kWh' },
-      { optionLetter: 'B', text: '1,50 kWh' },
-      { optionLetter: 'C', text: '5,00 kWh' },
-      { optionLetter: 'D', text: '15,00 kWh' },
-      { optionLetter: 'E', text: '50,00 kWh' },
+      { optionLetter: 'A', text: '$0{,}50\\text{ kWh}$' },
+      { optionLetter: 'B', text: '$1{,}50\\text{ kWh}$' },
+      { optionLetter: 'C', text: '$5{,}00\\text{ kWh}$' },
+      { optionLetter: 'D', text: '$15{,}00\\text{ kWh}$' },
+      { optionLetter: 'E', text: '$50{,}00\\text{ kWh}$' },
     ],
   },
   {
@@ -42,15 +42,78 @@ export const MOCK_QUESTIONS: readonly QuestionItemDto[] = [
     topic: 'Cinemática e Movimento Uniforme',
     itemNumber: 92,
     statement:
-      'Dois veículos partem simultaneamente de cidades separadas por uma distância de 120 km, deslocando-se em sentidos opostos com velocidades constantes de 60 km/h e 40 km/h. Quanto tempo levarão para se encontrar?',
+      'Dois veículos partem simultaneamente de cidades separadas por uma distância de $120\\text{ km}$, deslocando-se em sentidos opostos em uma mesma rodovia retilínea com velocidades constantes de $v_1 = 60\\text{ km/h}$ e $v_2 = 40\\text{ km/h}$. Quanto tempo levarão para se encontrar?',
     difficulty: 'EASY',
     status: 'ACTIVE',
     options: [
-      { optionLetter: 'A', text: '1,0 hora' },
-      { optionLetter: 'B', text: '1,2 horas' },
-      { optionLetter: 'C', text: '1,5 horas' },
-      { optionLetter: 'D', text: '2,0 horas' },
-      { optionLetter: 'E', text: '2,4 horas' },
+      { optionLetter: 'A', text: '$1{,}0\\text{ hora}$' },
+      { optionLetter: 'B', text: '$1{,}2\\text{ horas}$' },
+      { optionLetter: 'C', text: '$1{,}5\\text{ horas}$' },
+      { optionLetter: 'D', text: '$2{,}0\\text{ horas}$' },
+      { optionLetter: 'E', text: '$2{,}4\\text{ horas}$' },
+    ],
+  },
+  {
+    id: '99999999-aaaa-bbbb-cccc-dddddddddddd',
+    year: 2023,
+    subject: 'CN',
+    discipline: 'Química',
+    topic: 'Ligações Intermoleculares e Solubilidade',
+    itemNumber: 114,
+    statement:
+      'A solubilidade de compostos orgânicos em meio aquoso é fortemente governada pela polaridade das ligações e pela formação de ligações de hidrogênio. Observe o diagrama esquemático da interação intermolecular apresentado a seguir:',
+    figureUrl: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=600&q=80',
+    figureAltText: 'Diagrama esquemático de interações moleculares em solução aquosa',
+    difficulty: 'HARD',
+    status: 'ACTIVE',
+    options: [
+      { optionLetter: 'A', text: 'Predomínio de forças dipolo induzido-dipolo induzido (London)' },
+      { optionLetter: 'B', text: 'Formação de redes tridimensionais covalentes apolares' },
+      { optionLetter: 'C', text: 'Estabelecimento de ligações de hidrogênio entre hidroxilas e água' },
+      { optionLetter: 'D', text: 'Ruptura das ligações sigma carbono-oxigênio por solvatação iônica' },
+      { optionLetter: 'E', text: 'Neutralização eletrostática através de precipitação salina rápida' },
+    ],
+  },
+  {
+    id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+    year: 2023,
+    subject: 'CH',
+    discipline: 'História do Brasil',
+    topic: 'Cidadania e a Constituição de 1988',
+    itemNumber: 62,
+    contextText:
+      'A Constituição da República Federativa do Brasil de 1988, denominada Constituição Cidadã por Ulysses Guimarães, consolidou a transição democrática após duas décadas de regime militar, consagrando o princípio da dignidade da pessoa humana e a universalidade dos direitos sociais.',
+    statement:
+      'No contexto da história republicana brasileira, a promulgação da Constituição de 1988 representou um marco institucional fundamental porque:',
+    difficulty: 'MEDIUM',
+    status: 'ACTIVE',
+    options: [
+      { optionLetter: 'A', text: 'Restringiu a participação eleitoral a cidadãos alfabetizados e contribuintes' },
+      { optionLetter: 'B', text: 'Ampliou as garantias de direitos fundamentais e o acesso universal à saúde pública' },
+      { optionLetter: 'C', text: 'Centralizou as prerrogativas orçamentárias exclusivamente no Poder Executivo' },
+      { optionLetter: 'D', text: 'Extinguiu os partidos políticos em favor de um sistema bipartidário rígido' },
+      { optionLetter: 'E', text: 'Subordinou as decisões do Supremo Tribunal Federal às Forças Armadas' },
+    ],
+  },
+  {
+    id: 'bbbbbbbb-cccc-dddd-eeee-ffffffffffff',
+    year: 2022,
+    subject: 'LC',
+    discipline: 'Língua Portuguesa e Literatura',
+    topic: 'Funções da Linguagem e Modernismo',
+    itemNumber: 28,
+    contextText:
+      '"Sentia a terra fremir, o chão palpitar sob os pés descalços. Sentia a vida crescer em torrentes, rompendo finalmente os diques da indiferença construídos pelo tempo."',
+    statement:
+      'No fragmento lírico apresentado, a construção expressiva baseada na atribuição de sensações físicas e emocionais à paisagem natural caracteriza o recurso estilístico de:',
+    difficulty: 'EASY',
+    status: 'ACTIVE',
+    options: [
+      { optionLetter: 'A', text: 'Prosopopeia ou personificação lírica dos elementos naturais' },
+      { optionLetter: 'B', text: 'Paradoxo inconciliável entre o mundo rural e o urbano' },
+      { optionLetter: 'C', text: 'Eufemismo atenuador da precariedade do trabalho rural' },
+      { optionLetter: 'D', text: 'Metonímia quantitativa desprovida de carga afetiva' },
+      { optionLetter: 'E', text: 'Antítese temporal puramente cronológica e descritiva' },
     ],
   },
 ];
@@ -76,6 +139,38 @@ export const MOCK_RESOLUTION: QuestionResolutionDto = {
     E: 'Incorreta: Multiplicação arbitrária.',
   },
   attribution: 'INEP Microdados 2023',
+};
+
+export const MOCK_RESOLUTIONS: Record<string, QuestionResolutionDto> = {
+  '77777777-8888-9999-aaaa-bbbbbbbbbbbb': MOCK_RESOLUTION,
+  '88888888-9999-aaaa-bbbb-cccccccccccc': {
+    questionId: '88888888-9999-aaaa-bbbb-cccccccccccc',
+    correctOption: 'B',
+    baseExplanation:
+      'Tempo de encontro: $t = \\frac{d}{v_1 + v_2} = \\frac{120\\text{ km}}{60\\text{ km/h} + 40\\text{ km/h}} = \\frac{120}{100} = 1{,}2\\text{ horas}$. Alternativa correta: B.',
+    attribution: 'INEP Microdados 2022',
+  },
+  '99999999-aaaa-bbbb-cccc-dddddddddddd': {
+    questionId: '99999999-aaaa-bbbb-cccc-dddddddddddd',
+    correctOption: 'C',
+    baseExplanation:
+      'A elevada solubilidade do composto orgânico decorre da capacidade dos grupos hidroxila (-OH) formarem ligações de hidrogênio com a água. Alternativa correta: C.',
+    attribution: 'INEP Microdados 2023',
+  },
+  'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee': {
+    questionId: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+    correctOption: 'B',
+    baseExplanation:
+      'A Carta Magna de 1988 instituiu o Estado Democrático de Direito, universalizou direitos sociais e a previdência, além de criar as bases do Sistema Único de Saúde (SUS). Alternativa correta: B.',
+    attribution: 'INEP Microdados 2023',
+  },
+  'bbbbbbbb-cccc-dddd-eeee-ffffffffffff': {
+    questionId: 'bbbbbbbb-cccc-dddd-eeee-ffffffffffff',
+    correctOption: 'A',
+    baseExplanation:
+      'A atribuição de ações, sentimentos ou características animadas/humanas à terra ("fremir", "palpitar") configura uma prosopopeia ou personificação. Alternativa correta: A.',
+    attribution: 'INEP Microdados 2022',
+  },
 };
 
 export const MOCK_START_SESSION: StartSessionResponse = {
