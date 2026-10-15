@@ -44,7 +44,7 @@ export const QuestionCarousel: React.FC<QuestionCarouselProps> = ({
   const hasNext = currentIndex < totalQuestions - 1;
 
   return (
-    <div
+    <nav
       className={`flex flex-col sm:flex-row items-center justify-between gap-3 p-3 sm:p-4 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm ${className}`}
       aria-label="Controles de navegação do simulado"
     >
@@ -174,6 +174,6 @@ export const QuestionCarousel: React.FC<QuestionCarouselProps> = ({
           <ChevronRight className="h-4 w-4 ml-1" aria-hidden="true" />
         </Button>
       </div>
-    </div>
+    </nav>
   );
 };

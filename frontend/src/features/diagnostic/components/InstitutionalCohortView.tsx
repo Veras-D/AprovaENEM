@@ -243,6 +243,7 @@ export const InstitutionalCohortView: React.FC<InstitutionalCohortViewProps> = (
           {!showTableView ? (
             <div
               className="w-full h-80 flex items-center justify-center"
+              role="img"
               aria-label="Gráfico de radar comparativo da turma"
             >
               <ResponsiveContainer width="100%" height={320}>

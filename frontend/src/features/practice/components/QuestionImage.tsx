@@ -47,6 +47,7 @@ export const QuestionImage: React.FC<QuestionImageProps> = ({
         {/* Loading Skeleton */}
         {isLoading && !hasError && (
           <div
+            role="status"
             className="w-full h-48 sm:h-64 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-brand flex items-center justify-center text-slate-400"
             aria-busy="true"
             aria-label="Carregando imagem da questão..."

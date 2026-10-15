@@ -53,6 +53,7 @@ export const VLibras: React.FC = () => {
 
   return (
     <div
+      role="region"
       // @ts-expect-error VLibras proprietary attributes
       vw="true"
       className="enabled"

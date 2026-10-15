@@ -178,6 +178,7 @@ export const StudentDiagnosticRadar: React.FC<StudentDiagnosticRadarProps> = ({
           {!showTableView ? (
             <div
               className="w-full h-80 flex items-center justify-center"
+              role="img"
               aria-label="Gráfico de radar mostrando desempenho nas 4 áreas do ENEM"
             >
               <ResponsiveContainer width="100%" height={320}>
