@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTenantStore } from '@/stores/useTenantStore';
 import { useSessionStore } from '@/stores/useSessionStore';
 import { MOCK_QUESTIONS, MOCK_RESOLUTIONS } from '@/api/mocks/mock-data';
@@ -10,12 +10,14 @@ import {
   QuestionCard,
   QuestionCarousel,
   InstantFeedback,
+  SocraticTutorDrawer,
 } from './components';
 import {
   Sparkles,
   RotateCcw,
   Award,
   BookOpen,
+  Bot,
 } from 'lucide-react';
 import type { QuestionOptionLetter, PracticeSession } from '@/types';
 import { mapDtoToDomainQuestion } from './practice-mappers';
@@ -37,6 +39,8 @@ export const PracticeHero: React.FC = () => {
     goToQuestion,
     activeSession,
   } = useSessionStore();
+
+  const [isTutorOpen, setIsTutorOpen] = useState<boolean>(false);
 
   // Initialize session with authentic mock questions if empty
   useEffect(() => {
@@ -159,7 +163,23 @@ export const PracticeHero: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
+          {/* Socratic AI Tutor Quick Action */}
+          {currentQuestion && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsTutorOpen(true)}
+              aria-label="Abrir Tutor IA Socrático para esta questão"
+              title="Tirar dúvida com o Tutor IA Socrático"
+              className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 text-xs sm:text-sm"
+            >
+              <Bot className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />
+              <span className="hidden sm:inline">Tutor Socrático</span>
+            </Button>
+          )}
+
           {/* Quiz Timer */}
           <QuizTimer
             initialSeconds={180}
@@ -227,6 +247,7 @@ export const PracticeHero: React.FC = () => {
               awardedXp={currentAttempt.awardedXp}
               onNextQuestion={nextQuestion}
               hasNextQuestion={currentQuestionIndex < totalQuestions - 1}
+              onOpenSocraticTutor={() => setIsTutorOpen(true)}
             />
           )}
         </section>
@@ -284,6 +305,15 @@ export const PracticeHero: React.FC = () => {
             </div>
           </CardBody>
         </Card>
+      )}
+
+      {/* Socratic AI Tutor Drawer bound to current question */}
+      {currentQuestion && (
+        <SocraticTutorDrawer
+          isOpen={isTutorOpen}
+          onClose={() => setIsTutorOpen(false)}
+          question={currentQuestion}
+        />
       )}
     </div>
   );

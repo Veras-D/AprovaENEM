@@ -1,16 +1,31 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import React from 'react';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PracticeHero } from './PracticeHero';
 import { useSessionStore } from '@/stores/useSessionStore';
 
 describe('PracticeHero Component', () => {
+  let queryClient: QueryClient;
+
+  const renderWithProviders = (ui: React.ReactElement = <PracticeHero />) => {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false, gcTime: 0 },
+        mutations: { retry: false },
+      },
+    });
+
+    return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+  };
+
   beforeEach(() => {
-    // Reset session store state before each test
+    vi.clearAllMocks();
     useSessionStore.getState().clearSession();
   });
 
   it('should initialize and render the interactive quiz mode with authentic questions', () => {
-    render(<PracticeHero />);
+    renderWithProviders();
 
     // Platform header & white-label badge
     expect(
@@ -37,7 +52,7 @@ describe('PracticeHero Component', () => {
   });
 
   it('should allow selecting an option and submitting an answer with instant grading', () => {
-    render(<PracticeHero />);
+    renderWithProviders();
 
     // Initially "Confirmar Resposta" is disabled
     const submitBtn = screen.getByRole('button', { name: /confirmar resposta/i });
@@ -57,7 +72,7 @@ describe('PracticeHero Component', () => {
   });
 
   it('should navigate between questions using next button and carousel pills', () => {
-    render(<PracticeHero />);
+    renderWithProviders();
 
     // Question 1 is active
     expect(screen.getByText(/MT • Matemática/i)).toBeInTheDocument();
@@ -80,7 +95,7 @@ describe('PracticeHero Component', () => {
   });
 
   it('should toggle question flag for review', () => {
-    render(<PracticeHero />);
+    renderWithProviders();
 
     const flagBtn = screen.getByRole('button', { name: /Marcar questão para revisar/i });
     expect(flagBtn).toHaveAttribute('aria-pressed', 'false');
@@ -94,7 +109,7 @@ describe('PracticeHero Component', () => {
   });
 
   it('should allow restarting the quiz', () => {
-    render(<PracticeHero />);
+    renderWithProviders();
 
     // Select and submit option
     const optionB = screen.getByRole('radio', { name: /B.*1{,}50/i });
@@ -108,5 +123,45 @@ describe('PracticeHero Component', () => {
     fireEvent.click(restartBtn);
 
     expect(screen.getByText(/0 de 5 respondidas/i)).toBeInTheDocument();
+  });
+
+  it('should open Socratic Tutor drawer when clicking the tutor button in control bar and in feedback', async () => {
+    renderWithProviders();
+
+    // Tutor button in top control bar
+    const tutorTopBtn = screen.getByRole('button', {
+      name: /Abrir Tutor IA Socrático para esta questão/i,
+    });
+    expect(tutorTopBtn).toBeInTheDocument();
+
+    fireEvent.click(tutorTopBtn);
+
+    // Drawer should open
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: /Tutor IA Socrático/i })).toBeInTheDocument();
+    });
+
+    // Close drawer
+    const closeBtn = screen.getByRole('button', { name: /Fechar Tutor Socrático/i });
+    fireEvent.click(closeBtn);
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    // Now submit answer and open from instant feedback banner
+    const optionB = screen.getByRole('radio', { name: /B.*1{,}50/i });
+    fireEvent.click(optionB);
+    const submitBtn = screen.getByRole('button', { name: /confirmar resposta/i });
+    fireEvent.click(submitBtn);
+
+    const feedbackTutorBtn = screen.getByRole('button', {
+      name: /Abrir conversa com o Tutor IA Socrático/i,
+    });
+    fireEvent.click(feedbackTutorBtn);
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: /Tutor IA Socrático/i })).toBeInTheDocument();
+    });
   });
 });

@@ -7,3 +7,6 @@ export { FeedbackBanner, type FeedbackBannerProps } from './FeedbackBanner';
 export { DistractorBreakdown, type DistractorBreakdownProps } from './DistractorBreakdown';
 export { ResolutionAccordion, type ResolutionAccordionProps } from './ResolutionAccordion';
 export { InstantFeedback, type InstantFeedbackProps } from './InstantFeedback';
+export { SocraticQuotaWidget, type SocraticQuotaWidgetProps } from './SocraticQuotaWidget';
+export { SocraticMessageBubble, type SocraticMessageBubbleProps } from './SocraticMessageBubble';
+export { SocraticTutorDrawer, type SocraticTutorDrawerProps } from './SocraticTutorDrawer';
