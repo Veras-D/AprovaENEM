@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RootLayout } from '@/layouts/RootLayout';
 import { PracticeHero } from '@/features/practice/PracticeHero';
+import { GamificationDashboard } from '@/features/gamification';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -14,10 +15,16 @@ const queryClient = new QueryClient({
 });
 
 export const App: React.FC = () => {
+  const [activeSection, setActiveSection] = useState<string>('practice');
+
   return (
     <QueryClientProvider client={queryClient}>
-      <RootLayout>
-        <PracticeHero />
+      <RootLayout activeSection={activeSection} onNavigate={setActiveSection}>
+        {activeSection === 'leaderboard' ? (
+          <GamificationDashboard onStartPractice={() => setActiveSection('practice')} />
+        ) : (
+          <PracticeHero onOpenGamification={() => setActiveSection('leaderboard')} />
+        )}
       </RootLayout>
     </QueryClientProvider>
   );

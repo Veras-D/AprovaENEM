@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PracticeHero } from './PracticeHero';
 import { useSessionStore } from '@/stores/useSessionStore';
@@ -163,5 +163,43 @@ describe('PracticeHero Component', () => {
     await waitFor(() => {
       expect(screen.getByRole('dialog', { name: /Tutor IA Socrático/i })).toBeInTheDocument();
     });
+  });
+
+  it('triggers celebration overlay upon answering all questions and calls onOpenGamification', async () => {
+    const handleOpenGamification = vi.fn();
+    renderWithProviders(<PracticeHero onOpenGamification={handleOpenGamification} />);
+
+    // Complete all 5 questions by recording attempts in the session store
+    act(() => {
+      const qs = useSessionStore.getState().questions;
+      qs.forEach((q) => {
+        useSessionStore.getState().recordAttempt({
+          questionId: q.id,
+          selectedOption: 'A',
+          correctOption: 'A',
+          isCorrect: true,
+          awardedXp: 15,
+        });
+      });
+    });
+
+    // Celebration modal overlay should now be open with celebratory title
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: /Parabéns! Simulado Concluído!/i })).toBeInTheDocument();
+    });
+
+    // Close the celebration modal
+    const closeCelebrationBtn = screen.getByRole('button', { name: /Continuar Estudando/i });
+    fireEvent.click(closeCelebrationBtn);
+
+    // Completed summary card should be visible
+    expect(screen.getByText('Simulado Rápido Concluído!')).toBeInTheDocument();
+
+    // Click "Ver Conquistas & Ranking"
+    const gamificationBtn = screen.getByRole('button', { name: /Ver Conquistas & Ranking/i });
+    expect(gamificationBtn).toBeInTheDocument();
+    fireEvent.click(gamificationBtn);
+
+    expect(handleOpenGamification).toHaveBeenCalledTimes(1);
   });
 });

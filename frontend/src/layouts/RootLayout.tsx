@@ -17,12 +17,20 @@ import { ShieldCheck } from 'lucide-react';
 
 export interface RootLayoutProps {
   readonly children: React.ReactNode;
+  readonly activeSection?: string;
+  readonly onNavigate?: (section: string) => void;
 }
 
-export const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
+export const RootLayout: React.FC<RootLayoutProps> = ({
+  children,
+  activeSection: controlledSection,
+  onNavigate: controlledOnNavigate,
+}) => {
   const currentTenant = useTenantStore((s) => s.currentTenant);
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
-  const [activeSection, setActiveSection] = useState<string>('practice');
+  const [internalSection, setInternalSection] = useState<string>('practice');
+
+  const activeSection = controlledSection ?? internalSection;
 
   // Auth & LGPD Legal Modals State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
@@ -41,7 +49,11 @@ export const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
   };
 
   const handleNavigate = (section: string) => {
-    setActiveSection(section);
+    if (controlledOnNavigate) {
+      controlledOnNavigate(section);
+    } else {
+      setInternalSection(section);
+    }
   };
 
   return (

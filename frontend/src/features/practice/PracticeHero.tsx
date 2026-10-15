@@ -18,11 +18,17 @@ import {
   Award,
   BookOpen,
   Bot,
+  Trophy,
 } from 'lucide-react';
 import type { QuestionOptionLetter, PracticeSession } from '@/types';
 import { mapDtoToDomainQuestion } from './practice-mappers';
+import { CelebrationOverlay } from '@/features/gamification';
 
-export const PracticeHero: React.FC = () => {
+export interface PracticeHeroProps {
+  readonly onOpenGamification?: () => void;
+}
+
+export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }) => {
   const { currentTenant } = useTenantStore();
   const {
     questions,
@@ -41,6 +47,7 @@ export const PracticeHero: React.FC = () => {
   } = useSessionStore();
 
   const [isTutorOpen, setIsTutorOpen] = useState<boolean>(false);
+  const [showCelebration, setShowCelebration] = useState<boolean>(false);
 
   // Initialize session with authentic mock questions if empty
   useEffect(() => {
@@ -92,6 +99,7 @@ export const PracticeHero: React.FC = () => {
   }, [currentQuestion, currentSelectedOption, recordAttempt]);
 
   const handleRestart = useCallback(() => {
+    setShowCelebration(false);
     const domainQuestions = MOCK_QUESTIONS.map(mapDtoToDomainQuestion);
     const mockSession: PracticeSession = {
       id: `session-${Date.now()}`,
@@ -117,6 +125,13 @@ export const PracticeHero: React.FC = () => {
   const flaggedCount = useMemo(() => {
     return Object.values(flaggedQuestions).filter(Boolean).length;
   }, [flaggedQuestions]);
+
+  // Trigger celebratory confetti modal upon answering all questions
+  useEffect(() => {
+    if (isAllAnswered) {
+      setShowCelebration(true);
+    }
+  }, [isAllAnswered]);
 
   return (
     <div className="space-y-6">
@@ -292,6 +307,18 @@ export const PracticeHero: React.FC = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
+              {onOpenGamification && (
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="md"
+                  onClick={onOpenGamification}
+                  className="w-full sm:w-auto"
+                >
+                  <Trophy className="h-4 w-4 mr-2" aria-hidden="true" />
+                  Ver Conquistas & Ranking
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="outline"
@@ -315,6 +342,15 @@ export const PracticeHero: React.FC = () => {
           question={currentQuestion}
         />
       )}
+
+      {/* Level-up & Exam Completion Celebration Modal Overlay */}
+      <CelebrationOverlay
+        isOpen={showCelebration}
+        onClose={() => setShowCelebration(false)}
+        title="Parabéns! Simulado Concluído!"
+        subtitle={`Você respondeu a todas as ${totalQuestions} questões com ${correctCount} acertos!`}
+        xpAwarded={totalXp}
+      />
     </div>
   );
 };
