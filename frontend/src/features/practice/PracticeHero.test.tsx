@@ -51,8 +51,8 @@ describe('PracticeHero Component', () => {
     fireEvent.click(submitBtn);
 
     // After submit, should show correct feedback
-    expect(screen.getByText(/Resposta Correta! \(\+15 XP\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/Resolução Comentada:/i)).toBeInTheDocument();
+    expect(screen.getByText('Resposta Correta!')).toBeInTheDocument();
+    expect(screen.getByText(/Resolução Comentada Oficial/i)).toBeInTheDocument();
     expect(screen.getByText(/1 de 5 respondidas/i)).toBeInTheDocument();
   });
 

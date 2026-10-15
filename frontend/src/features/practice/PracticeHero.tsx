@@ -5,20 +5,15 @@ import { MOCK_QUESTIONS, MOCK_RESOLUTIONS } from '@/api/mocks/mock-data';
 import { ThemeCustomizer } from '@/components/ui/ThemeCustomizer';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardBody } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { MathRenderer } from '@/components/math/MathRenderer';
 import {
   QuizTimer,
   QuestionCard,
   QuestionCarousel,
+  InstantFeedback,
 } from './components';
 import {
   Sparkles,
-  CheckCircle2,
-  XCircle,
   RotateCcw,
-  Bot,
-  ArrowRight,
   Award,
   BookOpen,
 } from 'lucide-react';
@@ -219,72 +214,20 @@ export const PracticeHero: React.FC = () => {
             onToggleFlag={() => toggleFlagQuestion(currentQuestion.id)}
           />
 
-          {/* Instant Grading Resolution Accordion */}
+          {/* Instant Grading Resolution & Distractor Breakdown Accordion */}
           {isCurrentSubmitted && currentAttempt && (
-            <div
-              className={`mt-4 p-4 sm:p-5 rounded-brand border-2 animate-in fade-in duration-300 ${
-                currentAttempt.isCorrect
-                  ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-500/40 text-emerald-900 dark:text-emerald-100'
-                  : 'bg-amber-50 dark:bg-amber-950/30 border-amber-500/40 text-amber-900 dark:text-amber-100'
-              }`}
-              role="region"
-              aria-label="Resolução e feedback da questão"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2.5">
-                <div className="flex items-center gap-2 font-bold text-sm sm:text-base">
-                  {currentAttempt.isCorrect ? (
-                    <>
-                      <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
-                      <span>Resposta Correta! (+{currentAttempt.awardedXp ?? 15} XP)</span>
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className="h-5 w-5 text-rose-600 dark:text-rose-400 shrink-0" aria-hidden="true" />
-                      <span>
-                        Resposta Incorreta. A alternativa correta é a letra ({correctOption}).
-                      </span>
-                    </>
-                  )}
-                </div>
-
-                {currentQuestionIndex < totalQuestions - 1 && (
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size="sm"
-                    onClick={nextQuestion}
-                    className="self-end sm:self-auto"
-                  >
-                    <span>Próxima Questão</span>
-                    <ArrowRight className="h-4 w-4 ml-1.5" aria-hidden="true" />
-                  </Button>
-                )}
-              </div>
-
-              {currentAttempt.explanation && (
-                <div className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 mt-2 space-y-1">
-                  <strong className="block text-slate-900 dark:text-slate-100">
-                    Resolução Comentada:
-                  </strong>
-                  <div className="p-3 rounded-brand bg-white/70 dark:bg-slate-900/70 border border-slate-200/60 dark:border-slate-800/60">
-                    <MathRenderer content={currentAttempt.explanation} />
-                  </div>
-                </div>
-              )}
-
-              {/* Socratic AI Tutor Invitation Banner */}
-              <div className="mt-3.5 pt-3 border-t border-slate-200/60 dark:border-slate-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-                  <Bot className="h-4 w-4 text-brand-primary shrink-0" aria-hidden="true" />
-                  <span>
-                    Dúvida no conceito? Chame o <strong>Tutor IA Socrático</strong> para tirar dúvidas sem resposta pronta.
-                  </span>
-                </div>
-                <Badge variant="outline" className="self-start sm:self-auto text-xs">
-                  Socratic AI Tutor &bull; Sprint 5
-                </Badge>
-              </div>
-            </div>
+            <InstantFeedback
+              className="mt-4"
+              isCorrect={Boolean(currentAttempt.isCorrect)}
+              selectedOption={currentAttempt.selectedOption}
+              correctOption={correctOption ?? 'A'}
+              baseExplanation={currentAttempt.explanation || currentResolution?.baseExplanation || ''}
+              distractorAnalysis={currentResolution?.distractorAnalysis}
+              attribution={currentResolution?.attribution}
+              awardedXp={currentAttempt.awardedXp}
+              onNextQuestion={nextQuestion}
+              hasNextQuestion={currentQuestionIndex < totalQuestions - 1}
+            />
           )}
         </section>
       )}

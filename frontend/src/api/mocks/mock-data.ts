@@ -148,13 +148,27 @@ export const MOCK_RESOLUTIONS: Record<string, QuestionResolutionDto> = {
     correctOption: 'B',
     baseExplanation:
       'Tempo de encontro: $t = \\frac{d}{v_1 + v_2} = \\frac{120\\text{ km}}{60\\text{ km/h} + 40\\text{ km/h}} = \\frac{120}{100} = 1{,}2\\text{ horas}$. Alternativa correta: B.',
+    distractorAnalysis: {
+      A: 'Incorreta: Falácia de subtração de velocidades ou cálculo incompleto ($120/120 = 1{,}0\\text{ h}$).',
+      B: 'Correta: Velocidade relativa de aproximação $v_{\\text{rel}} = 60 + 40 = 100\\text{ km/h}$; portanto $t = 120/100 = 1{,}2\\text{ h}$.',
+      C: 'Incorreta: Média aritmética simples de tempos sem considerar a conservação do deslocamento.',
+      D: 'Incorreta: Considerou apenas o veículo mais rápido ($120/60 = 2{,}0\\text{ h}$), ignorando o deslocamento simultâneo do segundo.',
+      E: 'Incorreta: Multiplicou o tempo correto por 2 arbitrariamente.',
+    },
     attribution: 'INEP Microdados 2022',
   },
   '99999999-aaaa-bbbb-cccc-dddddddddddd': {
     questionId: '99999999-aaaa-bbbb-cccc-dddddddddddd',
     correctOption: 'C',
     baseExplanation:
-      'A elevada solubilidade do composto orgânico decorre da capacidade dos grupos hidroxila (-OH) formarem ligações de hidrogênio com a água. Alternativa correta: C.',
+      'A elevada solubilidade do composto orgânico decorre da capacidade dos grupos hidroxila (-OH) formarem ligações de hidrogênio com as moléculas de água. Alternativa correta: C.',
+    distractorAnalysis: {
+      A: 'Incorreta: Forças de London (dipolo induzido) são fracas e predominam em hidrocarbonetos e compostos apolares.',
+      B: 'Incorreta: Redes covalentes tridimensionais caracterizam sólidos macromoleculares insolúveis como o diamante.',
+      C: 'Correta: Os pares de elétrons livres e hidrogênios polarizados da hidroxila interagem fortemente com a água por ligações de hidrogênio.',
+      D: 'Incorreta: Não ocorre quebra de ligação sigma C-O por solvatação em moléculas neutras.',
+      E: 'Incorreta: Não há espécie iônica precipitante na interação intermolecular apresentada.',
+    },
     attribution: 'INEP Microdados 2023',
   },
   'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee': {
@@ -162,6 +176,13 @@ export const MOCK_RESOLUTIONS: Record<string, QuestionResolutionDto> = {
     correctOption: 'B',
     baseExplanation:
       'A Carta Magna de 1988 instituiu o Estado Democrático de Direito, universalizou direitos sociais e a previdência, além de criar as bases do Sistema Único de Saúde (SUS). Alternativa correta: B.',
+    distractorAnalysis: {
+      A: 'Incorreta: A CF/88 estendeu o direito de voto aos analfabetos (art. 14, § 1º, II, a), ampliando a cidadania.',
+      B: 'Correta: Consolidou garantias fundamentais inalienáveis, seguridade social universal e a criação do SUS.',
+      C: 'Incorreta: A CF/88 descentralizou o orçamento e fortaleceu a fiscalização pelo Congresso Nacional e TCU.',
+      D: 'Incorreta: A CF/88 consagrou expressamente o princípio do pluralismo político e partidário (art. 1º, V).',
+      E: 'Incorreta: O texto constitucional subordina as Forças Armadas à autoridade suprema da Presidência civil.',
+    },
     attribution: 'INEP Microdados 2023',
   },
   'bbbbbbbb-cccc-dddd-eeee-ffffffffffff': {
@@ -169,6 +190,13 @@ export const MOCK_RESOLUTIONS: Record<string, QuestionResolutionDto> = {
     correctOption: 'A',
     baseExplanation:
       'A atribuição de ações, sentimentos ou características animadas/humanas à terra ("fremir", "palpitar") configura uma prosopopeia ou personificação. Alternativa correta: A.',
+    distractorAnalysis: {
+      A: 'Correta: A personificação atribui comportamentos orgânicos e vitais a elementos inanimados da paisagem.',
+      B: 'Incorreta: O trecho não estabelece uma contradição lógica conceitual insolúvel (paradoxo).',
+      C: 'Incorreta: Não há atenuação de termo desagradável ou chocante (eufemismo), mas sim exaltação sensorial.',
+      D: 'Incorreta: A figuração não se baseia em relação de contiguidade parte/todo sem carga expressiva.',
+      E: 'Incorreta: A construção é figurativa e afetiva, não uma mera antítese cronológica descritiva.',
+    },
     attribution: 'INEP Microdados 2022',
   },
 };
