@@ -10,3 +10,12 @@ export { InstantFeedback, type InstantFeedbackProps } from './InstantFeedback';
 export { SocraticQuotaWidget, type SocraticQuotaWidgetProps } from './SocraticQuotaWidget';
 export { SocraticMessageBubble, type SocraticMessageBubbleProps } from './SocraticMessageBubble';
 export { SocraticTutorDrawer, type SocraticTutorDrawerProps } from './SocraticTutorDrawer';
+export { QuestionAudioReader, type QuestionAudioReaderProps } from './QuestionAudioReader';
+export {
+  TimeAccommodationModal,
+  type TimeAccommodationModalProps,
+} from './TimeAccommodationModal';
+export {
+  TIME_ACCOMMODATION_OPTIONS,
+  type TimeAccommodationOption,
+} from '../time-accommodation-constants';

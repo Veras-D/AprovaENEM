@@ -11,6 +11,8 @@ export type KnowledgeArea =
 
 export type QuestionDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
 
+export type TimeAccommodationMode = 'STANDARD' | 'EXTENDED_INEP' | 'UNTIMED';
+
 export type QuestionOptionLetter = 'A' | 'B' | 'C' | 'D' | 'E';
 
 export interface QuestionOption {
@@ -59,6 +61,7 @@ export interface PracticeSession {
   readonly correctCount: number;
   readonly createdAt: string;
   readonly completedAt?: string;
+  readonly timeMode?: TimeAccommodationMode;
 }
 
 export interface AnswerSubmissionPayload {

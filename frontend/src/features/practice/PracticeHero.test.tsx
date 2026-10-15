@@ -41,7 +41,7 @@ describe('PracticeHero Component', () => {
 
     // Question 1 metadata & statement
     expect(screen.getByText(/MT • Matemática/i)).toBeInTheDocument();
-    expect(screen.getByText(/ENEM 2023/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/ENEM 2023/i)[0]).toBeInTheDocument();
     expect(
       screen.getByText(/Um estudante do ensino médio deseja calcular a economia gerada/i)
     ).toBeInTheDocument();
@@ -129,9 +129,9 @@ describe('PracticeHero Component', () => {
     renderWithProviders();
 
     // Tutor button in top control bar
-    const tutorTopBtn = screen.getByRole('button', {
+    const tutorTopBtn = screen.getAllByRole('button', {
       name: /Abrir Tutor IA Socrático para esta questão/i,
-    });
+    })[0]!;
     expect(tutorTopBtn).toBeInTheDocument();
 
     fireEvent.click(tutorTopBtn);
@@ -201,5 +201,28 @@ describe('PracticeHero Component', () => {
     fireEvent.click(gamificationBtn);
 
     expect(handleOpenGamification).toHaveBeenCalledTimes(1);
+  });
+
+  it('allows opening and configuring INEP Exam Time Accommodations', async () => {
+    renderWithProviders();
+
+    // Click accommodations button on QuizTimer
+    const configBtn = screen.getByRole('button', {
+      name: /configurar acomodações de tempo inep/i,
+    });
+    expect(configBtn).toBeInTheDocument();
+    fireEvent.click(configBtn);
+
+    // Modal should be visible
+    expect(screen.getByText('Acomodações de Tempo de Prova INEP')).toBeInTheDocument();
+
+    // Select Extended INEP time (+60 min)
+    const inepBtn = screen.getByRole('button', {
+      name: /atendimento especializado inep/i,
+    });
+    fireEvent.click(inepBtn);
+
+    // Timer should reflect the +60m INEP mode
+    expect(screen.getByText('+60m INEP')).toBeInTheDocument();
   });
 });

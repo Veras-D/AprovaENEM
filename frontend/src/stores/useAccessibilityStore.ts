@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { TimeAccommodationMode } from '@/types';
 
 export type FontScale = 100 | 125 | 150 | 175 | 200;
 export type FontFamilyOption = 'standard' | 'dyslexic' | 'atkinson';
@@ -19,6 +20,7 @@ export interface AccessibilityPreferences {
   readonly highlightLinks: boolean;
   readonly readingRuler: boolean;
   readonly vlibrasEnabled: boolean;
+  readonly timeMode: TimeAccommodationMode;
 }
 
 export interface AccessibilityState extends AccessibilityPreferences {
@@ -34,6 +36,7 @@ export interface AccessibilityState extends AccessibilityPreferences {
   readonly toggleReadingRuler: () => void;
   readonly setRulerY: (y: number) => void;
   readonly toggleVlibras: () => void;
+  readonly setTimeMode: (mode: TimeAccommodationMode) => void;
   readonly setToolbarOpen: (open: boolean) => void;
   readonly toggleToolbar: () => void;
   readonly resetAccessibility: () => void;
@@ -48,6 +51,7 @@ export const DEFAULT_A11Y_PREFERENCES: AccessibilityPreferences = {
   highlightLinks: false,
   readingRuler: false,
   vlibrasEnabled: false,
+  timeMode: 'STANDARD',
 };
 
 const STORAGE_KEY = 'aprovaenem_a11y_prefs';
@@ -140,6 +144,7 @@ export function loadStoredPreferences(): AccessibilityPreferences {
       highlightLinks: Boolean(parsed.highlightLinks),
       readingRuler: Boolean(parsed.readingRuler),
       vlibrasEnabled: Boolean(parsed.vlibrasEnabled),
+      timeMode: parsed.timeMode ?? DEFAULT_A11Y_PREFERENCES.timeMode,
     };
   } catch {
     return DEFAULT_A11Y_PREFERENCES;
@@ -164,6 +169,7 @@ export const useAccessibilityStore = create<AccessibilityState>((set, get) => {
       highlightLinks: partial.highlightLinks ?? get().highlightLinks,
       readingRuler: partial.readingRuler ?? get().readingRuler,
       vlibrasEnabled: partial.vlibrasEnabled ?? get().vlibrasEnabled,
+      timeMode: partial.timeMode ?? get().timeMode,
     };
     applyAccessibilityToDocument(next);
     set(next);
@@ -184,6 +190,7 @@ export const useAccessibilityStore = create<AccessibilityState>((set, get) => {
     toggleReadingRuler: () => updatePrefs({ readingRuler: !get().readingRuler }),
     setRulerY: (y) => set({ rulerY: y }),
     toggleVlibras: () => updatePrefs({ vlibrasEnabled: !get().vlibrasEnabled }),
+    setTimeMode: (mode) => updatePrefs({ timeMode: mode }),
     setToolbarOpen: (open) => set({ isToolbarOpen: open }),
     toggleToolbar: () => set({ isToolbarOpen: !get().isToolbarOpen }),
     resetAccessibility: () => {

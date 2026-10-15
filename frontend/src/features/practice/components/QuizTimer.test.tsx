@@ -14,7 +14,7 @@ describe('QuizTimer Component', () => {
   it('should render initial formatted time in minutes and seconds', () => {
     render(<QuizTimer initialSeconds={300} />);
     expect(screen.getByText('05:00')).toBeInTheDocument();
-    expect(screen.getByRole('timer')).toHaveAttribute('aria-label', 'Tempo do simulado: 05:00');
+    expect(screen.getByRole('timer')).toHaveAttribute('aria-label', 'Tempo do simulado restante: 05:00');
   });
 
   it('should tick down every second in countdown mode and call onTick', () => {
@@ -82,5 +82,42 @@ describe('QuizTimer Component', () => {
     });
 
     expect(screen.getByText('00:03')).toBeInTheDocument();
+  });
+
+  it('supports EXTENDED_INEP mode with extended time starting at 300s', () => {
+    render(<QuizTimer initialSeconds={180} timeMode="EXTENDED_INEP" />);
+    expect(screen.getByText('05:00')).toBeInTheDocument();
+    expect(screen.getByText('+60m INEP')).toBeInTheDocument();
+    expect(screen.getByRole('timer')).toHaveAttribute(
+      'aria-label',
+      'Tempo estendido INEP restante: 05:00'
+    );
+  });
+
+  it('supports UNTIMED mode counting upwards from 0 without countdown', () => {
+    render(<QuizTimer initialSeconds={180} timeMode="UNTIMED" />);
+    expect(screen.getByText('00:00')).toBeInTheDocument();
+    expect(screen.getByText('Livre')).toBeInTheDocument();
+    expect(screen.getByRole('timer')).toHaveAttribute(
+      'aria-label',
+      'Tempo decorrido: 00:00 (Sem limite de tempo)'
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+
+    expect(screen.getByText('00:05')).toBeInTheDocument();
+  });
+
+  it('renders accommodations settings button when onOpenAccommodations is provided', () => {
+    const onOpen = vi.fn();
+    render(<QuizTimer onOpenAccommodations={onOpen} />);
+
+    const btn = screen.getByRole('button', { name: /configurar acomodações de tempo inep/i });
+    expect(btn).toBeInTheDocument();
+
+    fireEvent.click(btn);
+    expect(onOpen).toHaveBeenCalledTimes(1);
   });
 });

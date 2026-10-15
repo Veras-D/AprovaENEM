@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Question, QuestionOptionLetter } from '@/types';
 import type { QuestionItemDto } from '@/api/types';
 import { Card, CardHeader, CardBody, CardFooter } from '@/components/ui/Card';
@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/Button';
 import { MathRenderer } from '@/components/math/MathRenderer';
 import { QuestionImage } from './QuestionImage';
 import { OptionSelector, type OptionItem } from './OptionSelector';
-import { Bookmark, Sparkles, Send } from 'lucide-react';
+import { QuestionAudioReader } from './QuestionAudioReader';
+import { Bookmark, Sparkles, Send, Keyboard, Bot } from 'lucide-react';
 
 export type UnifiedQuestion = Question | QuestionItemDto;
 
@@ -16,6 +17,7 @@ export interface QuestionCardProps {
   readonly selectedOption: QuestionOptionLetter | null;
   readonly onSelectOption: (letter: QuestionOptionLetter) => void;
   readonly onSubmitAnswer?: () => void;
+  readonly onOpenSocraticTutor?: () => void;
   readonly isSubmitted?: boolean;
   readonly correctOption?: QuestionOptionLetter | null;
   readonly isSubmitting?: boolean;
@@ -24,11 +26,28 @@ export interface QuestionCardProps {
   readonly className?: string;
 }
 
+const AREA_LABELS: Record<string, string> = {
+  MT: 'Matemática e suas Tecnologias',
+  CN: 'Ciências da Natureza',
+  CH: 'Ciências Humanas',
+  LC: 'Linguagens e Códigos',
+};
+
+const DIFFICULTY_LABELS: Record<
+  string,
+  { label: string; variant: 'primary' | 'secondary' | 'warning' | 'outline' }
+> = {
+  EASY: { label: 'Fácil', variant: 'secondary' },
+  MEDIUM: { label: 'Média', variant: 'warning' },
+  HARD: { label: 'Difícil', variant: 'primary' },
+};
+
 export const QuestionCard: React.FC<QuestionCardProps> = ({
   question,
   selectedOption,
   onSelectOption,
   onSubmitAnswer,
+  onOpenSocraticTutor,
   isSubmitted = false,
   correctOption = null,
   isSubmitting = false,
@@ -39,9 +58,20 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   // Normalize fields between Question and QuestionItemDto
   const year = 'year' in question ? question.year : question.examYear;
   const areaCode = 'subject' in question ? question.subject : question.knowledgeArea;
-  const itemNumber = 'itemNumber' in question && question.itemNumber ? question.itemNumber : ('externalId' in question ? question.externalId : undefined);
-  const figure = 'figureUrl' in question ? question.figureUrl : ('imageUrl' in question ? question.imageUrl : undefined);
-  const figureAlt = 'figureAltText' in question ? question.figureAltText : 'Figura explicativa da questão ENEM';
+  const itemNumber =
+    'itemNumber' in question && question.itemNumber
+      ? question.itemNumber
+      : 'externalId' in question
+      ? question.externalId
+      : undefined;
+  const figure =
+    'figureUrl' in question
+      ? question.figureUrl
+      : 'imageUrl' in question
+      ? question.imageUrl
+      : undefined;
+  const figureAlt =
+    'figureAltText' in question ? question.figureAltText : 'Figura explicativa da questão ENEM';
   const topic = 'topic' in question ? question.topic : undefined;
   const discipline = 'discipline' in question ? question.discipline : undefined;
   const context = 'contextText' in question ? question.contextText : undefined;
@@ -52,24 +82,70 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     text: opt.text,
   }));
 
-  // Resolve Subject Area Badge Variant and Label
-  const areaLabels: Record<string, string> = {
-    MT: 'Matemática e suas Tecnologias',
-    CN: 'Ciências da Natureza',
-    CH: 'Ciências Humanas',
-    LC: 'Linguagens e Códigos',
-  };
-
-  const difficultyLabels: Record<string, { label: string; variant: 'primary' | 'secondary' | 'warning' | 'outline' }> = {
-    EASY: { label: 'Fácil', variant: 'secondary' },
-    MEDIUM: { label: 'Média', variant: 'warning' },
-    HARD: { label: 'Difícil', variant: 'primary' },
-  };
-
-  const difficultyInfo = difficultyLabels[question.difficulty] || {
+  const difficultyInfo = DIFFICULTY_LABELS[question.difficulty] || {
     label: question.difficulty,
     variant: 'outline' as const,
   };
+
+  // Live ARIA Status Announcement State (WCAG 4.1.3)
+  const [ariaAnnouncement, setAriaAnnouncement] = useState<string>('');
+
+  // Announce question change
+  useEffect(() => {
+    const areaName = AREA_LABELS[areaCode] || areaCode;
+    setAriaAnnouncement(
+      `Questão ${itemNumber ? '#' + itemNumber : ''} carregada. Área de ${areaName}, ENEM ${year}. Dificuldade ${difficultyInfo.label}.`
+    );
+  }, [question.id, areaCode, itemNumber, year, difficultyInfo.label]);
+
+  // Announce option selection
+  useEffect(() => {
+    if (selectedOption && !isSubmitted) {
+      setAriaAnnouncement(`Alternativa (${selectedOption}) selecionada.`);
+    }
+  }, [selectedOption, isSubmitted]);
+
+  // Announce submission grading result
+  useEffect(() => {
+    if (isSubmitted) {
+      if (correctOption) {
+        if (selectedOption === correctOption) {
+          setAriaAnnouncement(
+            `Resposta submetida e corrigida. Parabéns, resposta correta! Alternativa (${correctOption}).`
+          );
+        } else {
+          setAriaAnnouncement(
+            `Resposta submetida e corrigida. Resposta incorreta. A alternativa correta é a letra (${correctOption}).`
+          );
+        }
+      } else {
+        setAriaAnnouncement('Resposta submetida com sucesso.');
+      }
+    }
+  }, [isSubmitted, correctOption, selectedOption]);
+
+  // Spacebar hotkey to open Socratic AI Tutor
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'BUTTON' ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      if (e.code === 'Space' && onOpenSocraticTutor) {
+        e.preventDefault();
+        onOpenSocraticTutor();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onOpenSocraticTutor]);
 
   return (
     <Card
@@ -77,12 +153,17 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       role="region"
       aria-labelledby="question-statement-heading"
     >
+      {/* Live announcement region for screen readers (WCAG 4.1.3) */}
+      <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+        {ariaAnnouncement}
+      </div>
+
       {/* Question Metadata Header */}
       <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/70 dark:bg-slate-900/60 pb-3.5">
         <div className="flex flex-wrap items-center gap-2">
           {/* Knowledge Area */}
           <Badge variant="primary" className="font-bold">
-            {areaCode} &bull; {discipline || areaLabels[areaCode] || areaCode}
+            {areaCode} &bull; {discipline || AREA_LABELS[areaCode] || areaCode}
           </Badge>
 
           {/* Exam Edition */}
@@ -99,28 +180,31 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           )}
         </div>
 
-        {/* Flag Bookmark Toggle */}
-        {onToggleFlag && (
-          <button
-            type="button"
-            onClick={onToggleFlag}
-            className={`self-end sm:self-auto p-1.5 rounded-brand border text-xs flex items-center gap-1.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
-              isFlagged
-                ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 font-bold'
-                : 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-            aria-pressed={isFlagged}
-            aria-label={isFlagged ? 'Remover marcação da questão' : 'Marcar questão para revisar'}
-          >
-            <Bookmark
-              className={`h-4 w-4 ${isFlagged ? 'fill-amber-500 text-amber-500' : ''}`}
-              aria-hidden="true"
-            />
-            <span className="hidden sm:inline">
-              {isFlagged ? 'Marcada' : 'Revisar'}
-            </span>
-          </button>
-        )}
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          {/* Web Speech Audio Reader Toolbar */}
+          <QuestionAudioReader question={question} options={normalizedOptions} />
+
+          {/* Flag Bookmark Toggle */}
+          {onToggleFlag && (
+            <button
+              type="button"
+              onClick={onToggleFlag}
+              className={`p-1.5 rounded-brand border text-xs flex items-center gap-1.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary min-h-[36px] ${
+                isFlagged
+                  ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 font-bold'
+                  : 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+              aria-pressed={isFlagged}
+              aria-label={isFlagged ? 'Remover marcação da questão' : 'Marcar questão para revisar'}
+            >
+              <Bookmark
+                className={`h-4 w-4 ${isFlagged ? 'fill-amber-500 text-amber-500' : ''}`}
+                aria-hidden="true"
+              />
+              <span className="hidden sm:inline">{isFlagged ? 'Marcada' : 'Revisar'}</span>
+            </button>
+          )}
+        </div>
       </CardHeader>
 
       <CardBody className="space-y-5 p-4 sm:p-6">
@@ -139,9 +223,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         )}
 
         {/* Question Figure / Image (WebP with Lightbox Zoom) */}
-        {figure && (
-          <QuestionImage src={figure} alt={figureAlt} caption={figureAlt} />
-        )}
+        {figure && <QuestionImage src={figure} alt={figureAlt} caption={figureAlt} />}
 
         {/* Question Statement */}
         <div
@@ -151,7 +233,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           <MathRenderer content={question.statement} />
         </div>
 
-        {/* Option Selector List (A to E) */}
+        {/* Option Selector List (A to E) with semantic fieldset */}
         <OptionSelector
           options={normalizedOptions}
           selectedOption={selectedOption}
@@ -159,18 +241,42 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           disabled={isSubmitted || isSubmitting}
           correctOption={correctOption}
           isSubmitted={isSubmitted}
+          onSubmitAnswer={onSubmitAnswer}
         />
       </CardBody>
 
       {/* Card Action Footer */}
       <CardFooter className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-50/70 dark:bg-slate-900/60 p-4">
-        <span className="text-xs text-slate-500 dark:text-slate-400 text-center sm:text-left">
-          {!selectedOption && 'Selecione uma alternativa para responder (ou use as teclas A–E)'}
-          {selectedOption && !isSubmitted && `Alternativa (${selectedOption}) selecionada`}
-          {isSubmitted && 'Resposta submetida e computada'}
-        </span>
+        <div className="flex flex-col gap-1 text-center sm:text-left">
+          <span className="text-xs text-slate-500 dark:text-slate-400">
+            {!selectedOption && 'Selecione uma alternativa (ou use as teclas A–E)'}
+            {selectedOption && !isSubmitted && `Alternativa (${selectedOption}) selecionada`}
+            {isSubmitted && 'Resposta submetida e computada'}
+          </span>
+
+          {/* Accessible Hotkey Guide */}
+          <div className="flex items-center justify-center sm:justify-start gap-1 text-[11px] font-mono text-slate-400 dark:text-slate-500">
+            <Keyboard className="h-3 w-3" aria-hidden="true" />
+            <span>[A–E] Escolher &bull; [Enter] Confirmar &bull; [Espaço] Tutor IA</span>
+          </div>
+        </div>
 
         <div className="flex items-center justify-end gap-2.5">
+          {onOpenSocraticTutor && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onOpenSocraticTutor}
+              aria-label="Abrir Tutor IA Socrático para esta questão"
+              title="Pedir ajuda ao Tutor Socrático (Atalho: Espaço)"
+              className="text-xs border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10"
+            >
+              <Bot className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
+              Tutor IA
+            </Button>
+          )}
+
           {onSubmitAnswer && !isSubmitted && (
             <Button
               type="button"

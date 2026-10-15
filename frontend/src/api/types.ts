@@ -3,7 +3,7 @@
  * Strictly typed interfaces matching AprovaENEM backend microservices contracts
  */
 
-import type { QuestionDifficulty, QuestionOptionLetter, KnowledgeArea } from '@/types';
+import type { QuestionDifficulty, QuestionOptionLetter, KnowledgeArea, TimeAccommodationMode } from '@/types';
 
 export interface PaginatedResponse<T> {
   readonly content: readonly T[];
@@ -58,6 +58,7 @@ export interface StartSessionRequest {
   readonly questionCount?: number;
   readonly subject?: string;
   readonly difficulty?: QuestionDifficulty;
+  readonly timeMode?: TimeAccommodationMode;
 }
 
 export interface StartSessionResponse {
@@ -67,6 +68,7 @@ export interface StartSessionResponse {
   readonly currentQuestionIndex: number;
   readonly questions: readonly QuestionItemDto[];
   readonly createdAt: string;
+  readonly timeMode?: TimeAccommodationMode;
 }
 
 export interface SubmitAnswerRequest {

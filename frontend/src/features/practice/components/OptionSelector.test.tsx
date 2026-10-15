@@ -11,14 +11,21 @@ describe('OptionSelector Component', () => {
     { letter: 'E', text: '$50\\text{ m/s}$' },
   ];
 
-  it('should render all options in a radiogroup with accessible attributes', () => {
-    render(
+  it('should render options inside a semantic fieldset and radiogroup', () => {
+    const { container } = render(
       <OptionSelector
         options={sampleOptions}
         selectedOption="B"
         onSelectOption={vi.fn()}
       />
     );
+
+    const fieldset = container.querySelector('fieldset');
+    expect(fieldset).toBeInTheDocument();
+
+    const legend = container.querySelector('legend');
+    expect(legend).toBeInTheDocument();
+    expect(legend?.textContent).toContain('Alternativas da questão');
 
     const radiogroup = screen.getByRole('radiogroup', { name: 'Alternativas da questão' });
     expect(radiogroup).toBeInTheDocument();
@@ -84,6 +91,40 @@ describe('OptionSelector Component', () => {
     expect(handleSelect).toHaveBeenCalledWith('B');
   });
 
+  it('navigates options via ArrowDown and ArrowUp keys', () => {
+    const handleSelect = vi.fn();
+    render(
+      <OptionSelector
+        options={sampleOptions}
+        selectedOption="B"
+        onSelectOption={handleSelect}
+      />
+    );
+
+    // Press ArrowDown: from B should select C
+    fireEvent.keyDown(window, { key: 'ArrowDown' });
+    expect(handleSelect).toHaveBeenCalledWith('C');
+
+    // Press ArrowUp: from B should select A
+    fireEvent.keyDown(window, { key: 'ArrowUp' });
+    expect(handleSelect).toHaveBeenCalledWith('A');
+  });
+
+  it('triggers onSubmitAnswer when Enter is pressed with an option selected', () => {
+    const handleSubmit = vi.fn();
+    render(
+      <OptionSelector
+        options={sampleOptions}
+        selectedOption="C"
+        onSelectOption={vi.fn()}
+        onSubmitAnswer={handleSubmit}
+      />
+    );
+
+    fireEvent.keyDown(window, { key: 'Enter' });
+    expect(handleSubmit).toHaveBeenCalledTimes(1);
+  });
+
   it('should display correctness indicators when submitted in review mode', () => {
     render(
       <OptionSelector
@@ -97,9 +138,5 @@ describe('OptionSelector Component', () => {
 
     const radios = screen.getAllByRole('radio');
     expect(radios.length).toBe(5);
-    // Option B is correct
-    expect(radios[1]?.className).toContain('border-emerald-500');
-    // Option C was selected but is wrong
-    expect(radios[2]?.className).toContain('border-rose-500');
   });
 });

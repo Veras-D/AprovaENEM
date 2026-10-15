@@ -1,10 +1,42 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { QuestionCard } from './QuestionCard';
 import type { Question } from '@/types';
 import type { QuestionItemDto } from '@/api/types';
 
 describe('QuestionCard Component', () => {
+  beforeEach(() => {
+    Object.defineProperty(window, 'speechSynthesis', {
+      writable: true,
+      configurable: true,
+      value: {
+        speak: vi.fn(),
+        cancel: vi.fn(),
+        pause: vi.fn(),
+        resume: vi.fn(),
+        getVoices: vi.fn().mockReturnValue([]),
+      },
+    });
+
+    class MockUtterance {
+      public text: string;
+      public lang = '';
+      public rate = 1.0;
+      constructor(text: string) {
+        this.text = text;
+      }
+    }
+
+    Object.defineProperty(window, 'SpeechSynthesisUtterance', {
+      writable: true,
+      configurable: true,
+      value: MockUtterance,
+    });
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
   const mockDomainQuestion: Question = {
     id: 'q-dom-1',
     externalId: '101',
@@ -58,8 +90,8 @@ describe('QuestionCard Component', () => {
     );
 
     expect(screen.getByText(/MT • Geometria Espacial/i)).toBeInTheDocument();
-    expect(screen.getByText(/ENEM 2023/i)).toBeInTheDocument();
-    expect(screen.getByText(/Média/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/ENEM 2023/i)[0]).toBeInTheDocument();
+    expect(screen.getAllByText(/Média/i)[0]).toBeInTheDocument();
     expect(
       screen.getByText(/Um reservatório de água em formato de cone/i)
     ).toBeInTheDocument();
@@ -81,9 +113,9 @@ describe('QuestionCard Component', () => {
 
     expect(screen.getByText(/CN • Física/i)).toBeInTheDocument();
     expect(screen.getByText(/Cinemática/i)).toBeInTheDocument();
-    expect(screen.getByText(/ENEM 2022/i)).toBeInTheDocument();
-    expect(screen.getByText(/Difícil/i)).toBeInTheDocument();
-    expect(screen.getByText(/Questão #135/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/ENEM 2022/i)[0]).toBeInTheDocument();
+    expect(screen.getAllByText(/Difícil/i)[0]).toBeInTheDocument();
+    expect(screen.getAllByText(/Questão #135/i)[0]).toBeInTheDocument();
     expect(
       screen.getByRole('img', { name: /Gráfico de velocidade em função do tempo/i })
     ).toBeInTheDocument();
@@ -99,7 +131,7 @@ describe('QuestionCard Component', () => {
       />
     );
 
-    const optionB = screen.getByRole('radio', { name: /B\s+2\.500\s+L/i });
+    const optionB = screen.getByRole('radio', { name: /B.*2\.500/i });
     fireEvent.click(optionB);
     expect(handleSelect).toHaveBeenCalledWith('B');
   });
@@ -179,5 +211,46 @@ describe('QuestionCard Component', () => {
 
     expect(screen.queryByRole('button', { name: /confirmar resposta/i })).not.toBeInTheDocument();
     expect(screen.getByText(/resposta registrada/i)).toBeInTheDocument();
+  });
+
+  it('renders audio reader controls and announces question status to screen readers', () => {
+    render(
+      <QuestionCard
+        question={mockDomainQuestion}
+        selectedOption={null}
+        onSelectOption={vi.fn()}
+      />
+    );
+
+    // Audio reader button
+    expect(
+      screen.getByRole('button', { name: /ouvir questão em voz alta/i })
+    ).toBeInTheDocument();
+
+    // Hotkey helper
+    expect(
+      screen.getByText(/\[A–E\] Escolher • \[Enter\] Confirmar • \[Espaço\] Tutor IA/i)
+    ).toBeInTheDocument();
+
+    // Screen reader status announcement
+    const liveRegions = screen.getAllByRole('status');
+    expect(
+      liveRegions.some((r) => r.textContent?.includes('Questão #101 carregada'))
+    ).toBe(true);
+  });
+
+  it('triggers onOpenSocraticTutor when Spacebar is pressed', () => {
+    const handleOpenTutor = vi.fn();
+    render(
+      <QuestionCard
+        question={mockDomainQuestion}
+        selectedOption="B"
+        onSelectOption={vi.fn()}
+        onOpenSocraticTutor={handleOpenTutor}
+      />
+    );
+
+    fireEvent.keyDown(window, { code: 'Space' });
+    expect(handleOpenTutor).toHaveBeenCalledTimes(1);
   });
 });

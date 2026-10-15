@@ -23,6 +23,15 @@ describe('useAccessibilityStore', () => {
     expect(state.highlightLinks).toBe(false);
     expect(state.readingRuler).toBe(false);
     expect(state.vlibrasEnabled).toBe(false);
+    expect(state.timeMode).toBe('STANDARD');
+  });
+
+  it('should update timeMode and persist preference', () => {
+    useAccessibilityStore.getState().setTimeMode('EXTENDED_INEP');
+    expect(useAccessibilityStore.getState().timeMode).toBe('EXTENDED_INEP');
+
+    useAccessibilityStore.getState().setTimeMode('UNTIMED');
+    expect(useAccessibilityStore.getState().timeMode).toBe('UNTIMED');
   });
 
   it('should update font scale and apply data attribute to document', () => {

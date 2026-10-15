@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTenantStore } from '@/stores/useTenantStore';
 import { useSessionStore } from '@/stores/useSessionStore';
+import { useAccessibilityStore } from '@/stores/useAccessibilityStore';
 import { MOCK_QUESTIONS, MOCK_RESOLUTIONS } from '@/api/mocks/mock-data';
 import { ThemeCustomizer } from '@/components/ui/ThemeCustomizer';
 import { Button } from '@/components/ui/Button';
@@ -11,6 +12,7 @@ import {
   QuestionCarousel,
   InstantFeedback,
   SocraticTutorDrawer,
+  TimeAccommodationModal,
 } from './components';
 import {
   Sparkles,
@@ -46,8 +48,10 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
     activeSession,
   } = useSessionStore();
 
+  const { timeMode, setTimeMode } = useAccessibilityStore();
   const [isTutorOpen, setIsTutorOpen] = useState<boolean>(false);
   const [showCelebration, setShowCelebration] = useState<boolean>(false);
+  const [isAccommodationsOpen, setIsAccommodationsOpen] = useState<boolean>(false);
 
   // Initialize session with authentic mock questions if empty
   useEffect(() => {
@@ -195,10 +199,12 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
             </Button>
           )}
 
-          {/* Quiz Timer */}
+          {/* Quiz Timer with INEP Exam Accommodations */}
           <QuizTimer
             initialSeconds={180}
-            isCountdown={true}
+            isCountdown={timeMode !== 'UNTIMED'}
+            timeMode={timeMode}
+            onOpenAccommodations={() => setIsAccommodationsOpen(true)}
           />
 
           {/* Reset / Restart Quiz */}
@@ -243,6 +249,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
             selectedOption={currentSelectedOption}
             onSelectOption={handleSelectOption}
             onSubmitAnswer={handleConfirmAnswer}
+            onOpenSocraticTutor={() => setIsTutorOpen(true)}
             isSubmitted={isCurrentSubmitted}
             correctOption={correctOption}
             isFlagged={Boolean(flaggedQuestions[currentQuestion.id])}
@@ -350,6 +357,14 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
         title="Parabéns! Simulado Concluído!"
         subtitle={`Você respondeu a todas as ${totalQuestions} questões com ${correctCount} acertos!`}
         xpAwarded={totalXp}
+      />
+
+      {/* INEP Exam Time Accommodation Settings Modal */}
+      <TimeAccommodationModal
+        isOpen={isAccommodationsOpen}
+        currentMode={timeMode}
+        onSelectMode={setTimeMode}
+        onClose={() => setIsAccommodationsOpen(false)}
       />
     </div>
   );
