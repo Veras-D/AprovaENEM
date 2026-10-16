@@ -368,33 +368,69 @@ npm --prefix frontend run test:e2e:cypress
 
 ---
 
-### 5.2 Playwright Cross-Browser & Mobile Emulation (`e2e/`)
-Playwright complements Cypress by executing automated headless matrices across multiple browser rendering engines (Chromium, Firefox, WebKit) and mobile device profiles:
+### 5.2 Playwright Cross-Browser & Mobile Emulation Matrix (`frontend/e2e/`)
+Playwright complements Cypress by executing automated headless matrices across 5 distinct browser rendering engines (Desktop Chromium, Desktop Firefox, Desktop WebKit / Safari) and mobile device profiles (`Pixel 5` viewport 393×851, `iPhone 13` viewport 390×844):
 
 #### `playwright.config.ts`
 ```typescript
 import { defineConfig, devices } from '@playwright/test';
+import path from 'path';
 
 export default defineConfig({
-  testDir: './e2e',
+  testDir: path.resolve(__dirname, 'e2e'),
+  testMatch: '**/*.spec.ts',
   timeout: 30 * 1000,
-  expect: { timeout: 5000 },
+  expect: { timeout: 10 * 1000 },
   fullyParallel: true,
-  retries: 1,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 2 : undefined,
+  reporter: [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: process.env.BASE_URL || 'http://localhost',
+    baseURL: process.env.BASE_URL || 'http://localhost:5174',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure'
+    video: 'retain-on-failure',
   },
   projects: [
+    { name: 'Desktop Chrome', use: { ...devices['Desktop Chrome'] } },
+    { name: 'Desktop Firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'Desktop Safari', use: { ...devices['Desktop Safari'] } },
     { name: 'Mobile Chrome', use: { ...devices['Pixel 5'] } },
     { name: 'Mobile Safari', use: { ...devices['iPhone 13'] } },
-    { name: 'Desktop Chrome', use: { ...devices['Desktop Chrome'] } },
-    { name: 'Desktop Firefox', use: { ...devices['Desktop Firefox'] } }
-  ]
+  ],
+  webServer: {
+    command: 'npm run dev -- --port 5174',
+    cwd: __dirname,
+    port: 5174,
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
+  },
 });
 ```
+
+#### Implemented 5-Spec Cross-Browser Matrix
+
+| Spec File | Coverage & Verification Scope | Tests / Engines | WCAG / Lighthouse Gate |
+| :--- | :--- | :---: | :---: |
+| **`01-cross-browser-student-flow.spec.ts`** | Complete student quiz lifecycle: KaTeX scientific formulas ($10\text{ W}$, $1{,}50\text{ kWh}$, $t = \frac{d}{v_1 + v_2}$) rendered cleanly across Chromium, Firefox, and WebKit without distortion; live exam countdown timer; semantic radio option selection (A to E); answer submission with XP points award (+15 XP); step-by-step INEP resolution accordion with source attribution; and question palette carousel navigation. | 4 tests × 5 engines = 20 runs | Passed ✅ |
+| **`02-mobile-responsive-viewport.spec.ts`** | Mobile-first responsive layout adaptations on Pixel 5 and iPhone 13 viewports: sticky bottom navigation (`BottomNav.tsx`) visibility on mobile screens and hidden on desktop; mobile drawer menu (`MobileDrawer.tsx`) trigger, dialog containment, navigation links, and backdrop/Escape dismissal; WCAG 2.1 touch target compliance ($\ge 44 \times 44\text{px}$) on radio options and bottom navigation buttons; zero horizontal document scroll overflow (`scrollWidth <= innerWidth`); and tab view switching between Practice, Gamification, and Diagnostics. | 4 tests × 5 engines = 20 runs | Passed ✅ |
+| **`03-socratic-ai-tutor-matrix.spec.ts`** | Slide-out Socratic AI Tutor drawer across viewports, quota indicators (6 turns per question, midnight BRT reset timer, turn progress dots), LaTeX formula preview inside drawer statement, TanStack Query dynamic chat message exchange with mock Socratic guidance bubbles, and modal dismissal on Escape key and close button across desktop and mobile. | 4 tests × 5 engines = 20 runs | Passed ✅ |
+| **`04-multi-tenant-white-label-matrix.spec.ts`** | Dynamic 4-tier tenant resolution and runtime theme switching across URL query parameters (`?tenant=seduc-sp`, `?tenant=colegio-bandeirantes`), asserting dynamic CSS variable injection (`--brand-primary` #7c3aed for SEDUC-SP, #15803d for Bandeirantes, #0284c7 for default AprovaENEM), platform branding, dark mode toggling, and fallback resilience on unknown tenant slugs across all 3 browser engines. | 4 tests × 5 engines = 20 runs | Passed ✅ |
+| **`05-accessibility-lighthouse-audit.spec.ts`** | Automated `@axe-core/playwright` WCAG 2.1 Level AA compliance audits across all 5 browser and mobile viewports (Practice Simulator, Socratic AI Tutor drawer, Gamification Dashboard, Diagnostic Radar, and High Contrast mode), verifying zero critical or serious WCAG accessibility violations and $\ge 95\%$ rule compliance score meeting the Lighthouse Accessibility $\ge 95/100$ quality gate. | 4 tests × 5 engines = 20 runs | Passed ✅ |
+
+#### Execution Commands
+```bash
+# Run entire 100-test Playwright matrix across all 5 engines
+npm --prefix frontend run test:e2e:playwright
+
+# Run a specific browser engine (e.g., Desktop Safari / WebKit)
+npx --prefix frontend playwright test --project="Desktop Safari"
+
+# Run mobile emulation projects (Pixel 5 & iPhone 13)
+npx --prefix frontend playwright test --project="Mobile Chrome" --project="Mobile Safari"
+```
+
 
 ---
 

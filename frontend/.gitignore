@@ -9,8 +9,10 @@ dist
 dist-ssr
 *.local
 
-# Test Coverage
+# Test Coverage & Reports
 coverage
+test-results
+playwright-report
 
 # Editor & OS files
 .DS_Store

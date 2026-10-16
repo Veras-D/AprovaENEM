@@ -63,7 +63,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           type="button"
           onClick={onOpenDrawer}
           className="flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 px-2 rounded-brand text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors text-xs font-medium"
-          aria-label="Abrir menu de opções"
+          aria-label="Mais: Abrir menu de opções"
         >
           <Menu className="h-5 w-5 mb-0.5 stroke-2" aria-hidden="true" />
           <span>Mais</span>
