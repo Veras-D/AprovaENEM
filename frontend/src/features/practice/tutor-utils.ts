@@ -68,7 +68,7 @@ export function formatMessageTimestamp(timestamp?: string): string {
  * Checks if the current authenticated user has Pro or Administrator access.
  */
 export function isProOrAdmin(user: UserProfile | null | undefined): boolean {
-  if (!user) return false;
+  if (!user || !Array.isArray(user.roles)) return false;
   return user.roles.some(
     (role) => role === 'ROLE_PREMIUM_STUDENT' || role === 'ROLE_ADMIN' || role === 'ROLE_INSTITUTIONAL_ADMIN'
   );

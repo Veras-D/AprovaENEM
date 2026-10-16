@@ -112,7 +112,7 @@ export const DailyStreakCounter: React.FC<DailyStreakCounterProps> = ({
             size="sm"
             onClick={onActivateFreeze}
             className="text-xs h-7 py-0 px-2.5 self-end sm:self-auto shrink-0 border-blue-300 dark:border-blue-800 text-blue-700 dark:text-blue-300"
-            aria-label="Ver detalhes da proteção de congelamento de streak"
+            aria-label="Proteção Ativa: Ver detalhes da proteção de congelamento de streak"
           >
             Proteção Ativa
           </Button>

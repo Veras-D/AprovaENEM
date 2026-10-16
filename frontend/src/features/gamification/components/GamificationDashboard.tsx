@@ -88,7 +88,7 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
               size="sm"
               onClick={onStartPractice}
               className="text-xs gap-1.5"
-              aria-label="Ir para o simulado e praticar questões"
+              aria-label="Praticar Questões: Ir para o simulado e praticar questões"
             >
               <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
               Praticar Questões
@@ -100,7 +100,7 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
             size="sm"
             onClick={() => setIsCelebrationOpen(true)}
             className="text-xs gap-1.5 border-amber-400/40 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40"
-            aria-label="Ver comemoração de subida de nível"
+            aria-label="Comemorar Nível: Ver comemoração de subida de nível"
           >
             <Sparkles className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
             Comemorar Nível

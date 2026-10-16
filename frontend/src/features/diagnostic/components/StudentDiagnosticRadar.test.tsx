@@ -28,7 +28,7 @@ describe('StudentDiagnosticRadar Component', () => {
   it('toggles to accessible table view and back to radar view', () => {
     render(<StudentDiagnosticRadar report={MOCK_DIAGNOSTIC_REPORT} />);
 
-    const toggleButton = screen.getByRole('button', { name: /Ver dados em tabela acessível/i });
+    const toggleButton = screen.getByRole('button', { name: /Ver em Tabela/i });
     expect(toggleButton).toBeInTheDocument();
 
     // Switch to table view
@@ -39,7 +39,7 @@ describe('StudentDiagnosticRadar Component', () => {
     expect(within(table).getByText('Matemática e suas Tecnologias')).toBeInTheDocument();
 
     // Switch back to radar view
-    const radarButton = screen.getByRole('button', { name: /Ver gráfico de radar spider/i });
+    const radarButton = screen.getByRole('button', { name: /Ver Gráfico Radar/i });
     fireEvent.click(radarButton);
 
     expect(screen.queryByRole('table')).not.toBeInTheDocument();

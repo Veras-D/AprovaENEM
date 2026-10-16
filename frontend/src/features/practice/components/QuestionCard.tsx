@@ -149,6 +149,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
   return (
     <Card
+      data-testid="question-card"
       className={`border-2 border-slate-200 dark:border-slate-800 shadow-sm ${className}`}
       role="region"
       aria-labelledby="question-statement-heading"

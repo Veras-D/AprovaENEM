@@ -190,7 +190,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
               variant="outline"
               size="sm"
               onClick={() => setIsTutorOpen(true)}
-              aria-label="Abrir Tutor IA Socrático para esta questão"
+              aria-label="Tutor Socrático: Tirar dúvida com o Tutor IA"
               title="Tirar dúvida com o Tutor IA Socrático"
               className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 text-xs sm:text-sm"
             >

@@ -8,6 +8,7 @@ interface AuthState {
   readonly isAuthenticated: boolean;
   readonly setAuth: (token: string, user: UserProfile) => void;
   readonly clearAuth: () => void;
+  readonly syncAuthFromStorage: () => void;
 }
 
 const STORAGE_KEY_TOKEN = 'aprovaenem_auth_token';
@@ -43,6 +44,21 @@ export const useAuthStore = create<AuthState>((set) => {
       localStorage.removeItem(STORAGE_KEY_TOKEN);
       localStorage.removeItem(STORAGE_KEY_USER);
       set({ token: null, user: null, isAuthenticated: false });
+    },
+    syncAuthFromStorage: () => {
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem(STORAGE_KEY_TOKEN);
+        let user: UserProfile | null = null;
+        const storedUser = localStorage.getItem(STORAGE_KEY_USER);
+        if (storedUser) {
+          try {
+            user = JSON.parse(storedUser) as UserProfile;
+          } catch {
+            localStorage.removeItem(STORAGE_KEY_USER);
+          }
+        }
+        set({ token, user, isAuthenticated: Boolean(token) });
+      }
     },
   };
 });

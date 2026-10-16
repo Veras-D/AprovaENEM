@@ -74,7 +74,7 @@ export const QuestionCarousel: React.FC<QuestionCarouselProps> = ({
                 : 'border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
             aria-pressed={isCurrentFlagged}
-            aria-label={isCurrentFlagged ? 'Remover marcação de revisão' : 'Marcar questão para revisão'}
+            aria-label={isCurrentFlagged ? 'Marcada para Revisão' : 'Marcar para Revisão'}
           >
             <Bookmark
               className={`h-4 w-4 ${isCurrentFlagged ? 'fill-amber-500 text-amber-500' : ''}`}

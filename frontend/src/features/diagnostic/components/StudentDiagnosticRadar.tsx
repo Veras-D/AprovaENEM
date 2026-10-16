@@ -144,7 +144,7 @@ export const StudentDiagnosticRadar: React.FC<StudentDiagnosticRadarProps> = ({
             size="sm"
             onClick={() => setShowTableView((prev) => !prev)}
             className="text-xs gap-1.5"
-            aria-label={showTableView ? 'Ver gráfico de radar spider' : 'Ver dados em tabela acessível'}
+            aria-label={showTableView ? 'Ver Gráfico Radar: Alternar para gráfico de radar spider' : 'Ver em Tabela: Alternar para tabela de dados acessível'}
           >
             {showTableView ? (
               <>

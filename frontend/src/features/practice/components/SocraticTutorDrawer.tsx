@@ -182,9 +182,11 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
       {/* Slide-out Drawer */}
       <section
         ref={drawerRef}
+        data-testid="socratic-tutor-drawer"
         className={`fixed inset-y-0 right-0 z-50 w-full sm:max-w-md md:max-w-lg lg:max-w-xl bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col focus:outline-hidden ${className}`}
         role="dialog"
         aria-modal="true"
+        aria-label="Tutor IA Socrático"
         aria-labelledby="tutor-drawer-title"
         aria-describedby="tutor-drawer-desc"
       >

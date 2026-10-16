@@ -109,7 +109,7 @@ describe('QuestionCarousel Component', () => {
       />
     );
 
-    const flagBtn = screen.getByRole('button', { name: 'Marcar questão para revisão' });
+    const flagBtn = screen.getByRole('button', { name: /Marcar para Revisão/i });
     fireEvent.click(flagBtn);
 
     expect(handleToggleFlag).toHaveBeenCalledTimes(1);

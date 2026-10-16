@@ -123,7 +123,7 @@ export const SocraticQuotaWidget: React.FC<SocraticQuotaWidgetProps> = ({
               size="sm"
               onClick={onRegisterGuest}
               className="text-xs h-7 py-0 px-2.5 self-end sm:self-auto shrink-0"
-              aria-label="Criar conta gratuita para usar o Tutor Socrático"
+              aria-label="Cadastrar Grátis: Criar conta gratuita para usar o Tutor Socrático"
             >
               <UserPlus className="h-3 w-3 mr-1" aria-hidden="true" />
               Cadastrar Grátis
@@ -165,7 +165,7 @@ export const SocraticQuotaWidget: React.FC<SocraticQuotaWidgetProps> = ({
               size="sm"
               onClick={onUpgradePro}
               className="text-xs h-7 py-0 px-2.5 self-end sm:self-auto shrink-0 border-amber-500/40 text-amber-700 dark:text-amber-300"
-              aria-label="Conhecer o plano Pro para consultas ilimitadas"
+              aria-label="Plano Pro: Conhecer o plano Pro para consultas ilimitadas"
             >
               <Crown className="h-3 w-3 mr-1 text-amber-500" aria-hidden="true" />
               Plano Pro
