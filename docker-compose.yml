@@ -31,7 +31,10 @@ services:
   # 2. Edge Ingress Proxy (The ONLY public entrypoint)
   # ============================================================================
   nginx-proxy:
-    image: nginx:1.27-alpine
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: aprovaenem/frontend:latest
     container_name: aprovaenem-nginx
     restart: unless-stopped
     deploy:
