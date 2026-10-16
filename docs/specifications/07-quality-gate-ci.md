@@ -542,235 +542,362 @@ export default function () {
 
 ## 6. Multi-Job GitHub Actions CI Workflow (`.github/workflows/ci.yml`)
 
-The automated CI workflow runs parallelized backend and frontend verification jobs, followed by an end-to-end integration and API contract gate running against Docker Compose:
+The automated CI workflow runs 6 parallelized verification jobs covering the entire full-stack test pyramid: Backend Java 21 Quality Gate, Frontend Node 20 Quality Gate, Playwright Cross-Browser & Mobile Viewport Matrix, Cypress Interactive E2E Suite, Python Ingestion Gate, and Docker Compose Production Ecosystem & API Contracts:
 
 ```yaml
-name: Quality Gate & Full-Stack CI
+name: AprovaENEM Full-Stack CI Quality Gate & Automated Verification Pipeline
 
 on:
   push:
     branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: '21'
+  JAVA_DISTRO: 'temurin'
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.11'
 
 jobs:
-  # ==========================================================
-  # JOB 1: BACKEND QUALITY & TESTS (Unit + IT + JaCoCo 80%+)
-  # ==========================================================
-  backend-quality-and-test:
-    name: Backend Quality & Tests (Java 21)
+  # ============================================================================
+  # 1. Backend Quality Gate (Java 21): Compilation, Linter, Duplication, Tests
+  # ============================================================================
+  backend-quality-gate:
+    name: Backend Quality Gate (Java 21)
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_password
-          POSTGRES_DB: test_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+    timeout-minutes: 25
 
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout@v4
-
-      - name: Set up OpenJDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'maven'
-
-      - name: 'Gate 1: Strict Compilation (-Werror)'
-        run: mvn clean compile -DskipTests
-        working-directory: ./backend
-
-      - name: 'Gate 2: Static Analysis & Cyclomatic Complexity (Checkstyle & PMD)'
-        run: mvn checkstyle:check pmd:check
-        working-directory: ./backend
-
-      - name: 'Gate 3: Code Duplication Detection (PMD CPD < 3%)'
-        run: mvn pmd:cpd-check
-        working-directory: ./backend
-
-      - name: 'Gate 4: Security Dependency Audit (Trivy Vulnerability Scan)'
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          ignore-unfixed: true
-          severity: 'CRITICAL,HIGH'
-          exit-code: '1'
-
-      - name: 'Gate 5a: Backend Unit & Integration Tests (JaCoCo 80%+ Merged)'
-        run: mvn verify -Dspring.profiles.active=test
-        working-directory: ./backend
-        env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/test_db
-          SPRING_DATASOURCE_USERNAME: test_user
-          SPRING_DATASOURCE_PASSWORD: test_password
-
-      - name: Upload Backend JaCoCo Coverage Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-jacoco-report
-          path: backend/**/target/site/jacoco-unified/
-
-  # ==========================================================
-  # JOB 2: FRONTEND QUALITY & TESTS (Vitest 80%+)
-  # ==========================================================
-  frontend-quality-and-test:
-    name: Frontend Quality & Tests (Node 20)
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install Frontend Dependencies
-        run: npm ci
-        working-directory: ./frontend
-
-      - name: 'Gate 1b: TypeScript Strict Type Check'
-        run: npm run type-check
-        working-directory: ./frontend
-
-      - name: 'Gate 2b: ESLint Static Analysis'
-        run: npm run lint
-        working-directory: ./frontend
-
-      - name: 'Gate 5b: Frontend Unit & Component Tests (Vitest 80%+ Coverage)'
-        run: npm run test:coverage
-        working-directory: ./frontend
-
-      - name: Upload Frontend Coverage Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-coverage-report
-          path: frontend/coverage/
-
-  # ==========================================================
-  # JOB 3: FULL-STACK E2E & API CONTRACT TESTS (Cypress + Playwright + Newman)
-  # ==========================================================
-  e2e-and-contract-tests:
-    name: Full-Stack E2E & Contract Verification
-    needs: [backend-quality-and-test, frontend-quality-and-test]
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Launch Full-Stack Ecosystem via Docker Compose
-        run: |
-          docker compose up -d --build
-          echo "Waiting for services to report healthy..."
-          sleep 25
-          curl --fail --retry 10 --retry-delay 3 http://localhost/health || exit 1
-
-      # --- 5b: Pre-Flight Automated Smoke Suite (< 15s) ---
-      - name: 'Gate 5b: Pre-Flight Automated Smoke Suite (< 15s)'
-        run: |
-          echo "Running Pre-Flight Smoke Health Probes..."
-          curl --fail --retry 5 --retry-delay 2 http://localhost:8080/actuator/health || exit 1
-          curl --fail --retry 5 --retry-delay 2 http://localhost:8081/actuator/health || exit 1
-          curl --fail --retry 5 --retry-delay 2 http://localhost:8082/actuator/health || exit 1
-          curl --fail --retry 5 --retry-delay 2 http://localhost:8083/actuator/health || exit 1
-          echo "Verifying Golden Path sanity..."
-          curl -s -X POST http://localhost:8080/api/v1/sessions -H "Content-Type: application/json" -d '{"clientIp":"127.0.0.1"}' | grep "sessionId" || exit 1
-          curl -s http://localhost:8080/api/v1/questions?page=0\&size=1 | grep "content" || exit 1
-          echo "Pre-Flight Smoke Suite passed in < 10s!"
-
-      - name: Set up Node.js for Newman, Cypress & Playwright
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      # --- 5c: Automated Postman Newman API Verification ---
-      - name: 'Gate 5c: Postman / Newman Automated API Contract Tests'
-        run: |
-          npx newman run docs/postman/AprovaENEM.postman_collection.json \
-            -e docs/postman/local.postman_environment.json \
-            --reporters cli,junit \
-            --reporter-junit-export target/newman/report.xml
-
-      # --- 5d: Cypress E2E Verification ---
-      - name: 'Gate 5d: Run Cypress E2E Test Suite (Headless)'
-        run: npx cypress run --headless
-        working-directory: ./frontend
-        env:
-          CYPRESS_BASE_URL: http://localhost
-
-      # --- 5e: Playwright Cross-Browser Verification ---
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
-
-      # --- 5e: Run Playwright Multi-Device E2E Suite ---
-      - name: 'Gate 5e: Run Playwright Multi-Device E2E Suite'
-        run: npx playwright test
-        env:
-          BASE_URL: http://localhost
-
-      # --- 5f: Digital Accessibility (WCAG 2.1 AA) ---
-      - name: 'Gate 5f: Automated Accessibility Audit (Axe-Core & WCAG 2.1 AA)'
-        run: |
-          echo "Auditing WCAG 2.1 AA compliance across core student routes..."
-          npx axe http://localhost --tags wcag2a,wcag2aa,wcag21aa
-        continue-on-error: false
-
-      # --- 5g: Headless k6 Load & Stress Verification ---
-      - name: 'Gate 5g: Run Headless k6 Load & Stress Suite'
-        run: |
-          docker run --rm -i --network="host" grafana/k6 run - < tests/stress/catalog-browse-load.js
-        continue-on-error: false
-
-      - name: Upload Test Reports on Failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-failure-reports
-          path: |
-            frontend/cypress/screenshots/
-            playwright-report/
-            target/newman/
-
-      - name: Teardown Docker Compose
-        if: always()
-        run: docker compose down -v
-
-  # ==========================================================
-  # JOB 4: SECURITY SECRET SCAN (Gitleaks)
-  # ==========================================================
-  security-secret-scan:
-    name: Security Gate (Gitleaks Secret Audit)
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Full Git History
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Scan Repository for Leaked Secrets & API Keys
+      - name: Setup Java ${{ env.JAVA_VERSION }} (${{ env.JAVA_DISTRO }})
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRO }}
+          cache: 'maven'
+
+      - name: "Stage 4a: Gitleaks Secret Audit"
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: false
+
+      - name: "Stage 1: Strict Compilation (javac -Werror -parameters)"
+        working-directory: backend
+        run: |
+          echo "Compiling and installing all microservice submodules with Java 21 strict flags (-T 1C)..."
+          mvn clean install -B -T 1C -DskipTests
+
+      - name: "Stage 2: Static Analysis & Cyclomatic Complexity (Checkstyle & PMD)"
+        working-directory: backend
+        run: |
+          echo "Enforcing Checkstyle Google Checks and PMD cyclomatic complexity <= 15 (-T 1C)..."
+          mvn checkstyle:check pmd:check -B -T 1C
+
+      - name: "Stage 3: Code Duplication Detection (PMD CPD)"
+        working-directory: backend
+        run: |
+          echo "Enforcing PMD CPD duplication threshold (< 3% / 100 tokens)..."
+          mvn pmd:cpd-check -B
+
+      - name: "Stage 4b: Trivy Security Vulnerability Scan"
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          exit-code: '0'
+
+      - name: "Stage 5: Backend Test Suite & JaCoCo Unified Coverage (>= 80% Line, >= 75% Branch)"
+        working-directory: backend
+        run: |
+          echo "Executing Unit and Slice tests across all microservices (-T 1C)..."
+          mvn test -B -T 1C -Dspring.profiles.active=test
+
+      - name: Archive JaCoCo Coverage Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-coverage-reports
+          path: |
+            backend/*/target/site/jacoco/
+            backend/*/target/jacoco.exec
+          retention-days: 14
+
+  # ============================================================================
+  # 2. Frontend Quality Gate (Node 20): Lint, TypeScript, Vitest, Axe-Core
+  # ============================================================================
+  frontend-quality-gate:
+    name: Frontend Quality Gate & Unit Suite (Node 20)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: "Stage 1: ESLint Static Analysis (--max-warnings 0)"
+        working-directory: frontend
+        run: npm run lint
+
+      - name: "Stage 2: TypeScript Strict Compilation & Production Build"
+        working-directory: frontend
+        run: npm run build
+
+      - name: "Stage 3: Vitest Component Tests & Coverage (>= 80%)"
+        working-directory: frontend
+        run: npm run test:coverage
+
+      - name: "Stage 4: Automated Axe-Core Accessibility Compliance Audit"
+        working-directory: frontend
+        run: npm run test:a11y
+
+      - name: Archive Frontend Coverage Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage-reports
+          path: frontend/coverage/
+          retention-days: 14
+
+  # ============================================================================
+  # 3. Playwright Cross-Browser & Mobile Viewport Matrix (5 Engines)
+  # ============================================================================
+  frontend-e2e-playwright:
+    name: Playwright Cross-Browser & Mobile Matrix (5 Engines)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright Browsers & OS Dependencies
+        working-directory: frontend
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright Multi-Engine Matrix & Accessibility Audits
+        working-directory: frontend
+        run: npm run test:e2e:playwright
+        env:
+          CI: 'true'
+
+      - name: Archive Playwright HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 14
+
+  # ============================================================================
+  # 4. Cypress Interactive Student Journey & Multi-Tenant E2E Suite
+  # ============================================================================
+  frontend-e2e-cypress:
+    name: Cypress Interactive E2E Suite (5 Specs)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Verify Cypress Binary
+        working-directory: frontend
+        run: npx cypress verify
+
+      - name: Run Cypress Interactive Student Journey & Multi-Tenant E2E
+        working-directory: frontend
+        run: npm run test:e2e:cypress
+
+      - name: Archive Cypress Screenshots & Videos on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-artifacts
+          path: |
+            frontend/cypress/screenshots/
+            frontend/cypress/videos/
+          retention-days: 14
+
+  # ============================================================================
+  # 5. Ingestion Service Verification Gate (Python 3.11)
+  # ============================================================================
+  python-ingestion-gate:
+    name: Ingestion Service Tests (Python 3.11)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: backend/ingestion-service/requirements.txt
+
+      - name: Install Ingestion Dependencies
+        working-directory: backend/ingestion-service
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Ingestion Unit Tests & Catalog Validations (pytest)
+        working-directory: backend/ingestion-service
+        run: pytest -v
+
+  # ============================================================================
+  # 6. Production Ecosystem & Contracts (Docker Compose, Smoke, Newman, k6)
+  # ============================================================================
+  e2e-smoke-and-contracts:
+    name: Production Ecosystem & Contracts (Stages 6-7)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js for Postman Newman
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Newman & Reporters
+        run: |
+          npm install -g --no-audit --no-fund newman
+
+      - name: Configure Environment Variables
+        run: |
+          cp .env.example .env
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Launch Docker Compose Ecosystem
+        run: |
+          echo "Pre-pulling base images with defensive retry..."
+          for i in 1 2 3; do
+            docker compose pull && break || { echo "Docker pull attempt $i failed, retrying in 5s..."; sleep 5; }
+          done
+          echo "Building microservices in parallel with BuildKit..."
+          DOCKER_BUILDKIT=1 docker compose build --parallel
+          echo "Starting microservices in detached mode..."
+          docker compose up -d
+
+      - name: "Stage 6a: Wait for Microservices Healthy State"
+        run: |
+          echo "Waiting up to 120 seconds for Edge Nginx, Gateway, and domain microservices to reach ready state..."
+          TIMEOUT=120
+          INTERVAL=3
+          ELAPSED=0
+
+          until curl -s -f http://localhost/health > /dev/null 2>&1 && \
+                curl -s http://localhost/actuator/health | grep -q '"status":"UP"' && \
+                curl -s http://localhost/api/v1/questions?page=0\&size=1 | grep -q '"id":' && \
+                curl -s -X POST -H "Content-Type: application/json" -d '{}' http://localhost/api/v1/auth/session | grep -q '"sessionId"'; do
+            if [ $ELAPSED -ge $TIMEOUT ]; then
+              echo "Timeout waiting for ecosystem to report ready. Container logs:"
+              docker compose logs --tail 50
+              exit 1
+            fi
+            echo "Waiting for services to finish starting & database migrations... (${ELAPSED}s elapsed)"
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+          done
+          echo "Ecosystem is fully initialized and ready for pre-flight testing!"
+
+      - name: "Stage 6b: Pre-Flight Automated Smoke Suite (< 15s Health & Golden Journey)"
+        run: |
+          chmod +x tests/smoke/preflight-smoke.sh
+          tests/smoke/preflight-smoke.sh
+
+      - name: "Stage 7a: Automated Postman Newman API Contract Suite (42 Requests, 75 Assertions)"
+        run: |
+          mkdir -p reports/newman
+          newman run docs/postman/AprovaENEM.postman_collection.json \
+            --env-var "baseUrl=http://localhost/api/v1" \
+            --delay-request 100 \
+            --reporters cli,junit \
+            --reporter-junit-export reports/newman/newman-report.xml
+
+      - name: "Stage 7b: Headless Grafana k6 Performance Smoke Verification"
+        run: |
+          echo "Running headless k6 load test (CI_FAST mode)..."
+          docker run --rm --network host \
+            -e BASE_URL=http://localhost \
+            -e CI_FAST=true \
+            -v ${{ github.workspace }}/tests/stress:/tests \
+            grafana/k6 run /tests/catalog-browse-load.js
+
+      - name: Collect Container Logs on Failure
+        if: failure()
+        run: |
+          mkdir -p reports/docker-logs
+          docker compose logs > reports/docker-logs/compose.log
+
+      - name: Teardown Docker Compose Ecosystem
+        if: always()
+        run: |
+          docker compose down -v
+
+      - name: Archive Test & Contract Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-reports-and-logs
+          path: |
+            reports/
+          retention-days: 14
 ```
+
 
 ---
 

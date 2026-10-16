@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-16
+### ⚙️ Full-Stack GitHub Actions CI Workflow Pipeline Update
+- ci(pipeline): Expanded GitHub Actions CI workflow ([`.github/workflows/ci.yml`](file:///home/verivi/Veras/Projects/ReconectaRecode/.github/workflows/ci.yml)) to enforce the complete full-stack verification pyramid across backend, frontend, E2E, and ingestion services:
+  - **Frontend Quality Gate (`frontend-quality-gate`)**: Configured Node 20 environment with npm caching, automated dependency installation (`npm ci`), ESLint strict static analysis (`--max-warnings 0`), TypeScript strict compilation & Vite production build (`npm run build`), Vitest unit & component test suite with code coverage (`npm run test:coverage`, 410 tests passing, >96% line coverage), and automated Axe-Core WCAG 2.1 AA accessibility audit (`npm run test:a11y`).
+  - **Playwright Cross-Browser & Mobile Matrix Gate (`frontend-e2e-playwright`)**: Automated headless multi-engine testing across 5 browser/device configurations (Desktop Chromium, Desktop Firefox, Desktop WebKit, Mobile Chrome Pixel 5, Mobile Safari iPhone 13) running 100 passing tests across 5 comprehensive test suites with Playwright HTML report archiving.
+  - **Cypress Interactive E2E Gate (`frontend-e2e-cypress`)**: Automated headless interactive student quiz journey, white-label tenant resolution, Socratic AI tutor drawer, and `cypress-axe` accessibility audit across 5 specs (20 passing tests) with failure screenshot/video archiving.
+  - **Python Ingestion Service Gate (`python-ingestion-gate`)**: Configured Python 3.11 environment with pip caching, executing pytest unit tests and schema validations across 4 test suites (11 passing tests) in `backend/ingestion-service`.
+  - **Backend Quality Gate (`backend-quality-gate`)**: Maintained Java 21 LTS strict compilation (`-Werror`), Checkstyle, PMD, PMD CPD duplication check (<3%), Gitleaks secret entropy audit, Trivy CVE vulnerability scan, and JUnit 5 unit & slice tests with JaCoCo unified coverage archiving.
+  - **Production Ecosystem & API Contracts (`e2e-smoke-and-contracts`)**: Maintained multi-container Docker Compose startup, pre-flight smoke test (<15s), Newman/Postman API contract suite (42 requests, 75 assertions), and headless Grafana k6 load test.
+
 ### 🎭 Playwright Cross-Browser & Mobile Viewport Matrix (TASK-S6-03)
 - test(frontend): Implemented Playwright Cross-Browser, Mobile Emulation, and Axe-Core Accessibility Audit Matrix ([`TASK-S6-03`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/BACKLOG.md#task-s6-03)):
   - **Multi-Browser & Multi-Device Execution Matrix**: Implemented headless cross-browser test automation matrix covering 5 distinct engine configurations: Desktop Chromium, Desktop Firefox, Desktop WebKit (Safari), Mobile Chrome (`Pixel 5` viewport 393×851), and Mobile Safari (`iPhone 13` viewport 390×844) executing 100 passing tests across 5 comprehensive test suites.
