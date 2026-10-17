@@ -261,20 +261,21 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
           </div>
 
           {/* Mode Switch Tabs */}
-          <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-1.5 shrink-0 gap-1.5">
+          <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950/60 p-1.5 shrink-0 gap-1.5">
             <button
               type="button"
               onClick={() => {
                 setMode('register');
                 setFormError(null);
               }}
-              className={`flex-1 py-2 text-xs sm:text-sm font-semibold rounded-md transition-all ${
+              className={`flex-1 py-2.5 px-3 text-xs sm:text-sm font-bold rounded-brand transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 mode === 'register'
-                  ? 'bg-white dark:bg-slate-800 text-brand-primary shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-white dark:bg-slate-800 text-brand-primary shadow-sm border border-brand-primary/30 dark:border-brand-primary/40'
+                  : 'border border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-900/50'
               }`}
             >
-              Criar Conta Gratuita
+              <UserPlus className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>Criar Conta Gratuita</span>
             </button>
             <button
               type="button"
@@ -282,13 +283,14 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 setMode('login');
                 setFormError(null);
               }}
-              className={`flex-1 py-2 text-xs sm:text-sm font-semibold rounded-md transition-all ${
+              className={`flex-1 py-2.5 px-3 text-xs sm:text-sm font-bold rounded-brand transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 mode === 'login'
-                  ? 'bg-white dark:bg-slate-800 text-brand-primary shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-white dark:bg-slate-800 text-brand-primary shadow-sm border border-brand-primary/30 dark:border-brand-primary/40'
+                  : 'border border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-900/50'
               }`}
             >
-              Já Possuo Conta
+              <LogIn className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>Já Possuo Conta</span>
             </button>
           </div>
 

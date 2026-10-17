@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-17
+### 👁️ Enhanced High-Contrast Auth Mode Switch Tabs (Light & Dark Modes)
+- fix(auth): Enhanced contrast and visibility of the active mode tab switch in [`RegisterModal.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/auth/RegisterModal.tsx):
+  - **High-Contrast Track Background**: Replaced faint `bg-slate-50/70` with solid `bg-slate-100 dark:bg-slate-950/60`, establishing strong luminance separation against the white modal card.
+  - **Distinct Active Pill Boundary**: Added a crisp 1px active border (`border-brand-primary/30 dark:border-brand-primary/40`), `shadow-sm`, and `font-bold` typography to the selected tab, making the selected state immediately discernible on both light and dark backgrounds.
+  - **Visual Icons & Semantics**: Integrated `<UserPlus />` and `<LogIn />` icon indicators directly within the tabs and added subtle hover states (`hover:bg-slate-200/60 dark:hover:bg-slate-900/50`) for unselected tabs.
+  - **Automated Test Coverage**: Verified 100% green across [`RegisterModal.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/auth/RegisterModal.test.tsx), axe-core audit in [`accessibility-audit.a11y.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/test/a11y/accessibility-audit.a11y.test.tsx), full suite (71 files, 456 tests), and production build.
+
 ### 🎨 Custom Accessible Select Component Replacing Native Dropdowns
 - feat(ui): Implemented custom, accessible, theme-styled `Select` dropdown component replacing native unstyled browser `<select>` elements:
   - **Custom Accessible UI Primitive ([`Select.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/ui/Select.tsx))**: Built a WCAG 2.1 Level AA compliant combobox and listbox component using Tailwind CSS, supporting brand tokens (`rounded-brand`, dynamic focus rings, dark mode tokens), option checkmark indicators, smooth chevron rotation, keyboard navigation (`ArrowDown`, `ArrowUp`, `Enter`, `Space`, `Escape`, type-ahead search), and click-outside dismissal.
