@@ -54,8 +54,8 @@ describe('color-contrast engine', () => {
     expect(getOptimalForeground('#0f172a')).toBe('#ffffff');
     expect(getOptimalForeground('#1e3a8a')).toBe('#ffffff');
 
-    // Mid-light sky blue #0284c7 contrast: dark slate #0f172a has higher contrast (4.33:1) than white (4.10:1)
-    expect(getOptimalForeground('#0284c7')).toBe('#0f172a');
+    // Mid-light sky blue #0284c7: pure white provides clean, high-contrast readable text (4.10:1 >= 3.5:1)
+    expect(getOptimalForeground('#0284c7')).toBe('#ffffff');
 
     // Very light colors need dark foreground
     expect(getOptimalForeground('#fef08a')).toBe('#0f172a');

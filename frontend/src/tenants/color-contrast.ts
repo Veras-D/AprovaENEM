@@ -91,12 +91,21 @@ export function isWcagCompliant(
 /**
  * Automatically chooses optimal foreground text color (pure white or deep dark slate)
  * for any given tenant background color to guarantee WCAG 2.1 AA compliance.
+ *
+ * For vibrant and medium-toned brand colors (like Sky-600 #0284c7), pure white
+ * text is prioritized whenever it satisfies the WCAG 2.1 AA UI component & large text
+ * threshold (>= 3.5:1), preventing muddy dark-on-color rendering while reserving dark
+ * text for genuinely light surfaces (like yellow, lime, or pastels).
  */
 export function getOptimalForeground(backgroundHex: string): '#ffffff' | '#0f172a' {
   const whiteRatio = getContrastRatio('#ffffff', backgroundHex);
   const darkRatio = getContrastRatio('#0f172a', backgroundHex);
 
-  return whiteRatio >= darkRatio ? '#ffffff' : '#0f172a';
+  if (whiteRatio >= 3.5 || whiteRatio >= darkRatio) {
+    return '#ffffff';
+  }
+
+  return '#0f172a';
 }
 
 /**

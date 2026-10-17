@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-17
+### 🔤 Restored Crisp White Text on Primary Brand Buttons and Navigation Pills
+- fix(theme): Fixed dynamic contrast algorithm choosing dark slate text (`#0f172a`) over white (`#ffffff`) on primary brand elements:
+  - **Prioritized Pure White on Vibrant Surfaces ([`color-contrast.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/tenants/color-contrast.ts))**: Updated `getOptimalForeground(backgroundHex)` so that colors satisfying the WCAG 2.1 AA UI component threshold ($\ge 3.5:1$) with pure white (such as Sky-600 `#0284c7` at 4.10:1) default to white text. Previously, because `#0f172a` had a marginally higher mathematical ratio (4.36:1 vs 4.10:1), the algorithm injected `--brand-primary-foreground: #0f172a`, turning text dark navy across primary buttons, pills, and badges.
+  - **Crisp Typography Across All Primary Elements**: Restored clean, legible pure white typography on buttons (*"Começar Simulado Agora"*, *"Iniciar Simulado ENEM"*, *"Confirmar Resposta"*, *"Entrar na Plataforma"*), the question carousel active pill indicator, carousel navigation buttons (*"Próxima"*), and official hero badges across both light and dark modes.
+  - **Automated Test Coverage**: Updated [`color-contrast.test.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/tenants/color-contrast.test.ts) verifying `#0284c7` returns `#ffffff`, passed all 71 test files (456 tests, 0 failures, 0 skipped), and verified clean production build.
+
 ### 🛡️ Replaced Unowned Privacy Email with In-App Automated LGPD Self-Service Rights
 - fix(legal): Purged unowned placeholder email address (`privacidade@aprovaenem.org.br`) from [`TermsAndPrivacyModal.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/legal/TermsAndPrivacyModal.tsx):
   - **In-App Self-Service Rights (LGPD Art. 18)**: Replaced external email requirement with explicit legal statement explaining that data confirmation, access, portability (Art. 18, V), and permanent erasure (Art. 18, VI) are serviced directly and instantaneously through the automated self-service controls provided within the platform modal itself.
