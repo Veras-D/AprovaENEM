@@ -37,6 +37,7 @@ import { SocraticMessageBubble } from '@/features/practice/components/SocraticMe
 
 // Modals
 import { TimeAccommodationModal } from '@/features/practice/components/TimeAccommodationModal';
+import { TimeUpModal } from '@/features/practice/components/TimeUpModal';
 import { RegisterModal } from '@/components/auth/RegisterModal';
 import { TermsAndPrivacyModal, AccountErasureModal } from '@/components/legal';
 import { CelebrationOverlay } from '@/features/gamification/components/CelebrationOverlay';
@@ -271,8 +272,6 @@ describe('Axe-Core WCAG 2.1 Level AA Accessibility Audit Suite', () => {
             onSelectIndex={() => {}}
             isAnswered={(i) => i === 0}
             isFlagged={() => false}
-            isCurrentFlagged={false}
-            onToggleFlag={() => {}}
             onNext={() => {}}
             onPrevious={() => {}}
           />
@@ -397,6 +396,24 @@ describe('Axe-Core WCAG 2.1 Level AA Accessibility Audit Suite', () => {
           onClose={() => {}}
           currentMode="STANDARD"
           onSelectMode={() => {}}
+        />
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    it('has zero accessibility violations on TimeUpModal in open state', async () => {
+      const { container } = render(
+        <TimeUpModal
+          isOpen={true}
+          totalAnswered={4}
+          totalQuestions={5}
+          correctCount={3}
+          totalXp={50}
+          onReviewAnswers={() => {}}
+          onRestart={() => {}}
+          onClose={() => {}}
         />
       );
 

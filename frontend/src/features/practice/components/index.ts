@@ -16,6 +16,10 @@ export {
   type TimeAccommodationModalProps,
 } from './TimeAccommodationModal';
 export {
+  TimeUpModal,
+  type TimeUpModalProps,
+} from './TimeUpModal';
+export {
   TIME_ACCOMMODATION_OPTIONS,
   type TimeAccommodationOption,
 } from '../time-accommodation-constants';

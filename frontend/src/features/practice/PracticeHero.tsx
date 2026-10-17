@@ -11,6 +11,7 @@ import {
   InstantFeedback,
   SocraticTutorDrawer,
   TimeAccommodationModal,
+  TimeUpModal,
 } from './components';
 import {
   RotateCcw,
@@ -48,6 +49,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
   const [isTutorOpen, setIsTutorOpen] = useState<boolean>(false);
   const [showCelebration, setShowCelebration] = useState<boolean>(false);
   const [isAccommodationsOpen, setIsAccommodationsOpen] = useState<boolean>(false);
+  const [isTimeUpModalOpen, setIsTimeUpModalOpen] = useState<boolean>(false);
 
   // Initialize session with authentic mock questions if empty
   useEffect(() => {
@@ -100,6 +102,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
 
   const handleRestart = useCallback(() => {
     setShowCelebration(false);
+    setIsTimeUpModalOpen(false);
     const domainQuestions = MOCK_QUESTIONS.map(mapDtoToDomainQuestion);
     const mockSession: PracticeSession = {
       id: `session-${Date.now()}`,
@@ -182,6 +185,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
             isCountdown={timeMode !== 'UNTIMED'}
             timeMode={timeMode}
             onOpenAccommodations={() => setIsAccommodationsOpen(true)}
+            onTimeUp={() => setIsTimeUpModalOpen(true)}
           />
 
           {/* Reset / Restart Quiz */}
@@ -209,8 +213,6 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
           onPrevious={previousQuestion}
           isAnswered={(idx) => Boolean(questions[idx] && attempts[questions[idx].id])}
           isFlagged={(idx) => Boolean(questions[idx] && flaggedQuestions[questions[idx].id])}
-          onToggleFlag={() => currentQuestion && toggleFlagQuestion(currentQuestion.id)}
-          isCurrentFlagged={Boolean(currentQuestion && flaggedQuestions[currentQuestion.id])}
         />
       )}
 
@@ -342,6 +344,18 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
         currentMode={timeMode}
         onSelectMode={setTimeMode}
         onClose={() => setIsAccommodationsOpen(false)}
+      />
+
+      {/* Exam Time-Up Summary Modal */}
+      <TimeUpModal
+        isOpen={isTimeUpModalOpen}
+        totalAnswered={totalAnswered}
+        totalQuestions={totalQuestions}
+        correctCount={correctCount}
+        totalXp={totalXp}
+        onReviewAnswers={() => setIsTimeUpModalOpen(false)}
+        onRestart={handleRestart}
+        onClose={() => setIsTimeUpModalOpen(false)}
       />
     </div>
   );

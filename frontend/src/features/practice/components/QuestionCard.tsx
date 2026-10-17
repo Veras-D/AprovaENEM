@@ -202,7 +202,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                 className={`h-4 w-4 ${isFlagged ? 'fill-amber-500 text-amber-500' : ''}`}
                 aria-hidden="true"
               />
-              <span className="hidden sm:inline">{isFlagged ? 'Marcada' : 'Revisar'}</span>
+              <span className="hidden sm:inline">{isFlagged ? 'Marcada para Revisão' : 'Marcar para Revisão'}</span>
             </button>
           )}
         </div>

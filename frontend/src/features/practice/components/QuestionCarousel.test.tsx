@@ -97,21 +97,16 @@ describe('QuestionCarousel Component', () => {
     expect(screen.getByRole('button', { name: /Ir para a questão 3 \(Marcada para revisão\)/i })).toBeInTheDocument();
   });
 
-  it('should toggle flag when Marcar para Revisão button is clicked', () => {
-    const handleToggleFlag = vi.fn();
+  it('should render active button with proper aria-current attribute', () => {
     render(
       <QuestionCarousel
         totalQuestions={3}
         currentIndex={1}
         onSelectIndex={vi.fn()}
-        onToggleFlag={handleToggleFlag}
-        isCurrentFlagged={false}
       />
     );
 
-    const flagBtn = screen.getByRole('button', { name: /Marcar para Revisão/i });
-    fireEvent.click(flagBtn);
-
-    expect(handleToggleFlag).toHaveBeenCalledTimes(1);
+    const activeBtn = screen.getByRole('button', { name: /Ir para a questão 2/i });
+    expect(activeBtn).toHaveAttribute('aria-current', 'step');
   });
 });

@@ -10,8 +10,6 @@ export interface QuestionCarouselProps {
   readonly isFlagged?: (index: number) => boolean;
   readonly onNext?: () => void;
   readonly onPrevious?: () => void;
-  readonly onToggleFlag?: () => void;
-  readonly isCurrentFlagged?: boolean;
   readonly className?: string;
 }
 
@@ -23,8 +21,6 @@ export const QuestionCarousel: React.FC<QuestionCarouselProps> = ({
   isFlagged = () => false,
   onNext,
   onPrevious,
-  onToggleFlag,
-  isCurrentFlagged = false,
   className = '',
 }) => {
   const activeBtnRef = useRef<HTMLButtonElement>(null);
@@ -62,29 +58,6 @@ export const QuestionCarousel: React.FC<QuestionCarouselProps> = ({
           <ChevronLeft className="h-4 w-4 mr-1" aria-hidden="true" />
           Anterior
         </Button>
-
-        {/* Flag Bookmark Toggle */}
-        {onToggleFlag && (
-          <button
-            type="button"
-            onClick={onToggleFlag}
-            className={`p-2 rounded-brand border text-xs font-medium flex items-center gap-1.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
-              isCurrentFlagged
-                ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 font-bold'
-                : 'border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-            aria-pressed={isCurrentFlagged}
-            aria-label={isCurrentFlagged ? 'Marcada para Revisão' : 'Marcar para Revisão'}
-          >
-            <Bookmark
-              className={`h-4 w-4 ${isCurrentFlagged ? 'fill-amber-500 text-amber-500' : ''}`}
-              aria-hidden="true"
-            />
-            <span className="hidden md:inline">
-              {isCurrentFlagged ? 'Marcada para Revisão' : 'Marcar para Revisão'}
-            </span>
-          </button>
-        )}
 
         <Button
           type="button"
