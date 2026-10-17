@@ -12,7 +12,7 @@ import {
   AccessibilityToolbar,
 } from '@/components/accessibility';
 import { RegisterModal } from '@/components/auth';
-import { TermsAndPrivacyModal } from '@/components/legal';
+import { TermsAndPrivacyModal, AccountErasureModal } from '@/components/legal';
 import { ShieldCheck } from 'lucide-react';
 
 export interface RootLayoutProps {
@@ -37,6 +37,7 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
   const [authModalMode, setAuthModalMode] = useState<'register' | 'login'>('login');
   const [isLegalModalOpen, setIsLegalModalOpen] = useState<boolean>(false);
   const [legalModalTab, setLegalModalTab] = useState<'terms' | 'privacy'>('terms');
+  const [isErasureModalOpen, setIsErasureModalOpen] = useState<boolean>(false);
 
   const openAuthModal = (mode: 'register' | 'login' = 'login') => {
     setAuthModalMode(mode);
@@ -46,6 +47,10 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
   const openLegalModal = (tab: 'terms' | 'privacy' = 'terms') => {
     setLegalModalTab(tab);
     setIsLegalModalOpen(true);
+  };
+
+  const openErasureModal = () => {
+    setIsErasureModalOpen(true);
   };
 
   const handleNavigate = (section: string) => {
@@ -89,6 +94,7 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
         onNavigate={handleNavigate}
         onOpenAuthModal={() => openAuthModal('register')}
         onOpenLegalModal={() => openLegalModal('privacy')}
+        onOpenErasureModal={openErasureModal}
       />
 
       {/* Main Page Content (with bottom padding for sticky mobile nav) */}
@@ -124,6 +130,14 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
               >
                 Termos de Uso e Privacidade
               </button>
+              <span className="mx-1.5">&bull;</span>
+              <button
+                type="button"
+                onClick={openErasureModal}
+                className="hover:text-rose-600 dark:hover:text-rose-400 underline transition-colors focus:outline-none focus:ring-1 focus:ring-rose-500 rounded"
+              >
+                Exclusão de Conta (Art. 18)
+              </button>
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
@@ -144,6 +158,13 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
         isOpen={isLegalModalOpen}
         onClose={() => setIsLegalModalOpen(false)}
         initialTab={legalModalTab}
+        onOpenErasureModal={openErasureModal}
+      />
+
+      {/* Self-Service Account Erasure Modal (LGPD Art. 18, VI) */}
+      <AccountErasureModal
+        isOpen={isErasureModalOpen}
+        onClose={() => setIsErasureModalOpen(false)}
       />
     </div>
   );

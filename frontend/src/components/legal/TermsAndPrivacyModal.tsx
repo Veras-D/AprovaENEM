@@ -1,26 +1,49 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, ShieldCheck, FileText, CheckCircle2, Lock, Download, Trash2, HeartHandshake } from 'lucide-react';
+import {
+  X,
+  ShieldCheck,
+  FileText,
+  CheckCircle2,
+  Lock,
+  Download,
+  Trash2,
+  HeartHandshake,
+  Loader2,
+  AlertOctagon,
+} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { useSessionStore } from '@/stores/useSessionStore';
+import { useExportUserDataMutation } from '@/api/hooks';
 
 export interface TermsAndPrivacyModalProps {
   readonly isOpen: boolean;
   readonly onClose: () => void;
   readonly initialTab?: 'terms' | 'privacy';
+  readonly onOpenErasureModal?: () => void;
 }
 
 export const TermsAndPrivacyModal: React.FC<TermsAndPrivacyModalProps> = ({
   isOpen,
   onClose,
   initialTab = 'terms',
+  onOpenErasureModal,
 }) => {
   const [activeTab, setActiveTab] = useState<'terms' | 'privacy'>(initialTab);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const exportUserDataMutation = useExportUserDataMutation();
+  const [exportStatus, setExportStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [exportErrorMessage, setExportErrorMessage] = useState<string | null>(null);
+
   const modalRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
 
-  // Sync initial tab if prop changes when opening
+  // Sync initial tab and reset state when opening
   useEffect(() => {
     if (isOpen) {
       setActiveTab(initialTab);
+      setExportStatus('idle');
+      setExportErrorMessage(null);
     }
   }, [isOpen, initialTab]);
 
@@ -73,6 +96,52 @@ export const TermsAndPrivacyModal: React.FC<TermsAndPrivacyModalProps> = ({
       previouslyFocusedElement.current?.focus();
     };
   }, [isOpen, onClose]);
+
+  const handleExportData = async () => {
+    setExportStatus('loading');
+    setExportErrorMessage(null);
+
+    try {
+      let exportPayload: Record<string, unknown>;
+      let filenamePrefix: string;
+
+      if (isAuthenticated) {
+        exportPayload = await exportUserDataMutation.mutateAsync();
+        filenamePrefix = 'aprovaenem-dados-estudante';
+      } else {
+        const sessionState = useSessionStore.getState();
+        exportPayload = {
+          legalBasis: 'LGPD Artigo 18, inciso V — Portabilidade de Dados (Sessão Anônima)',
+          exportedAt: new Date().toISOString(),
+          anonymousSessionId: sessionState.anonymousSessionId,
+          attemptsCount: Object.keys(sessionState.attempts).length,
+          attempts: sessionState.attempts,
+          activeSession: sessionState.activeSession,
+          notice: 'Estudante não autenticado. Estes dados representam seu histórico armazenado localmente no dispositivo.',
+        };
+        filenamePrefix = 'aprovaenem-dados-sessao-anonima';
+      }
+
+      const jsonStr = JSON.stringify(exportPayload, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+      const downloadUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `${filenamePrefix}-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(downloadUrl);
+
+      setExportStatus('success');
+      setTimeout(() => {
+        setExportStatus('idle');
+      }, 4000);
+    } catch {
+      setExportStatus('error');
+      setExportErrorMessage('Falha ao exportar os dados. Tente novamente em instantes.');
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -259,24 +328,75 @@ export const TermsAndPrivacyModal: React.FC<TermsAndPrivacyModalProps> = ({
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
-                  <div className="p-3 rounded-brand border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 space-y-1">
-                    <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
-                      <Download className="h-4 w-4 text-brand-primary" aria-hidden="true" />
-                      Portabilidade (Art. 18, V)
+                  <div className="p-3.5 rounded-brand border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 space-y-3 flex flex-col justify-between">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
+                        <Download className="h-4 w-4 text-brand-primary" aria-hidden="true" />
+                        <span>Portabilidade (Art. 18, V)</span>
+                      </div>
+                      <p className="text-slate-600 dark:text-slate-300 text-xs leading-relaxed">
+                        Exporte a qualquer momento seus dados cadastrais, histórico de resoluções, XP, ofensivas e diagnósticos em formato JSON aberto (<code className="text-[11px] bg-slate-200 dark:bg-slate-700 px-1 py-0.5 rounded">GET /api/v1/auth/export</code>).
+                      </p>
                     </div>
-                    <p className="text-slate-600 dark:text-slate-300">
-                      Exporte a qualquer momento todos os seus dados cadastrais, XP, ofensivas e diagnósticos em formato JSON aberto (<code className="text-[11px] bg-slate-200 dark:bg-slate-700 px-1 py-0.5 rounded">GET /api/v1/auth/export</code>).
-                    </p>
+                    <div>
+                      <button
+                        type="button"
+                        onClick={handleExportData}
+                        disabled={exportStatus === 'loading'}
+                        className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-brand bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary text-xs font-semibold border border-brand-primary/30 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary disabled:opacity-50"
+                      >
+                        {exportStatus === 'loading' ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                            <span>Exportando Dados...</span>
+                          </>
+                        ) : exportStatus === 'success' ? (
+                          <>
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                            <span className="text-emerald-700 dark:text-emerald-300">Download Concluído!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                            <span>Exportar Meus Dados (JSON)</span>
+                          </>
+                        )}
+                      </button>
+                      {exportErrorMessage && (
+                        <div
+                          role="alert"
+                          className="mt-2 p-2 rounded-brand bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-[11px] flex items-center gap-1.5"
+                        >
+                          <AlertOctagon className="h-3 w-3 shrink-0" aria-hidden="true" />
+                          <span>{exportErrorMessage}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="p-3 rounded-brand border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 space-y-1">
-                    <div className="flex items-center gap-1.5 font-bold text-rose-600 dark:text-rose-400">
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
-                      Eliminação Definitiva (Art. 18, VI)
+                  <div className="p-3.5 rounded-brand border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 space-y-3 flex flex-col justify-between">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-1.5 font-bold text-rose-600 dark:text-rose-400">
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        <span>Eliminação Definitiva (Art. 18, VI)</span>
+                      </div>
+                      <p className="text-slate-600 dark:text-slate-300 text-xs leading-relaxed">
+                        Exclua sua conta com salvaguardas de confirmação estritas. Todas as suas credenciais, simulados e mensagens com a tutoria socrática são expurgadas permanentemente.
+                      </p>
                     </div>
-                    <p className="text-slate-600 dark:text-slate-300">
-                      Exclua sua conta com 1 clique. Todas as suas credenciais, sessões e mensagens de tutoria socrática são expurgadas permanentemente dos nossos servidores.
-                    </p>
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onClose();
+                          onOpenErasureModal?.();
+                        }}
+                        className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-brand bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-900 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/80 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" aria-hidden="true" />
+                        <span>Solicitar Exclusão de Conta</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </section>

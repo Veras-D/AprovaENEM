@@ -1,23 +1,66 @@
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TermsAndPrivacyModal } from './TermsAndPrivacyModal';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { useSessionStore } from '@/stores/useSessionStore';
+import { authService } from '@/api/services/auth.service';
+
+vi.mock('@/api/services/auth.service', () => ({
+  authService: {
+    exportUserData: vi.fn(),
+    deleteAccount: vi.fn(),
+  },
+}));
 
 describe('TermsAndPrivacyModal Component', () => {
   const handleClose = vi.fn();
+  const handleOpenErasure = vi.fn();
+  let queryClient: QueryClient;
+
+  const renderWithProviders = (ui: React.ReactElement) => {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false, gcTime: 0 },
+        mutations: { retry: false },
+      },
+    });
+
+    return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
+    useAuthStore.setState({ user: null, isAuthenticated: false });
+    useSessionStore.setState({
+      anonymousSessionId: 'anon-test-123',
+      attempts: {
+        'q-1': {
+          questionId: 'q-1',
+          selectedOption: 'A',
+          isCorrect: true,
+          timeSpentSeconds: 45,
+          answeredAt: '2026-10-16T12:00:00Z',
+        },
+      },
+      activeSession: null,
+    });
+
+    // Mock URL.createObjectURL and revokeObjectURL for JSDOM
+    window.URL.createObjectURL = vi.fn(() => 'blob:mock-export-url');
+    window.URL.revokeObjectURL = vi.fn();
   });
 
   it('should not render anything when isOpen is false', () => {
-    const { container } = render(
+    const { container } = renderWithProviders(
       <TermsAndPrivacyModal isOpen={false} onClose={handleClose} />
     );
     expect(container).toBeEmptyDOMElement();
   });
 
   it('should render dialog with accessible attributes when isOpen is true', () => {
-    render(<TermsAndPrivacyModal isOpen={true} onClose={handleClose} />);
+    renderWithProviders(<TermsAndPrivacyModal isOpen={true} onClose={handleClose} />);
 
     const dialog = screen.getByRole('dialog');
     expect(dialog).toBeInTheDocument();
@@ -27,7 +70,7 @@ describe('TermsAndPrivacyModal Component', () => {
   });
 
   it('should display Terms of Use content by default and allow switching to Privacy & LGPD', () => {
-    render(<TermsAndPrivacyModal isOpen={true} onClose={handleClose} />);
+    renderWithProviders(<TermsAndPrivacyModal isOpen={true} onClose={handleClose} />);
 
     // By default, Terms of Use tab is active
     expect(screen.getByRole('tab', { name: /Termos de Uso/i })).toHaveAttribute('aria-selected', 'true');
@@ -45,14 +88,14 @@ describe('TermsAndPrivacyModal Component', () => {
   });
 
   it('should support initialTab="privacy" on open', () => {
-    render(<TermsAndPrivacyModal isOpen={true} onClose={handleClose} initialTab="privacy" />);
+    renderWithProviders(<TermsAndPrivacyModal isOpen={true} onClose={handleClose} initialTab="privacy" />);
 
     expect(screen.getByRole('tab', { name: /Política de Privacidade & LGPD/i })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByText(/Compromisso de Não-Comercialização/i)).toBeInTheDocument();
   });
 
   it('should call onClose when close button or "Entendido e Fechar" is clicked', () => {
-    render(<TermsAndPrivacyModal isOpen={true} onClose={handleClose} />);
+    renderWithProviders(<TermsAndPrivacyModal isOpen={true} onClose={handleClose} />);
 
     const closeBtn = screen.getByRole('button', { name: 'Fechar termos e privacidade' });
     fireEvent.click(closeBtn);
@@ -64,14 +107,14 @@ describe('TermsAndPrivacyModal Component', () => {
   });
 
   it('should call onClose when Escape key is pressed', () => {
-    render(<TermsAndPrivacyModal isOpen={true} onClose={handleClose} />);
+    renderWithProviders(<TermsAndPrivacyModal isOpen={true} onClose={handleClose} />);
 
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(handleClose).toHaveBeenCalledTimes(1);
   });
 
   it('should handle keyboard Tab focus cycling inside modal', () => {
-    render(<TermsAndPrivacyModal isOpen={true} onClose={handleClose} />);
+    renderWithProviders(<TermsAndPrivacyModal isOpen={true} onClose={handleClose} />);
 
     const closeBtn = screen.getByRole('button', { name: 'Fechar termos e privacidade' });
     const entendidoBtn = screen.getByRole('button', { name: 'Entendido e Fechar' });
@@ -86,5 +129,77 @@ describe('TermsAndPrivacyModal Component', () => {
     // Shift+Tab on first element should cycle to last
     fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
     expect(document.activeElement).toBe(entendidoBtn);
+  });
+
+  it('should trigger local anonymous JSON download when clicking export data for unauthenticated visitor', async () => {
+    renderWithProviders(
+      <TermsAndPrivacyModal
+        isOpen={true}
+        onClose={handleClose}
+        initialTab="privacy"
+      />
+    );
+
+    const exportBtn = screen.getByRole('button', { name: /Exportar Meus Dados \(JSON\)/i });
+    fireEvent.click(exportBtn);
+
+    await waitFor(() => {
+      expect(window.URL.createObjectURL).toHaveBeenCalledTimes(1);
+      expect(screen.getByText(/Download Concluído!/i)).toBeInTheDocument();
+    });
+  });
+
+  it('should call backend export and trigger download when student is authenticated', async () => {
+    useAuthStore.setState({
+      user: {
+        id: 'user-lgpd-1',
+        email: 'estudante@enem.br',
+        name: 'Maria Silva',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-01-01T00:00:00Z',
+      },
+      isAuthenticated: true,
+    });
+
+    vi.mocked(authService.exportUserData).mockResolvedValueOnce({
+      legalBasis: 'LGPD Artigo 18, V',
+      exportedAt: '2026-10-16T12:00:00Z',
+      user: { id: 'user-lgpd-1', name: 'Maria Silva' },
+    });
+
+    renderWithProviders(
+      <TermsAndPrivacyModal
+        isOpen={true}
+        onClose={handleClose}
+        initialTab="privacy"
+      />
+    );
+
+    const exportBtn = screen.getByRole('button', { name: /Exportar Meus Dados \(JSON\)/i });
+    fireEvent.click(exportBtn);
+
+    await waitFor(() => {
+      expect(authService.exportUserData).toHaveBeenCalledTimes(1);
+      expect(window.URL.createObjectURL).toHaveBeenCalledTimes(1);
+      expect(screen.getByText(/Download Concluído!/i)).toBeInTheDocument();
+    });
+  });
+
+  it('should trigger onOpenErasureModal and onClose when clicking Solicitar Exclusão de Conta', () => {
+    renderWithProviders(
+      <TermsAndPrivacyModal
+        isOpen={true}
+        onClose={handleClose}
+        onOpenErasureModal={handleOpenErasure}
+        initialTab="privacy"
+      />
+    );
+
+    const erasureBtn = screen.getByRole('button', { name: /Solicitar Exclusão de Conta/i });
+    fireEvent.click(erasureBtn);
+
+    expect(handleClose).toHaveBeenCalledTimes(1);
+    expect(handleOpenErasure).toHaveBeenCalledTimes(1);
   });
 });

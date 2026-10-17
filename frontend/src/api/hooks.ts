@@ -7,6 +7,7 @@ import { tenantService } from './services/tenant.service';
 import { authService } from './services/auth.service';
 import { institutionalService } from './services/institutional.service';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useSessionStore } from '@/stores/useSessionStore';
 import type {
   GetQuestionsParams,
   StartSessionRequest,
@@ -191,6 +192,26 @@ export function useCurrentUserQuery() {
     queryFn: () => authService.getCurrentUser(),
     enabled: isAuthenticated,
     staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
+export function useExportUserDataMutation() {
+  return useMutation({
+    mutationFn: () => authService.exportUserData(),
+  });
+}
+
+export function useDeleteAccountMutation() {
+  const queryClient = useQueryClient();
+  const clearAuth = useAuthStore((s) => s.clearAuth);
+
+  return useMutation({
+    mutationFn: () => authService.deleteAccount(),
+    onSuccess: () => {
+      clearAuth();
+      useSessionStore.getState().clearSession();
+      queryClient.removeQueries();
+    },
   });
 }
 

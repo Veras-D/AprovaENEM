@@ -100,4 +100,17 @@ describe('RootLayout component', () => {
 
     expect(screen.getByRole('dialog', { name: /Termos de Uso e Privacidade LGPD/i })).toBeInTheDocument();
   });
+
+  it('should open Account Erasure modal when clicking footer erasure link', () => {
+    renderWithProviders(
+      <RootLayout>
+        <div>Corpo</div>
+      </RootLayout>
+    );
+
+    const erasureBtn = screen.getByRole('button', { name: /Exclusão de Conta \(Art\. 18\)/i });
+    fireEvent.click(erasureBtn);
+
+    expect(screen.getByRole('dialog', { name: /Eliminar Conta Definitivamente/i })).toBeInTheDocument();
+  });
 });

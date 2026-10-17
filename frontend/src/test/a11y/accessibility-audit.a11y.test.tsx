@@ -38,7 +38,7 @@ import { SocraticMessageBubble } from '@/features/practice/components/SocraticMe
 // Modals
 import { TimeAccommodationModal } from '@/features/practice/components/TimeAccommodationModal';
 import { RegisterModal } from '@/components/auth/RegisterModal';
-import { TermsAndPrivacyModal } from '@/components/legal/TermsAndPrivacyModal';
+import { TermsAndPrivacyModal, AccountErasureModal } from '@/components/legal';
 import { CelebrationOverlay } from '@/features/gamification/components/CelebrationOverlay';
 
 // Gamification & Diagnostic
@@ -418,8 +418,17 @@ describe('Axe-Core WCAG 2.1 Level AA Accessibility Audit Suite', () => {
     });
 
     it('has zero accessibility violations on TermsAndPrivacyModal in open state', async () => {
-      const { container } = render(
+      const { container } = renderWithProviders(
         <TermsAndPrivacyModal isOpen={true} onClose={() => {}} />
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    it('has zero accessibility violations on AccountErasureModal in open state', async () => {
+      const { container } = renderWithProviders(
+        <AccountErasureModal isOpen={true} onClose={() => {}} />
       );
 
       const results = await axe(container);
