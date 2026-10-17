@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-17
+### 🔒 LGPD Account Erasure Flow Restricted to Authenticated Sessions
+- fix(legal): Restricted account deletion triggers and modal controls strictly to authenticated user sessions:
+  - **Footer Account Erasure Guard**: Guarded the `"Exclusão de Conta (Art. 18)"` trigger button in [`RootLayout.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/layouts/RootLayout.tsx) to only render when `isAuthenticated` is true, keeping the public `"Termos de Uso e Privacidade"` accessible to all visitors.
+  - **Privacy Modal Action Protection**: Guarded `"Solicitar Exclusão de Conta"` in [`TermsAndPrivacyModal.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/legal/TermsAndPrivacyModal.tsx) behind authentication. Logged-out visitors see explanatory guidance (*"A solicitação de exclusão de dados cadastrais fica disponível após você entrar na sua conta"*).
+  - **Modal Defensive State**: Configured [`AccountErasureModal.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/legal/AccountErasureModal.tsx) to display a friendly *"Nenhuma Conta Conectada"* dialog and omit destructive delete action buttons if invoked without an active authenticated session, while preserving post-deletion success screens.
+  - **Automated Test Coverage**: Updated [`RootLayout.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/layouts/RootLayout.test.tsx), [`TermsAndPrivacyModal.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/legal/TermsAndPrivacyModal.test.tsx), and [`AccountErasureModal.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/legal/AccountErasureModal.test.tsx) with authenticated and unauthenticated test suites. Verified 100% green across all 70 test files (446 tests, 0 failures, 0 skipped) and clean Vite production build.
+
 ### ⏱️ Question Pacing Alert & Continuous Study Flow
 - fix(practice): Replaced disruptive exam-halting modal with non-blocking question pacing alert:
   - **Non-Disruptive Study Flow**: Transformed [`TimeUpModal.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/TimeUpModal.tsx) from an exam-stopping dialog into a gentle question pacing alert (*"Atenção ao Tempo da Questão • Ritmo de Prova ENEM (3 min)"*). Rather than terminating the session or declaring the exam concluded, it provides a prominent, default-focused **`"Continuar Respondendo"`** action allowing students to immediately resume their study without losing answers or session state.

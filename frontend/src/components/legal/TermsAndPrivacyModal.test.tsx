@@ -186,7 +186,36 @@ describe('TermsAndPrivacyModal Component', () => {
     });
   });
 
-  it('should trigger onOpenErasureModal and onClose when clicking Solicitar Exclusão de Conta', () => {
+  it('should display unauthenticated notice instead of erasure button when user is logged out', () => {
+    renderWithProviders(
+      <TermsAndPrivacyModal
+        isOpen={true}
+        onClose={handleClose}
+        onOpenErasureModal={handleOpenErasure}
+        initialTab="privacy"
+      />
+    );
+
+    expect(screen.queryByRole('button', { name: /Solicitar Exclusão de Conta/i })).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/A solicitação de exclusão de dados cadastrais fica disponível após você entrar na sua conta/i)
+    ).toBeInTheDocument();
+  });
+
+  it('should trigger onOpenErasureModal and onClose when clicking Solicitar Exclusão de Conta as authenticated user', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-123',
+        name: 'Ana Souza',
+        email: 'ana@example.com',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-01-01T00:00:00Z',
+      },
+      token: 'jwt-token',
+      isAuthenticated: true,
+    });
+
     renderWithProviders(
       <TermsAndPrivacyModal
         isOpen={true}

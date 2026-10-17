@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTenantStore } from '@/stores/useTenantStore';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { MobileDrawer } from '@/components/layout/MobileDrawer';
@@ -27,6 +28,7 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
   onNavigate: controlledOnNavigate,
 }) => {
   const currentTenant = useTenantStore((s) => s.currentTenant);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
   const [internalSection, setInternalSection] = useState<string>('practice');
 
@@ -130,14 +132,18 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
               >
                 Termos de Uso e Privacidade
               </button>
-              <span className="mx-1.5">&bull;</span>
-              <button
-                type="button"
-                onClick={openErasureModal}
-                className="hover:text-rose-600 dark:hover:text-rose-400 underline transition-colors focus:outline-none focus:ring-1 focus:ring-rose-500 rounded"
-              >
-                Exclusão de Conta (Art. 18)
-              </button>
+              {isAuthenticated && (
+                <>
+                  <span className="mx-1.5">&bull;</span>
+                  <button
+                    type="button"
+                    onClick={openErasureModal}
+                    className="hover:text-rose-600 dark:hover:text-rose-400 underline transition-colors focus:outline-none focus:ring-1 focus:ring-rose-500 rounded"
+                  >
+                    Exclusão de Conta (Art. 18)
+                  </button>
+                </>
+              )}
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 text-center">

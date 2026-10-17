@@ -101,7 +101,30 @@ describe('RootLayout component', () => {
     expect(screen.getByRole('dialog', { name: /Termos de Uso e Privacidade LGPD/i })).toBeInTheDocument();
   });
 
-  it('should open Account Erasure modal when clicking footer erasure link', () => {
+  it('should not show account erasure link in footer when user is unauthenticated', () => {
+    renderWithProviders(
+      <RootLayout>
+        <div>Corpo</div>
+      </RootLayout>
+    );
+
+    expect(screen.queryByRole('button', { name: /Exclusão de Conta \(Art\. 18\)/i })).not.toBeInTheDocument();
+  });
+
+  it('should open Account Erasure modal when clicking footer erasure link as authenticated user', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-123',
+        name: 'Ana Souza',
+        email: 'ana@example.com',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-01-01T00:00:00Z',
+      },
+      token: 'jwt-token',
+      isAuthenticated: true,
+    });
+
     renderWithProviders(
       <RootLayout>
         <div>Corpo</div>

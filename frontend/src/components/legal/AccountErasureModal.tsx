@@ -188,6 +188,25 @@ export const AccountErasureModal: React.FC<AccountErasureModalProps> = ({
                 Conforme o Art. 18, VI da LGPD, todos os seus dados cadastrais, simulados e mensagens foram expurgados permanentemente dos nossos servidores.
               </p>
             </div>
+          ) : !isAuthenticated ? (
+            <div className="py-6 text-center space-y-4">
+              <div className="mx-auto w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center">
+                <ShieldAlert className="h-6 w-6" aria-hidden="true" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  Nenhuma Conta Conectada
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-sm mx-auto">
+                  A solicitação de exclusão definitiva de conta e dados cadastrais (LGPD Art. 18, VI) só pode ser realizada quando você estiver conectado à sua conta.
+                </p>
+              </div>
+              <div className="pt-2 flex justify-center gap-3">
+                <Button variant="outline" size="sm" onClick={onClose}>
+                  Fechar
+                </Button>
+              </div>
+            </div>
           ) : (
             <>
               {/* Adolescent-Friendly Warning Description */}
@@ -283,7 +302,7 @@ export const AccountErasureModal: React.FC<AccountErasureModalProps> = ({
         </div>
 
         {/* Modal Footer Controls */}
-        {!isSuccess && (
+        {!isSuccess && isAuthenticated && (
           <div className="p-4 sm:p-5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3 shrink-0 bg-slate-50 dark:bg-slate-900/80">
             <Button
               type="button"

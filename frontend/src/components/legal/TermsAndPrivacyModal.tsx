@@ -385,17 +385,23 @@ export const TermsAndPrivacyModal: React.FC<TermsAndPrivacyModalProps> = ({
                       </p>
                     </div>
                     <div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          onClose();
-                          onOpenErasureModal?.();
-                        }}
-                        className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-brand bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-900 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/80 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
-                      >
-                        <Trash2 className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" aria-hidden="true" />
-                        <span>Solicitar Exclusão de Conta</span>
-                      </button>
+                      {isAuthenticated ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onClose();
+                            onOpenErasureModal?.();
+                          }}
+                          className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-brand bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-900 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/80 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" aria-hidden="true" />
+                          <span>Solicitar Exclusão de Conta</span>
+                        </button>
+                      ) : (
+                        <p className="text-xs text-slate-500 dark:text-slate-400 italic">
+                          A solicitação de exclusão de dados cadastrais fica disponível após você entrar na sua conta.
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>

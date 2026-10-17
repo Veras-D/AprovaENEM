@@ -175,4 +175,25 @@ describe('AccountErasureModal Component', () => {
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(handleClose).toHaveBeenCalledTimes(2);
   });
+
+  it('should render unauthenticated fallback when user is not logged in', () => {
+    useAuthStore.setState({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+    });
+
+    renderWithProviders(<AccountErasureModal isOpen={true} onClose={handleClose} />);
+
+    expect(screen.getByText('Nenhuma Conta Conectada')).toBeInTheDocument();
+    expect(
+      screen.getByText(/A solicitação de exclusão definitiva de conta e dados cadastrais .* só pode ser realizada quando você estiver conectado/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Eliminar Conta Definitivamente/i })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Para confirmar, digite/i)).not.toBeInTheDocument();
+
+    const closeBtn = screen.getByRole('button', { name: 'Fechar' });
+    fireEvent.click(closeBtn);
+    expect(handleClose).toHaveBeenCalledTimes(1);
+  });
 });
