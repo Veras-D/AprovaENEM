@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Trophy, BarChart2, Menu } from 'lucide-react';
+import { Home, BookOpen, Trophy, BarChart2, Menu } from 'lucide-react';
 
 export interface BottomNavProps {
   readonly activeSection?: string;
@@ -17,6 +17,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   onOpenDrawer,
 }) => {
   const items = [
+    { id: 'home', label: 'Início', icon: Home },
     { id: 'practice', label: 'Praticar', icon: BookOpen },
     { id: 'leaderboard', label: 'Ranking', icon: Trophy },
     { id: 'diagnostics', label: 'Diagnóstico', icon: BarChart2 },

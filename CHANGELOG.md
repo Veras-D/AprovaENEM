@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-17
+### 🏠 Institutional Home Landing Page & Distraction-Free Exam Screen
+- feat(home): Created dedicated White-Label Home Landing Page and purged promotional hero banners from the active exam simulator:
+  - **Dedicated White-Label Home Landing Page ([`LandingPage.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/home/LandingPage.tsx))**: Implemented an institutional entry portal dynamically adapting to the active tenant's brand manual (`currentTenant.name`, `currentTenant.tagline`, logos, fonts, colors), featuring:
+    - High-impact hero presentation with direct *"Começar Simulado Agora"* and *"Mapeamento Diagnóstico"* CTAs.
+    - 4 Core Educational Pillars (Simulado Oficial INEP & KaTeX, Tutor IA Socrático Pedagógico, Acessibilidade Universal WCAG 2.1 AA & VLibras, and Diagnóstico TRI & Gamificação).
+    - Platform trust badges (100% Free access, calibrated INEP items, ethical AI guardrails, LGPD Art. 18 compliance).
+  - **Distraction-Free Exam Simulator ([`PracticeHero.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.tsx))**: Removed promotional marketing hero section from the active exam screen. The practice screen now immediately presents the focused timed quiz bar, question carousel, and interactive question card without vertical screen waste.
+  - **Omnichannel Navigation Integration**: Added *"Início"* (Home) nav item across [`Header.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/Header.tsx), [`BottomNav.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/BottomNav.tsx), and [`MobileDrawer.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/MobileDrawer.tsx), and made the tenant header logo/name clickable to navigate back to Home.
+  - **Automated Test Coverage**: Created [`LandingPage.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/home/LandingPage.test.tsx) and updated [`App.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/App.test.tsx), [`Header.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/Header.test.tsx), [`BottomNav.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/BottomNav.test.tsx), [`MobileDrawer.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/MobileDrawer.test.tsx), and [`PracticeHero.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.test.tsx). Verified 100% green (69 test files, 433 tests, 0 failures).
+
 ### 🎨 White-Label Multi-Tenant Brand Manual Adaptation
 - feat(whitelabel): Enriched B2B multi-tenant architecture to fully adapt to partner Design Manuals and eliminated demo artifacts:
   - **Eradicated Demo Bar from Student Screen**: Removed developer `<ThemeCustomizer />` demo toolbar from [`PracticeHero.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.tsx), restoring student focus and realistic portal immersion.

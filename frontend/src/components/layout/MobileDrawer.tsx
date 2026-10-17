@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { useSessionStore } from '@/stores/useSessionStore';
 import {
   X,
+  Home,
   BookOpen,
   Trophy,
   BarChart2,
@@ -78,6 +79,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
   }
 
   const navItems = [
+    { id: 'home', label: 'Início', icon: Home },
     { id: 'practice', label: 'Praticar Questões', icon: BookOpen },
     { id: 'leaderboard', label: 'Ranking Semanal', icon: Trophy },
     { id: 'diagnostics', label: 'Diagnóstico & Desempenho', icon: BarChart2 },

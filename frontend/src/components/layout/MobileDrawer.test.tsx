@@ -45,6 +45,7 @@ describe('MobileDrawer component', () => {
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText('AprovaENEM Social')).toBeInTheDocument();
+    expect(screen.getByText('Início')).toBeInTheDocument();
     expect(screen.getByText('Praticar Questões')).toBeInTheDocument();
     expect(screen.getByText('Ranking Semanal')).toBeInTheDocument();
     expect(screen.getByText('Diagnóstico & Desempenho')).toBeInTheDocument();

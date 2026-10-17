@@ -53,16 +53,22 @@ describe('Header component', () => {
       <Header onOpenDrawer={vi.fn()} activeSection="practice" onNavigate={handleNavigate} />
     );
 
+    const homeBtn = screen.getByRole('button', { name: /Início/i });
     const practiceBtn = screen.getByRole('button', { name: /Praticar/i });
     const rankingBtn = screen.getByRole('button', { name: /Ranking/i });
     const diagnosticsBtn = screen.getByRole('button', { name: /Diagnóstico/i });
 
+    expect(homeBtn).toBeInTheDocument();
     expect(practiceBtn).toBeInTheDocument();
     expect(rankingBtn).toBeInTheDocument();
     expect(diagnosticsBtn).toBeInTheDocument();
 
     fireEvent.click(rankingBtn);
     expect(handleNavigate).toHaveBeenCalledWith('leaderboard');
+
+    const brandBtn = screen.getByRole('button', { name: /Ir para a página inicial de/i });
+    fireEvent.click(brandBtn);
+    expect(handleNavigate).toHaveBeenCalledWith('home');
   });
 
   it('should trigger onOpenDrawer when mobile hamburger button is clicked', () => {

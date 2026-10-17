@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTenantStore } from '@/stores/useTenantStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useSessionStore } from '@/stores/useSessionStore';
-import { BookOpen, Trophy, BarChart2, User, Menu, Sun, Moon, LogOut } from 'lucide-react';
+import { Home, BookOpen, Trophy, BarChart2, User, Menu, Sun, Moon, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 export interface HeaderProps {
@@ -40,6 +40,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const navLinks = [
+    { id: 'home', label: 'Início', icon: Home },
     { id: 'practice', label: 'Praticar', icon: BookOpen },
     { id: 'leaderboard', label: 'Ranking', icon: Trophy },
     { id: 'diagnostics', label: 'Diagnóstico', icon: BarChart2 },
@@ -59,25 +60,32 @@ export const Header: React.FC<HeaderProps> = ({
             <Menu className="h-5 w-5" aria-hidden="true" />
           </button>
 
-          <img
-            src={currentTenant.logoUrl}
-            alt={`${currentTenant.name} Logo`}
-            className="h-8 w-8 sm:h-9 sm:w-9 rounded-brand object-contain shrink-0"
-          />
+          <button
+            type="button"
+            onClick={() => onNavigate?.('home')}
+            className="flex items-center gap-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded-brand p-1 -m-1 transition-opacity hover:opacity-90"
+            aria-label={`Ir para a página inicial de ${currentTenant.name}`}
+          >
+            <img
+              src={currentTenant.logoUrl}
+              alt={`${currentTenant.name} Logo`}
+              className="h-8 w-8 sm:h-9 sm:w-9 rounded-brand object-contain shrink-0"
+            />
 
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white truncate">
-                {currentTenant.name}
-              </span>
-              <span className="hidden sm:inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary border border-brand-primary/20 shrink-0">
-                Portal do Aluno
-              </span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white truncate">
+                  {currentTenant.name}
+                </span>
+                <span className="hidden sm:inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary border border-brand-primary/20 shrink-0">
+                  Portal do Aluno
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 hidden lg:block truncate max-w-md">
+                {currentTenant.tagline}
+              </p>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 hidden lg:block truncate max-w-md">
-              {currentTenant.tagline}
-            </p>
-          </div>
+          </button>
         </div>
 
         {/* Desktop Navigation Links */}

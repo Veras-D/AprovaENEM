@@ -4,6 +4,7 @@ import { RootLayout } from '@/layouts/RootLayout';
 import { PracticeHero } from '@/features/practice/PracticeHero';
 import { GamificationDashboard } from '@/features/gamification';
 import { DiagnosticDashboard } from '@/features/diagnostic';
+import { LandingPage } from '@/features/home';
 import { useTenantStore } from '@/stores/useTenantStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 
@@ -18,7 +19,7 @@ const queryClient = new QueryClient({
 });
 
 export const App: React.FC = () => {
-  const [activeSection, setActiveSection] = useState<string>('practice');
+  const [activeSection, setActiveSection] = useState<string>('home');
 
   useEffect(() => {
     void useTenantStore.getState().resolveAndApplyTenant();
@@ -28,7 +29,12 @@ export const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <RootLayout activeSection={activeSection} onNavigate={setActiveSection}>
-        {activeSection === 'leaderboard' ? (
+        {activeSection === 'home' ? (
+          <LandingPage
+            onStartPractice={() => setActiveSection('practice')}
+            onNavigate={setActiveSection}
+          />
+        ) : activeSection === 'leaderboard' ? (
           <GamificationDashboard onStartPractice={() => setActiveSection('practice')} />
         ) : activeSection === 'diagnostics' ? (
           <DiagnosticDashboard onPracticeTopic={() => setActiveSection('practice')} />

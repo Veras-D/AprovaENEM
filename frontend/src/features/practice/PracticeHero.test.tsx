@@ -27,11 +27,6 @@ describe('PracticeHero Component', () => {
   it('should initialize and render the interactive quiz mode with authentic questions', () => {
     renderWithProviders();
 
-    // Platform header & white-label badge
-    expect(
-      screen.getByText(/Prática Inteligente com Alinhamento INEP e Tutor IA Socrático/i)
-    ).toBeInTheDocument();
-
     // Quiz control bar
     expect(screen.getByText(/Simulado Rápido ENEM/i)).toBeInTheDocument();
     expect(screen.getByText(/0 de 5 respondidas/i)).toBeInTheDocument();

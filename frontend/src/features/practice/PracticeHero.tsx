@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useTenantStore } from '@/stores/useTenantStore';
 import { useSessionStore } from '@/stores/useSessionStore';
 import { useAccessibilityStore } from '@/stores/useAccessibilityStore';
 import { MOCK_QUESTIONS, MOCK_RESOLUTIONS } from '@/api/mocks/mock-data';
@@ -14,7 +13,6 @@ import {
   TimeAccommodationModal,
 } from './components';
 import {
-  Sparkles,
   RotateCcw,
   Award,
   BookOpen,
@@ -30,7 +28,6 @@ export interface PracticeHeroProps {
 }
 
 export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }) => {
-  const { currentTenant } = useTenantStore();
   const {
     questions,
     currentQuestionIndex,
@@ -138,22 +135,6 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
 
   return (
     <div className="space-y-6">
-      {/* Hero Introduction */}
-      <section className="bg-gradient-to-r from-brand-primary/10 via-brand-surface to-brand-primary/5 rounded-brand p-6 sm:p-8 border border-brand-primary/20">
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-brand-primary text-brand-primary-foreground shadow-sm">
-            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-            Simulado Oficial ENEM &bull; {currentTenant.name}
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Prática Inteligente com Alinhamento INEP e Tutor IA Socrático
-          </h1>
-          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-3xl">
-            {currentTenant.tagline}. Simulado rápido com fórmulas KaTeX dinâmicas, imagens em alta definição WebP com zoom, navegação acessível e cronômetro de prova oficial.
-          </p>
-        </div>
-      </section>
-
       {/* Timed Quiz Control Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
         <div className="flex items-center gap-3">

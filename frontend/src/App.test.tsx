@@ -9,14 +9,25 @@ describe('App Root Integration Component', () => {
     useSessionStore.getState().clearSession();
   });
 
-  it('renders PracticeHero by default and switches to GamificationDashboard via navigation', async () => {
+  it('renders LandingPage by default, navigates to PracticeHero via CTA, and switches to GamificationDashboard', async () => {
     render(<App />);
 
-    // Default view is PracticeHero
+    // Default view is LandingPage
     expect(
-      screen.getByText(/Prática Inteligente com Alinhamento INEP e Tutor IA Socrático/i)
+      screen.getByRole('heading', {
+        name: /Preparação Completa, Inteligente e Acessível para o ENEM/i,
+      })
     ).toBeInTheDocument();
-    expect(screen.getByText(/Simulado Rápido ENEM/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Começar Simulado Agora/i })).toBeInTheDocument();
+
+    // Click "Começar Simulado Agora" to enter Practice mode
+    const startSimBtn = screen.getByRole('button', { name: /Começar Simulado Agora/i });
+    fireEvent.click(startSimBtn);
+
+    // Practice view should now be rendered
+    await waitFor(() => {
+      expect(screen.getByText(/Simulado Rápido ENEM/i)).toBeInTheDocument();
+    });
 
     // Switch to Leaderboard / Gamification via Desktop Header "Ranking"
     const rankingNavButtons = screen.getAllByRole('button', { name: /ranking/i });
@@ -36,10 +47,21 @@ describe('App Root Integration Component', () => {
     });
     fireEvent.click(startPracticeBtn);
 
-    // Should return to PracticeHero
+    // Should return to Practice mode
+    await waitFor(() => {
+      expect(screen.getByText(/Simulado Rápido ENEM/i)).toBeInTheDocument();
+    });
+
+    // Return to LandingPage via "Início"
+    const homeNavButtons = screen.getAllByRole('button', { name: /início/i });
+    expect(homeNavButtons.length).toBeGreaterThan(0);
+    fireEvent.click(homeNavButtons[0]!);
+
     await waitFor(() => {
       expect(
-        screen.getByText(/Prática Inteligente com Alinhamento INEP e Tutor IA Socrático/i)
+        screen.getByRole('heading', {
+          name: /Preparação Completa, Inteligente e Acessível para o ENEM/i,
+        })
       ).toBeInTheDocument();
     });
   });

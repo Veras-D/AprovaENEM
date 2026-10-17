@@ -3,9 +3,10 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { BottomNav } from './BottomNav';
 
 describe('BottomNav component', () => {
-  it('should render all 3 primary action items and the "Mais" drawer trigger', () => {
+  it('should render all 4 primary action items and the "Mais" drawer trigger', () => {
     render(<BottomNav onOpenDrawer={vi.fn()} activeSection="practice" />);
 
+    expect(screen.getByRole('button', { name: /Início/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Praticar/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Ranking/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Diagnóstico/i })).toBeInTheDocument();
