@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-17
+### ⏱️ Question Pacing Alert & Continuous Study Flow
+- fix(practice): Replaced disruptive exam-halting modal with non-blocking question pacing alert:
+  - **Non-Disruptive Study Flow**: Transformed [`TimeUpModal.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/TimeUpModal.tsx) from an exam-stopping dialog into a gentle question pacing alert (*"Atenção ao Tempo da Questão • Ritmo de Prova ENEM (3 min)"*). Rather than terminating the session or declaring the exam concluded, it provides a prominent, default-focused **`"Continuar Respondendo"`** action allowing students to immediately resume their study without losing answers or session state.
+  - **Per-Question Timer Benchmark**: Keyed `<QuizTimer key={currentQuestionIndex} ... />` in [`PracticeHero.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.tsx) to reset per question, reflecting authentic ENEM pacing (~3 min/question).
+  - **Flexible Student Options**: Added *"Pular para Próxima"* to advance if stuck and a direct link to switch to Untimed Mode (*"Ativar Modo Livre"*) for students who prefer practicing without countdown pressure.
+  - **Automated Test Coverage**: Updated [`TimeUpModal.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/TimeUpModal.test.tsx) and [`accessibility-audit.a11y.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/test/a11y/accessibility-audit.a11y.test.tsx). Verified 100% green across all 70 test files (443 tests, 0 failures, 0 skipped).
+
 ### 🧹 Header Cleanup: Removed Raw Anonymous Session Debug Badge
 - fix(header): Removed internal `Sessão Anônima: anon-4cb52...` technical string from application header:
   - **Clean Institutional Presentation**: Purged internal anonymous session tracking ID from [`Header.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/Header.tsx). Unauthenticated users now see only the clean, intuitive `"Entrar"` action button with user icon.

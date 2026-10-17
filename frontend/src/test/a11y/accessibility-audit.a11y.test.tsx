@@ -407,12 +407,11 @@ describe('Axe-Core WCAG 2.1 Level AA Accessibility Audit Suite', () => {
       const { container } = render(
         <TimeUpModal
           isOpen={true}
-          totalAnswered={4}
-          totalQuestions={5}
-          correctCount={3}
-          totalXp={50}
-          onReviewAnswers={() => {}}
-          onRestart={() => {}}
+          questionNumber={1}
+          hasNextQuestion={true}
+          onContinue={() => {}}
+          onNextQuestion={() => {}}
+          onSwitchUntimed={() => {}}
           onClose={() => {}}
         />
       );

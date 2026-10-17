@@ -2,15 +2,14 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { TimeUpModal } from './TimeUpModal';
 
-describe('TimeUpModal Component', () => {
+describe('TimeUpModal (Question Pacing Alert) Component', () => {
   const defaultProps = {
     isOpen: true,
-    totalAnswered: 4,
-    totalQuestions: 5,
-    correctCount: 3,
-    totalXp: 50,
-    onReviewAnswers: vi.fn(),
-    onRestart: vi.fn(),
+    questionNumber: 2,
+    hasNextQuestion: true,
+    onContinue: vi.fn(),
+    onNextQuestion: vi.fn(),
+    onSwitchUntimed: vi.fn(),
     onClose: vi.fn(),
   };
 
@@ -19,7 +18,7 @@ describe('TimeUpModal Component', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('should render modal dialog with proper ARIA attributes and title when isOpen is true', () => {
+  it('should render pacing alert dialog with proper ARIA attributes, title, and guidance', () => {
     render(<TimeUpModal {...defaultProps} />);
 
     const dialog = screen.getByRole('dialog');
@@ -28,59 +27,56 @@ describe('TimeUpModal Component', () => {
     expect(dialog).toHaveAttribute('aria-labelledby', 'timeup-modal-title');
     expect(dialog).toHaveAttribute('aria-describedby', 'timeup-modal-description');
 
-    expect(screen.getByText('Tempo Oficial Esgotado!')).toBeInTheDocument();
-    expect(screen.getByText('Simulado Concluído')).toBeInTheDocument();
+    expect(screen.getByText('Atenção ao Tempo da Questão')).toBeInTheDocument();
+    expect(screen.getByText(/Questão #2 • Ritmo de Prova ENEM \(3 min\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Você atingiu o tempo médio sugerido de/i)).toBeInTheDocument();
   });
 
-  it('should render performance metrics accurately', () => {
-    render(<TimeUpModal {...defaultProps} />);
+  it('should call onContinue when "Continuar Respondendo" is clicked', () => {
+    const onContinue = vi.fn();
+    render(<TimeUpModal {...defaultProps} onContinue={onContinue} />);
 
-    expect(screen.getByText('4/5')).toBeInTheDocument();
-    expect(screen.getByText('Respondidas')).toBeInTheDocument();
-    expect(screen.getByText('3')).toBeInTheDocument();
-    expect(screen.getByText('Acertos')).toBeInTheDocument();
-    expect(screen.getByText('+50')).toBeInTheDocument();
-    expect(screen.getByText('XP Total')).toBeInTheDocument();
+    const continueBtn = screen.getByRole('button', { name: /Continuar Respondendo/i });
+    fireEvent.click(continueBtn);
+
+    expect(onContinue).toHaveBeenCalledTimes(1);
   });
 
-  it('should call onReviewAnswers when "Ver Gabarito & Resoluções" is clicked', () => {
-    const onReview = vi.fn();
-    render(<TimeUpModal {...defaultProps} onReviewAnswers={onReview} />);
+  it('should call onNextQuestion when "Pular para Próxima" is clicked', () => {
+    const onNext = vi.fn();
+    render(<TimeUpModal {...defaultProps} onNextQuestion={onNext} hasNextQuestion={true} />);
 
-    const reviewBtn = screen.getByRole('button', { name: /Ver Gabarito & Resoluções/i });
-    fireEvent.click(reviewBtn);
+    const skipBtn = screen.getByRole('button', { name: /Pular para Próxima/i });
+    fireEvent.click(skipBtn);
 
-    expect(onReview).toHaveBeenCalledTimes(1);
+    expect(onNext).toHaveBeenCalledTimes(1);
   });
 
-  it('should call onRestart when "Reiniciar Simulado" is clicked', () => {
-    const onRestart = vi.fn();
-    render(<TimeUpModal {...defaultProps} onRestart={onRestart} />);
+  it('should not render "Pular para Próxima" button when hasNextQuestion is false', () => {
+    render(<TimeUpModal {...defaultProps} hasNextQuestion={false} />);
 
-    const restartBtn = screen.getByRole('button', { name: /Reiniciar Simulado/i });
-    fireEvent.click(restartBtn);
+    expect(screen.queryByRole('button', { name: /Pular para Próxima/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Continuar Respondendo/i })).toBeInTheDocument();
+  });
 
-    expect(onRestart).toHaveBeenCalledTimes(1);
+  it('should call onSwitchUntimed when clicking Modo Livre link', () => {
+    const onSwitch = vi.fn();
+    render(<TimeUpModal {...defaultProps} onSwitchUntimed={onSwitch} />);
+
+    const switchBtn = screen.getByRole('button', { name: /Prefere praticar sem pressão de tempo\? Ativar Modo Livre/i });
+    fireEvent.click(switchBtn);
+
+    expect(onSwitch).toHaveBeenCalledTimes(1);
   });
 
   it('should call onClose when close icon button is clicked', () => {
     const onClose = vi.fn();
     render(<TimeUpModal {...defaultProps} onClose={onClose} />);
 
-    const closeBtn = screen.getByRole('button', { name: /Fechar aviso de tempo esgotado/i });
+    const closeBtn = screen.getByRole('button', { name: /Fechar aviso de tempo da questão/i });
     fireEvent.click(closeBtn);
 
     expect(onClose).toHaveBeenCalledTimes(1);
-  });
-
-  it('should fallback to onReviewAnswers when onClose is not provided and close button is clicked', () => {
-    const onReview = vi.fn();
-    render(<TimeUpModal {...defaultProps} onClose={undefined} onReviewAnswers={onReview} />);
-
-    const closeBtn = screen.getByRole('button', { name: /Fechar aviso de tempo esgotado/i });
-    fireEvent.click(closeBtn);
-
-    expect(onReview).toHaveBeenCalledTimes(1);
   });
 
   it('should close on Escape key press', () => {

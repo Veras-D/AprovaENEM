@@ -179,8 +179,9 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
             </Button>
           )}
 
-          {/* Quiz Timer with INEP Exam Accommodations */}
+          {/* Quiz Timer with INEP Exam Accommodations (3 min per question benchmark) */}
           <QuizTimer
+            key={currentQuestionIndex}
             initialSeconds={180}
             isCountdown={timeMode !== 'UNTIMED'}
             timeMode={timeMode}
@@ -346,15 +347,20 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
         onClose={() => setIsAccommodationsOpen(false)}
       />
 
-      {/* Exam Time-Up Summary Modal */}
+      {/* Question Pacing Alert Popup (Never interrupts or blocks candidate studies) */}
       <TimeUpModal
         isOpen={isTimeUpModalOpen}
-        totalAnswered={totalAnswered}
-        totalQuestions={totalQuestions}
-        correctCount={correctCount}
-        totalXp={totalXp}
-        onReviewAnswers={() => setIsTimeUpModalOpen(false)}
-        onRestart={handleRestart}
+        questionNumber={currentQuestionIndex + 1}
+        hasNextQuestion={currentQuestionIndex < totalQuestions - 1}
+        onContinue={() => setIsTimeUpModalOpen(false)}
+        onNextQuestion={() => {
+          setIsTimeUpModalOpen(false);
+          nextQuestion();
+        }}
+        onSwitchUntimed={() => {
+          setTimeMode('UNTIMED');
+          setIsTimeUpModalOpen(false);
+        }}
         onClose={() => setIsTimeUpModalOpen(false)}
       />
     </div>
