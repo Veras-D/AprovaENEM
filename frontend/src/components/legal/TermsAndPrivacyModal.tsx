@@ -429,16 +429,10 @@ export const TermsAndPrivacyModal: React.FC<TermsAndPrivacyModalProps> = ({
 
               <section className="space-y-2">
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  4. Contato com o Encarregado de Proteção de Dados (DPO)
+                  4. Atendimento e Exercício de Direitos (LGPD)
                 </h3>
                 <p className="text-xs sm:text-sm">
-                  Dúvidas sobre o tratamento de dados pessoais ou solicitações adicionais podem ser encaminhadas diretamente ao nosso Encarregado pelo canal oficial:{' '}
-                  <a
-                    href="mailto:privacidade@aprovaenem.org.br"
-                    className="text-brand-primary underline font-medium hover:opacity-80"
-                  >
-                    privacidade@aprovaenem.org.br
-                  </a>.
+                  Em conformidade com a LGPD (Lei nº 13.709/2018), os direitos de confirmação, acesso, portabilidade e eliminação definitiva de dados pessoais são atendidos diretamente através dos recursos de autoatendimento da plataforma (opções de exportação e exclusão disponíveis nesta janela).
                 </p>
               </section>
             </div>

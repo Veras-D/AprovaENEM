@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-17
+### 🛡️ Replaced Unowned Privacy Email with In-App Automated LGPD Self-Service Rights
+- fix(legal): Purged unowned placeholder email address (`privacidade@aprovaenem.org.br`) from [`TermsAndPrivacyModal.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/legal/TermsAndPrivacyModal.tsx):
+  - **In-App Self-Service Rights (LGPD Art. 18)**: Replaced external email requirement with explicit legal statement explaining that data confirmation, access, portability (Art. 18, V), and permanent erasure (Art. 18, VI) are serviced directly and instantaneously through the automated self-service controls provided within the platform modal itself.
+  - **Zero Unowned Domains**: Eliminated all dead email links and unowned domain references across the application.
+  - **Automated Test Coverage**: Verified 100% green across [`TermsAndPrivacyModal.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/legal/TermsAndPrivacyModal.test.tsx), axe-core accessibility audit in [`accessibility-audit.a11y.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/test/a11y/accessibility-audit.a11y.test.tsx), full test suite (71 files, 456 tests), and production build.
+
 ### 👁️ Enhanced High-Contrast Auth Mode Switch Tabs (Light & Dark Modes)
 - fix(auth): Enhanced contrast and visibility of the active mode tab switch in [`RegisterModal.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/auth/RegisterModal.tsx):
   - **High-Contrast Track Background**: Replaced faint `bg-slate-50/70` with solid `bg-slate-100 dark:bg-slate-950/60`, establishing strong luminance separation against the white modal card.
