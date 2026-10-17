@@ -131,7 +131,7 @@ describe('TermsAndPrivacyModal Component', () => {
     expect(document.activeElement).toBe(entendidoBtn);
   });
 
-  it('should trigger local anonymous JSON download when clicking export data for unauthenticated visitor', async () => {
+  it('should display unauthenticated notice instead of export button when visitor is logged out', () => {
     renderWithProviders(
       <TermsAndPrivacyModal
         isOpen={true}
@@ -140,13 +140,10 @@ describe('TermsAndPrivacyModal Component', () => {
       />
     );
 
-    const exportBtn = screen.getByRole('button', { name: /Exportar Meus Dados \(JSON\)/i });
-    fireEvent.click(exportBtn);
-
-    await waitFor(() => {
-      expect(window.URL.createObjectURL).toHaveBeenCalledTimes(1);
-      expect(screen.getByText(/Download Concluído!/i)).toBeInTheDocument();
-    });
+    expect(screen.queryByRole('button', { name: /Exportar Meus Dados \(JSON\)/i })).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/A exportação de dados cadastrais e histórico completo fica disponível após você entrar na sua conta/i)
+    ).toBeInTheDocument();
   });
 
   it('should call backend export and trigger download when student is authenticated', async () => {

@@ -335,33 +335,39 @@ export const TermsAndPrivacyModal: React.FC<TermsAndPrivacyModalProps> = ({
                         <span>Portabilidade (Art. 18, V)</span>
                       </div>
                       <p className="text-slate-600 dark:text-slate-300 text-xs leading-relaxed">
-                        Exporte a qualquer momento seus dados cadastrais, histórico de resoluções, XP, ofensivas e diagnósticos em formato JSON aberto (<code className="text-[11px] bg-slate-200 dark:bg-slate-700 px-1 py-0.5 rounded">GET /api/v1/auth/export</code>).
+                        Exporte a qualquer momento seus dados cadastrais, histórico de resoluções, XP, ofensivas e diagnósticos em formato JSON aberto, conforme garantido pela LGPD.
                       </p>
                     </div>
                     <div>
-                      <button
-                        type="button"
-                        onClick={handleExportData}
-                        disabled={exportStatus === 'loading'}
-                        className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-brand bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary text-xs font-semibold border border-brand-primary/30 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary disabled:opacity-50"
-                      >
-                        {exportStatus === 'loading' ? (
-                          <>
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-                            <span>Exportando Dados...</span>
-                          </>
-                        ) : exportStatus === 'success' ? (
-                          <>
-                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
-                            <span className="text-emerald-700 dark:text-emerald-300">Download Concluído!</span>
-                          </>
-                        ) : (
-                          <>
-                            <Download className="h-3.5 w-3.5" aria-hidden="true" />
-                            <span>Exportar Meus Dados (JSON)</span>
-                          </>
-                        )}
-                      </button>
+                      {isAuthenticated ? (
+                        <button
+                          type="button"
+                          onClick={handleExportData}
+                          disabled={exportStatus === 'loading'}
+                          className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-brand bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary text-xs font-semibold border border-brand-primary/30 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary disabled:opacity-50"
+                        >
+                          {exportStatus === 'loading' ? (
+                            <>
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                              <span>Exportando Dados...</span>
+                            </>
+                          ) : exportStatus === 'success' ? (
+                            <>
+                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                              <span className="text-emerald-700 dark:text-emerald-300">Download Concluído!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                              <span>Exportar Meus Dados (JSON)</span>
+                            </>
+                          )}
+                        </button>
+                      ) : (
+                        <p className="text-xs text-slate-500 dark:text-slate-400 italic">
+                          A exportação de dados cadastrais e histórico completo fica disponível após você entrar na sua conta.
+                        </p>
+                      )}
                       {exportErrorMessage && (
                         <div
                           role="alert"
