@@ -27,12 +27,14 @@ import java.util.regex.Pattern;
 public class GeminiTutorClientAdapter implements TutorAiPort {
 
     private static final Pattern DIRECT_ANSWER_REQUEST_PATTERN = Pattern.compile(
-            "\\b(resposta|gabarito|letra|alternativa\\s+correta|op[çc][ãa]o\\s+correta|qual\\s+[ée]\\s+a\\s+certa|qual\\s+marco|diga\\s+a\\s+letra|solu[çc][ãa]o\\s+final)\\b",
+            "\\b(resposta|gabarito|letra|alternativa\\s+correta|op[çc][ãa]o\\s+correta|"
+                    + "qual\\s+[ée]\\s+a\\s+certa|qual\\s+marco|diga\\s+a\\s+letra|solu[çc][ãa]o\\s+final)\\b",
             Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
     );
 
     private static final Pattern ANSWER_SPOILER_PATTERN = Pattern.compile(
-            "(?:resposta\\s+correta\\s+[ée]|alternativa\\s+correta\\s*(?:[ée]|:)?|gabarito\\s*(?:[ée]|:)?|letra\\s+correta\\s*(?:[ée]|:)?)\\s*[\"'(]?[A-E][\"')]?",
+            "(?:resposta\\s+correta\\s+[ée]|alternativa\\s+correta\\s*(?:[ée]|:)?|"
+                    + "gabarito\\s*(?:[ée]|:)?|letra\\s+correta\\s*(?:[ée]|:)?)\\s*[\"'(]?[A-E][\"')]?",
             Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
     );
 
