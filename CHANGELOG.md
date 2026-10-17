@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-17
+### 🧹 Header Cleanup: Removed Raw Anonymous Session Debug Badge
+- fix(header): Removed internal `Sessão Anônima: anon-4cb52...` technical string from application header:
+  - **Clean Institutional Presentation**: Purged internal anonymous session tracking ID from [`Header.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/Header.tsx). Unauthenticated users now see only the clean, intuitive `"Entrar"` action button with user icon.
+  - **Internal Session Integrity**: Anonymous session ID continues to be tracked silently in Zustand store and forwarded via `X-Session-Id` header for backend caching and LGPD Art. 18 data export without cluttering the student interface.
+  - **Automated Test Coverage**: Updated [`Header.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/Header.test.tsx) asserting zero leak of internal anonymous session strings in the DOM. Verified 100% green across all 70 test files (443 tests, 0 failures, 0 skipped).
+
 ### 🤖 Action-Oriented AI Study Assistant Button Labeling
 - feat(practice): Replaced academic "Tutor Socrático" jargon on buttons with student-friendly, action-oriented "Tirar Dúvida (IA)" across exam simulator:
   - **Intuitive Action Labeling**: Unified exam button labels to `"Tirar Dúvida (IA)"` across the top timed control bar ([`PracticeHero.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.tsx)), the active question card footer ([`QuestionCard.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/QuestionCard.tsx)), and post-grading feedback banner ([`InstantFeedback.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/InstantFeedback.tsx)).

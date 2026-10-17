@@ -92,10 +92,10 @@ describe('Header component', () => {
     expect(useTenantStore.getState().isDarkMode).toBe(true);
   });
 
-  it('should show anonymous session ID when unauthenticated', () => {
+  it('should show login button when unauthenticated without leaking internal session IDs', () => {
     renderWithClient(<Header onOpenDrawer={vi.fn()} />);
 
-    expect(screen.getByText(/Sessão Anônima:/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Sessão Anônima:/i)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Entrar/i })).toBeInTheDocument();
   });
 

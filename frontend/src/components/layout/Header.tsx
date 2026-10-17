@@ -30,7 +30,6 @@ export const Header: React.FC<HeaderProps> = ({
   const { currentTenant, isDarkMode, toggleDarkMode } = useTenantStore();
   const { user, isAuthenticated, clearAuth } = useAuthStore();
   const clearSession = useSessionStore((s) => s.clearSession);
-  const anonymousSessionId = useSessionStore((s) => s.anonymousSessionId);
 
   const handleLogout = () => {
     clearAuth();
@@ -149,23 +148,15 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 dark:text-slate-400 hidden xl:inline">
-                Sessão Anônima:{' '}
-                <code className="text-[11px] font-mono text-slate-600 dark:text-slate-300">
-                  {anonymousSessionId.slice(0, 10)}...
-                </code>
-              </span>
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-xs px-2.5 sm:px-3"
-                onClick={onOpenAuthModal}
-              >
-                <User className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
-                Entrar
-              </Button>
-            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs px-2.5 sm:px-3"
+              onClick={onOpenAuthModal}
+            >
+              <User className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+              Entrar
+            </Button>
           )}
         </div>
       </div>
