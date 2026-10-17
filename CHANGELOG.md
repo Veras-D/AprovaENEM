@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-17
+### 🤖 Action-Oriented AI Study Assistant Button Labeling
+- feat(practice): Replaced academic "Tutor Socrático" jargon on buttons with student-friendly, action-oriented "Tirar Dúvida (IA)" across exam simulator:
+  - **Intuitive Action Labeling**: Unified exam button labels to `"Tirar Dúvida (IA)"` across the top timed control bar ([`PracticeHero.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.tsx)), the active question card footer ([`QuestionCard.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/QuestionCard.tsx)), and post-grading feedback banner ([`InstantFeedback.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/InstantFeedback.tsx)).
+  - **Contextual Tooltips & Microcopy**: Replaced internal jargon tooltips with self-explanatory student microcopy (*"Tem dúvida nesta questão? Peça dicas e explicações passo a passo com Inteligência Artificial"*). Removed developer Sprint tag from instant feedback card, replacing with clean *"Tutor IA Pedagógico"* badge.
+  - **Automated Test Updates**: Updated [`PracticeHero.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.test.tsx) and [`InstantFeedback.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/InstantFeedback.test.tsx) with updated accessible label queries. Verified 100% green (70 test files, 443 tests, 0 failures).
+
 ### ⏱️ Exam Timer Expiry Modal & Question Carousel UX Refinements
 - feat(practice): Wired official exam countdown timer expiration to accessible summary modal and removed duplicate bookmark toggle:
   - **Exam Timer Expiration Modal Dialog ([`TimeUpModal.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/TimeUpModal.tsx))**: Connected `onTimeUp` in [`PracticeHero.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.tsx) to trigger an accessible modal dialog when the exam countdown timer reaches `00:00`. Displays total answered questions, correct score, and earned XP with actions to *"Ver Gabarito & Resoluções"* or *"Reiniciar Simulado"*. Implements full WCAG 2.1 AA focus trap, `aria-modal` semantics, and Escape key dismissal.

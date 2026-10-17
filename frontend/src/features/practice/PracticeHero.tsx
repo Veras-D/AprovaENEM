@@ -170,12 +170,12 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
               variant="outline"
               size="sm"
               onClick={() => setIsTutorOpen(true)}
-              aria-label="Tutor Socrático: Tirar dúvida com o Tutor IA"
-              title="Tirar dúvida com o Tutor IA Socrático"
-              className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 text-xs sm:text-sm"
+              aria-label="Tirar dúvida com o Tutor IA"
+              title="Tem dúvida nesta questão? Peça dicas e explicações passo a passo com Inteligência Artificial"
+              className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 text-xs sm:text-sm font-medium"
             >
               <Bot className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />
-              <span className="hidden sm:inline">Tutor Socrático</span>
+              <span className="hidden sm:inline">Tirar Dúvida (IA)</span>
             </Button>
           )}
 

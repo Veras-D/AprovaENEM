@@ -269,12 +269,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
               variant="outline"
               size="sm"
               onClick={onOpenSocraticTutor}
-              aria-label="Abrir Tutor IA Socrático para esta questão"
-              title="Pedir ajuda ao Tutor Socrático (Atalho: Espaço)"
+              aria-label="Tirar dúvida com o Tutor IA para esta questão"
+              title="Tirar dúvida com o Tutor IA (Atalho: Espaço)"
               className="text-xs border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10"
             >
               <Bot className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
-              Tutor IA
+              Tirar Dúvida (IA)
             </Button>
           )}
 

@@ -71,7 +71,7 @@ export const InstantFeedback: React.FC<InstantFeedbackProps> = ({
 
         <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
           <Badge variant="outline" className="text-xs hidden sm:inline-flex">
-            Socratic AI Tutor &bull; Sprint 5
+            Tutor IA Pedagógico
           </Badge>
 
           {onOpenSocraticTutor && (
@@ -81,10 +81,10 @@ export const InstantFeedback: React.FC<InstantFeedbackProps> = ({
               size="sm"
               onClick={onOpenSocraticTutor}
               className="text-xs"
-              aria-label="Abrir conversa com o Tutor IA Socrático"
+              aria-label="Tirar dúvida com o Tutor IA sobre esta questão"
             >
               <MessageSquare className="h-3.5 w-3.5 mr-1.5 text-brand-primary" aria-hidden="true" />
-              Tirar Dúvida
+              Tirar Dúvida (IA)
             </Button>
           )}
         </div>

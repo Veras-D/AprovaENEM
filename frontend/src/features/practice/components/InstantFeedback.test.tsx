@@ -45,7 +45,7 @@ describe('InstantFeedback Component', () => {
     expect(screen.getByText(/Consumo = 1,50 kWh. Alternativa B./i)).toBeInTheDocument();
 
     // Socratic tutor button
-    const tutorBtn = screen.getByRole('button', { name: /abrir conversa com o tutor ia socrático/i });
+    const tutorBtn = screen.getByRole('button', { name: /tirar dúvida com o tutor ia/i });
     expect(tutorBtn).toBeInTheDocument();
     fireEvent.click(tutorBtn);
     expect(handleOpenTutor).toHaveBeenCalledTimes(1);

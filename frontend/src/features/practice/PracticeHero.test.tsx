@@ -125,7 +125,7 @@ describe('PracticeHero Component', () => {
 
     // Tutor button in top control bar
     const tutorTopBtn = screen.getAllByRole('button', {
-      name: /Abrir Tutor IA Socrático para esta questão/i,
+      name: /Tirar dúvida com o Tutor IA/i,
     })[0]!;
     expect(tutorTopBtn).toBeInTheDocument();
 
@@ -151,7 +151,7 @@ describe('PracticeHero Component', () => {
     fireEvent.click(submitBtn);
 
     const feedbackTutorBtn = screen.getByRole('button', {
-      name: /Abrir conversa com o Tutor IA Socrático/i,
+      name: /Tirar dúvida com o Tutor IA sobre esta questão/i,
     });
     fireEvent.click(feedbackTutorBtn);
 
