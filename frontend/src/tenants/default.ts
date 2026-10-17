@@ -6,8 +6,8 @@ export const DEFAULT_TENANT: TenantConfig = {
   name: 'AprovaENEM',
   shortName: 'AprovaENEM',
   tagline: 'Democratizando o Acesso ao Ensino Superior Público',
-  logoUrl: '/favicon.svg',
-  faviconUrl: '/favicon.svg',
+  logoUrl: '/tenants/aprovaenem.svg',
+  faviconUrl: '/tenants/aprovaenem.svg',
   supportEmail: 'suporte@aprovaenem.org',
   allowedDomains: ['localhost', '127.0.0.1'],
   theme: {

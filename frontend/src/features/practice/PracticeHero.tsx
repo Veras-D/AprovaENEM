@@ -3,7 +3,6 @@ import { useTenantStore } from '@/stores/useTenantStore';
 import { useSessionStore } from '@/stores/useSessionStore';
 import { useAccessibilityStore } from '@/stores/useAccessibilityStore';
 import { MOCK_QUESTIONS, MOCK_RESOLUTIONS } from '@/api/mocks/mock-data';
-import { ThemeCustomizer } from '@/components/ui/ThemeCustomizer';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardBody } from '@/components/ui/Card';
 import {
@@ -139,15 +138,12 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
 
   return (
     <div className="space-y-6">
-      {/* Dynamic White-Label & Accessibility Customizer */}
-      <ThemeCustomizer />
-
       {/* Hero Introduction */}
       <section className="bg-gradient-to-r from-brand-primary/10 via-brand-surface to-brand-primary/5 rounded-brand p-6 sm:p-8 border border-brand-primary/20">
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-brand-primary text-brand-primary-foreground shadow-sm">
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-            White-Label B2B Educational Platform &bull; {currentTenant.name}
+            Simulado Oficial ENEM &bull; {currentTenant.name}
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             Prática Inteligente com Alinhamento INEP e Tutor IA Socrático

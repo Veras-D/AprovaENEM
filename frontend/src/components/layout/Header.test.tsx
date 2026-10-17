@@ -38,11 +38,11 @@ describe('Header component', () => {
     });
   });
 
-  it('should render tenant brand identity and White-Label badge', () => {
+  it('should render tenant brand identity and Portal do Aluno badge', () => {
     renderWithClient(<Header onOpenDrawer={vi.fn()} />);
 
     expect(screen.getByText('AprovaENEM Social')).toBeInTheDocument();
-    expect(screen.getByText('White-Label')).toBeInTheDocument();
+    expect(screen.getByText('Portal do Aluno')).toBeInTheDocument();
     expect(screen.getByText('Preparatório Popular Acessível para o ENEM')).toBeInTheDocument();
     expect(screen.getByAltText('AprovaENEM Social Logo')).toBeInTheDocument();
   });

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+  <rect width="40" height="40" rx="4" fill="#0f172a"/>
+  <!-- Instituto Federal: Iconic Red Circle (Student) + Green Rectangles (Federal Network) -->
+  <circle cx="12" cy="12" r="3.5" fill="#dc2626"/>
+  <rect x="8.5" y="17.5" width="7" height="7" rx="1" fill="#16a34a"/>
+  <rect x="8.5" y="26.5" width="7" height="7" rx="1" fill="#16a34a"/>
+  <rect x="17.5" y="8.5" width="7" height="7" rx="1" fill="#16a34a"/>
+  <rect x="17.5" y="17.5" width="7" height="7" rx="1" fill="#16a34a"/>
+  <rect x="26.5" y="8.5" width="7" height="7" rx="1" fill="#16a34a"/>
+  <rect x="26.5" y="17.5" width="7" height="7" rx="1" fill="#16a34a"/>
+  <rect x="26.5" y="26.5" width="7" height="7" rx="1" fill="#16a34a"/>
+</svg>

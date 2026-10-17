@@ -71,7 +71,7 @@ export const Header: React.FC<HeaderProps> = ({
                 {currentTenant.name}
               </span>
               <span className="hidden sm:inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary border border-brand-primary/20 shrink-0">
-                White-Label
+                Portal do Aluno
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 hidden lg:block truncate max-w-md">
