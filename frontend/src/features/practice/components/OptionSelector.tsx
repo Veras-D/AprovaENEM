@@ -49,8 +49,8 @@ export const OptionSelector: React.FC<OptionSelectorProps> = ({
         return;
       }
 
-      // Arrow navigation between options
-      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      // Vertical arrow navigation between options
+      if (e.key === 'ArrowDown') {
         e.preventDefault();
         const currentIndex = options.findIndex((opt) => opt.letter === selectedOption);
         const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % options.length;
@@ -61,7 +61,7 @@ export const OptionSelector: React.FC<OptionSelectorProps> = ({
         return;
       }
 
-      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      if (e.key === 'ArrowUp') {
         e.preventDefault();
         const currentIndex = options.findIndex((opt) => opt.letter === selectedOption);
         const prevIndex =

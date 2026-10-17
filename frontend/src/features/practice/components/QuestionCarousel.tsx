@@ -53,6 +53,8 @@ export const QuestionCarousel: React.FC<QuestionCarouselProps> = ({
           disabled={!hasPrevious}
           onClick={onPrevious}
           aria-label="Questão anterior"
+          title="Questão anterior (Atalho: ← ou PageUp)"
+          aria-keyshortcuts="ArrowLeft PageUp"
           className="flex-1 sm:flex-none"
         >
           <ChevronLeft className="h-4 w-4 mr-1" aria-hidden="true" />
@@ -66,6 +68,8 @@ export const QuestionCarousel: React.FC<QuestionCarouselProps> = ({
           disabled={!hasNext}
           onClick={onNext}
           aria-label="Próxima questão"
+          title="Próxima questão (Atalho: → ou PageDown)"
+          aria-keyshortcuts="ArrowRight PageDown"
           className="flex-1 sm:flex-none sm:hidden"
         >
           Próxima
@@ -142,6 +146,8 @@ export const QuestionCarousel: React.FC<QuestionCarouselProps> = ({
           disabled={!hasNext}
           onClick={onNext}
           aria-label="Próxima questão"
+          title="Próxima questão (Atalho: → ou PageDown)"
+          aria-keyshortcuts="ArrowRight PageDown"
         >
           Próxima
           <ChevronRight className="h-4 w-4 ml-1" aria-hidden="true" />

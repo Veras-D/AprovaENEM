@@ -136,6 +136,64 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
     }
   }, [isAllAnswered]);
 
+  // Keyboard navigation shortcuts: ArrowLeft / ArrowRight, PageUp / PageDown, [ / ]
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input, textarea, or contentEditable element
+      const target = e.target as HTMLElement | null;
+      if (
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.isContentEditable
+      ) {
+        return;
+      }
+
+      // Don't navigate questions if any modal or drawer is open
+      if (isTutorOpen || isAccommodationsOpen || isTimeUpModalOpen || showCelebration) {
+        return;
+      }
+
+      // Previous Question: ArrowLeft, PageUp, [
+      if (
+        (e.key === 'ArrowLeft' && !e.ctrlKey && !e.metaKey) ||
+        e.key === 'PageUp' ||
+        e.key === '['
+      ) {
+        if (currentQuestionIndex > 0) {
+          e.preventDefault();
+          previousQuestion();
+        }
+        return;
+      }
+
+      // Next Question: ArrowRight, PageDown, ]
+      if (
+        (e.key === 'ArrowRight' && !e.ctrlKey && !e.metaKey) ||
+        e.key === 'PageDown' ||
+        e.key === ']'
+      ) {
+        if (currentQuestionIndex < totalQuestions - 1) {
+          e.preventDefault();
+          nextQuestion();
+        }
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    currentQuestionIndex,
+    totalQuestions,
+    previousQuestion,
+    nextQuestion,
+    isTutorOpen,
+    isAccommodationsOpen,
+    isTimeUpModalOpen,
+    showCelebration,
+  ]);
+
   return (
     <div className="space-y-6">
       {/* Timed Quiz Control Bar */}

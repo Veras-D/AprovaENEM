@@ -258,7 +258,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           {/* Accessible Hotkey Guide */}
           <div className="flex items-center justify-center sm:justify-start gap-1 text-[11px] font-mono text-slate-400 dark:text-slate-500">
             <Keyboard className="h-3 w-3" aria-hidden="true" />
-            <span>[A–E] Escolher &bull; [Enter] Confirmar &bull; [Espaço] Tutor IA</span>
+            <span>[A–E] Escolher &bull; [Enter] Confirmar &bull; [← / →] Questões &bull; [Espaço] Tutor IA</span>
           </div>
         </div>
 

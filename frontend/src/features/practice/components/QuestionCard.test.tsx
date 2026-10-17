@@ -229,7 +229,7 @@ describe('QuestionCard Component', () => {
 
     // Hotkey helper
     expect(
-      screen.getByText(/\[A–E\] Escolher • \[Enter\] Confirmar • \[Espaço\] Tutor IA/i)
+      screen.getByText(/\[A–E\] Escolher • \[Enter\] Confirmar • \[← \/ →\] Questões • \[Espaço\] Tutor IA/i)
     ).toBeInTheDocument();
 
     // Screen reader status announcement

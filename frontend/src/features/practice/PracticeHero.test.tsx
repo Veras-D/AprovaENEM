@@ -220,4 +220,57 @@ describe('PracticeHero Component', () => {
     // Timer should reflect the +60m INEP mode
     expect(screen.getByText('+60m INEP')).toBeInTheDocument();
   });
+
+  it('navigates to next and previous questions via keyboard shortcuts (ArrowRight/ArrowLeft, PageDown/PageUp, [/])', () => {
+    renderWithProviders();
+
+    // Starts on Question 1 (MT • Matemática)
+    expect(screen.getByText(/MT • Matemática/i)).toBeInTheDocument();
+
+    // Press ArrowLeft on first question (boundary check - should stay on Q1)
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    expect(screen.getByText(/MT • Matemática/i)).toBeInTheDocument();
+
+    // Press ArrowRight to advance to Question 2 (CN • Física)
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(screen.getByText(/CN • Física/i)).toBeInTheDocument();
+
+    // Press PageDown to advance to Question 3 (CN • Química)
+    fireEvent.keyDown(window, { key: 'PageDown' });
+    expect(screen.getByText(/CN • Química/i)).toBeInTheDocument();
+
+    // Press ']' bracket shortcut to advance to Question 4 (CH • História)
+    fireEvent.keyDown(window, { key: ']' });
+    expect(screen.getByText(/CH • História/i)).toBeInTheDocument();
+
+    // Press PageUp to go back to Question 3
+    fireEvent.keyDown(window, { key: 'PageUp' });
+    expect(screen.getByText(/CN • Química/i)).toBeInTheDocument();
+
+    // Press '[' bracket shortcut to go back to Question 2
+    fireEvent.keyDown(window, { key: '[' });
+    expect(screen.getByText(/CN • Física/i)).toBeInTheDocument();
+
+    // Press ArrowLeft to go back to Question 1
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    expect(screen.getByText(/MT • Matemática/i)).toBeInTheDocument();
+  });
+
+  it('does not trigger question navigation when user is typing in an input or textarea', () => {
+    renderWithProviders();
+
+    expect(screen.getByText(/MT • Matemática/i)).toBeInTheDocument();
+
+    // Create a mock input and focus it
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+    input.focus();
+
+    fireEvent.keyDown(input, { key: 'ArrowRight' });
+
+    // Should still be on Question 1
+    expect(screen.getByText(/MT • Matemática/i)).toBeInTheDocument();
+
+    document.body.removeChild(input);
+  });
 });
