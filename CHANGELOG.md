@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-17
+### 📋 Post-Audit Remediation Backlog Expansion (TASK-S6-10 & TASK-S6-11)
+- chore(backlog): Expanded Sprint 6 backlog with verified Tier 1 and Tier 2 audit remediation tasks ([`docs/BACKLOG.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/BACKLOG.md)):
+  - **`TASK-S6-10` (P0, 5 pts)**: *JAM 2 Security Audit Tier 1 Critical Hotfixes: Active AI Guardrails, Sourcemaps, Gateway CORS & Session Security* — Addresses the 4 pre-cloud blockers (`VULN-JAM2-01` active Socratic prompt keyword & post-generation regex filters, `VULN-JAM2-02` production sourcemap elimination, `VULN-JAM2-03` Spring Cloud Gateway wildcard CORS subdomain pattern matching, `VULN-JAM2-04`/`05` public terminal session scrub with accessible UI logout button, and `VULN-JAM2-07` Nginx CSP header).
+  - **`TASK-S6-11`** (P1, 3 pts): *JAM 2 Security Audit Tier 2 Quality Hardening: Socratic Textarea Ceiling, Explicit KaTeX Flags & Test Persistence Assertions* — Addresses secondary defensive hygiene (`VULN-JAM2-18` Socratic `<textarea maxLength={1000}>`, `VULN-JAM2-23` explicit `trust: false` KaTeX parameters, and `VULN-JAM2-11` accessibility store `localStorage.setItem` test assertions).
+
 ### 🛡️ Full-Stack Security & Test Suite Integrity Audit (TASK-S6-06 — Stage 5 Master Synthesis)
 - test(audit): Completed comprehensive full-stack security, client architecture, runtime penetration, and test suite integrity master synthesis report ([`TASK-S6-06`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/BACKLOG.md#task-s6-06), [`docs/audit/jam2-fullstack-security-audit.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/audit/jam2-fullstack-security-audit.md)):
   - **Comprehensive 5-Stage Synthesis**: Synthesized findings across Stage 1 (Client Threat Model & DOM Security: 71.0% / C-), Stage 2 (Automated SAST, SCA & Container Hardening: 84.0% / B+), Stage 3 (Runtime Penetration Testing, KaTeX Fuzzing & AI Jailbreaking: 66.5% / D+), and Stage 4 (Frontend & E2E Test Suite Quality & Mutation Resilience: 84.5% / B+). Attained a global weighted engineering maturity score of **75.63% (Grade: C+)**.
