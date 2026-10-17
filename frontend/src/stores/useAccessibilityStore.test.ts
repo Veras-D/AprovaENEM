@@ -150,4 +150,64 @@ describe('useAccessibilityStore', () => {
     localStorage.setItem('aprovaenem_a11y_prefs', 'invalid-json{');
     expect(loadStoredPreferences()).toEqual(DEFAULT_A11Y_PREFERENCES);
   });
+
+  it('should persist updated preferences to localStorage on every change (VULN-JAM2-11 / AUD-JAM2-T01)', () => {
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
+
+    useAccessibilityStore.getState().setFontScale(150);
+    expect(setItemSpy).toHaveBeenCalledWith(
+      'aprovaenem_a11y_prefs',
+      expect.stringContaining('"fontScale":150')
+    );
+
+    useAccessibilityStore.getState().setFontFamily('dyslexic');
+    expect(setItemSpy).toHaveBeenCalledWith(
+      'aprovaenem_a11y_prefs',
+      expect.stringContaining('"fontFamily":"dyslexic"')
+    );
+
+    useAccessibilityStore.getState().setContrastMode('high-contrast');
+    expect(setItemSpy).toHaveBeenCalledWith(
+      'aprovaenem_a11y_prefs',
+      expect.stringContaining('"contrastMode":"high-contrast"')
+    );
+
+    useAccessibilityStore.getState().setColorBlindness('protanopia');
+    expect(setItemSpy).toHaveBeenCalledWith(
+      'aprovaenem_a11y_prefs',
+      expect.stringContaining('"colorBlindness":"protanopia"')
+    );
+
+    useAccessibilityStore.getState().toggleTextSpacing();
+    expect(setItemSpy).toHaveBeenCalledWith(
+      'aprovaenem_a11y_prefs',
+      expect.stringContaining('"textSpacing":"expanded"')
+    );
+
+    useAccessibilityStore.getState().toggleHighlightLinks();
+    expect(setItemSpy).toHaveBeenCalledWith(
+      'aprovaenem_a11y_prefs',
+      expect.stringContaining('"highlightLinks":true')
+    );
+
+    useAccessibilityStore.getState().setTimeMode('EXTENDED_INEP');
+    expect(setItemSpy).toHaveBeenCalledWith(
+      'aprovaenem_a11y_prefs',
+      expect.stringContaining('"timeMode":"EXTENDED_INEP"')
+    );
+
+    useAccessibilityStore.getState().resetAccessibility();
+    expect(setItemSpy).toHaveBeenCalledWith(
+      'aprovaenem_a11y_prefs',
+      expect.stringContaining('"fontScale":100')
+    );
+
+    // Verify stored JSON deserialization matches state
+    const stored = loadStoredPreferences();
+    expect(stored.fontScale).toBe(100);
+    expect(stored.fontFamily).toBe('standard');
+    expect(stored.timeMode).toBe('STANDARD');
+
+    setItemSpy.mockRestore();
+  });
 });

@@ -132,8 +132,11 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
   }, [isOpen, isResetConfirmOpen, onClose]);
 
   const handleSendMessage = (contentToSend?: string) => {
-    const text = (contentToSend ?? inputMessage).trim();
-    if (!text || askMutation.isPending) return;
+    const rawText = (contentToSend ?? inputMessage).trim();
+    if (!rawText || askMutation.isPending) return;
+
+    // Enforce 1,000 character maximum limit (VULN-JAM2-18)
+    const text = rawText.slice(0, 1000);
 
     if (!isAuthenticated) {
       setIsRegisterModalOpen(true);
@@ -473,17 +476,33 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
                 <textarea
                   ref={textareaRef}
                   value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
+                  onChange={(e) => setInputMessage(e.target.value.slice(0, 1000))}
                   onKeyDown={handleKeyDown}
                   placeholder="Digite sua dúvida sobre o conceito ou fórmula..."
                   rows={2}
+                  maxLength={1000}
                   disabled={askMutation.isPending || isTurnQuotaExhausted}
-                  className="w-full resize-none p-2.5 text-xs sm:text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-brand-primary/50"
+                  className="w-full resize-none p-2.5 pb-6 text-xs sm:text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-brand-primary/50"
                   aria-label="Pergunta para o Tutor Socrático"
                 />
-                <span className="absolute bottom-1 right-2 text-[10px] text-slate-400 hidden sm:inline">
-                  Enter envia &bull; Shift+Enter quebra linha
-                </span>
+                <div className="absolute bottom-1.5 left-2.5 right-2.5 flex justify-between items-center text-[10px] text-slate-400 pointer-events-none select-none">
+                  <span className="hidden sm:inline">
+                    Enter envia &bull; Shift+Enter quebra linha
+                  </span>
+                  <span
+                    className={`ml-auto font-mono ${
+                      inputMessage.length >= 1000
+                        ? 'text-rose-500 font-semibold'
+                        : inputMessage.length >= 900
+                          ? 'text-amber-500'
+                          : 'text-slate-400'
+                    }`}
+                    aria-live="polite"
+                    aria-label={`Contador de caracteres: ${inputMessage.length} de 1000`}
+                  >
+                    {inputMessage.length}/1000
+                  </span>
+                </div>
               </div>
 
               <Button

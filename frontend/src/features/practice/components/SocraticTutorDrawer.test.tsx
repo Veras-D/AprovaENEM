@@ -272,4 +272,87 @@ describe('SocraticTutorDrawer Component', () => {
       expect(screen.queryByPlaceholderText(/Digite sua dúvida/i)).not.toBeInTheDocument();
     });
   });
+
+  it('should enforce maxLength={1000} and display real-time character counter on textarea (VULN-JAM2-18)', async () => {
+    useAuthStore.getState().setAuth('mock-token', {
+      id: 'student-1',
+      name: 'Maria Aluna',
+      email: 'maria@example.com',
+      roles: ['ROLE_STUDENT'],
+      isEmailVerified: true,
+      createdAt: '2026-01-01',
+    });
+
+    const activeThread: SocraticThreadDto = {
+      threadId: 't-1',
+      questionId: mockQuestion.id,
+      remainingTurns: 3,
+      maxTurns: 6,
+      messages: [],
+    };
+    vi.spyOn(tutorService, 'getSocraticThread').mockResolvedValue(activeThread);
+
+    renderWithProviders(
+      <SocraticTutorDrawer isOpen={true} onClose={handleClose} question={mockQuestion} />
+    );
+
+    const textarea = await screen.findByPlaceholderText(/Digite sua dúvida sobre o conceito/i);
+    expect(textarea).toHaveAttribute('maxLength', '1000');
+
+    // Initial counter: 0/1000
+    expect(screen.getByText('0/1000')).toBeInTheDocument();
+
+    // Type text and verify counter updates
+    fireEvent.change(textarea, { target: { value: 'Dúvida curta' } });
+    expect(screen.getByText('12/1000')).toBeInTheDocument();
+  });
+
+  it('should bound payloads to 1000 characters on submission (VULN-JAM2-18)', async () => {
+    useAuthStore.getState().setAuth('mock-token', {
+      id: 'student-1',
+      name: 'Maria Aluna',
+      email: 'maria@example.com',
+      roles: ['ROLE_STUDENT'],
+      isEmailVerified: true,
+      createdAt: '2026-01-01',
+    });
+
+    const activeThread: SocraticThreadDto = {
+      threadId: 't-1',
+      questionId: mockQuestion.id,
+      remainingTurns: 3,
+      maxTurns: 6,
+      messages: [],
+    };
+    vi.spyOn(tutorService, 'getSocraticThread').mockResolvedValue(activeThread);
+
+    const mockResponse: SocraticChatResponse = {
+      threadId: 't-1',
+      questionId: mockQuestion.id,
+      turnNumber: 1,
+      maxTurnsPerThread: 6,
+      remainingTurnsInThread: 2,
+      socraticResponse: 'Pense na relação entre massa e aceleração.',
+      modelUsed: 'gemini-1.5-flash',
+      isFallback: false,
+    };
+    const askSpy = vi.spyOn(tutorService, 'askSocraticTutor').mockResolvedValue(mockResponse);
+
+    renderWithProviders(
+      <SocraticTutorDrawer isOpen={true} onClose={handleClose} question={mockQuestion} />
+    );
+
+    const textarea = await screen.findByPlaceholderText(/Digite sua dúvida sobre o conceito/i);
+    const longString = 'A'.repeat(1200);
+    fireEvent.change(textarea, { target: { value: longString } });
+
+    const sendBtn = screen.getByRole('button', { name: /Enviar pergunta ao Tutor Socrático/i });
+    fireEvent.click(sendBtn);
+
+    await waitFor(() => {
+      expect(askSpy).toHaveBeenCalledWith(mockQuestion.id, {
+        message: 'A'.repeat(1000),
+      });
+    });
+  });
 });

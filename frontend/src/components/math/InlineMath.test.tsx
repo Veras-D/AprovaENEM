@@ -28,4 +28,14 @@ describe('InlineMath component', () => {
     const container = screen.getByRole('math');
     expect(container).toBeInTheDocument();
   });
+
+  it('should enforce trust: false preventing raw link/href injection in math expressions (VULN-JAM2-23)', () => {
+    render(<InlineMath math="\\url{https://malicious-domain.com}" />);
+
+    const container = screen.getByRole('math');
+    expect(container).toBeInTheDocument();
+    // With trust: false, KaTeX will not render <a> tags or href attributes
+    expect(container.querySelector('a')).toBeNull();
+    expect(container.innerHTML).not.toContain('href=');
+  });
 });

@@ -22,6 +22,9 @@ export const InlineMath: React.FC<InlineMathProps> = ({
         throwOnError: false,
         output: 'html',
         strict: 'ignore',
+        trust: false,
+        maxSize: 25,
+        maxExpand: 100,
       });
     } catch {
       return null;

@@ -27,4 +27,13 @@ describe('BlockMath component', () => {
     const element = screen.getByRole('math');
     expect(element).toHaveAttribute('tabIndex', '0');
   });
+
+  it('should enforce trust: false preventing href injection in display formulas (VULN-JAM2-23)', () => {
+    render(<BlockMath math="\\href{https://malicious.org}{Clique aqui}" />);
+
+    const element = screen.getByRole('math');
+    expect(element).toBeInTheDocument();
+    expect(element.querySelector('a')).toBeNull();
+    expect(element.innerHTML).not.toContain('href=');
+  });
 });
