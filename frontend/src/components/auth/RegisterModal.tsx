@@ -12,9 +12,16 @@ import {
   GraduationCap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { Select } from '@/components/ui/Select';
 import { TermsAndPrivacyModal } from '@/components/legal/TermsAndPrivacyModal';
 import { useLoginMutation, useRegisterMutation } from '@/api/hooks';
 import type { ApiError } from '@/api/client';
+
+const SCHOOL_TYPE_OPTIONS = [
+  { value: 'PUBLIC_SCHOOL', label: 'Escola Pública' },
+  { value: 'PRIVATE_SCHOLARSHIP', label: 'Bolsista em Particular' },
+  { value: 'PRIVATE_REGULAR', label: 'Escola Particular' },
+] as const;
 
 export interface RegisterModalProps {
   readonly isOpen: boolean;
@@ -401,26 +408,13 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 
                 {/* School Type & Target Degree */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label
-                      htmlFor="reg-school-type"
-                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
-                    >
-                      Tipo de Escola
-                    </label>
-                    <select
-                      id="reg-school-type"
-                      value={schoolType}
-                      onChange={(e) =>
-                        setSchoolType(e.target.value as 'PUBLIC_SCHOOL' | 'PRIVATE_SCHOLARSHIP' | 'PRIVATE_REGULAR')
-                      }
-                      className="w-full px-3 py-2.5 text-xs sm:text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-primary"
-                    >
-                      <option value="PUBLIC_SCHOOL">Escola Pública</option>
-                      <option value="PRIVATE_SCHOLARSHIP">Bolsista em Particular</option>
-                      <option value="PRIVATE_REGULAR">Escola Particular</option>
-                    </select>
-                  </div>
+                  <Select<'PUBLIC_SCHOOL' | 'PRIVATE_SCHOLARSHIP' | 'PRIVATE_REGULAR'>
+                    id="reg-school-type"
+                    label="Tipo de Escola"
+                    value={schoolType}
+                    onChange={(val) => setSchoolType(val)}
+                    options={SCHOOL_TYPE_OPTIONS}
+                  />
 
                   <div className="space-y-1">
                     <label

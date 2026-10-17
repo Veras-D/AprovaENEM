@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-17
+### 🎨 Custom Accessible Select Component Replacing Native Dropdowns
+- feat(ui): Implemented custom, accessible, theme-styled `Select` dropdown component replacing native unstyled browser `<select>` elements:
+  - **Custom Accessible UI Primitive ([`Select.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/ui/Select.tsx))**: Built a WCAG 2.1 Level AA compliant combobox and listbox component using Tailwind CSS, supporting brand tokens (`rounded-brand`, dynamic focus rings, dark mode tokens), option checkmark indicators, smooth chevron rotation, keyboard navigation (`ArrowDown`, `ArrowUp`, `Enter`, `Space`, `Escape`, type-ahead search), and click-outside dismissal.
+  - **Seamless Native Form & Test Compatibility**: Embedded a synchronized hidden `<select>` associated with form IDs to guarantee full backwards compatibility with native form posts, screen reader fallback, and React Testing Library queries (`getByLabelText`, `fireEvent.change`).
+  - **Eliminated Native Browser Dropdowns**: Replaced raw, unstyled browser selects across the entire application:
+    - School type selector in student registration modal ([`RegisterModal.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/auth/RegisterModal.tsx)).
+    - Daltonism simulation filter selector in accessibility toolbar ([`AccessibilityToolbar.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/accessibility/AccessibilityToolbar.tsx)).
+    - Cohort switcher selector in B2B institutional diagnostic dashboard ([`InstitutionalCohortView.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/diagnostic/components/InstitutionalCohortView.tsx)).
+  - **UI Barrel Exports ([`index.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/ui/index.ts))**: Centralized exports for `Select`, `SelectOption`, `SelectProps`, along with `Button`, `Badge`, `Card`, and `ThemeCustomizer`.
+  - **Automated Test Coverage**: Added dedicated unit test suite in [`Select.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/ui/Select.test.tsx) (8/8 green), verified zero axe-core accessibility violations in [`accessibility-audit.a11y.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/test/a11y/accessibility-audit.a11y.test.tsx), and confirmed 100% green test execution across all 71 test files (456 tests, 0 failures, 0 skipped) and clean Vite production build.
+
 ### ⌨️ Comprehensive Keyboard Shortcuts for Question Navigation
 - feat(practice): Implemented intuitive keyboard navigation shortcuts between previous and next questions:
   - **Horizontal Question Navigation Shortcuts**: Added global key listeners in [`PracticeHero.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.tsx) enabling students to fluidly navigate exam items using **`ArrowLeft` / `ArrowRight`** (or `Alt + ArrowLeft/Right`), **`PageUp` / `PageDown`**, and bracket keys **`[` / `]`**.

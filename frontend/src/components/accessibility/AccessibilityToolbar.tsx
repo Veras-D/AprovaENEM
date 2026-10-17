@@ -11,6 +11,7 @@ import {
   BookMarked,
   Sparkles,
 } from 'lucide-react';
+import { Select } from '@/components/ui/Select';
 
 export const AccessibilityToolbar: React.FC = () => {
   const {
@@ -244,26 +245,16 @@ export const AccessibilityToolbar: React.FC = () => {
             </div>
 
             {/* 4. Daltonism Filters */}
-            <div className="space-y-1.5">
-              <label
-                htmlFor="daltonism-select"
-                className="font-semibold text-slate-700 dark:text-slate-300 block"
-              >
-                Filtros para Daltonismo
-              </label>
-              <select
-                id="daltonism-select"
-                value={colorBlindness}
-                onChange={(e) => setColorBlindness(e.target.value as ColorBlindnessType)}
-                className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-primary"
-              >
-                {colorBlindnessOptions.map((opt) => (
-                  <option key={opt.id} value={opt.id}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Select<ColorBlindnessType>
+              id="daltonism-select"
+              label="Filtros para Daltonismo"
+              value={colorBlindness}
+              onChange={(val) => setColorBlindness(val)}
+              options={colorBlindnessOptions.map((opt) => ({
+                value: opt.id,
+                label: opt.label,
+              }))}
+            />
 
             {/* 5. Additional Visual & Reading Aids */}
             <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">

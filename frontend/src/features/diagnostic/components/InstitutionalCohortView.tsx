@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { Select } from '@/components/ui/Select';
 import {
   getAreaMetadata,
   MASTERY_CONFIGS,
@@ -122,18 +123,17 @@ export const InstitutionalCohortView: React.FC<InstitutionalCohortViewProps> = (
           <label htmlFor="cohort-select" className="sr-only">
             Selecionar turma
           </label>
-          <select
+          <Select
             id="cohort-select"
             value={selectedCohortId}
-            onChange={(e) => setSelectedCohortId(e.target.value)}
-            className="text-xs font-semibold px-3 py-2 rounded-brand border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-brand-primary cursor-pointer"
-          >
-            {AVAILABLE_COHORTS.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+            onChange={(val) => setSelectedCohortId(val)}
+            options={AVAILABLE_COHORTS.map((c) => ({
+              value: c.id,
+              label: c.name,
+            }))}
+            size="sm"
+            className="min-w-[180px]"
+          />
 
           {onExportReport && (
             <Button
