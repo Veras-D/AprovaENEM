@@ -49,9 +49,9 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
       aria-label="Painel de gamificação do estudante"
     >
       {/* Dashboard Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 rounded-brand border border-slate-200 dark:border-slate-800 bg-gradient-to-r from-amber-500/10 via-brand-primary/5 to-transparent dark:from-amber-500/15 dark:via-brand-primary/10">
-        <div className="flex items-center gap-3">
-          <div className="h-11 w-11 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 text-white flex items-center justify-center shadow-md shadow-amber-500/20 shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
+        <div className="flex items-center gap-3.5">
+          <div className="h-12 w-12 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
             <Trophy className="h-6 w-6" aria-hidden="true" />
           </div>
           <div>
@@ -63,11 +63,11 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
                 type="button"
                 onClick={() => setActiveTab('leaderboard')}
                 aria-label={`Ver classificação da Liga ${profile.weeklyLeague}`}
-                className="focus:outline-hidden focus:ring-2 focus:ring-amber-500 rounded-full"
+                className="focus:outline-hidden focus:ring-2 focus:ring-amber-500 rounded-full cursor-pointer"
               >
                 <Badge
                   variant="outline"
-                  className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30 text-xs py-0 px-2 font-bold uppercase tracking-wider cursor-pointer transition-colors"
+                  className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-500/30 text-xs py-0.5 px-2 font-bold uppercase tracking-wider cursor-pointer transition-colors"
                 >
                   Liga {profile.weeklyLeague}
                 </Badge>
@@ -110,7 +110,7 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
 
       {/* Navigation Tabs (Meu Progresso vs Ranking da Liga) */}
       <div
-        className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2"
+        className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3"
         role="tablist"
         aria-label="Seções do painel de gamificação"
       >
@@ -121,7 +121,7 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
           aria-selected={activeTab === 'overview'}
           aria-controls="panel-overview"
           onClick={() => setActiveTab('overview')}
-          className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+          className={`px-3.5 py-2 rounded-brand text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer ${
             activeTab === 'overview'
               ? 'bg-brand-primary text-white shadow-xs'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -138,7 +138,7 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
           aria-selected={activeTab === 'leaderboard'}
           aria-controls="panel-leaderboard"
           onClick={() => setActiveTab('leaderboard')}
-          className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+          className={`px-3.5 py-2 rounded-brand text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer ${
             activeTab === 'leaderboard'
               ? 'bg-brand-primary text-white shadow-xs'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -215,7 +215,7 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
               className={`h-full rounded-full transition-all duration-500 ${
                 isDailyGoalReached
                   ? 'bg-emerald-500'
-                  : 'bg-gradient-to-r from-brand-primary to-amber-500'
+                  : 'bg-brand-primary'
               }`}
               style={{ width: `${goalPercentage}%` }}
             />

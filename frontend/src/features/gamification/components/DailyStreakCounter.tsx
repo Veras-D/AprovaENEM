@@ -32,11 +32,11 @@ export const DailyStreakCounter: React.FC<DailyStreakCounterProps> = ({
           <div
             className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 transition-transform ${
               isStreakActive
-                ? 'bg-gradient-to-br from-amber-500 to-rose-500 text-white shadow-md shadow-orange-500/20 animate-pulse'
+                ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
             }`}
           >
-            <Flame className="h-6 w-6 fill-current" aria-hidden="true" />
+            <Flame className="h-5 w-5 fill-current" aria-hidden="true" />
           </div>
 
           <div>

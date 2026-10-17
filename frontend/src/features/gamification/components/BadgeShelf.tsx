@@ -146,8 +146,8 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
               <div
                 className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${
                   isUnlocked
-                    ? 'bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-sm'
-                    : 'bg-slate-200 dark:bg-slate-700 text-slate-400'
+                    ? 'bg-amber-500 text-white shadow-xs'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
                 }`}
               >
                 {isUnlocked ? (

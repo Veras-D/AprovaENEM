@@ -278,7 +278,7 @@ export const StudentDiagnosticRadar: React.FC<StudentDiagnosticRadarProps> = ({
         <div className="lg:col-span-5 space-y-4 flex flex-col justify-between">
           {/* Strongest Area Card */}
           {strongestArea && (
-            <div className="p-4 rounded-brand border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 via-transparent to-transparent dark:from-emerald-950/20 dark:border-emerald-500/30">
+            <div className="p-4 rounded-brand border border-emerald-500/20 bg-emerald-50/60 dark:bg-emerald-950/20">
               <div className="flex items-center gap-2.5 mb-1.5">
                 <div className="h-8 w-8 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                   <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
@@ -300,7 +300,7 @@ export const StudentDiagnosticRadar: React.FC<StudentDiagnosticRadarProps> = ({
 
           {/* Area Requiring Focus Card */}
           {weakestArea && (
-            <div className="p-4 rounded-brand border border-amber-500/20 bg-gradient-to-br from-amber-500/10 via-transparent to-transparent dark:from-amber-950/20 dark:border-amber-500/30">
+            <div className="p-4 rounded-brand border border-amber-500/20 bg-amber-50/60 dark:bg-amber-950/20">
               <div className="flex items-center gap-2.5 mb-1.5">
                 <div className="h-8 w-8 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                   <AlertCircle className="h-4 w-4" aria-hidden="true" />

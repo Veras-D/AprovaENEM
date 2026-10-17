@@ -72,7 +72,7 @@ export const LevelProgressBar: React.FC<LevelProgressBarProps> = ({
           aria-label={`Progresso do Nível ${stats.currentLevel}: ${stats.progressPercentage}% (${stats.xpInCurrentLevel} de 200 XP)`}
         >
           <div
-            className="h-full bg-gradient-to-r from-brand-primary to-emerald-500 rounded-full transition-all duration-500 ease-out"
+            className="h-full bg-brand-primary rounded-full transition-all duration-500 ease-out"
             style={{ width: `${stats.progressPercentage}%` }}
           />
         </div>

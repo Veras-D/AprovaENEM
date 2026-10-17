@@ -174,9 +174,9 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
               role="tab"
               aria-selected={isSelected}
               onClick={() => setSelectedLeague(tier)}
-              className={`p-3 rounded-brand border text-left transition-all flex flex-col justify-between gap-2 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-primary ${
+              className={`p-3 rounded-brand border text-left transition-all flex flex-col justify-between gap-2 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-primary cursor-pointer ${
                 isSelected
-                  ? `border-brand-primary bg-gradient-to-br ${config.gradientFrom} to-transparent ring-2 ring-brand-primary/20 shadow-xs font-bold`
+                  ? 'border-brand-primary bg-brand-primary/5 dark:bg-brand-primary/10 ring-2 ring-brand-primary/20 shadow-xs font-bold'
                   : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
               }`}
             >
@@ -377,7 +377,7 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
 
       {/* User Position Summary Footer (if in current league) */}
       {currentUserEntry && (
-        <div className="p-3.5 sm:p-4 rounded-brand border border-brand-primary/30 bg-gradient-to-r from-brand-primary/10 via-brand-primary/5 to-transparent flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
+        <div className="p-3.5 sm:p-4 rounded-brand border border-brand-primary/30 bg-brand-primary/5 dark:bg-brand-primary/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
           <div className="flex items-center gap-2">
             <Trophy className="h-4 w-4 text-brand-primary shrink-0" aria-hidden="true" />
             <span className="text-slate-800 dark:text-slate-200">

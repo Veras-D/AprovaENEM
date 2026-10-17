@@ -151,7 +151,7 @@ export const CelebrationOverlay: React.FC<CelebrationOverlayProps> = ({
 
         {/* Radiant Trophy Illustration */}
         <div className="relative inline-block mx-auto">
-          <div className="h-20 w-20 rounded-full bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-amber-500/30">
+          <div className="h-20 w-20 rounded-full bg-amber-500 text-white flex items-center justify-center mx-auto shadow-md shadow-amber-500/20">
             <Trophy className="h-10 w-10 fill-current animate-pulse" aria-hidden="true" />
           </div>
           <div className="absolute -top-1 -right-1 p-1 rounded-full bg-emerald-500 text-white shadow-xs">

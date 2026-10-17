@@ -87,7 +87,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   return (
     <div className="space-y-10 sm:space-y-14 py-2 sm:py-6">
       {/* Hero Presentation Section */}
-      <section className="relative overflow-hidden rounded-brand bg-gradient-to-br from-brand-primary/10 via-brand-surface to-brand-primary/5 p-6 sm:p-12 border border-brand-primary/20 shadow-sm">
+      <section className="relative overflow-hidden rounded-brand bg-slate-50 dark:bg-slate-900/60 p-6 sm:p-12 border border-slate-200 dark:border-slate-800 shadow-xs">
         <div className="max-w-3xl space-y-5">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-brand-primary text-brand-primary-foreground shadow-sm">
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
