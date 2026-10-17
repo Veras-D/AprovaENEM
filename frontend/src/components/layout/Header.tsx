@@ -1,8 +1,9 @@
 import React from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTenantStore } from '@/stores/useTenantStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useSessionStore } from '@/stores/useSessionStore';
-import { BookOpen, Trophy, BarChart2, User, Menu, Sun, Moon } from 'lucide-react';
+import { BookOpen, Trophy, BarChart2, User, Menu, Sun, Moon, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 export interface HeaderProps {
@@ -10,6 +11,7 @@ export interface HeaderProps {
   readonly activeSection?: string;
   readonly onNavigate?: (section: string) => void;
   readonly onOpenAuthModal?: () => void;
+  readonly onLogout?: () => void;
 }
 
 /**
@@ -22,10 +24,20 @@ export const Header: React.FC<HeaderProps> = ({
   activeSection = 'practice',
   onNavigate,
   onOpenAuthModal,
+  onLogout,
 }) => {
+  const queryClient = useQueryClient();
   const { currentTenant, isDarkMode, toggleDarkMode } = useTenantStore();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, clearAuth } = useAuthStore();
+  const clearSession = useSessionStore((s) => s.clearSession);
   const anonymousSessionId = useSessionStore((s) => s.anonymousSessionId);
+
+  const handleLogout = () => {
+    clearAuth();
+    clearSession();
+    queryClient.removeQueries();
+    onLogout?.();
+  };
 
   const navLinks = [
     { id: 'practice', label: 'Praticar', icon: BookOpen },
@@ -117,6 +129,16 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="hidden sm:inline font-medium text-xs sm:text-sm max-w-[120px] truncate">
                 {user.name}
               </span>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 rounded-brand hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                aria-label="Sair da conta"
+                title="Sair da conta"
+              >
+                <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
+                <span className="hidden md:inline">Sair</span>
+              </button>
             </div>
           ) : (
             <div className="flex items-center gap-2">

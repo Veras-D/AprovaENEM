@@ -20,10 +20,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Component
 public class GeminiTutorClientAdapter implements TutorAiPort {
+
+    private static final Pattern DIRECT_ANSWER_REQUEST_PATTERN = Pattern.compile(
+            "\\b(resposta|gabarito|letra|alternativa\\s+correta|op[çc][ãa]o\\s+correta|qual\\s+[ée]\\s+a\\s+certa|qual\\s+marco|diga\\s+a\\s+letra|solu[çc][ãa]o\\s+final)\\b",
+            Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+    );
+
+    private static final Pattern ANSWER_SPOILER_PATTERN = Pattern.compile(
+            "(?:resposta\\s+correta\\s+[ée]|alternativa\\s+correta\\s*(?:[ée]|:)?|gabarito\\s*(?:[ée]|:)?|letra\\s+correta\\s*(?:[ée]|:)?)\\s*[\"'(]?[A-E][\"')]?",
+            Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+    );
 
     @Value("${gemini.api-key:}")
     private String apiKey;
@@ -50,6 +61,12 @@ public class GeminiTutorClientAdapter implements TutorAiPort {
             List<TutorChatMessage> history,
             String studentMessage
     ) {
+        // Pre-flight Guardrail: Intercept direct answer / letter extraction attempts before invoking LLM
+        if (isDirectAnswerRequest(studentMessage)) {
+            log.info("Direct answer request intercepted by Socratic guardrail. Returning conceptual refusal.");
+            return TutorAiResult.success(createSocraticRefusal(question));
+        }
+
         if (apiKey == null || apiKey.isBlank() || apiKey.equalsIgnoreCase("dummy_or_test_key")) {
             log.info("Gemini API key is not configured or is placeholder. Using pedagogical fallback.");
             return socraticFallback(question, pedagogicalChunks, history, studentMessage, new IllegalStateException("Gemini API key not configured"));
@@ -78,7 +95,10 @@ public class GeminiTutorClientAdapter implements TutorAiPort {
                 .retrieve()
                 .body(String.class);
 
-        return TutorAiResult.success(extractCandidateText(responseBody));
+        String candidateText = extractCandidateText(responseBody);
+        String sanitizedText = sanitizeCandidateOutput(candidateText, question);
+
+        return TutorAiResult.success(sanitizedText);
     }
 
     public TutorAiResult socraticFallback(
@@ -90,6 +110,10 @@ public class GeminiTutorClientAdapter implements TutorAiPort {
     ) {
         log.warn("Gemini Tutor call diverted to Socratic fallback. Reason: {}", t.getMessage());
 
+        if (isDirectAnswerRequest(studentMessage)) {
+            return TutorAiResult.fallback(createSocraticRefusal(question));
+        }
+
         QuestionResolution res = question.getResolution();
         String keyConcepts = (res != null && res.getKeyConcepts() != null)
                 ? res.getKeyConcepts()
@@ -97,20 +121,48 @@ public class GeminiTutorClientAdapter implements TutorAiPort {
 
         String topicName = question.getTopicName() != null ? question.getTopicName() : "esta questão";
 
-        if (studentMessage != null && (studentMessage.toLowerCase().contains("resposta") ||
-                studentMessage.toLowerCase().contains("letra") ||
-                studentMessage.toLowerCase().contains("gabarito"))) {
-            return TutorAiResult.fallback("Como seu Tutor Socrático do AprovaENEM, minha função é te guiar no raciocínio para que você domine o conteúdo! " +
-                    "Não posso te dar a letra ou a resposta pronta. " +
-                    "Em vez disso, que tal identificarmos juntos: quais dados o enunciado nos dá e qual é o conceito de " + keyConcepts + " aplicável aqui?");
-        }
-
         return TutorAiResult.fallback(String.format(
                 "Excelente iniciativa em tentar resolver! Vamos analisar a questão sobre **%s** passo a passo.\n\n" +
                 "💡 **Dica reflexiva**: Lembre-se de conectar a pergunta com %s.\n\n" +
                 "Qual é o primeiro passo que você daria para isolar as grandezas dadas pelo enunciado?",
                 topicName, keyConcepts
         ));
+    }
+
+    private boolean isDirectAnswerRequest(String message) {
+        if (message == null || message.isBlank()) {
+            return false;
+        }
+        return DIRECT_ANSWER_REQUEST_PATTERN.matcher(message).find();
+    }
+
+    private String createSocraticRefusal(Question question) {
+        QuestionResolution res = question.getResolution();
+        String keyConcepts = (res != null && res.getKeyConcepts() != null)
+                ? res.getKeyConcepts()
+                : "os conceitos fundamentais da disciplina";
+
+        return "Como seu Tutor Socrático do AprovaENEM, minha função é te guiar no raciocínio para que você domine o conteúdo! " +
+                "Não posso te dar a letra ou a resposta pronta. " +
+                "Em vez disso, que tal identificarmos juntos: quais dados o enunciado nos dá e qual é o conceito de " + keyConcepts + " aplicável aqui?";
+    }
+
+    private String sanitizeCandidateOutput(String candidateText, Question question) {
+        if (candidateText == null || candidateText.isBlank()) {
+            return "Excelente iniciativa em refletir sobre a questão! Qual é o primeiro passo para analisarmos os dados do enunciado?";
+        }
+
+        if (ANSWER_SPOILER_PATTERN.matcher(candidateText).find()) {
+            log.warn("Gemini candidate output contained direct answer spoiler. Redacting to protect Socratic method.");
+            QuestionResolution res = question.getResolution();
+            String keyConcepts = (res != null && res.getKeyConcepts() != null)
+                    ? res.getKeyConcepts()
+                    : "os conceitos fundamentais da disciplina";
+            return "Excelente raciocínio! Vamos focar no raciocínio passo a passo: com base em " + keyConcepts +
+                    ", qual critério conceitual nos ajuda a analisar as alternativas apresentadas?";
+        }
+
+        return candidateText;
     }
 
     private String buildSystemPrompt(Question question, List<PedagogicalChunk> pedagogicalChunks) {

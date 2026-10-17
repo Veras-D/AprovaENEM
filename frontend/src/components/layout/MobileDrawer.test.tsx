@@ -1,12 +1,25 @@
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MobileDrawer } from './MobileDrawer';
 import { useTenantStore } from '@/stores/useTenantStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { DEFAULT_TENANT } from '@/tenants/default';
 
 describe('MobileDrawer component', () => {
+  let queryClient: QueryClient;
+
+  const renderWithClient = (ui: React.ReactElement) => {
+    return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+  };
+
   beforeEach(() => {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+      },
+    });
     useTenantStore.setState({
       currentTenant: {
         ...DEFAULT_TENANT,
@@ -23,12 +36,12 @@ describe('MobileDrawer component', () => {
   });
 
   it('should not render anything when isOpen is false', () => {
-    const { container } = render(<MobileDrawer isOpen={false} onClose={vi.fn()} />);
+    const { container } = renderWithClient(<MobileDrawer isOpen={false} onClose={vi.fn()} />);
     expect(container).toBeEmptyDOMElement();
   });
 
   it('should render dialog, tenant brand, and navigation items when isOpen is true', () => {
-    render(<MobileDrawer isOpen={true} onClose={vi.fn()} />);
+    renderWithClient(<MobileDrawer isOpen={true} onClose={vi.fn()} />);
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText('AprovaENEM Social')).toBeInTheDocument();
@@ -40,7 +53,7 @@ describe('MobileDrawer component', () => {
 
   it('should call onClose when close button or backdrop is clicked', () => {
     const handleClose = vi.fn();
-    render(<MobileDrawer isOpen={true} onClose={handleClose} />);
+    renderWithClient(<MobileDrawer isOpen={true} onClose={handleClose} />);
 
     const closeBtn = screen.getByRole('button', { name: /Fechar menu/i });
     fireEvent.click(closeBtn);
@@ -49,7 +62,7 @@ describe('MobileDrawer component', () => {
 
   it('should close on Escape key press', () => {
     const handleClose = vi.fn();
-    render(<MobileDrawer isOpen={true} onClose={handleClose} />);
+    renderWithClient(<MobileDrawer isOpen={true} onClose={handleClose} />);
 
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(handleClose).toHaveBeenCalledTimes(1);
@@ -58,7 +71,7 @@ describe('MobileDrawer component', () => {
   it('should navigate and close drawer when navigation item is clicked', () => {
     const handleNavigate = vi.fn();
     const handleClose = vi.fn();
-    render(
+    renderWithClient(
       <MobileDrawer
         isOpen={true}
         onClose={handleClose}
@@ -75,7 +88,7 @@ describe('MobileDrawer component', () => {
   });
 
   it('should toggle dark mode and high contrast accessibility options', () => {
-    render(<MobileDrawer isOpen={true} onClose={vi.fn()} />);
+    renderWithClient(<MobileDrawer isOpen={true} onClose={vi.fn()} />);
 
     const darkModeBtn = screen.getByRole('button', { name: /Modo Escuro/i });
     fireEvent.click(darkModeBtn);
@@ -99,22 +112,23 @@ describe('MobileDrawer component', () => {
       isAuthenticated: true,
     });
 
-    render(<MobileDrawer isOpen={true} onClose={vi.fn()} />);
+    renderWithClient(<MobileDrawer isOpen={true} onClose={vi.fn()} />);
 
     expect(screen.getByText('Carlos Oliveira')).toBeInTheDocument();
     expect(screen.getByText('carlos@escola.gov.br')).toBeInTheDocument();
     expect(screen.getByText('C')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Sair da conta/i })).toBeInTheDocument();
   });
 
   it('should display LGPD Art. 18 data protection badge', () => {
-    render(<MobileDrawer isOpen={true} onClose={vi.fn()} />);
+    renderWithClient(<MobileDrawer isOpen={true} onClose={vi.fn()} />);
     expect(screen.getByText(/LGPD Art. 18/i)).toBeInTheDocument();
   });
 
   it('should call onOpenAuthModal and onClose when clicking Criar Conta ou Entrar', () => {
     const handleClose = vi.fn();
     const handleOpenAuth = vi.fn();
-    render(
+    renderWithClient(
       <MobileDrawer
         isOpen={true}
         onClose={handleClose}
@@ -131,7 +145,7 @@ describe('MobileDrawer component', () => {
   it('should call onOpenLegalModal and onClose when clicking LGPD footer', () => {
     const handleClose = vi.fn();
     const handleOpenLegal = vi.fn();
-    render(
+    renderWithClient(
       <MobileDrawer
         isOpen={true}
         onClose={handleClose}
@@ -143,5 +157,41 @@ describe('MobileDrawer component', () => {
     fireEvent.click(legalBtn);
     expect(handleClose).toHaveBeenCalledTimes(1);
     expect(handleOpenLegal).toHaveBeenCalledTimes(1);
+  });
+
+  it('should call clearAuth, clearSession, close drawer, and clear query cache on logout', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-99',
+        name: 'Carlos Oliveira',
+        email: 'carlos@escola.gov.br',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-01-01T00:00:00Z',
+      },
+      isAuthenticated: true,
+    });
+    const removeQueriesSpy = vi.spyOn(queryClient, 'removeQueries');
+    const handleClose = vi.fn();
+    const handleLogout = vi.fn();
+
+    renderWithClient(
+      <MobileDrawer
+        isOpen={true}
+        onClose={handleClose}
+        onLogout={handleLogout}
+      />
+    );
+
+    const sairBtn = screen.getByRole('button', { name: /Sair da conta/i });
+    expect(sairBtn).toBeInTheDocument();
+
+    fireEvent.click(sairBtn);
+
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    expect(useAuthStore.getState().user).toBeNull();
+    expect(removeQueriesSpy).toHaveBeenCalledTimes(1);
+    expect(handleClose).toHaveBeenCalledTimes(1);
+    expect(handleLogout).toHaveBeenCalledTimes(1);
   });
 });

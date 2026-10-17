@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTenantStore } from '@/stores/useTenantStore';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useSessionStore } from '@/stores/useSessionStore';
 import {
   X,
   BookOpen,
@@ -12,6 +14,7 @@ import {
   Moon,
   Eye,
   Sparkles,
+  LogOut,
 } from 'lucide-react';
 
 export interface MobileDrawerProps {
@@ -22,6 +25,7 @@ export interface MobileDrawerProps {
   readonly onOpenAuthModal?: () => void;
   readonly onOpenLegalModal?: () => void;
   readonly onOpenErasureModal?: () => void;
+  readonly onLogout?: () => void;
 }
 
 export const MobileDrawer: React.FC<MobileDrawerProps> = ({
@@ -32,10 +36,21 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
   onOpenAuthModal,
   onOpenLegalModal,
   onOpenErasureModal,
+  onLogout,
 }) => {
+  const queryClient = useQueryClient();
   const { currentTenant, isDarkMode, toggleDarkMode, isHighContrast, toggleHighContrast } =
     useTenantStore();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, clearAuth } = useAuthStore();
+  const clearSession = useSessionStore((s) => s.clearSession);
+
+  const handleLogout = () => {
+    clearAuth();
+    clearSession();
+    queryClient.removeQueries();
+    onClose();
+    onLogout?.();
+  };
 
   // Close drawer on Escape key press
   useEffect(() => {
@@ -123,18 +138,29 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
         {/* User Card */}
         <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
           {isAuthenticated && user ? (
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-base">
-                {user.name.charAt(0).toUpperCase()}
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-base">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="overflow-hidden">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                    {user.name}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                    {user.email}
+                  </p>
+                </div>
               </div>
-              <div className="overflow-hidden">
-                <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-                  {user.name}
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                  {user.email}
-                </p>
-              </div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-brand border border-slate-200 dark:border-slate-700 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                aria-label="Sair da conta"
+              >
+                <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>Sair da Conta</span>
+              </button>
             </div>
           ) : (
             <div className="space-y-2">

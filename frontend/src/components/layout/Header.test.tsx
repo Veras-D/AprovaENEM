@@ -1,5 +1,7 @@
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Header } from './Header';
 import { useTenantStore } from '@/stores/useTenantStore';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -7,7 +9,18 @@ import { useSessionStore } from '@/stores/useSessionStore';
 import { DEFAULT_TENANT } from '@/tenants/default';
 
 describe('Header component', () => {
+  let queryClient: QueryClient;
+
+  const renderWithClient = (ui: React.ReactElement) => {
+    return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+  };
+
   beforeEach(() => {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+      },
+    });
     useTenantStore.setState({
       currentTenant: {
         ...DEFAULT_TENANT,
@@ -26,7 +39,7 @@ describe('Header component', () => {
   });
 
   it('should render tenant brand identity and White-Label badge', () => {
-    render(<Header onOpenDrawer={vi.fn()} />);
+    renderWithClient(<Header onOpenDrawer={vi.fn()} />);
 
     expect(screen.getByText('AprovaENEM Social')).toBeInTheDocument();
     expect(screen.getByText('White-Label')).toBeInTheDocument();
@@ -36,7 +49,9 @@ describe('Header component', () => {
 
   it('should render desktop navigation links and trigger onNavigate', () => {
     const handleNavigate = vi.fn();
-    render(<Header onOpenDrawer={vi.fn()} activeSection="practice" onNavigate={handleNavigate} />);
+    renderWithClient(
+      <Header onOpenDrawer={vi.fn()} activeSection="practice" onNavigate={handleNavigate} />
+    );
 
     const practiceBtn = screen.getByRole('button', { name: /Praticar/i });
     const rankingBtn = screen.getByRole('button', { name: /Ranking/i });
@@ -52,7 +67,7 @@ describe('Header component', () => {
 
   it('should trigger onOpenDrawer when mobile hamburger button is clicked', () => {
     const handleOpenDrawer = vi.fn();
-    render(<Header onOpenDrawer={handleOpenDrawer} />);
+    renderWithClient(<Header onOpenDrawer={handleOpenDrawer} />);
 
     const menuBtn = screen.getByRole('button', { name: /Abrir menu de navegação/i });
     expect(menuBtn).toBeInTheDocument();
@@ -62,7 +77,7 @@ describe('Header component', () => {
   });
 
   it('should toggle dark mode on quick toggle click', () => {
-    render(<Header onOpenDrawer={vi.fn()} />);
+    renderWithClient(<Header onOpenDrawer={vi.fn()} />);
 
     const themeToggle = screen.getByRole('button', { name: /Ativar modo escuro/i });
     expect(themeToggle).toBeInTheDocument();
@@ -72,7 +87,7 @@ describe('Header component', () => {
   });
 
   it('should show anonymous session ID when unauthenticated', () => {
-    render(<Header onOpenDrawer={vi.fn()} />);
+    renderWithClient(<Header onOpenDrawer={vi.fn()} />);
 
     expect(screen.getByText(/Sessão Anônima:/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Entrar/i })).toBeInTheDocument();
@@ -91,18 +106,47 @@ describe('Header component', () => {
       isAuthenticated: true,
     });
 
-    render(<Header onOpenDrawer={vi.fn()} />);
+    renderWithClient(<Header onOpenDrawer={vi.fn()} />);
 
     expect(screen.getByText('Maria Silva')).toBeInTheDocument();
     expect(screen.getByText('M')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Sair da conta/i })).toBeInTheDocument();
   });
 
   it('should call onOpenAuthModal when clicking Entrar', () => {
     const handleOpenAuth = vi.fn();
-    render(<Header onOpenDrawer={vi.fn()} onOpenAuthModal={handleOpenAuth} />);
+    renderWithClient(<Header onOpenDrawer={vi.fn()} onOpenAuthModal={handleOpenAuth} />);
 
     const entrarBtn = screen.getByRole('button', { name: /Entrar/i });
     fireEvent.click(entrarBtn);
     expect(handleOpenAuth).toHaveBeenCalledTimes(1);
+  });
+
+  it('should clear authentication, reset session and clear query cache on logout', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-1',
+        name: 'Maria Silva',
+        email: 'maria@example.com',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-01-01T00:00:00Z',
+      },
+      isAuthenticated: true,
+    });
+    const removeQueriesSpy = vi.spyOn(queryClient, 'removeQueries');
+    const handleLogout = vi.fn();
+
+    renderWithClient(<Header onOpenDrawer={vi.fn()} onLogout={handleLogout} />);
+
+    const sairBtn = screen.getByRole('button', { name: /Sair da conta/i });
+    expect(sairBtn).toBeInTheDocument();
+
+    fireEvent.click(sairBtn);
+
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    expect(useAuthStore.getState().user).toBeNull();
+    expect(removeQueriesSpy).toHaveBeenCalledTimes(1);
+    expect(handleLogout).toHaveBeenCalledTimes(1);
   });
 });

@@ -15,11 +15,15 @@ spring:
         add-to-simple-url-handler-mapping: true
         cors-configurations:
           '[/**]':
-            allowedOrigins:
-              - "http://localhost:3000"
-              - "http://localhost:5173"
-              - "http://localhost:80"
+            allowedOriginPatterns:
+              - "http://localhost:[*]"
               - "http://localhost"
+              - "http://*.localhost:[*]"
+              - "http://*.localhost"
+              - "https://*.aprovaenem.org"
+              - "https://aprovaenem.org"
+              - "https://*.aprovaenem.com.br"
+              - "https://aprovaenem.com.br"
             allowedMethods:
               - GET
               - POST

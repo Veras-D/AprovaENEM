@@ -175,7 +175,7 @@ describe('Axe-Core WCAG 2.1 Level AA Accessibility Audit Suite', () => {
     });
 
     it('has zero accessibility violations on MobileDrawer in open state', async () => {
-      const { container } = render(
+      const { container } = renderWithProviders(
         <MobileDrawer
           isOpen={true}
           onClose={() => {}}

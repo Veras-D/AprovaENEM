@@ -133,7 +133,51 @@ class GeminiTutorClientAdapterTest {
     }
 
     @Test
-    @DisplayName("Should polite refuse to give answer when student asks for letter or direct answer")
+    @DisplayName("Should intercept direct answer request in live flow before calling Gemini API")
+    void shouldInterceptDirectAnswerRequestInLiveFlow() {
+        // Notice: mockServer expects ZERO requests because pre-flight guardrail intercepts it
+        TutorAiResult result = adapter.generateSocraticResponse(question, List.of(), List.of(), "Qual é a resposta correta e a letra do gabarito?");
+
+        mockServer.verify();
+        assertThat(result.isFallback()).isFalse();
+        assertThat(result.responseText()).contains("Não posso te dar a letra ou a resposta pronta");
+        assertThat(result.responseText()).contains("Lei de Ohm e Potência");
+    }
+
+    @Test
+    @DisplayName("Should sanitize candidate output if Gemini leaks direct answer")
+    void shouldSanitizeCandidateOutputIfGeminiLeaksDirectAnswer() {
+        String expectedUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+        String geminiSpoilerJson = """
+                {
+                  "candidates": [
+                    {
+                      "content": {
+                        "parts": [
+                          { "text": "A resposta correta é a letra B porque a potência é calculada por P = U * i." }
+                        ]
+                      }
+                    }
+                  ]
+                }
+                """;
+
+        mockServer.expect(requestTo(expectedUrl))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header("x-goog-api-key", "test-api-key"))
+                .andRespond(withSuccess(geminiSpoilerJson, MediaType.APPLICATION_JSON));
+
+        TutorAiResult result = adapter.generateSocraticResponse(question, List.of(), List.of(), "Como relacionar as grandezas?");
+
+        mockServer.verify();
+        assertThat(result.isFallback()).isFalse();
+        assertThat(result.responseText()).doesNotContain("A resposta correta é a letra B");
+        assertThat(result.responseText()).contains("Lei de Ohm e Potência");
+        assertThat(result.responseText()).contains("qual critério conceitual nos ajuda");
+    }
+
+    @Test
+    @DisplayName("Should polite refuse to give answer when student asks for letter or direct answer in fallback")
     void shouldRefuseDirectAnswer() {
         TutorAiResult result = adapter.socraticFallback(
                 question,
