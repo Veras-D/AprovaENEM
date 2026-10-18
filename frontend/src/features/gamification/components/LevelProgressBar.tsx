@@ -41,7 +41,9 @@ export const LevelProgressBar: React.FC<LevelProgressBarProps> = ({
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Próximo: {stats.nextLevelTitle} (Nível {stats.currentLevel + 1})
+              {stats.levelTitle === stats.nextLevelTitle
+                ? `Próxima meta: Nível ${stats.currentLevel + 1}`
+                : `Próximo: ${stats.nextLevelTitle} (Nível ${stats.currentLevel + 1})`}
             </p>
           </div>
         </div>

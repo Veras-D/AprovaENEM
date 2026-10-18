@@ -30,4 +30,16 @@ describe('LevelProgressBar Component', () => {
     expect(screen.getByText('Nível 21')).toBeInTheDocument();
     expect(screen.getByText('Nota 1000')).toBeInTheDocument();
   });
+
+  it('displays "Próxima meta: Nível X" when current title matches next level title', () => {
+    render(<LevelProgressBar currentXp={450} currentLevel={3} />);
+
+    expect(screen.getByText('Próxima meta: Nível 4')).toBeInTheDocument();
+  });
+
+  it('displays "Próximo: {Title} (Nível X)" when reaching tier transition', () => {
+    render(<LevelProgressBar currentXp={750} currentLevel={4} />);
+
+    expect(screen.getByText('Próximo: Focado no SISU (Nível 5)')).toBeInTheDocument();
+  });
 });

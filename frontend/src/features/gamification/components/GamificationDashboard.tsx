@@ -246,6 +246,7 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
         onClose={() => setIsCelebrationOpen(false)}
         level={profile.level}
         levelTitle={profile.levelTitle}
+        onContinuePractice={onStartPractice}
       />
     </div>
   );

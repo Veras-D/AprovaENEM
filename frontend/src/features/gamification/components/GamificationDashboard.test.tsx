@@ -70,6 +70,25 @@ describe('GamificationDashboard Component', () => {
     expect(handleStartPractice).toHaveBeenCalledTimes(1);
   });
 
+  it('calls onStartPractice when clicking "Continuar Estudando" inside celebration modal', () => {
+    const handleStartPractice = vi.fn();
+    renderWithProviders(
+      <GamificationDashboard profile={mockProfile} onStartPractice={handleStartPractice} />
+    );
+
+    const celebrateBtn = screen.getByRole('button', {
+      name: /Ver comemoração de subida de nível/i,
+    });
+    fireEvent.click(celebrateBtn);
+
+    const continueBtn = screen.getByRole('button', { name: /Continuar Estudando/i });
+    expect(continueBtn).toBeInTheDocument();
+    fireEvent.click(continueBtn);
+
+    expect(handleStartPractice).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
   it('switches to the leaderboard tab when clicking "Ranking da Liga" tab', () => {
     renderWithProviders(<GamificationDashboard profile={mockProfile} />);
 

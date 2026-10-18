@@ -37,7 +37,28 @@ describe('CelebrationOverlay Component', () => {
     expect(screen.getByText('Nível 5 Alcançado!')).toBeInTheDocument();
     expect(screen.getByText('Focado no SISU')).toBeInTheDocument();
     expect(screen.getByText(/\+50 XP/i)).toBeInTheDocument();
-    expect(screen.getByTestId('confetti-container')).toBeInTheDocument();
+    const confettiContainer = screen.getByTestId('confetti-container');
+    expect(confettiContainer).toBeInTheDocument();
+    const particle = confettiContainer.querySelector('.animate-confetti');
+    expect(particle).toBeInTheDocument();
+  });
+
+  it('calls onContinuePractice when provided and CTA button is clicked', () => {
+    const handleContinuePractice = vi.fn();
+    render(
+      <CelebrationOverlay
+        isOpen={true}
+        onClose={handleClose}
+        level={5}
+        levelTitle="Focado no SISU"
+        onContinuePractice={handleContinuePractice}
+      />
+    );
+
+    const ctaBtn = screen.getByRole('button', { name: /Continuar Estudando/i });
+    fireEvent.click(ctaBtn);
+    expect(handleClose).toHaveBeenCalledTimes(1);
+    expect(handleContinuePractice).toHaveBeenCalledTimes(1);
   });
 
   it('calls onClose when close button, backdrop, or CTA button is clicked', () => {

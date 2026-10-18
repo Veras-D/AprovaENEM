@@ -106,3 +106,24 @@ body {
   color: var(--brand-primary) !important;
   font-weight: 700 !important;
 }
+
+/* Cascading Confetti Shower Animation */
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-30px) rotate(0deg);
+    opacity: 1;
+  }
+  85% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(105vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.animate-confetti {
+  animation-name: confetti-fall;
+  animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation-fill-mode: forwards;
+}

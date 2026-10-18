@@ -13,6 +13,7 @@ export interface CelebrationOverlayProps {
   readonly awardedXp?: number;
   readonly xpAwarded?: number;
   readonly className?: string;
+  readonly onContinuePractice?: () => void;
 }
 
 interface Particle {
@@ -44,6 +45,7 @@ export const CelebrationOverlay: React.FC<CelebrationOverlayProps> = ({
   awardedXp: propAwardedXp,
   xpAwarded,
   className = '',
+  onContinuePractice,
 }) => {
   const awardedXp = propAwardedXp ?? xpAwarded ?? 50;
   const modalRef = useRef<HTMLDivElement>(null);
@@ -120,15 +122,15 @@ export const CelebrationOverlay: React.FC<CelebrationOverlayProps> = ({
           {particles.map((p) => (
             <div
               key={p.id}
-              className="absolute top-0 rounded-xs animate-bounce"
+              className="absolute rounded-xs animate-confetti"
               style={{
                 left: `${p.left}%`,
+                top: '-30px',
                 width: `${p.size}px`,
                 height: `${p.size * 1.4}px`,
                 backgroundColor: p.color,
                 animationDelay: `${p.delay}s`,
                 animationDuration: `${p.duration}s`,
-                transform: `rotate(${p.id * 25}deg)`,
               }}
             />
           ))}
@@ -199,7 +201,10 @@ export const CelebrationOverlay: React.FC<CelebrationOverlayProps> = ({
             type="button"
             variant="primary"
             size="lg"
-            onClick={onClose}
+            onClick={() => {
+              onClose();
+              onContinuePractice?.();
+            }}
             className="w-full text-sm font-bold shadow-md shadow-brand-primary/20"
           >
             Continuar Estudando

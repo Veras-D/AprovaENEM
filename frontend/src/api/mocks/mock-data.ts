@@ -378,9 +378,9 @@ export const MOCK_SOCRATIC_THREAD: SocraticThreadDto = {
 
 export const MOCK_GAMIFICATION_PROFILE: GamificationProfileDto = {
   userId: 'usr-123',
-  currentXp: 350,
+  currentXp: 450,
   level: 3,
-  levelTitle: 'Calouro Dedicado',
+  levelTitle: 'Calouro Iniciante',
   currentStreakDays: 5,
   longestStreakDays: 14,
   streakFreezeAvailable: true,
