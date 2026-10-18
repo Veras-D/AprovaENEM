@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Trophy,
   Target,
-  Sparkles,
   CheckCircle2,
   BookOpen,
 } from 'lucide-react';
@@ -23,6 +22,8 @@ export interface GamificationDashboardProps {
   readonly className?: string;
   readonly onStartPractice?: () => void;
   readonly defaultTab?: 'overview' | 'leaderboard';
+  readonly showCelebration?: boolean;
+  readonly onCelebrationClose?: () => void;
 }
 
 export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
@@ -30,10 +31,18 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
   className = '',
   onStartPractice,
   defaultTab = 'overview',
+  showCelebration,
+  onCelebrationClose,
 }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'leaderboard'>(defaultTab);
-  const [isCelebrationOpen, setIsCelebrationOpen] = useState<boolean>(false);
+  const [internalCelebrationOpen, setInternalCelebrationOpen] = useState<boolean>(false);
+  const isCelebrationOpen = showCelebration ?? internalCelebrationOpen;
   const profileQuery = useGamificationProfileQuery();
+
+  const handleCelebrationClose = () => {
+    setInternalCelebrationOpen(false);
+    onCelebrationClose?.();
+  };
 
   const profile = propProfile || profileQuery.data || MOCK_GAMIFICATION_PROFILE;
   const isDailyGoalReached = profile.dailyGoalProgress >= profile.dailyGoalTarget;
@@ -79,9 +88,9 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
           </div>
         </div>
 
-        {/* Level-up Celebratory Animation Trigger & Practice Navigation */}
-        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-          {onStartPractice && (
+        {/* Practice Navigation */}
+        {onStartPractice && (
+          <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
             <Button
               type="button"
               variant="primary"
@@ -93,19 +102,8 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
               <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
               Praticar Questões
             </Button>
-          )}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setIsCelebrationOpen(true)}
-            className="text-xs gap-1.5 border-amber-400/40 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40"
-            aria-label="Comemorar Nível: Ver comemoração de subida de nível"
-          >
-            <Sparkles className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
-            Comemorar Nível
-          </Button>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Navigation Tabs (Meu Progresso vs Ranking da Liga) */}
@@ -243,7 +241,7 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
       {/* Level-Up Celebration Modal Overlay */}
       <CelebrationOverlay
         isOpen={isCelebrationOpen}
-        onClose={() => setIsCelebrationOpen(false)}
+        onClose={handleCelebrationClose}
         level={profile.level}
         levelTitle={profile.levelTitle}
         onContinuePractice={onStartPractice}

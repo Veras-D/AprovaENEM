@@ -43,13 +43,16 @@ describe('GamificationDashboard Component', () => {
     expect(screen.getByText('Concluída!')).toBeInTheDocument();
   });
 
-  it('opens celebration overlay when clicking "Comemorar Nível" button', () => {
+  it('does not render manual QA "Comemorar Nível" button in header', () => {
     renderWithProviders(<GamificationDashboard profile={mockProfile} />);
 
-    const celebrateBtn = screen.getByRole('button', {
-      name: /Ver comemoração de subida de nível/i,
-    });
-    fireEvent.click(celebrateBtn);
+    expect(
+      screen.queryByRole('button', { name: /Comemorar Nível/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders celebration overlay when showCelebration is true', () => {
+    renderWithProviders(<GamificationDashboard profile={mockProfile} showCelebration={true} />);
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText('Nível 5 Alcançado!')).toBeInTheDocument();
@@ -70,23 +73,25 @@ describe('GamificationDashboard Component', () => {
     expect(handleStartPractice).toHaveBeenCalledTimes(1);
   });
 
-  it('calls onStartPractice when clicking "Continuar Estudando" inside celebration modal', () => {
+  it('calls onStartPractice and onCelebrationClose when clicking "Continuar Estudando" inside celebration modal', () => {
     const handleStartPractice = vi.fn();
+    const handleCelebrationClose = vi.fn();
     renderWithProviders(
-      <GamificationDashboard profile={mockProfile} onStartPractice={handleStartPractice} />
+      <GamificationDashboard
+        profile={mockProfile}
+        showCelebration={true}
+        onStartPractice={handleStartPractice}
+        onCelebrationClose={handleCelebrationClose}
+      />
     );
 
-    const celebrateBtn = screen.getByRole('button', {
-      name: /Ver comemoração de subida de nível/i,
-    });
-    fireEvent.click(celebrateBtn);
-
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
     const continueBtn = screen.getByRole('button', { name: /Continuar Estudando/i });
     expect(continueBtn).toBeInTheDocument();
     fireEvent.click(continueBtn);
 
     expect(handleStartPractice).toHaveBeenCalledTimes(1);
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(handleCelebrationClose).toHaveBeenCalledTimes(1);
   });
 
   it('switches to the leaderboard tab when clicking "Ranking da Liga" tab', () => {
