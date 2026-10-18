@@ -19,7 +19,6 @@ import {
   type LeagueTier,
   LEAGUE_CONFIGS,
   LEAGUE_TIERS_ORDER,
-  isLeagueLocked,
   isLeagueCompleted,
   getZoneStatus,
   calculateTimeRemaining,
@@ -60,13 +59,7 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
     return initialLeague;
   }, [propData, initialLeague]);
 
-  const [selectedLeague, setSelectedLeague] = useState<LeagueTier>(userLeague);
   const leaderboardQuery = useLeaderboardQuery();
-
-  // Keep selectedLeague in sync when userLeague changes
-  useEffect(() => {
-    setSelectedLeague(userLeague);
-  }, [userLeague]);
 
   // Reset target: default to next Sunday 23:59:59 BRT
   const defaultResetDate = useMemo(() => getNextSundayReset(), []);
@@ -84,22 +77,20 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
     return () => clearInterval(interval);
   }, [propData?.resetsAt, defaultResetDate]);
 
-  const isViewingUserLeague = selectedLeague === userLeague;
-
-  // Determine active league dataset (only used when viewing user's active league)
+  // Determine active league dataset for user's division
   const activeDataset: LeaderboardResponseDto = useMemo(() => {
-    if (propData && (propData.league === selectedLeague || propData.leagueTier === selectedLeague)) {
+    if (propData && (propData.league === userLeague || propData.leagueTier === userLeague)) {
       return propData;
     }
     if (
       leaderboardQuery.data &&
-      (leaderboardQuery.data.league === selectedLeague ||
-        leaderboardQuery.data.leagueTier === selectedLeague)
+      (leaderboardQuery.data.league === userLeague ||
+        leaderboardQuery.data.leagueTier === userLeague)
     ) {
       return leaderboardQuery.data;
     }
-    return MOCK_LEAGUE_LEADERBOARDS[selectedLeague] || MOCK_LEAGUE_LEADERBOARDS.GOLD;
-  }, [propData, leaderboardQuery.data, selectedLeague]);
+    return MOCK_LEAGUE_LEADERBOARDS[userLeague] || MOCK_LEAGUE_LEADERBOARDS.GOLD;
+  }, [propData, leaderboardQuery.data, userLeague]);
 
   // Normalize entries: compute rank & isCurrentUser
   const entries = useMemo(() => {
@@ -122,8 +113,8 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
   }, [activeDataset, currentUserId]);
 
   const totalParticipants = activeDataset.totalParticipants || entries.length;
-  const currentConfig = LEAGUE_CONFIGS[selectedLeague];
-  const TierIcon = TIER_ICONS[selectedLeague];
+  const currentConfig = LEAGUE_CONFIGS[userLeague];
+  const TierIcon = TIER_ICONS[userLeague];
 
   // Current user entry in this league (if present)
   const currentUserEntry = useMemo(
@@ -150,30 +141,12 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
               <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-slate-100">
                 {currentConfig.name}
               </h2>
-              {isViewingUserLeague ? (
-                <Badge
-                  variant="outline"
-                  className={`${currentConfig.badgeBg} ${currentConfig.badgeText} ${currentConfig.borderColor} text-xs py-0 px-2 font-bold uppercase tracking-wider`}
-                >
-                  Sua Divisão
-                </Badge>
-              ) : isLeagueLocked(selectedLeague, userLeague) ? (
-                <Badge
-                  variant="outline"
-                  className="bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-500/40 text-xs py-0 px-2 font-bold uppercase tracking-wider inline-flex items-center gap-1"
-                >
-                  <Lock className="h-3 w-3" aria-hidden="true" />
-                  Divisão Bloqueada
-                </Badge>
-              ) : (
-                <Badge
-                  variant="outline"
-                  className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-500/40 text-xs py-0 px-2 font-bold uppercase tracking-wider inline-flex items-center gap-1"
-                >
-                  <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
-                  Divisão Concluída
-                </Badge>
-              )}
+              <Badge
+                variant="outline"
+                className={`${currentConfig.badgeBg} ${currentConfig.badgeText} ${currentConfig.borderColor} text-xs py-0 px-2 font-bold uppercase tracking-wider`}
+              >
+                Sua Divisão
+              </Badge>
             </div>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
               {currentConfig.description}
@@ -195,143 +168,115 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
         </div>
       </div>
 
-      {/* League Tier Switcher Tabs */}
+      {/* Minimalist League Progression Track (Non-clickable, mystery next league) */}
       <div
-        className="grid grid-cols-2 sm:grid-cols-4 gap-2"
-        role="tablist"
-        aria-label="Selecionar liga semanal"
+        className="p-3 sm:p-4 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-3"
+        aria-label="Jornada das Ligas"
       >
-        {LEAGUE_TIERS_ORDER.map((tier) => {
-          const config = LEAGUE_CONFIGS[tier];
-          const Icon = TIER_ICONS[tier];
-          const isSelected = selectedLeague === tier;
-          const isThisUserLeague = userLeague === tier;
-          const isLocked = isLeagueLocked(tier, userLeague);
-          const isCompleted = isLeagueCompleted(tier, userLeague);
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs">
+          <span className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+            <Trophy className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
+            Jornada das Ligas
+          </span>
+          <span className="text-slate-500 dark:text-slate-400 text-[11px]">
+            {userLeague === 'DIAMOND'
+              ? 'Divisão Máxima alcançada! Defenda seu lugar entre os melhores.'
+              : 'Termine a semana no Top 20% para revelar e desbloquear a próxima liga'}
+          </span>
+        </div>
 
-          return (
-            <button
-              key={tier}
-              type="button"
-              role="tab"
-              aria-selected={isSelected}
-              onClick={() => setSelectedLeague(tier)}
-              className={`p-3 rounded-brand border text-left transition-all flex flex-col justify-between gap-2 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-primary cursor-pointer ${
-                isSelected
-                  ? 'border-brand-primary bg-brand-primary/5 dark:bg-brand-primary/10 ring-2 ring-brand-primary/20 shadow-xs font-bold'
-                  : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className={`p-1.5 rounded-full ${config.badgeBg} ${config.badgeText}`}>
-                  <Icon className="h-4 w-4" aria-hidden="true" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {LEAGUE_TIERS_ORDER.map((tier) => {
+            const config = LEAGUE_CONFIGS[tier];
+            const isCompleted = isLeagueCompleted(tier, userLeague);
+            const isCurrent = tier === userLeague;
+            const StepIcon = TIER_ICONS[tier];
+
+            if (isCompleted) {
+              return (
+                <div
+                  key={tier}
+                  className="p-2.5 rounded-brand border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/30 flex items-center gap-2.5"
+                >
+                  <div className="h-7 w-7 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="block text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
+                      {config.shortName}
+                    </span>
+                    <span className="block text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                      Concluída ✓
+                    </span>
+                  </div>
                 </div>
-                {isThisUserLeague ? (
-                  <Badge variant="outline" className="text-[10px] py-0 px-1 bg-brand-primary/10 text-brand-primary border-brand-primary/30 font-semibold">
-                    Sua Liga
-                  </Badge>
-                ) : isCompleted ? (
-                  <Badge variant="outline" className="text-[10px] py-0 px-1 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 font-semibold inline-flex items-center gap-0.5">
-                    <CheckCircle2 className="h-2.5 w-2.5" aria-hidden="true" />
-                    Concluída
-                  </Badge>
-                ) : isLocked ? (
-                  <Badge variant="outline" className="text-[10px] py-0 px-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-700 font-semibold inline-flex items-center gap-0.5">
-                    <Lock className="h-2.5 w-2.5" aria-hidden="true" />
+              );
+            }
+
+            if (isCurrent) {
+              return (
+                <div
+                  key={tier}
+                  className="p-2.5 rounded-brand border-2 border-brand-primary bg-brand-primary/10 dark:bg-brand-primary/15 flex items-center gap-2.5 shadow-xs"
+                >
+                  <div className={`h-7 w-7 rounded-full ${config.badgeBg} ${config.badgeText} flex items-center justify-center shrink-0 shadow-2xs`}>
+                    <StepIcon className="h-4 w-4" aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="block text-xs font-black text-slate-900 dark:text-slate-100 truncate">
+                      {config.shortName}
+                    </span>
+                    <span className="block text-[10px] text-brand-primary font-bold">
+                      Sua Liga
+                    </span>
+                  </div>
+                </div>
+              );
+            }
+
+            // Locked / Future Tier — Name and details hidden to stimulate user curiosity
+            return (
+              <div
+                key={tier}
+                className="p-2.5 rounded-brand border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/40 dark:bg-slate-900/40 flex items-center gap-2.5 opacity-75"
+              >
+                <div className="h-7 w-7 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center shrink-0">
+                  <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                </div>
+                <div className="min-w-0">
+                  <span className="block text-xs font-mono font-bold text-slate-500 dark:text-slate-400 tracking-wider">
+                    ???
+                  </span>
+                  <span className="block text-[10px] text-slate-400 dark:text-slate-500 font-medium">
                     Bloqueada
-                  </Badge>
-                ) : null}
+                  </span>
+                </div>
               </div>
-              <div>
-                <span className="block text-sm font-bold text-slate-900 dark:text-slate-100">
-                  {config.shortName}
-                </span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                  {isThisUserLeague
-                    ? 'Sua divisão ativa'
-                    : isCompleted
-                    ? 'Divisão superada'
-                    : isLocked
-                    ? 'Requer classificação'
-                    : tier === 'DIAMOND'
-                    ? 'Top Liga'
-                    : 'Top 20% classificam'}
-                </span>
-              </div>
-            </button>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
-      {!isViewingUserLeague ? (
-        /* Locked / Restricted View for non-active leagues (avoids leaking participants) */
-        <div
-          className="p-8 sm:p-12 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-center shadow-xs flex flex-col items-center justify-center space-y-4"
-          role="status"
-          aria-live="polite"
-        >
-          {isLeagueLocked(selectedLeague, userLeague) ? (
-            <>
-              <div className="h-16 w-16 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700/60 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-xs">
-                <Lock className="h-8 w-8" aria-hidden="true" />
-              </div>
-              <div className="max-w-md space-y-2">
-                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">
-                  Classificação Bloqueada
-                </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Os participantes da <strong>{currentConfig.name}</strong> são exclusivos desta divisão. Para desbloquear o acesso e disputar nesta liga, termine a semana na{' '}
-                  <strong className="text-emerald-700 dark:text-emerald-400">Zona de Classificação (Top 20%)</strong> da sua liga atual.
-                </p>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="h-16 w-16 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-xs">
-                <CheckCircle2 className="h-8 w-8" aria-hidden="true" />
-              </div>
-              <div className="max-w-md space-y-2">
-                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">
-                  Divisão Concluída
-                </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Você já superou esta divisão e atualmente compete na{' '}
-                  <strong className="text-brand-primary">{LEAGUE_CONFIGS[userLeague].name}</strong>. A classificação das divisões anteriores é exclusiva para os estudantes em disputa ativa nelas.
-                </p>
-              </div>
-            </>
+      {/* Classification / Contention / Reinforcement Zone Legend */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-brand bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 text-xs">
+        <div className="flex flex-wrap items-center gap-3">
+          {userLeague !== 'DIAMOND' && (
+            <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-medium">
+              <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />
+              Zona de Classificação (Top 20%)
+            </span>
           )}
-          <button
-            type="button"
-            onClick={() => setSelectedLeague(userLeague)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-brand bg-brand-primary text-brand-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity cursor-pointer shadow-xs focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-primary"
-          >
-            <Trophy className="h-4 w-4" aria-hidden="true" />
-            Voltar para Minha Liga ({LEAGUE_CONFIGS[userLeague].shortName})
-          </button>
+          <span className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400">
+            <Minus className="h-3.5 w-3.5" aria-hidden="true" />
+            Na Disputa
+          </span>
+          {userLeague !== 'BRONZE' && (
+            <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400 font-medium">
+              <TrendingDown className="h-3.5 w-3.5" aria-hidden="true" />
+              Zona de Reforço (Últimos 10%)
+            </span>
+          )}
         </div>
-      ) : (
-        <>
-          {/* Classification / Contention / Reinforcement Zone Legend */}
-          <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-brand bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 text-xs">
-            <div className="flex flex-wrap items-center gap-3">
-              {selectedLeague !== 'DIAMOND' && (
-                <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-medium">
-                  <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />
-                  Zona de Classificação (Top 20%)
-                </span>
-              )}
-              <span className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400">
-                <Minus className="h-3.5 w-3.5" aria-hidden="true" />
-                Na Disputa
-              </span>
-              {selectedLeague !== 'BRONZE' && (
-                <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400 font-medium">
-                  <TrendingDown className="h-3.5 w-3.5" aria-hidden="true" />
-                  Zona de Reforço (Últimos 10%)
-                </span>
-              )}
-            </div>
             <span className="text-slate-500 dark:text-slate-400 text-[11px] flex items-center gap-1">
               <Info className="h-3 w-3" aria-hidden="true" />
               {totalParticipants} participantes nesta liga
@@ -363,7 +308,7 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
                   {entries.map((entry) => {
-                    const zone = getZoneStatus(entry.rank, totalParticipants, selectedLeague);
+                    const zone = getZoneStatus(entry.rank, totalParticipants, userLeague);
                     const isTop1 = entry.rank === 1;
                     const isTop2 = entry.rank === 2;
                     const isTop3 = entry.rank === 3;
@@ -494,16 +439,14 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
                 </span>
               </div>
               <span className="text-brand-primary font-bold">
-                {getZoneStatus(currentUserEntry.rank, totalParticipants, selectedLeague) === 'PROMOTION'
+                {getZoneStatus(currentUserEntry.rank, totalParticipants, userLeague) === 'PROMOTION'
                   ? '🎉 Você está na Zona de Classificação!'
-                  : getZoneStatus(currentUserEntry.rank, totalParticipants, selectedLeague) === 'RELEGATION'
+                  : getZoneStatus(currentUserEntry.rank, totalParticipants, userLeague) === 'RELEGATION'
                   ? '💡 Pratique mais questões no Reforço para virar o jogo!'
                   : '💪 Você está na disputa! Continue firme para alcançar a classificação!'}
               </span>
             </div>
           )}
-        </>
-      )}
     </div>
   );
 };

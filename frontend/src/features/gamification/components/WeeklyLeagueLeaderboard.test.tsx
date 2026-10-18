@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WeeklyLeagueLeaderboard } from './WeeklyLeagueLeaderboard';
 import { MOCK_LEAGUE_LEADERBOARDS } from '@/api/mocks/mock-data';
@@ -18,7 +18,7 @@ describe('WeeklyLeagueLeaderboard Component', () => {
     return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
   };
 
-  it('renders default Gold league with countdown timer, tier tabs, and ranked students with exact zones', () => {
+  it('renders default Gold league with countdown timer, minimalist progression track, and ranked students with exact zones', () => {
     renderWithProviders(
       <WeeklyLeagueLeaderboard
         initialLeague="GOLD"
@@ -34,14 +34,22 @@ describe('WeeklyLeagueLeaderboard Component', () => {
     // Reset countdown widget
     expect(screen.getByText('Reinício do Ranking')).toBeInTheDocument();
 
-    // 4 league tabs with appropriate status indicators
-    expect(screen.getByRole('tab', { name: /Bronze/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /Prata/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /Ouro/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /Diamante/i })).toBeInTheDocument();
+    // Minimalist progression track:
+    // Completed leagues (Bronze, Prata)
+    expect(screen.getByText('Bronze')).toBeInTheDocument();
+    expect(screen.getByText('Prata')).toBeInTheDocument();
+    expect(screen.getAllByText('Concluída ✓')).toHaveLength(2);
 
-    // Active league badge on Ouro
-    expect(screen.getByText('Sua Divisão')).toBeInTheDocument();
+    // Active league (Ouro)
+    expect(screen.getByText('Ouro')).toBeInTheDocument();
+    expect(screen.getByText('Sua Liga')).toBeInTheDocument();
+
+    // Next league (Diamante) is strictly HIDDEN as mystery '???'
+    expect(screen.getByText('???')).toBeInTheDocument();
+    expect(screen.queryByText('Diamante')).not.toBeInTheDocument();
+
+    // Tiers are non-clickable: no tab buttons exist
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
 
     // Highlighted current user (Lucas Silva)
     expect(screen.getByText('Lucas Silva')).toBeInTheDocument();
@@ -65,7 +73,7 @@ describe('WeeklyLeagueLeaderboard Component', () => {
     expect(relegationBadges).toHaveLength(1);
   });
 
-  it('restricts visibility of higher leagues (locked) and does not leak participant names or XP', () => {
+  it('hides the next league as a mystery locked tier (???) to stimulate user curiosity and progression', () => {
     renderWithProviders(
       <WeeklyLeagueLeaderboard
         initialLeague="GOLD"
@@ -74,33 +82,18 @@ describe('WeeklyLeagueLeaderboard Component', () => {
       />
     );
 
-    // Click Diamante tab (which is locked for a Gold user)
-    const diamondTab = screen.getByRole('tab', { name: /Diamante/i });
-    fireEvent.click(diamondTab);
+    // The next league identity is completely hidden
+    expect(screen.queryByText('Diamante')).not.toBeInTheDocument();
+    expect(screen.getByText('???')).toBeInTheDocument();
+    expect(screen.getByText('Bloqueada')).toBeInTheDocument();
 
-    // Header updates to Liga Diamante with Divisão Bloqueada badge
-    expect(screen.getByRole('heading', { level: 2, name: 'Liga Diamante' })).toBeInTheDocument();
-    expect(screen.getByText('Divisão Bloqueada')).toBeInTheDocument();
-
-    // Locked explanation is displayed
-    expect(screen.getByRole('heading', { level: 3, name: 'Classificação Bloqueada' })).toBeInTheDocument();
-    expect(screen.getByText(/Os participantes da/i)).toBeInTheDocument();
-
-    // Diamond students are STRICTLY NOT rendered
-    expect(screen.queryByText('Arthur Nogueira')).not.toBeInTheDocument();
-    expect(screen.queryByText('Yasmin Vasconcelos')).not.toBeInTheDocument();
-
-    // Click "Voltar para Minha Liga"
-    const returnButton = screen.getByRole('button', { name: /Voltar para Minha Liga/i });
-    fireEvent.click(returnButton);
-
-    // Restores Gold league and shows active participants again
-    expect(screen.getByRole('heading', { level: 2, name: 'Liga Ouro' })).toBeInTheDocument();
-    expect(screen.getByText('Beatriz Costa')).toBeInTheDocument();
-    expect(screen.getByText('Lucas Silva')).toBeInTheDocument();
+    // Explanatory encouragement is present
+    expect(
+      screen.getByText(/Termine a semana no Top 20% para revelar e desbloquear a próxima liga/i)
+    ).toBeInTheDocument();
   });
 
-  it('restricts visibility of lower leagues (completed) and does not leak participant names or XP', () => {
+  it('exclusively renders rankings for the student active division and protects privacy across tiers', () => {
     renderWithProviders(
       <WeeklyLeagueLeaderboard
         initialLeague="GOLD"
@@ -109,28 +102,18 @@ describe('WeeklyLeagueLeaderboard Component', () => {
       />
     );
 
-    // Click Prata tab (which is completed for a Gold user)
-    const silverTab = screen.getByRole('tab', { name: /Prata/i });
-    fireEvent.click(silverTab);
+    // Tiers are static and non-clickable (zero tab buttons)
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
 
-    // Header updates to Liga Prata with Divisão Concluída badge
-    expect(screen.getByRole('heading', { level: 2, name: 'Liga Prata' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 3, name: 'Divisão Concluída' })).toBeInTheDocument();
-
-    // Completed explanation is displayed
-    expect(screen.getByText(/Você já superou esta divisão e atualmente compete na/i)).toBeInTheDocument();
-
-    // Silver students are STRICTLY NOT rendered
-    expect(screen.queryByText('Rodrigo Alencar')).not.toBeInTheDocument();
-    expect(screen.queryByText('Fernanda Neves')).not.toBeInTheDocument();
-
-    // Click "Voltar para Minha Liga"
-    const returnButton = screen.getByRole('button', { name: /Voltar para Minha Liga/i });
-    fireEvent.click(returnButton);
-
-    // Restores Gold league
-    expect(screen.getByRole('heading', { level: 2, name: 'Liga Ouro' })).toBeInTheDocument();
+    // Gold active cohort is rendered
     expect(screen.getByText('Beatriz Costa')).toBeInTheDocument();
+    expect(screen.getByText('Lucas Silva')).toBeInTheDocument();
+
+    // Students from other leagues are strictly NEVER rendered
+    expect(screen.queryByText('Arthur Nogueira')).not.toBeInTheDocument(); // Diamond
+    expect(screen.queryByText('Yasmin Vasconcelos')).not.toBeInTheDocument(); // Diamond
+    expect(screen.queryByText('Rodrigo Alencar')).not.toBeInTheDocument(); // Silver
+    expect(screen.queryByText('Fernanda Neves')).not.toBeInTheDocument(); // Silver
   });
 
   it('displays user position footer summary with promotion celebration message', () => {
