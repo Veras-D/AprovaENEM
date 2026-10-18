@@ -252,10 +252,10 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
                     : isCompleted
                     ? 'Divisão superada'
                     : isLocked
-                    ? 'Requer promoção'
+                    ? 'Requer classificação'
                     : tier === 'DIAMOND'
                     ? 'Top Liga'
-                    : 'Top 20% sobem'}
+                    : 'Top 20% classificam'}
                 </span>
               </div>
             </button>
@@ -281,7 +281,7 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
                 </h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400">
                   Os participantes da <strong>{currentConfig.name}</strong> são exclusivos desta divisão. Para desbloquear o acesso e disputar nesta liga, termine a semana na{' '}
-                  <strong className="text-emerald-700 dark:text-emerald-400">Zona de Promoção (Top 20%)</strong> da sua liga atual.
+                  <strong className="text-emerald-700 dark:text-emerald-400">Zona de Classificação (Top 20%)</strong> da sua liga atual.
                 </p>
               </div>
             </>
@@ -312,23 +312,23 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
         </div>
       ) : (
         <>
-          {/* Promotion / Relegation Zone Legend */}
+          {/* Classification / Contention / Reinforcement Zone Legend */}
           <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-brand bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 text-xs">
             <div className="flex flex-wrap items-center gap-3">
               {selectedLeague !== 'DIAMOND' && (
                 <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-medium">
                   <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />
-                  Zona de Promoção (Top 20%)
+                  Zona de Classificação (Top 20%)
                 </span>
               )}
               <span className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400">
                 <Minus className="h-3.5 w-3.5" aria-hidden="true" />
-                Zona de Permanência
+                Na Disputa
               </span>
               {selectedLeague !== 'BRONZE' && (
-                <span className="inline-flex items-center gap-1 text-rose-700 dark:text-rose-400 font-medium">
+                <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400 font-medium">
                   <TrendingDown className="h-3.5 w-3.5" aria-hidden="true" />
-                  Zona de Rebaixamento (Últimos 10%)
+                  Zona de Reforço (Últimos 10%)
                 </span>
               )}
             </div>
@@ -377,7 +377,7 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
                             : zone === 'PROMOTION'
                             ? 'hover:bg-emerald-50/40 dark:hover:bg-emerald-950/20'
                             : zone === 'RELEGATION'
-                            ? 'hover:bg-rose-50/40 dark:hover:bg-rose-950/20'
+                            ? 'hover:bg-amber-50/40 dark:hover:bg-amber-950/20'
                             : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/40'
                         }`}
                       >
@@ -453,16 +453,16 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
                               className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-xs py-0.5 px-2 inline-flex items-center gap-1"
                             >
                               <TrendingUp className="h-3 w-3 text-emerald-600" aria-hidden="true" />
-                              <span className="hidden sm:inline">Promoção</span>
+                              <span className="hidden sm:inline">Classificado</span>
                               <span className="sm:hidden">▲</span>
                             </Badge>
                           ) : zone === 'RELEGATION' ? (
                             <Badge
                               variant="outline"
-                              className="bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-500/30 text-xs py-0.5 px-2 inline-flex items-center gap-1"
+                              className="bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-500/30 text-xs py-0.5 px-2 inline-flex items-center gap-1"
                             >
-                              <TrendingDown className="h-3 w-3 text-rose-600" aria-hidden="true" />
-                              <span className="hidden sm:inline">Rebaixamento</span>
+                              <TrendingDown className="h-3 w-3 text-amber-600" aria-hidden="true" />
+                              <span className="hidden sm:inline">Reforço</span>
                               <span className="sm:hidden">▼</span>
                             </Badge>
                           ) : (
@@ -471,7 +471,7 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
                               className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-700 text-xs py-0.5 px-2 inline-flex items-center gap-1"
                             >
                               <Minus className="h-3 w-3" aria-hidden="true" />
-                              <span className="hidden sm:inline">Permanência</span>
+                              <span className="hidden sm:inline">Na Disputa</span>
                               <span className="sm:hidden">•</span>
                             </Badge>
                           )}
@@ -495,10 +495,10 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
               </div>
               <span className="text-brand-primary font-bold">
                 {getZoneStatus(currentUserEntry.rank, totalParticipants, selectedLeague) === 'PROMOTION'
-                  ? '🎉 Você está na Zona de Promoção!'
+                  ? '🎉 Você está na Zona de Classificação!'
                   : getZoneStatus(currentUserEntry.rank, totalParticipants, selectedLeague) === 'RELEGATION'
-                  ? '⚠️ Pratique mais questões para sair da Zona de Rebaixamento!'
-                  : '💪 Continue firme para alcançar a Zona de Promoção!'}
+                  ? '💡 Pratique mais questões no Reforço para virar o jogo!'
+                  : '💪 Você está na disputa! Continue firme para alcançar a classificação!'}
               </span>
             </div>
           )}

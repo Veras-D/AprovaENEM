@@ -52,16 +52,16 @@ describe('WeeklyLeagueLeaderboard Component', () => {
     expect(screen.getByText('Vanessa Moreira')).toBeInTheDocument();
 
     // Exact zone distributions for a 10-student cohort:
-    // Top 20% (ranks 1 & 2): Promoção (2 badges)
-    const promoBadges = screen.getAllByText('Promoção');
+    // Top 20% (ranks 1 & 2): Classificado (2 badges)
+    const promoBadges = screen.getAllByText('Classificado');
     expect(promoBadges).toHaveLength(2);
 
-    // Middle 70% (ranks 3 to 9): Permanência (7 badges)
-    const permanenceBadges = screen.getAllByText('Permanência');
-    expect(permanenceBadges).toHaveLength(7);
+    // Middle 70% (ranks 3 to 9): Na Disputa (7 badges in table + 1 in legend = 8 total)
+    const permanenceBadges = screen.getAllByText('Na Disputa');
+    expect(permanenceBadges).toHaveLength(8);
 
-    // Bottom 10% (rank 10): Rebaixamento (1 badge)
-    const relegationBadges = screen.getAllByText('Rebaixamento');
+    // Bottom 10% (rank 10): Reforço (1 badge in table; legend is "Zona de Reforço (Últimos 10%)")
+    const relegationBadges = screen.getAllByText('Reforço');
     expect(relegationBadges).toHaveLength(1);
   });
 
@@ -144,6 +144,6 @@ describe('WeeklyLeagueLeaderboard Component', () => {
 
     // User position footer summary
     expect(screen.getByText(/Sua posição nesta semana:/i)).toBeInTheDocument();
-    expect(screen.getByText(/Você está na Zona de Promoção!/i)).toBeInTheDocument();
+    expect(screen.getByText(/Você está na Zona de Classificação!/i)).toBeInTheDocument();
   });
 });
