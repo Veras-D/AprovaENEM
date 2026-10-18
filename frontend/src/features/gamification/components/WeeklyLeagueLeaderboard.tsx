@@ -336,19 +336,31 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
                         {/* Rank Position */}
                         <td className="py-3 px-3 sm:px-4 text-center font-mono">
                           {isTop1 ? (
-                            <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-amber-400 text-amber-950 font-black text-xs shadow-xs" title="1º Lugar">
-                              🥇
+                            <span
+                              className="inline-flex items-center justify-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700/60 text-amber-800 dark:text-amber-300 shadow-xs"
+                              title="1º Lugar — Campeão da Semana"
+                            >
+                              <Crown className="h-3.5 w-3.5 text-amber-500 fill-amber-400 shrink-0" aria-hidden="true" />
+                              <span className="text-xs font-black">1º</span>
                             </span>
                           ) : isTop2 ? (
-                            <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-slate-300 text-slate-900 font-black text-xs shadow-xs" title="2º Lugar">
-                              🥈
+                            <span
+                              className="inline-flex items-center justify-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 shadow-xs"
+                              title="2º Lugar — Prata"
+                            >
+                              <Medal className="h-3.5 w-3.5 text-slate-400 fill-slate-300 dark:fill-slate-500 shrink-0" aria-hidden="true" />
+                              <span className="text-xs font-black">2º</span>
                             </span>
                           ) : isTop3 ? (
-                            <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-amber-600 text-white font-black text-xs shadow-xs" title="3º Lugar">
-                              🥉
+                            <span
+                              className="inline-flex items-center justify-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-600/30 dark:border-amber-700/40 text-amber-900 dark:text-amber-400 shadow-xs"
+                              title="3º Lugar — Bronze"
+                            >
+                              <Medal className="h-3.5 w-3.5 text-amber-700 fill-amber-600/80 dark:fill-amber-600/60 shrink-0" aria-hidden="true" />
+                              <span className="text-xs font-black">3º</span>
                             </span>
                           ) : (
-                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                            <span className="inline-flex items-center justify-center w-8 text-xs font-bold text-slate-400 dark:text-slate-500">
                               {entry.rank}º
                             </span>
                           )}
