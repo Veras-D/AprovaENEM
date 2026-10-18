@@ -12,7 +12,6 @@ import {
   Medal,
   Info,
   Lock,
-  CheckCircle2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import {
@@ -198,8 +197,16 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
                   key={tier}
                   className="p-2.5 rounded-brand border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/30 flex items-center gap-2.5"
                 >
-                  <div className="h-7 w-7 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                    <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                  <div className="relative shrink-0">
+                    <div className={`h-7 w-7 rounded-full ${config.badgeBg} ${config.badgeText} flex items-center justify-center`}>
+                      <StepIcon className="h-4 w-4" aria-hidden="true" />
+                    </div>
+                    <span
+                      className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[8px] font-black shadow-xs ring-1 ring-white dark:ring-slate-900"
+                      title="Divisão Concluída"
+                    >
+                      ✓
+                    </span>
                   </div>
                   <div className="min-w-0">
                     <span className="block text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
