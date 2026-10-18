@@ -40,6 +40,61 @@ const TIER_ICONS: Record<LeagueTier, React.ElementType> = {
   DIAMOND: Sparkles,
 };
 
+const ACTIVE_TIER_STYLES: Record<
+  LeagueTier,
+  {
+    cardBg: string;
+    cardBorder: string;
+    iconRing: string;
+    badgeBg: string;
+    badgeText: string;
+    badgeBorder: string;
+    pulseColor: string;
+    titleColor: string;
+  }
+> = {
+  BRONZE: {
+    cardBg: 'bg-amber-50/80 dark:bg-amber-950/30',
+    cardBorder: 'border-amber-600/40 dark:border-amber-600/50',
+    iconRing: 'ring-2 ring-amber-600/40',
+    badgeBg: 'bg-amber-100 dark:bg-amber-900/50',
+    badgeText: 'text-amber-800 dark:text-amber-300',
+    badgeBorder: 'border-amber-600/30 dark:border-amber-700/40',
+    pulseColor: 'bg-amber-600',
+    titleColor: 'text-amber-900 dark:text-amber-200',
+  },
+  SILVER: {
+    cardBg: 'bg-slate-100/80 dark:bg-slate-800/40',
+    cardBorder: 'border-slate-400 dark:border-slate-500',
+    iconRing: 'ring-2 ring-slate-400/40',
+    badgeBg: 'bg-slate-200 dark:bg-slate-700',
+    badgeText: 'text-slate-800 dark:text-slate-200',
+    badgeBorder: 'border-slate-300 dark:border-slate-600',
+    pulseColor: 'bg-slate-400',
+    titleColor: 'text-slate-900 dark:text-slate-100',
+  },
+  GOLD: {
+    cardBg: 'bg-amber-50/80 dark:bg-amber-950/30',
+    cardBorder: 'border-amber-400/60 dark:border-amber-500/60',
+    iconRing: 'ring-2 ring-amber-400/50',
+    badgeBg: 'bg-amber-100 dark:bg-amber-900/50',
+    badgeText: 'text-amber-800 dark:text-amber-200',
+    badgeBorder: 'border-amber-300 dark:border-amber-700/50',
+    pulseColor: 'bg-amber-500',
+    titleColor: 'text-amber-950 dark:text-amber-100',
+  },
+  DIAMOND: {
+    cardBg: 'bg-cyan-50/80 dark:bg-cyan-950/30',
+    cardBorder: 'border-cyan-400/60 dark:border-cyan-500/60',
+    iconRing: 'ring-2 ring-cyan-400/50',
+    badgeBg: 'bg-cyan-100 dark:bg-cyan-900/50',
+    badgeText: 'text-cyan-800 dark:text-cyan-300',
+    badgeBorder: 'border-cyan-300 dark:border-cyan-700/50',
+    pulseColor: 'bg-cyan-500',
+    titleColor: 'text-cyan-950 dark:text-cyan-100',
+  },
+};
+
 export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = ({
   initialLeague = 'GOLD',
   leaderboardData: propData,
@@ -220,19 +275,33 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
             }
 
             if (isCurrent) {
+              const activeStyle = ACTIVE_TIER_STYLES[tier];
               return (
                 <div
                   key={tier}
-                  className="p-2.5 rounded-brand border-2 border-brand-primary bg-brand-primary/10 dark:bg-brand-primary/15 flex items-center gap-2.5 shadow-xs"
+                  className={`p-2.5 rounded-brand border ${activeStyle.cardBorder} ${activeStyle.cardBg} flex items-center gap-2.5 shadow-xs`}
                 >
-                  <div className={`h-7 w-7 rounded-full ${config.badgeBg} ${config.badgeText} flex items-center justify-center shrink-0 shadow-2xs`}>
-                    <StepIcon className="h-4 w-4" aria-hidden="true" />
+                  <div className="relative shrink-0">
+                    <div
+                      className={`h-7 w-7 rounded-full ${config.badgeBg} ${config.badgeText} ${activeStyle.iconRing} flex items-center justify-center`}
+                    >
+                      <StepIcon className="h-4 w-4" aria-hidden="true" />
+                    </div>
+                    <span
+                      className="absolute -top-0.5 -right-0.5 flex h-2 w-2"
+                      title="Sua divisão ativa"
+                    >
+                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${activeStyle.pulseColor} opacity-75`} />
+                      <span className={`relative inline-flex rounded-full h-2 w-2 ${activeStyle.pulseColor}`} />
+                    </span>
                   </div>
                   <div className="min-w-0">
-                    <span className="block text-xs font-black text-slate-900 dark:text-slate-100 truncate">
+                    <span className={`block text-xs font-black ${activeStyle.titleColor} truncate`}>
                       {config.shortName}
                     </span>
-                    <span className="block text-[10px] text-brand-primary font-bold">
+                    <span
+                      className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold ${activeStyle.badgeBg} ${activeStyle.badgeText} border ${activeStyle.badgeBorder} leading-none mt-0.5`}
+                    >
                       Sua Liga
                     </span>
                   </div>
