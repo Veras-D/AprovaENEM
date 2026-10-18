@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   LEAGUE_CONFIGS,
   LEAGUE_TIERS_ORDER,
+  isLeagueLocked,
+  isLeagueCompleted,
   getZoneStatus,
   calculateTimeRemaining,
   getNextSundayReset,
@@ -23,6 +25,21 @@ describe('leaderboard-utils', () => {
       expect(LEAGUE_CONFIGS.SILVER.canRelegate).toBe(true);
       expect(LEAGUE_CONFIGS.GOLD.canRelegate).toBe(true);
     });
+
+    it('determines if a league tier is locked or completed relative to user league', () => {
+      // User is in GOLD:
+      // BRONZE and SILVER are completed
+      expect(isLeagueCompleted('BRONZE', 'GOLD')).toBe(true);
+      expect(isLeagueCompleted('SILVER', 'GOLD')).toBe(true);
+      expect(isLeagueCompleted('GOLD', 'GOLD')).toBe(false);
+      expect(isLeagueCompleted('DIAMOND', 'GOLD')).toBe(false);
+
+      // DIAMOND is locked
+      expect(isLeagueLocked('DIAMOND', 'GOLD')).toBe(true);
+      expect(isLeagueLocked('GOLD', 'GOLD')).toBe(false);
+      expect(isLeagueLocked('SILVER', 'GOLD')).toBe(false);
+      expect(isLeagueLocked('BRONZE', 'GOLD')).toBe(false);
+    });
   });
 
   describe('getZoneStatus', () => {
@@ -34,10 +51,12 @@ describe('leaderboard-utils', () => {
       expect(getZoneStatus(2, 10, 'GOLD')).toBe('PROMOTION');
     });
 
-    it('returns MAINTENANCE for middle ranks', () => {
+    it('returns MAINTENANCE for middle ranks (ranks 3 to 9 in cohort of 10)', () => {
+      expect(getZoneStatus(3, 10, 'GOLD')).toBe('MAINTENANCE');
       expect(getZoneStatus(5, 10, 'BRONZE')).toBe('MAINTENANCE');
       expect(getZoneStatus(5, 10, 'SILVER')).toBe('MAINTENANCE');
       expect(getZoneStatus(5, 10, 'GOLD')).toBe('MAINTENANCE');
+      expect(getZoneStatus(9, 10, 'GOLD')).toBe('MAINTENANCE');
     });
 
     it('never relegates Bronze players even at the bottom', () => {
@@ -45,7 +64,7 @@ describe('leaderboard-utils', () => {
     });
 
     it('returns RELEGATION for bottom 10% in Silver, Gold, and Diamond', () => {
-      // 10 participants: rank 9 and 10 are bottom ranks
+      // 10 participants: rank 10 is bottom 10%
       expect(getZoneStatus(10, 10, 'SILVER')).toBe('RELEGATION');
       expect(getZoneStatus(10, 10, 'GOLD')).toBe('RELEGATION');
       expect(getZoneStatus(10, 10, 'DIAMOND')).toBe('RELEGATION');

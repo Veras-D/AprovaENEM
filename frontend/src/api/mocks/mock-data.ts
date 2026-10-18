@@ -397,7 +397,7 @@ export const MOCK_LEAGUE_LEADERBOARDS: Record<'BRONZE' | 'SILVER' | 'GOLD' | 'DI
     weekNumber: 42,
     year: 2026,
     resetsAt: '2026-10-18T23:59:59Z',
-    totalParticipants: 120,
+    totalParticipants: 10,
     entries: [
       { rank: 1, userId: 'usr-b1', studentName: 'Camila Fernandes', displayName: 'Camila Fernandes', weeklyXp: 480, streakDays: 4, promotionZone: true, isCurrentUser: false },
       { rank: 2, userId: 'usr-b2', studentName: 'Felipe Martins', displayName: 'Felipe Martins', weeklyXp: 410, streakDays: 3, promotionZone: true, isCurrentUser: false },
@@ -417,7 +417,7 @@ export const MOCK_LEAGUE_LEADERBOARDS: Record<'BRONZE' | 'SILVER' | 'GOLD' | 'DI
     weekNumber: 42,
     year: 2026,
     resetsAt: '2026-10-18T23:59:59Z',
-    totalParticipants: 85,
+    totalParticipants: 10,
     entries: [
       { rank: 1, userId: 'usr-s1', studentName: 'Rodrigo Alencar', displayName: 'Rodrigo Alencar', weeklyXp: 690, streakDays: 6, promotionZone: true, isCurrentUser: false },
       { rank: 2, userId: 'usr-s2', studentName: 'Fernanda Neves', displayName: 'Fernanda Neves', weeklyXp: 610, streakDays: 5, promotionZone: true, isCurrentUser: false },
@@ -437,7 +437,7 @@ export const MOCK_LEAGUE_LEADERBOARDS: Record<'BRONZE' | 'SILVER' | 'GOLD' | 'DI
     weekNumber: 42,
     year: 2026,
     resetsAt: '2026-10-18T23:59:59Z',
-    totalParticipants: 60,
+    totalParticipants: 10,
     entries: [
       { rank: 1, userId: 'usr-1', studentName: 'Beatriz Costa', displayName: 'Beatriz Costa', weeklyXp: 820, streakDays: 12, promotionZone: true, isCurrentUser: false },
       { rank: 2, userId: 'usr-123', studentName: 'Lucas Silva', displayName: 'Lucas Silva', weeklyXp: 750, streakDays: 7, promotionZone: true, isCurrentUser: true },
@@ -457,7 +457,7 @@ export const MOCK_LEAGUE_LEADERBOARDS: Record<'BRONZE' | 'SILVER' | 'GOLD' | 'DI
     weekNumber: 42,
     year: 2026,
     resetsAt: '2026-10-18T23:59:59Z',
-    totalParticipants: 35,
+    totalParticipants: 10,
     entries: [
       { rank: 1, userId: 'usr-d1', studentName: 'Arthur Nogueira', displayName: 'Arthur Nogueira', weeklyXp: 1450, streakDays: 32, promotionZone: false, isCurrentUser: false },
       { rank: 2, userId: 'usr-d2', studentName: 'Yasmin Vasconcelos', displayName: 'Yasmin Vasconcelos', weeklyXp: 1380, streakDays: 28, promotionZone: false, isCurrentUser: false },

@@ -18,7 +18,7 @@ describe('WeeklyLeagueLeaderboard Component', () => {
     return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
   };
 
-  it('renders default Gold league with countdown timer, tier tabs, and ranked students', () => {
+  it('renders default Gold league with countdown timer, tier tabs, and ranked students with exact zones', () => {
     renderWithProviders(
       <WeeklyLeagueLeaderboard
         initialLeague="GOLD"
@@ -34,21 +34,38 @@ describe('WeeklyLeagueLeaderboard Component', () => {
     // Reset countdown widget
     expect(screen.getByText('Reinício do Ranking')).toBeInTheDocument();
 
-    // 4 league tabs
+    // 4 league tabs with appropriate status indicators
     expect(screen.getByRole('tab', { name: /Bronze/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /Prata/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /Ouro/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /Diamante/i })).toBeInTheDocument();
 
+    // Active league badge on Ouro
+    expect(screen.getByText('Sua Divisão')).toBeInTheDocument();
+
     // Highlighted current user (Lucas Silva)
     expect(screen.getByText('Lucas Silva')).toBeInTheDocument();
     expect(screen.getByText('(Você)')).toBeInTheDocument();
 
-    // First place student
+    // Top students and bottom student
     expect(screen.getByText('Beatriz Costa')).toBeInTheDocument();
+    expect(screen.getByText('Vanessa Moreira')).toBeInTheDocument();
+
+    // Exact zone distributions for a 10-student cohort:
+    // Top 20% (ranks 1 & 2): Promoção (2 badges)
+    const promoBadges = screen.getAllByText('Promoção');
+    expect(promoBadges).toHaveLength(2);
+
+    // Middle 70% (ranks 3 to 9): Permanência (7 badges)
+    const permanenceBadges = screen.getAllByText('Permanência');
+    expect(permanenceBadges).toHaveLength(7);
+
+    // Bottom 10% (rank 10): Rebaixamento (1 badge)
+    const relegationBadges = screen.getAllByText('Rebaixamento');
+    expect(relegationBadges).toHaveLength(1);
   });
 
-  it('allows switching between league tiers via tabs', () => {
+  it('restricts visibility of higher leagues (locked) and does not leak participant names or XP', () => {
     renderWithProviders(
       <WeeklyLeagueLeaderboard
         initialLeague="GOLD"
@@ -57,20 +74,33 @@ describe('WeeklyLeagueLeaderboard Component', () => {
       />
     );
 
-    // Click Diamante tab
+    // Click Diamante tab (which is locked for a Gold user)
     const diamondTab = screen.getByRole('tab', { name: /Diamante/i });
     fireEvent.click(diamondTab);
 
-    // Header updates to Liga Diamante
-    expect(screen.getByText('Liga Diamante')).toBeInTheDocument();
-    expect(screen.getByText(/Elite dos vestibulandos/i)).toBeInTheDocument();
+    // Header updates to Liga Diamante with Divisão Bloqueada badge
+    expect(screen.getByRole('heading', { level: 2, name: 'Liga Diamante' })).toBeInTheDocument();
+    expect(screen.getByText('Divisão Bloqueada')).toBeInTheDocument();
 
-    // Diamond students are rendered
-    expect(screen.getByText('Arthur Nogueira')).toBeInTheDocument();
-    expect(screen.getByText('Yasmin Vasconcelos')).toBeInTheDocument();
+    // Locked explanation is displayed
+    expect(screen.getByRole('heading', { level: 3, name: 'Classificação Bloqueada' })).toBeInTheDocument();
+    expect(screen.getByText(/Os participantes da/i)).toBeInTheDocument();
+
+    // Diamond students are STRICTLY NOT rendered
+    expect(screen.queryByText('Arthur Nogueira')).not.toBeInTheDocument();
+    expect(screen.queryByText('Yasmin Vasconcelos')).not.toBeInTheDocument();
+
+    // Click "Voltar para Minha Liga"
+    const returnButton = screen.getByRole('button', { name: /Voltar para Minha Liga/i });
+    fireEvent.click(returnButton);
+
+    // Restores Gold league and shows active participants again
+    expect(screen.getByRole('heading', { level: 2, name: 'Liga Ouro' })).toBeInTheDocument();
+    expect(screen.getByText('Beatriz Costa')).toBeInTheDocument();
+    expect(screen.getByText('Lucas Silva')).toBeInTheDocument();
   });
 
-  it('displays promotion zone badge for top performers and footer summary for current user', () => {
+  it('restricts visibility of lower leagues (completed) and does not leak participant names or XP', () => {
     renderWithProviders(
       <WeeklyLeagueLeaderboard
         initialLeague="GOLD"
@@ -79,9 +109,38 @@ describe('WeeklyLeagueLeaderboard Component', () => {
       />
     );
 
-    // Promotion badges for top 20%
-    const promoBadges = screen.getAllByText(/Promoção/i);
-    expect(promoBadges.length).toBeGreaterThan(0);
+    // Click Prata tab (which is completed for a Gold user)
+    const silverTab = screen.getByRole('tab', { name: /Prata/i });
+    fireEvent.click(silverTab);
+
+    // Header updates to Liga Prata with Divisão Concluída badge
+    expect(screen.getByRole('heading', { level: 2, name: 'Liga Prata' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: 'Divisão Concluída' })).toBeInTheDocument();
+
+    // Completed explanation is displayed
+    expect(screen.getByText(/Você já superou esta divisão e atualmente compete na/i)).toBeInTheDocument();
+
+    // Silver students are STRICTLY NOT rendered
+    expect(screen.queryByText('Rodrigo Alencar')).not.toBeInTheDocument();
+    expect(screen.queryByText('Fernanda Neves')).not.toBeInTheDocument();
+
+    // Click "Voltar para Minha Liga"
+    const returnButton = screen.getByRole('button', { name: /Voltar para Minha Liga/i });
+    fireEvent.click(returnButton);
+
+    // Restores Gold league
+    expect(screen.getByRole('heading', { level: 2, name: 'Liga Ouro' })).toBeInTheDocument();
+    expect(screen.getByText('Beatriz Costa')).toBeInTheDocument();
+  });
+
+  it('displays user position footer summary with promotion celebration message', () => {
+    renderWithProviders(
+      <WeeklyLeagueLeaderboard
+        initialLeague="GOLD"
+        leaderboardData={MOCK_LEAGUE_LEADERBOARDS.GOLD}
+        currentUserId="usr-123"
+      />
+    );
 
     // User position footer summary
     expect(screen.getByText(/Sua posição nesta semana:/i)).toBeInTheDocument();

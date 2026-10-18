@@ -75,10 +75,34 @@ export const LEAGUE_CONFIGS: Record<LeagueTier, LeagueConfig> = {
 export const LEAGUE_TIERS_ORDER: readonly LeagueTier[] = ['BRONZE', 'SILVER', 'GOLD', 'DIAMOND'];
 
 /**
+ * Checks if target league is locked (higher tier than current user's league).
+ */
+export function isLeagueLocked(
+  targetLeague: LeagueTier,
+  userLeague: LeagueTier
+): boolean {
+  const targetIndex = LEAGUE_TIERS_ORDER.indexOf(targetLeague);
+  const userIndex = LEAGUE_TIERS_ORDER.indexOf(userLeague);
+  return targetIndex > userIndex;
+}
+
+/**
+ * Checks if target league is already completed (lower tier than current user's league).
+ */
+export function isLeagueCompleted(
+  targetLeague: LeagueTier,
+  userLeague: LeagueTier
+): boolean {
+  const targetIndex = LEAGUE_TIERS_ORDER.indexOf(targetLeague);
+  const userIndex = LEAGUE_TIERS_ORDER.indexOf(userLeague);
+  return targetIndex < userIndex;
+}
+
+/**
  * Computes whether a student at a given rank is in the Promotion, Maintenance, or Relegation zone.
- * - Promotion: Top 20% of the league (for Bronze, Silver, Gold).
- * - Relegation: Bottom 10% of the league (for Silver, Gold, Diamond). Bronze cannot relegate.
- * - Maintenance: Remaining ranks.
+ * - Promotion: Top 20% of the league cohort (for Bronze, Silver, Gold).
+ * - Relegation: Bottom 10% of the league cohort (for Silver, Gold, Diamond). Bronze cannot relegate.
+ * - Maintenance: Remaining intermediate ranks.
  */
 export function getZoneStatus(
   rank: number,
@@ -88,17 +112,20 @@ export function getZoneStatus(
   const safeTotal = Math.max(1, totalParticipants);
   const safeRank = Math.max(1, rank);
 
+  // Bottom 10% count (at least 1 student when cohort >= 5)
+  const bottomTenPercentCount = Math.max(1, Math.floor(safeTotal * 0.1));
+
   // Diamond is top league: no promotion available
   if (league === 'DIAMOND') {
-    const relegationThreshold = Math.max(2, Math.floor(safeTotal * 0.9));
+    const relegationThreshold = Math.max(2, safeTotal - bottomTenPercentCount + 1);
     if (safeTotal >= 5 && safeRank >= relegationThreshold) {
       return 'RELEGATION';
     }
     return 'MAINTENANCE';
   }
 
-  // Top 20% promotion threshold
-  const promotionCutoff = Math.max(1, Math.ceil(safeTotal * 0.2));
+  // Top 20% promotion threshold (e.g. for cohort of 10, ranks 1 & 2)
+  const promotionCutoff = Math.max(1, Math.floor(safeTotal * 0.2));
   if (safeRank <= promotionCutoff) {
     return 'PROMOTION';
   }
@@ -108,8 +135,11 @@ export function getZoneStatus(
     return 'MAINTENANCE';
   }
 
-  // Bottom 10% relegation threshold
-  const relegationCutoff = Math.max(promotionCutoff + 1, Math.floor(safeTotal * 0.9));
+  // Bottom 10% relegation threshold (e.g. for cohort of 10, rank 10)
+  const relegationCutoff = Math.max(
+    promotionCutoff + 1,
+    safeTotal - bottomTenPercentCount + 1
+  );
   if (safeTotal >= 5 && safeRank >= relegationCutoff) {
     return 'RELEGATION';
   }
