@@ -5,7 +5,7 @@ test.describe('Mobile Device Responsive Viewports & Touch Emulation', () => {
     await page.addInitScript(() => {
       window.localStorage.clear();
     });
-    await page.goto('/');
+    await page.goto('/?section=practice');
     await page.waitForLoadState('domcontentloaded');
   });
 

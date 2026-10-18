@@ -224,7 +224,7 @@ export const InstitutionalCohortView: React.FC<InstitutionalCohortViewProps> = (
               size="sm"
               onClick={() => setShowTableView((prev) => !prev)}
               className="text-xs gap-1.5"
-              aria-label={showTableView ? 'Ver radar da turma' : 'Ver tabela de médias'}
+              aria-label={showTableView ? 'Ver Gráfico: Ver radar da turma' : 'Ver Tabela: Ver tabela de médias'}
             >
               {showTableView ? (
                 <>

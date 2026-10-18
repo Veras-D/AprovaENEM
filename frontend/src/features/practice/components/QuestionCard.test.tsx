@@ -148,7 +148,7 @@ describe('QuestionCard Component', () => {
       />
     );
 
-    const flagBtn = screen.getByRole('button', { name: /marcar questão para revisar/i });
+    const flagBtn = screen.getByRole('button', { name: /marcar para revisão/i });
     expect(flagBtn).toHaveAttribute('aria-pressed', 'false');
     fireEvent.click(flagBtn);
     expect(handleToggleFlag).toHaveBeenCalledTimes(1);
@@ -164,7 +164,7 @@ describe('QuestionCard Component', () => {
       />
     );
 
-    const flaggedBtn = screen.getByRole('button', { name: /remover marcação da questão/i });
+    const flaggedBtn = screen.getByRole('button', { name: /marcada para revisão/i });
     expect(flaggedBtn).toHaveAttribute('aria-pressed', 'true');
   });
 

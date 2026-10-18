@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { Select, SelectOption } from './Select';
+import { Select, type SelectOption } from './Select';
 
 const sampleOptions: SelectOption[] = [
   { value: 'PUBLIC_SCHOOL', label: 'Escola Pública' },

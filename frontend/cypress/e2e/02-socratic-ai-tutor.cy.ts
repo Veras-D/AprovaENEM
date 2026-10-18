@@ -1,7 +1,7 @@
 describe('Socratic AI Tutor Drawer & Quota Widget E2E', () => {
   beforeEach(() => {
     cy.clearLocalStorage();
-    cy.visit('/', {
+    cy.visit('/?section=practice', {
       onBeforeLoad(win) {
         win.localStorage.setItem('aprovaenem_auth_token', 'mock-cypress-jwt-token');
         win.localStorage.setItem(

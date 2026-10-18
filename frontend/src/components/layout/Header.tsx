@@ -63,7 +63,6 @@ export const Header: React.FC<HeaderProps> = ({
             type="button"
             onClick={() => onNavigate?.('home')}
             className="flex items-center gap-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded-brand p-1 -m-1 transition-opacity hover:opacity-90"
-            aria-label={`Ir para a página inicial de ${currentTenant.name}`}
           >
             <img
               src={currentTenant.logoUrl}

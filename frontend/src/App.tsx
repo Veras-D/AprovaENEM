@@ -18,28 +18,71 @@ const queryClient = new QueryClient({
   },
 });
 
+const VALID_SECTIONS = ['home', 'practice', 'leaderboard', 'diagnostics'] as const;
+type SectionType = (typeof VALID_SECTIONS)[number];
+
+const getInitialSection = (): SectionType => {
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    const sectionParam = params.get('section');
+    if (sectionParam && (VALID_SECTIONS as readonly string[]).includes(sectionParam)) {
+      return sectionParam as SectionType;
+    }
+    const hash = window.location.hash.replace('#', '');
+    if (hash && (VALID_SECTIONS as readonly string[]).includes(hash)) {
+      return hash as SectionType;
+    }
+  }
+  return 'home';
+};
+
 export const App: React.FC = () => {
-  const [activeSection, setActiveSection] = useState<string>('home');
+  const [activeSection, setActiveSection] = useState<string>(getInitialSection);
 
   useEffect(() => {
     void useTenantStore.getState().resolveAndApplyTenant();
     useAuthStore.getState().syncAuthFromStorage();
   }, []);
 
+  const handleNavigate = (section: string) => {
+    setActiveSection(section);
+    if (typeof window !== 'undefined') {
+      try {
+        const url = new URL(window.location.href);
+        if (section === 'home') {
+          url.searchParams.delete('section');
+        } else {
+          url.searchParams.set('section', section);
+        }
+        window.history.pushState({}, '', url.toString());
+      } catch {
+        // Fallback for non-standard environments (e.g. test jsdom)
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setActiveSection(getInitialSection());
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
-      <RootLayout activeSection={activeSection} onNavigate={setActiveSection}>
+      <RootLayout activeSection={activeSection} onNavigate={handleNavigate}>
         {activeSection === 'home' ? (
           <LandingPage
-            onStartPractice={() => setActiveSection('practice')}
-            onNavigate={setActiveSection}
+            onStartPractice={() => handleNavigate('practice')}
+            onNavigate={handleNavigate}
           />
         ) : activeSection === 'leaderboard' ? (
-          <GamificationDashboard onStartPractice={() => setActiveSection('practice')} />
+          <GamificationDashboard onStartPractice={() => handleNavigate('practice')} />
         ) : activeSection === 'diagnostics' ? (
-          <DiagnosticDashboard onPracticeTopic={() => setActiveSection('practice')} />
+          <DiagnosticDashboard onPracticeTopic={() => handleNavigate('practice')} />
         ) : (
-          <PracticeHero onOpenGamification={() => setActiveSection('leaderboard')} />
+          <PracticeHero onOpenGamification={() => handleNavigate('leaderboard')} />
         )}
       </RootLayout>
     </QueryClientProvider>

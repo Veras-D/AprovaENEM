@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { Clock, AlertTriangle, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
@@ -28,13 +28,13 @@ export const TimeUpModal: React.FC<TimeUpModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
 
-  const handleDismiss = () => {
+  const handleDismiss = useCallback(() => {
     if (onClose) {
       onClose();
     } else {
       onContinue();
     }
-  };
+  }, [onClose, onContinue]);
 
   // Focus trap and Escape key handling (WCAG 2.1 AA)
   useEffect(() => {
@@ -73,7 +73,7 @@ export const TimeUpModal: React.FC<TimeUpModalProps> = ({
       window.removeEventListener('keydown', handleKeyDown);
       previouslyFocusedElement.current?.focus();
     };
-  }, [isOpen]);
+  }, [isOpen, handleDismiss]);
 
   if (!isOpen) return null;
 

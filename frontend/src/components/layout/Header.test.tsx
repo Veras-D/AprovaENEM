@@ -66,7 +66,7 @@ describe('Header component', () => {
     fireEvent.click(rankingBtn);
     expect(handleNavigate).toHaveBeenCalledWith('leaderboard');
 
-    const brandBtn = screen.getByRole('button', { name: /Ir para a página inicial de/i });
+    const brandBtn = screen.getByRole('button', { name: /AprovaENEM/i });
     fireEvent.click(brandBtn);
     expect(handleNavigate).toHaveBeenCalledWith('home');
   });

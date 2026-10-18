@@ -19,7 +19,7 @@ test.describe('Socratic AI Tutor Drawer Across Desktop & Mobile Viewports', () =
       );
     });
 
-    await page.goto('/');
+    await page.goto('/?section=practice');
     await page.waitForLoadState('domcontentloaded');
     await expect(page.locator('[data-testid="question-card"]')).toBeVisible();
   });

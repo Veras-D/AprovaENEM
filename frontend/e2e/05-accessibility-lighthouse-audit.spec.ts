@@ -8,8 +8,29 @@ test.describe('Axe-Core Automated WCAG 2.1 Level AA & Lighthouse Accessibility A
     });
   });
 
-  test('has zero critical or serious accessibility violations on Practice Simulator', async ({ page }) => {
+  test('has zero critical or serious accessibility violations on Landing Page', async ({ page }) => {
     await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.getByRole('button', { name: 'Começar Simulado Agora' })).toBeVisible();
+
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .disableRules(['color-contrast'])
+      .analyze();
+
+    const criticalOrSerious = results.violations.filter(
+      (v) => v.impact === 'critical' || v.impact === 'serious'
+    );
+    expect(criticalOrSerious).toEqual([]);
+
+    // Compute rule compliance percentage for Lighthouse accessibility equivalence (>= 95%)
+    const totalTested = results.passes.length + results.violations.length;
+    const score = totalTested > 0 ? (results.passes.length / totalTested) * 100 : 100;
+    expect(score).toBeGreaterThanOrEqual(95);
+  });
+
+  test('has zero critical or serious accessibility violations on Practice Simulator', async ({ page }) => {
+    await page.goto('/?section=practice');
     await page.waitForLoadState('domcontentloaded');
     await expect(page.locator('[data-testid="question-card"]')).toBeVisible();
 
@@ -44,7 +65,7 @@ test.describe('Axe-Core Automated WCAG 2.1 Level AA & Lighthouse Accessibility A
       );
     });
 
-    await page.goto('/');
+    await page.goto('/?section=practice');
     await page.waitForLoadState('domcontentloaded');
 
     const tutorBtn = page.locator('button[aria-label*="Tutor" i]').first();

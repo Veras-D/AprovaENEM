@@ -1,8 +1,14 @@
 describe('Student Practice Quiz Journey E2E', () => {
   beforeEach(() => {
-    // Clear localStorage and visit root
+    // Clear localStorage and visit practice simulator
     cy.clearLocalStorage();
+    cy.visit('/?section=practice');
+  });
+
+  it('navigates from landing page to practice simulator when clicking start CTA', () => {
     cy.visit('/');
+    cy.contains(/Começar Simulado Agora|Iniciar Simulado/i).click();
+    cy.get('[data-testid="question-card"]').should('be.visible');
   });
 
   it('renders initial question card with LaTeX math, timer, and carousel navigation', () => {

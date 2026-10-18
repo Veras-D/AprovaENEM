@@ -30,14 +30,22 @@ describe('Axe-Core Automated WCAG 2.1 Level AA Audit E2E', () => {
     cy.clearLocalStorage();
   });
 
-  it('has zero critical or serious accessibility violations on Practice View', () => {
+  it('has zero critical or serious accessibility violations on Landing Page', () => {
     cy.visit('/');
+    cy.contains(/Preparação Completa/i).should('be.visible');
+    cy.injectAxe();
+    cy.checkA11y(undefined, axeOptions, terminalLog, false);
+  });
+
+  it('has zero critical or serious accessibility violations on Practice View', () => {
+    cy.visit('/?section=practice');
+    cy.get('[data-testid="question-card"]').should('be.visible');
     cy.injectAxe();
     cy.checkA11y(undefined, axeOptions, terminalLog, false);
   });
 
   it('has zero critical or serious accessibility violations on Socratic AI Tutor drawer', () => {
-    cy.visit('/');
+    cy.visit('/?section=practice');
     cy.get('[data-testid="question-card"]').should('be.visible');
     cy.get('button[aria-label*="Tutor"]').first().click();
     cy.get('[data-testid="socratic-tutor-drawer"]').should('be.visible');

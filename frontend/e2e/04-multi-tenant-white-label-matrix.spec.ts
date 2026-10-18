@@ -61,8 +61,8 @@ test.describe('Multi-Tenant White-Label Resolution & Theme Injection', () => {
     });
     expect(primaryColor.toLowerCase()).toBe('#0284c7');
 
-    // Verify application remains interactive
-    await expect(page.locator('[data-testid="question-card"]')).toBeVisible();
+    // Verify application remains interactive on landing page
+    await expect(page.getByRole('button', { name: 'Começar Simulado Agora' })).toBeVisible();
   });
 
   test('toggles dark mode and persists .dark class on root HTML element', async ({ page }) => {

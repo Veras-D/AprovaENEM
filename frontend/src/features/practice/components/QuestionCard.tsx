@@ -196,7 +196,11 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                   : 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
               aria-pressed={isFlagged}
-              aria-label={isFlagged ? 'Remover marcação da questão' : 'Marcar questão para revisar'}
+              aria-label={
+                isFlagged
+                  ? 'Marcada para Revisão: Remover marcação da questão'
+                  : 'Marcar para Revisão: Marcar questão para revisar'
+              }
             >
               <Bookmark
                 className={`h-4 w-4 ${isFlagged ? 'fill-amber-500 text-amber-500' : ''}`}

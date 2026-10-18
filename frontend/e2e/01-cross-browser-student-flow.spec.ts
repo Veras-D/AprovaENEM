@@ -2,12 +2,19 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Student Practice Quiz Journey & KaTeX Math Rendering', () => {
   test.beforeEach(async ({ page }) => {
-    // Clear localStorage and visit root simulator
+    // Clear localStorage and visit practice simulator
     await page.addInitScript(() => {
       window.localStorage.clear();
     });
+    await page.goto('/?section=practice');
+    await page.waitForLoadState('domcontentloaded');
+  });
+
+  test('navigates from landing page to practice simulator via CTA button', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
+    await page.getByRole('button', { name: 'Começar Simulado Agora' }).click();
+    await expect(page.locator('[data-testid="question-card"]')).toBeVisible();
   });
 
   test('renders initial question card with KaTeX LaTeX math, timer, and metadata across browsers', async ({ page }) => {
