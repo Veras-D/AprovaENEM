@@ -10,7 +10,6 @@ import {
   Shield,
   Sparkles,
   Medal,
-  Info,
   Lock,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
@@ -264,31 +263,6 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
         </div>
       </div>
 
-      {/* Classification / Contention / Reinforcement Zone Legend */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-brand bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 text-xs">
-        <div className="flex flex-wrap items-center gap-3">
-          {userLeague !== 'DIAMOND' && (
-            <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-medium">
-              <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />
-              Zona de Classificação (Top 20%)
-            </span>
-          )}
-          <span className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400">
-            <Minus className="h-3.5 w-3.5" aria-hidden="true" />
-            Na Disputa
-          </span>
-          {userLeague !== 'BRONZE' && (
-            <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400 font-medium">
-              <TrendingDown className="h-3.5 w-3.5" aria-hidden="true" />
-              Zona de Reforço (Últimos 10%)
-            </span>
-          )}
-        </div>
-            <span className="text-slate-500 dark:text-slate-400 text-[11px] flex items-center gap-1">
-              <Info className="h-3 w-3" aria-hidden="true" />
-              {totalParticipants} participantes nesta liga
-            </span>
-          </div>
 
           {/* Leaderboard Table */}
           <div className="rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">

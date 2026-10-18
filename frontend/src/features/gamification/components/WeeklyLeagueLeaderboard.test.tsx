@@ -64,11 +64,11 @@ describe('WeeklyLeagueLeaderboard Component', () => {
     const promoBadges = screen.getAllByText('Classificado');
     expect(promoBadges).toHaveLength(2);
 
-    // Middle 70% (ranks 3 to 9): Na Disputa (7 badges in table + 1 in legend = 8 total)
+    // Middle 70% (ranks 3 to 9): Na Disputa (7 badges in table)
     const permanenceBadges = screen.getAllByText('Na Disputa');
-    expect(permanenceBadges).toHaveLength(8);
+    expect(permanenceBadges).toHaveLength(7);
 
-    // Bottom 10% (rank 10): Reforço (1 badge in table; legend is "Zona de Reforço (Últimos 10%)")
+    // Bottom 10% (rank 10): Reforço (1 badge in table)
     const relegationBadges = screen.getAllByText('Reforço');
     expect(relegationBadges).toHaveLength(1);
   });
