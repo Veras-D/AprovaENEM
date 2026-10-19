@@ -5,16 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-18
-### 🎖️ Dynamic Badge Tier Progression: Conquered Tier Preservation & Successor Spawning
-- feat(gamification): Re-architected badge shelf tier progression to preserve conquered tiers as completed cards and dynamically spawn the next active rank while hiding future ranks (TASK-S6-21):
+### 🎖️ Dynamic Badge Tier Progression: Universal Rankings Across All Badges
+- feat(gamification): Re-architected badge shelf tier progression to give every badge card a progressive rank tier (Bronze, Silver, Gold, Diamond), preserving conquered tiers as completed cards and dynamically spawning the next active rank while hiding future ranks (TASK-S6-21):
+  - **Universal Progressive Rankings Across All Catalog Badges ([`gamification-utils.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/gamification-utils.ts), [`BadgeShelf.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/components/BadgeShelf.tsx))**:
+    - Converted all 20 catalog achievements into progressive tiered tracks (`isProgressive: true`) with complete 4-tier configurations (`Bronze`, `Prata`, `Ouro`, `Diamante`).
+    - Added dedicated ranking tiers to habit cards (*Foco no Fim de Semana*, *Corujão do ENEM*, *Caderno de Erros*), challenge cards (*Precisão Cirúrgica*, *Gabarito Perfeito*, *Gestão de Tempo ENEM*, *Semana Impecável*), and special cards (*Pódio da Liga*, *Inclusão & Acessibilidade*, *Rumo à Nota 1000*), eliminating all flat/unranked cards from the shelf.
+    - Every badge card on the shelf consistently renders a rank pill (`Bronze`, `Prata`, `Ouro`, `Diamante`), vector corner icon emblem (`<Medal />`, `<Crown />`, `<Gem />`), and metallic card styling.
   - **Completed Tier Retention & Successor Spawning ([`BadgeShelf.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/components/BadgeShelf.tsx), [`gamification-utils.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/gamification-utils.ts))**:
     - When a student completes a tier (e.g. Bronze for *Mestre da Matemática* with 50/50 correct answers, or Silver with 100/100 correct answers), each conquered tier is preserved on the shelf as a completed achievement with a green `Conquistada ✓` badge and 100% emerald progress bar.
-    - The shelf automatically spawns the next active tier (*Ouro 🥇*, target 250) with status `A Conquistar`, displaying real-time progress (125/250, 50%).
-    - Future ranks (*Diamante 💎*) remain hidden until the preceding tier is unlocked, eliminating visual noise and maintaining focused, bite-sized goals.
+    - The shelf automatically spawns the next active tier (*Ouro*, target 250) with status `A Conquistar`, displaying real-time progress (125/250, 50%).
+    - Future ranks (*Diamante*) remain hidden until the preceding tier is unlocked, eliminating visual noise and maintaining focused, bite-sized goals.
     - Streamlined the card UI by eliminating redundant progress subtext (*"Faltam X acertos para conquistar esta medalha!"*), leaving a clean, compact numerical fraction and progress bar.
   - **Dynamic Badge Computation Algorithm ([`computeVisibleBadges` in `gamification-utils.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/gamification-utils.ts))**:
     - Generates visible cards from the catalog based on unlocked badges: emits completed cards for all achieved tiers, plus at most one active spawned card for the first incomplete tier, suppressing subsequent ranks.
-    - Enhanced all 8 progressive achievements (`MARATONISTA_QUESTOES`, `SIMULADOS_COMPLETOS`, `ESCALADA_NIVEL`, `MESTRE_MATEMATICA`, `MESTRE_NATUREZA`, `MESTRE_HUMANAS`, `MESTRE_LINGUAGENS`, `TUTOR_SOCRATICO`) with clear, goal-specific descriptions for every tier level (Bronze, Silver, Gold, Diamond).
+    - Enhanced all progressive achievements with clear, goal-specific descriptions for every tier level (Bronze, Silver, Gold, Diamond).
+  - **Progressive Streak & Habit Unification ([`gamification-utils.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/gamification-utils.ts), [`BadgeShelf.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/components/BadgeShelf.tsx))**:
+    - Unified previously fragmented streak cards (*Chama Acesa*, *Semana de Ouro*, and *Hábito Imparável*) into a single progressive tiered achievement track, `STREAK_DIAS` (*Chama Acesa*), with Bronze (3 days), Silver (7 days), Gold (14 days), and Diamond (30 days).
+    - When 3 days are completed, the shelf displays the Bronze medal card as conquered and spawns the Silver medal card as active (4/7 days, 57%), while concealing Gold and Diamond until preceding ranks are unlocked.
+    - Added dedicated habit badges `CORUJAO_ENEM` (*Corujão do ENEM*) and `REVISAO_CADERNO` (*Caderno de Erros*) preserving a rich, pedagogical 20-achievement catalog.
   - **Distinct Visual Tier Styling & Crisp Vector Icons ([`BadgeShelf.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/components/BadgeShelf.tsx))**:
     - Resolved visual ambiguity where different ranks looked identical by implementing dedicated `TIER_THEMES` for all progressive levels using crisp Lucide SVG vector icons (completely eliminating pixelated raw emojis):
       - **Bronze**: Warm copper/bronze card border (`border-amber-600/50`), subtle copper card tint (`bg-amber-50/70`), rich deep bronze icon circle (`bg-amber-700 text-amber-50 ring-2 ring-amber-600/40`), and mini `<Medal />` vector icon corner emblem.

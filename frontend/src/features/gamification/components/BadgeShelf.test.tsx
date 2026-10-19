@@ -9,31 +9,33 @@ describe('BadgeShelf Component', () => {
     render(<BadgeShelf unlockedBadges={mockUnlocked} />);
 
     expect(screen.getByText('Conquistas e Medalhas')).toBeInTheDocument();
-    expect(screen.getByText(/2\/20/)).toBeInTheDocument();
+    expect(screen.getByText(/2\/22/)).toBeInTheDocument();
   });
 
   it('filters badges based on active status filter tab', () => {
     render(<BadgeShelf unlockedBadges={mockUnlocked} />);
 
-    // Initially "Todas" tab is selected
-    expect(screen.getByText('Primeiro Passo')).toBeInTheDocument();
-    expect(screen.getByText('Chama Acesa')).toBeInTheDocument();
-    expect(screen.getByText('Semana de Ouro')).toBeInTheDocument(); // locked
+    // Initially "Todas" tab is selected: both Primeiro Passo and Chama Acesa have conquered Bronze & spawned Prata
+    expect(screen.getAllByText('Primeiro Passo')).toHaveLength(2);
+    expect(screen.getAllByText('Chama Acesa')).toHaveLength(2);
+    expect(screen.getAllByText('Bronze').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Prata').length).toBeGreaterThan(0);
 
-    // Click "Desbloqueadas"
+    // Click "Desbloqueadas": only completed cards (Primeiro Passo & Chama Acesa Bronze)
     const unlockedTab = screen.getByRole('tab', { name: /Desbloqueadas/i });
     fireEvent.click(unlockedTab);
 
     expect(screen.getByText('Primeiro Passo')).toBeInTheDocument();
     expect(screen.getByText('Chama Acesa')).toBeInTheDocument();
-    expect(screen.queryByText('Semana de Ouro')).not.toBeInTheDocument();
+    expect(screen.queryByText('Prata')).not.toBeInTheDocument();
 
-    // Click "A Conquistar"
+    // Click "A Conquistar": spawned incomplete cards (Primeiro Passo Prata & Chama Acesa Prata)
     const lockedTab = screen.getByRole('tab', { name: /A Conquistar/i });
     fireEvent.click(lockedTab);
 
-    expect(screen.queryByText('Primeiro Passo')).not.toBeInTheDocument();
-    expect(screen.getByText('Semana de Ouro')).toBeInTheDocument();
+    expect(screen.getByText('Primeiro Passo')).toBeInTheDocument();
+    expect(screen.getByText('Chama Acesa')).toBeInTheDocument();
+    expect(screen.getAllByText('Prata').length).toBeGreaterThan(0);
   });
 
   it('filters badges by category pills and displays progressive indicators', () => {

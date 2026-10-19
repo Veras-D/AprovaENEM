@@ -123,6 +123,42 @@ export function computeVisibleBadges(
         return tierIdx === 0 || isTierCompleted(tierIdx - 1);
       }
 
+      // Backward-compatibility aliases for streak
+      if (badge.id === 'STREAK_DIAS') {
+        if (
+          tier.tier === 'BRONZE' &&
+          (unlockedSet.has('STREAK_3_DIAS') ||
+            unlockedSet.has('STREAK_3_DAYS') ||
+            unlockedSet.has('STREAK_DIAS_BRONZE'))
+        ) {
+          return true;
+        }
+        if (
+          tier.tier === 'SILVER' &&
+          (unlockedSet.has('STREAK_7_DIAS') ||
+            unlockedSet.has('STREAK_7_DAYS') ||
+            unlockedSet.has('STREAK_DIAS_SILVER'))
+        ) {
+          return isTierCompleted(0);
+        }
+        if (
+          tier.tier === 'GOLD' &&
+          (unlockedSet.has('STREAK_14_DIAS') ||
+            unlockedSet.has('STREAK_14_DAYS') ||
+            unlockedSet.has('STREAK_DIAS_GOLD'))
+        ) {
+          return isTierCompleted(1);
+        }
+        if (
+          tier.tier === 'DIAMOND' &&
+          (unlockedSet.has('STREAK_30_DIAS') ||
+            unlockedSet.has('STREAK_30_DAYS') ||
+            unlockedSet.has('STREAK_DIAS_DIAMOND'))
+        ) {
+          return isTierCompleted(2);
+        }
+      }
+
       // Tier 0 is unlocked if the base badge ID is in unlockedSet
       if (tierIdx === 0) {
         return unlockedSet.has(badge.id);
@@ -266,34 +302,54 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     iconName: 'CheckCircle2',
     category: 'STREAK_HABIT',
     categoryLabel: 'Ofensiva & Hábito',
-    progress: { current: 1, target: 1, unit: 'questão' },
+    isProgressive: true,
+    progress: { current: 1, target: 1, unit: 'questão', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    tiers: [
+      { tier: 'BRONZE', label: 'Bronze', shortLabel: 'Bronze', target: 1, description: 'Resolveu sua primeira questão no AprovaENEM rumo à aprovação.' },
+      { tier: 'SILVER', label: 'Prata', shortLabel: 'Prata', target: 5, description: 'Resolva 5 questões consolidando os primeiros passos.' },
+      { tier: 'GOLD', label: 'Ouro', shortLabel: 'Ouro', target: 15, description: 'Resolva 15 questões mantendo o foco inicial.' },
+      { tier: 'DIAMOND', label: 'Diamante', shortLabel: 'Diamante', target: 30, description: 'Resolva 30 questões completando o aquecimento de estreia.' },
+    ],
   },
   {
-    id: 'STREAK_3_DIAS',
+    id: 'STREAK_DIAS',
     name: 'Chama Acesa',
-    description: 'Manteve uma sequência ininterrupta de 3 dias de prática.',
+    description: 'Mantenha sua ofensiva diária de estudos ativa sem interrupções.',
     iconName: 'Flame',
     category: 'STREAK_HABIT',
     categoryLabel: 'Ofensiva & Hábito',
-    progress: { current: 3, target: 3, unit: 'dias' },
-  },
-  {
-    id: 'STREAK_7_DIAS',
-    name: 'Semana de Ouro',
-    description: 'Pratique durante 7 dias seguidos construindo uma rotina consistente.',
-    iconName: 'Zap',
-    category: 'STREAK_HABIT',
-    categoryLabel: 'Ofensiva & Hábito',
-    progress: { current: 4, target: 7, unit: 'dias' },
-  },
-  {
-    id: 'STREAK_30_DIAS',
-    name: 'Hábito Imparável',
-    description: 'Mantenha 30 dias ininterruptos de prática ativa para consolidar o ritmo do vestibular.',
-    iconName: 'Flame',
-    category: 'STREAK_HABIT',
-    categoryLabel: 'Ofensiva & Hábito',
-    progress: { current: 7, target: 30, unit: 'dias' },
+    isProgressive: true,
+    progress: { current: 4, target: 7, unit: 'dias', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    tiers: [
+      {
+        tier: 'BRONZE',
+        label: 'Bronze',
+        shortLabel: 'Bronze',
+        target: 3,
+        description: 'Manteve uma sequência ininterrupta de 3 dias de prática.',
+      },
+      {
+        tier: 'SILVER',
+        label: 'Prata',
+        shortLabel: 'Prata',
+        target: 7,
+        description: 'Pratique durante 7 dias seguidos construindo uma rotina consistente.',
+      },
+      {
+        tier: 'GOLD',
+        label: 'Ouro',
+        shortLabel: 'Ouro',
+        target: 14,
+        description: 'Mantenha 14 dias ininterruptos de prática consolidando seu hábito.',
+      },
+      {
+        tier: 'DIAMOND',
+        label: 'Diamante',
+        shortLabel: 'Diamante',
+        target: 30,
+        description: 'Mantenha 30 dias ininterruptos de prática ativa para consolidar o ritmo do vestibular.',
+      },
+    ],
   },
   {
     id: 'FIM_DE_SEMANA_ATIVO',
@@ -302,7 +358,46 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     iconName: 'Calendar',
     category: 'STREAK_HABIT',
     categoryLabel: 'Ofensiva & Hábito',
-    progress: { current: 1, target: 2, unit: 'dias' },
+    isProgressive: true,
+    progress: { current: 1, target: 2, unit: 'dias', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    tiers: [
+      { tier: 'BRONZE', label: 'Bronze', shortLabel: 'Bronze', target: 2, description: 'Pratique no sábado e domingo mantendo a ofensiva sem interrupções.' },
+      { tier: 'SILVER', label: 'Prata', shortLabel: 'Prata', target: 4, description: 'Pratique durante 2 finais de semana mantendo o ritmo consistente.' },
+      { tier: 'GOLD', label: 'Ouro', shortLabel: 'Ouro', target: 8, description: 'Pratique durante 4 finais de semana demonstrando foco absoluto.' },
+      { tier: 'DIAMOND', label: 'Diamante', shortLabel: 'Diamante', target: 16, description: 'Pratique durante 8 finais de semana consolidando maestria total.' },
+    ],
+  },
+  {
+    id: 'CORUJAO_ENEM',
+    name: 'Corujão do ENEM',
+    description: 'Pratique após as 20h adaptando os estudos à sua rotina pessoal.',
+    iconName: 'Clock',
+    category: 'STREAK_HABIT',
+    categoryLabel: 'Ofensiva & Hábito',
+    isProgressive: true,
+    progress: { current: 1, target: 3, unit: 'sessões noturnas', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    tiers: [
+      { tier: 'BRONZE', label: 'Bronze', shortLabel: 'Bronze', target: 3, description: 'Realize 3 sessões de estudos noturnas após as 20h.' },
+      { tier: 'SILVER', label: 'Prata', shortLabel: 'Prata', target: 10, description: 'Realize 10 sessões de estudos noturnas adaptando seu cronograma.' },
+      { tier: 'GOLD', label: 'Ouro', shortLabel: 'Ouro', target: 25, description: 'Realize 25 sessões de estudos noturnas com alta produtividade.' },
+      { tier: 'DIAMOND', label: 'Diamante', shortLabel: 'Diamante', target: 50, description: 'Realize 50 sessões de estudos noturnas dominando seu horário de estudos.' },
+    ],
+  },
+  {
+    id: 'REVISAO_CADERNO',
+    name: 'Caderno de Erros',
+    description: 'Revise e refaça questões com erros para consolidar pontos fracos.',
+    iconName: 'BookOpen',
+    category: 'STREAK_HABIT',
+    categoryLabel: 'Ofensiva & Hábito',
+    isProgressive: true,
+    progress: { current: 3, target: 5, unit: 'questões revisadas', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    tiers: [
+      { tier: 'BRONZE', label: 'Bronze', shortLabel: 'Bronze', target: 5, description: 'Revise e refaça 5 questões com erros para consolidar pontos fracos.' },
+      { tier: 'SILVER', label: 'Prata', shortLabel: 'Prata', target: 15, description: 'Revise 15 questões com erros fortalecendo os conceitos mais difíceis.' },
+      { tier: 'GOLD', label: 'Ouro', shortLabel: 'Ouro', target: 35, description: 'Revise 35 questões com erros transformando pontos fracos em acertos.' },
+      { tier: 'DIAMOND', label: 'Diamante', shortLabel: 'Diamante', target: 75, description: 'Revise 75 questões com erros alcançando domínio conceitual pleno.' },
+    ],
   },
 
   // --- Grupo 3: Áreas do Conhecimento do ENEM (Progressivas por Matéria) ---
@@ -375,38 +470,66 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
   {
     id: 'PRECISAO_CIRURGICA',
     name: 'Precisão Cirúrgica',
-    description: 'Acerte 5 questões consecutivas em uma mesma sessão sem cometer nenhum erro.',
+    description: 'Acerte questões consecutivas em uma mesma sessão sem cometer nenhum erro.',
     iconName: 'Target',
     category: 'CHALLENGE',
     categoryLabel: 'Desafios & Precisão',
-    progress: { current: 3, target: 5, unit: 'acertos seguidos' },
+    isProgressive: true,
+    progress: { current: 3, target: 5, unit: 'acertos seguidos', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    tiers: [
+      { tier: 'BRONZE', label: 'Bronze', shortLabel: 'Bronze', target: 5, description: 'Acerte 5 questões consecutivas em uma mesma sessão sem cometer erros.' },
+      { tier: 'SILVER', label: 'Prata', shortLabel: 'Prata', target: 10, description: 'Acerte 10 questões consecutivas em uma mesma sessão sem erros.' },
+      { tier: 'GOLD', label: 'Ouro', shortLabel: 'Ouro', target: 15, description: 'Acerte 15 questões consecutivas em uma mesma sessão com alto foco.' },
+      { tier: 'DIAMOND', label: 'Diamante', shortLabel: 'Diamante', target: 25, description: 'Acerte 25 questões consecutivas alcançando precisão cirúrgica absoluta.' },
+    ],
   },
   {
     id: 'GABARITO_PERFEITO',
     name: 'Gabarito Perfeito',
-    description: 'Finalize um simulado de 10 questões com 100% de aproveitamento.',
+    description: 'Finalize simulados de treino com 100% de aproveitamento.',
     iconName: 'Crown',
     category: 'CHALLENGE',
     categoryLabel: 'Desafios & Precisão',
-    progress: { current: 8, target: 10, unit: 'acertos' },
+    isProgressive: true,
+    progress: { current: 1, target: 1, unit: 'simulado gabaritado', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    tiers: [
+      { tier: 'BRONZE', label: 'Bronze', shortLabel: 'Bronze', target: 1, description: 'Finalize 1 simulado com 100% de acertos gabaritando a sessão.' },
+      { tier: 'SILVER', label: 'Prata', shortLabel: 'Prata', target: 3, description: 'Finalize 3 simulados com 100% de aproveitamento.' },
+      { tier: 'GOLD', label: 'Ouro', shortLabel: 'Ouro', target: 5, description: 'Finalize 5 simulados com 100% de aproveitamento impecável.' },
+      { tier: 'DIAMOND', label: 'Diamante', shortLabel: 'Diamante', target: 10, description: 'Finalize 10 simulados gabaritados demonstrando domínio supremo.' },
+    ],
   },
   {
     id: 'VELOCIDADE_E_FOCO',
     name: 'Gestão de Tempo ENEM',
-    description: 'Responda 10 questões mantendo a média de tempo ideal do INEP (até 3 min/questão).',
+    description: 'Responda questões mantendo a média de tempo ideal do INEP (até 3 min/questão).',
     iconName: 'Clock',
     category: 'CHALLENGE',
     categoryLabel: 'Desafios & Precisão',
-    progress: { current: 6, target: 10, unit: 'questões no tempo' },
+    isProgressive: true,
+    progress: { current: 6, target: 10, unit: 'questões no tempo', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    tiers: [
+      { tier: 'BRONZE', label: 'Bronze', shortLabel: 'Bronze', target: 10, description: 'Responda 10 questões mantendo a média ideal do INEP (3 min/questão).' },
+      { tier: 'SILVER', label: 'Prata', shortLabel: 'Prata', target: 25, description: 'Responda 25 questões no ritmo ideal de prova do ENEM.' },
+      { tier: 'GOLD', label: 'Ouro', shortLabel: 'Ouro', target: 50, description: 'Responda 50 questões no ritmo oficial sem perder precisão.' },
+      { tier: 'DIAMOND', label: 'Diamante', shortLabel: 'Diamante', target: 100, description: 'Responda 100 questões com velocidade e foco magistrais.' },
+    ],
   },
   {
     id: 'META_DIARIA_7',
     name: 'Semana Impecável',
-    description: 'Cumpra sua meta diária de questões durante 7 dias seguidos.',
+    description: 'Cumpra sua meta diária de questões consecutivamente.',
     iconName: 'CheckCheck',
     category: 'CHALLENGE',
     categoryLabel: 'Desafios & Precisão',
-    progress: { current: 4, target: 7, unit: 'dias cumpridos' },
+    isProgressive: true,
+    progress: { current: 4, target: 7, unit: 'dias cumpridos', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    tiers: [
+      { tier: 'BRONZE', label: 'Bronze', shortLabel: 'Bronze', target: 3, description: 'Cumpra sua meta diária de estudos durante 3 dias seguidos.' },
+      { tier: 'SILVER', label: 'Prata', shortLabel: 'Prata', target: 7, description: 'Cumpra sua meta diária durante 7 dias seguidos (1 semana impecável).' },
+      { tier: 'GOLD', label: 'Ouro', shortLabel: 'Ouro', target: 14, description: 'Cumpra sua meta diária durante 14 dias seguidos (2 semanas impecáveis).' },
+      { tier: 'DIAMOND', label: 'Diamante', shortLabel: 'Diamante', target: 30, description: 'Cumpra sua meta diária durante 30 dias seguidos com disciplina total.' },
+    ],
   },
 
   // --- Grupo 5: Especiais & IA Socrática ---
@@ -429,11 +552,18 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
   {
     id: 'PODIO_LIGA',
     name: 'Pódio da Liga',
-    description: 'Termine uma rodada semanal entre os 3 primeiros colocados na sua liga.',
+    description: 'Termine rodadas semanais entre os primeiros colocados na sua liga.',
     iconName: 'Medal',
     category: 'SPECIAL',
     categoryLabel: 'Especiais & IA',
-    progress: { current: 2, target: 3, unit: 'posição atual' },
+    isProgressive: true,
+    progress: { current: 1, target: 1, unit: 'pódios', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    tiers: [
+      { tier: 'BRONZE', label: 'Bronze', shortLabel: 'Bronze', target: 1, description: 'Termine 1 rodada semanal entre os 3 primeiros da sua liga.' },
+      { tier: 'SILVER', label: 'Prata', shortLabel: 'Prata', target: 3, description: 'Termine 3 rodadas semanais no pódio da sua liga.' },
+      { tier: 'GOLD', label: 'Ouro', shortLabel: 'Ouro', target: 5, description: 'Termine 5 rodadas semanais no pódio da sua liga.' },
+      { tier: 'DIAMOND', label: 'Diamante', shortLabel: 'Diamante', target: 10, description: 'Termine 10 rodadas no pódio ou seja Campeão da Liga Diamante.' },
+    ],
   },
   {
     id: 'ACESSIBILIDADE_TOTAL',
@@ -442,7 +572,14 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     iconName: 'Sparkles',
     category: 'SPECIAL',
     categoryLabel: 'Especiais & IA',
-    progress: { current: 0, target: 1, unit: 'recurso utilizado' },
+    isProgressive: true,
+    progress: { current: 1, target: 1, unit: 'recurso utilizado', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    tiers: [
+      { tier: 'BRONZE', label: 'Bronze', shortLabel: 'Bronze', target: 1, description: 'Utilize 1 recurso inclusivo na plataforma.' },
+      { tier: 'SILVER', label: 'Prata', shortLabel: 'Prata', target: 2, description: 'Personalize 2 recursos inclusivos para otimizar sua leitura.' },
+      { tier: 'GOLD', label: 'Ouro', shortLabel: 'Ouro', target: 3, description: 'Personalize 3 recursos inclusivos adaptando seu ambiente de estudos.' },
+      { tier: 'DIAMOND', label: 'Diamante', shortLabel: 'Diamante', target: 4, description: 'Utilize todos os 4 recursos inclusivos (VLibras, Leitor de Voz, Alto Contraste, Régua).' },
+    ],
   },
   {
     id: 'NOTA_1000',
@@ -451,7 +588,14 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     iconName: 'GraduationCap',
     category: 'SPECIAL',
     categoryLabel: 'Especiais & IA',
-    progress: { current: 3, target: 20, unit: 'nível' },
+    isProgressive: true,
+    progress: { current: 3, target: 5, unit: 'nível de maestria', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    tiers: [
+      { tier: 'BRONZE', label: 'Bronze', shortLabel: 'Bronze', target: 5, description: 'Alcance o Nível 5 multidisciplinar na plataforma.' },
+      { tier: 'SILVER', label: 'Prata', shortLabel: 'Prata', target: 10, description: 'Alcance o Nível 10 multidisciplinar na plataforma.' },
+      { tier: 'GOLD', label: 'Ouro', shortLabel: 'Ouro', target: 15, description: 'Alcance o Nível 15 multidisciplinar rumo à excelência.' },
+      { tier: 'DIAMOND', label: 'Diamante', shortLabel: 'Diamante', target: 20, description: 'Alcance o Nível 20 multidisciplinar consolidando o domínio supremo para a Nota 1000.' },
+    ],
   },
 ] as const;
 
