@@ -97,6 +97,30 @@ describe('QuestionCarousel Component', () => {
     expect(screen.getByRole('button', { name: /Ir para a questão 3 \(Marcada para revisão\)/i })).toBeInTheDocument();
   });
 
+  it('should display distinct styles and icons for correct and incorrect/missed questions', () => {
+    render(
+      <QuestionCarousel
+        totalQuestions={5}
+        currentIndex={4}
+        onSelectIndex={vi.fn()}
+        isAnswered={(i) => i < 4}
+        isCorrect={(i) => (i === 3 ? false : i < 3 ? true : undefined)}
+      />
+    );
+
+    // Question 1, 2, 3 were answered correctly
+    const q1Btn = screen.getByRole('button', { name: /Ir para a questão 1 \(Correta\)/i });
+    expect(q1Btn).toHaveClass('border-emerald-500/60');
+    expect(q1Btn).toHaveClass('text-emerald-800');
+
+    // Question 4 was missed / answered incorrectly
+    const q4Btn = screen.getByRole('button', { name: /Ir para a questão 4 \(Incorreta\)/i });
+    expect(q4Btn).toHaveClass('border-rose-500/60');
+    expect(q4Btn).toHaveClass('text-rose-800');
+    expect(screen.getByTestId('carousel-incorrect-badge')).toBeInTheDocument();
+    expect(screen.getAllByTestId('carousel-correct-badge')).toHaveLength(3);
+  });
+
   it('should render active button with proper aria-current attribute', () => {
     render(
       <QuestionCarousel

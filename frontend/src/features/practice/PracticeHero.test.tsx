@@ -66,6 +66,28 @@ describe('PracticeHero Component', () => {
     expect(screen.getByText(/1 de 5 respondidas/i)).toBeInTheDocument();
   });
 
+  it('should visually mark carousel pill as incorrect when answer is wrong', () => {
+    renderWithProviders();
+
+    // Select option A (incorrect; correct is B)
+    const optionA = screen.getByRole('radio', { name: /A.*0{,}50/i });
+    fireEvent.click(optionA);
+
+    const submitBtn = screen.getByRole('button', { name: /confirmar resposta/i });
+    fireEvent.click(submitBtn);
+
+    expect(screen.getByText('Resposta Incorreta!')).toBeInTheDocument();
+
+    // Navigate to question 2 so question 1 is no longer active
+    const q2Btn = screen.getByRole('button', { name: /Ir para a questão 2/i });
+    fireEvent.click(q2Btn);
+
+    // Question 1 pill should be marked as incorrect with rose border
+    const q1Btn = screen.getByRole('button', { name: /Ir para a questão 1 \(Incorreta\)/i });
+    expect(q1Btn).toHaveClass('border-rose-500/60');
+    expect(screen.getByTestId('carousel-incorrect-badge')).toBeInTheDocument();
+  });
+
   it('should navigate between questions using next button and carousel pills', () => {
     renderWithProviders();
 

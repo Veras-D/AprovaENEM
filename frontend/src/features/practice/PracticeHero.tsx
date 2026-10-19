@@ -346,6 +346,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
           onNext={nextQuestion}
           onPrevious={previousQuestion}
           isAnswered={(idx) => Boolean(questions[idx] && attempts[questions[idx].id])}
+          isCorrect={(idx) => (questions[idx] ? attempts[questions[idx].id]?.isCorrect : undefined)}
           isFlagged={(idx) => Boolean(questions[idx] && flaggedQuestions[questions[idx].id])}
         />
       )}

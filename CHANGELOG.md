@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-18
+### 🎯 Visual Differentiation of Correct vs Missed Questions in Question Carousel
+- fix(practice): Corrected question carousel indicator palette and badge icons to accurately differentiate between correctly answered questions and missed/incorrect questions (TASK-S6-24):
+  - **Dynamic Status Palette ([`QuestionCarousel.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/QuestionCarousel.tsx))**:
+    - Previously, any answered question was unconditionally rendered with an emerald green border and checkmark badge, misleading students who missed a question into seeing it as green.
+    - Updated `QuestionCarouselProps` with `isCorrect?: (index: number) => boolean | undefined;`.
+    - Correct answers (`isCorrect === true`): rendered with emerald green border/background (`border-emerald-500/60 bg-emerald-50/70 text-emerald-800`), green badge overlay with `<Check />` icon (`carousel-correct-badge`), and accessible screen reader text `(Correta)`.
+    - Missed/incorrect answers (`isCorrect === false`): rendered with high-contrast rose/red border/background (`border-rose-500/60 bg-rose-50/70 text-rose-800`), rose badge overlay with `<X />` icon (`carousel-incorrect-badge`), and accessible screen reader text `(Incorreta)`.
+    - Answered questions with unknown/pending evaluation (`isCorrect === undefined`): rendered in neutral slate border/background with accessible text `(Respondida)`.
+  - **Wiring in Practice Hero ([`PracticeHero.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.tsx))**:
+    - Connected `QuestionCarousel`'s `isCorrect` callback to `attempts[questions[idx].id]?.isCorrect`.
+  - **Rigorous Verification & Contrast Compliance**:
+    - Added dedicated unit tests in [`QuestionCarousel.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/QuestionCarousel.test.tsx) and integration tests in [`PracticeHero.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.test.tsx).
+    - Verified WCAG 2.1 AA color contrast compliance (> 6:1 contrast ratio for both emerald and rose palettes across light and dark modes).
+    - Verified with 100% green test suite across 73 Vitest test suites (506/506 tests passing), 0 ESLint warnings (`max-warnings 0`), and clean Vite production build.
+
 ### 🛡️ Student Feature Privacy & Unauthenticated Guest Navigation Isolation
 - feat(auth): Protected student personal features (`Ranking`, `Meu Progresso & Conquistas`, `Ranking da Liga`, and `Diagnóstico`) so that unauthenticated visitors cannot view personal metrics or synthetic mock data, and restricted public guest navigation strictly to exploratory features (TASK-S6-23):
   - **Guest Navigation Isolation ([`Header.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/Header.tsx), [`BottomNav.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/BottomNav.tsx), [`MobileDrawer.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/MobileDrawer.tsx))**:

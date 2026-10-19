@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Bookmark, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bookmark, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 export interface QuestionCarouselProps {
@@ -7,6 +7,7 @@ export interface QuestionCarouselProps {
   readonly currentIndex: number;
   readonly onSelectIndex: (index: number) => void;
   readonly isAnswered?: (index: number) => boolean;
+  readonly isCorrect?: (index: number) => boolean | undefined;
   readonly isFlagged?: (index: number) => boolean;
   readonly onNext?: () => void;
   readonly onPrevious?: () => void;
@@ -18,6 +19,7 @@ export const QuestionCarousel: React.FC<QuestionCarouselProps> = ({
   currentIndex,
   onSelectIndex,
   isAnswered = () => false,
+  isCorrect = () => undefined,
   isFlagged = () => false,
   onNext,
   onPrevious,
@@ -85,6 +87,7 @@ export const QuestionCarousel: React.FC<QuestionCarouselProps> = ({
         {Array.from({ length: totalQuestions }, (_, i) => {
           const isActive = i === currentIndex;
           const answered = isAnswered(i);
+          const correct = isCorrect(i);
           const flagged = isFlagged(i);
 
           let itemStyles =
@@ -97,8 +100,27 @@ export const QuestionCarousel: React.FC<QuestionCarouselProps> = ({
             itemStyles =
               'border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 font-semibold';
           } else if (answered) {
-            itemStyles =
-              'border-emerald-500/60 bg-emerald-50/70 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 font-medium';
+            if (correct === false) {
+              itemStyles =
+                'border-rose-500/60 bg-rose-50/70 dark:bg-rose-950/30 text-rose-800 dark:text-rose-300 font-medium hover:border-rose-500';
+            } else if (correct === true) {
+              itemStyles =
+                'border-emerald-500/60 bg-emerald-50/70 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 font-medium hover:border-emerald-500';
+            } else {
+              itemStyles =
+                'border-slate-400/60 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-medium hover:border-slate-500';
+            }
+          }
+
+          let statusText = '';
+          if (answered) {
+            if (correct === true) {
+              statusText = ' (Correta)';
+            } else if (correct === false) {
+              statusText = ' (Incorreta)';
+            } else {
+              statusText = ' (Respondida)';
+            }
           }
 
           return (
@@ -108,7 +130,7 @@ export const QuestionCarousel: React.FC<QuestionCarouselProps> = ({
               type="button"
               onClick={() => onSelectIndex(i)}
               aria-current={isActive ? 'step' : undefined}
-              aria-label={`Ir para a questão ${i + 1}${answered ? ' (Respondida)' : ''}${
+              aria-label={`Ir para a questão ${i + 1}${statusText}${
                 flagged ? ' (Marcada para revisão)' : ''
               }`}
               className={`relative h-9 w-9 min-w-[36px] rounded-brand border flex items-center justify-center text-xs transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${itemStyles}`}
@@ -118,19 +140,30 @@ export const QuestionCarousel: React.FC<QuestionCarouselProps> = ({
               {/* Status Icons Overlay */}
               {flagged && !isActive && (
                 <span
-                  className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-amber-500 flex items-center justify-center text-white"
+                  className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-amber-500 flex items-center justify-center text-white shadow-xs z-10"
                   aria-hidden="true"
                 >
                   <Bookmark className="h-2 w-2 fill-current" />
                 </span>
               )}
               {answered && !isActive && !flagged && (
-                <span
-                  className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-emerald-500 flex items-center justify-center text-white"
-                  aria-hidden="true"
-                >
-                  <Check className="h-2 w-2 stroke-[3]" />
-                </span>
+                correct === false ? (
+                  <span
+                    className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-rose-500 flex items-center justify-center text-white shadow-xs z-10"
+                    aria-hidden="true"
+                    data-testid="carousel-incorrect-badge"
+                  >
+                    <X className="h-2.5 w-2.5 stroke-[3]" />
+                  </span>
+                ) : (
+                  <span
+                    className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-xs z-10"
+                    aria-hidden="true"
+                    data-testid="carousel-correct-badge"
+                  >
+                    <Check className="h-2.5 w-2.5 stroke-[3]" />
+                  </span>
+                )
               )}
             </button>
           );
