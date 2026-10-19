@@ -9,10 +9,10 @@ describe('BadgeShelf Component', () => {
     render(<BadgeShelf unlockedBadges={mockUnlocked} />);
 
     expect(screen.getByText('Conquistas e Medalhas')).toBeInTheDocument();
-    expect(screen.getByText(/2\/9/)).toBeInTheDocument();
+    expect(screen.getByText(/2\/20/)).toBeInTheDocument();
   });
 
-  it('filters badges based on active filter tab', () => {
+  it('filters badges based on active status filter tab', () => {
     render(<BadgeShelf unlockedBadges={mockUnlocked} />);
 
     // Initially "Todas" tab is selected
@@ -34,5 +34,28 @@ describe('BadgeShelf Component', () => {
 
     expect(screen.queryByText('Primeiro Passo')).not.toBeInTheDocument();
     expect(screen.getByText('Semana de Ouro')).toBeInTheDocument();
+  });
+
+  it('filters badges by category pills and displays progressive indicators', () => {
+    render(<BadgeShelf unlockedBadges={mockUnlocked} />);
+
+    // Click "Áreas do ENEM"
+    const subjectBtn = screen.getByRole('button', { name: /Áreas do ENEM/i });
+    fireEvent.click(subjectBtn);
+
+    expect(screen.getByText('Mestre da Matemática')).toBeInTheDocument();
+    expect(screen.getByText('Cientista da Natureza')).toBeInTheDocument();
+    expect(screen.getByText('Pensador Crítico')).toBeInTheDocument();
+    expect(screen.getByText('Poliglota do ENEM')).toBeInTheDocument();
+    expect(screen.queryByText('Primeiro Passo')).not.toBeInTheDocument();
+
+    // Click "Jornada & Volume"
+    const progressionBtn = screen.getByRole('button', { name: /Jornada & Volume/i });
+    fireEvent.click(progressionBtn);
+
+    expect(screen.getByText('Maratonista do ENEM')).toBeInTheDocument();
+    expect(screen.getByText('Dia de Prova')).toBeInTheDocument();
+    expect(screen.getAllByText(/Progresso:/i)).toHaveLength(3);
+    expect(screen.queryByText('Mestre da Matemática')).not.toBeInTheDocument();
   });
 });

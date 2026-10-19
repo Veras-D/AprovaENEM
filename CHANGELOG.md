@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-18
+### 🏅 Progressive Tiered Badges, Live Progress Bars & Categorized Mission Catalog
+- feat(gamification): Re-engineered achievements and medal shelf with progressive multi-tier tracks, live progress bars, and categorized mission filtering (TASK-S6-19):
+  - **Authentic 20-Badge Mission Catalog ([`gamification-utils.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/gamification-utils.ts))**: Expanded the badge system from 9 flat, confusing badges into 20 motivating, ENEM-focused achievements categorized into 5 pedagogical domains with measurable criteria:
+    - *Jornada & Volume*: `MARATONA_QUESTOES` (Maratona de Questões - 50 questions), `SIMULADOS_COMPLETOS` (Dia de Prova - 5 complete timed exams), and `ESCALADA_NIVEL` (Escalada de Nível - level milestone progression).
+    - *Ofensiva & Hábito*: `PRIMEIRA_QUESTAO` (Primeiro Passo), `STREAK_3_DIAS` (Chama Acesa), `STREAK_7_DIAS` (Semana de Ouro), `STREAK_30_DIAS` (Hábito Imparável), and `FIM_DE_SEMANA_ATIVO` (Foco no Fim de Semana).
+    - *Áreas do ENEM*: Multi-tier subject mastery tracks for `MESTRE_MATEMATICA` (Matemática e suas Tecnologias), `MESTRE_NATUREZA` (Ciências da Natureza), `MESTRE_HUMANAS` (Ciências Humanas), and `MESTRE_LINGUAGENS` (Linguagens e Códigos).
+    - *Desafios & Precisão*: `PRECISAO_CIRURGICA` (5 consecutive correct answers without errors), `GABARITO_PERFEITO` (100% score on a 10-question practice set), `VELOCIDADE_E_FOCO` (answering 10 questions within INEP's 3 min/question pace), and `META_DIARIA_7` (completing daily study goals 7 days consecutively).
+    - *Especiais & IA*: `TUTOR_SOCRATICO` (Espírito Socrático - exploring conceptual resolutions with AI tutor), `PODIO_LIGA` (Pódio da Liga - finishing weekly league in top 3), `ACESSIBILIDADE_TOTAL` (Inclusão & Acessibilidade - utilizing VLibras, voice reader, high contrast, or reading ruler), and `NOTA_1000` (Rumo à Nota 1000 - reaching level 20).
+    - *Eliminated Confusing Anti-Patterns*: Removed confusing and sci-fi tropes like *"Imunidade Criogênica"* and vague descriptions like *"dominou fórmulas"* in favor of clear, transparent numbers and educational milestones.
+  - **Progressive Multi-Tier Tracking & Live Dual-Tone Progress Bars ([`BadgeShelf.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/components/BadgeShelf.tsx))**:
+    - Progressive badges render real-time progress bars showing exact numerical progression (e.g., `35/50 questões (70%)`, `18/50 acertos (36%)`, `8/10 dúvidas resolvidas (80%)`).
+    - Added metallic tier pills (`Bronze 🥉`, `Prata 🥈`, `Ouro 🥇`, `Diamante 💎`) displaying active tier and indicating the next tier goal.
+    - Dual-tone progress bar styling: vibrant emerald (`bg-emerald-500`) for 100% unlocked achievements and motivating amber (`bg-amber-500`) for in-progress tiers.
+  - **Category Pill Filters & Status Tabs ([`BadgeShelf.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/components/BadgeShelf.tsx))**:
+    - Added horizontal category filter pills (`Todas`, `Jornada & Volume`, `Áreas do ENEM`, `Ofensiva & Hábito`, `Desafios & Precisão`, `Especiais & IA`) with accessible ARIA states.
+    - Added status tabs (`Todas`, `Desbloqueadas`, `A Conquistar`) showing dynamic counts (e.g. `Desbloqueadas (2)`).
+    - Dynamic progress summary header indicating global achievements unlocked: `2 de 20 conquistas desbloqueadas (10%)`.
+  - **Comprehensive Test Coverage & Quality Gates**: Updated [`BadgeShelf.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/components/BadgeShelf.test.tsx) and verified 100% green test execution across all 71 Vitest test suites (464/464 tests passing), zero axe-core accessibility violations (23/23 tests green), zero ESLint warnings (`max-warnings 0`), and clean Vite production build.
+
 ### 🏆 Restricted League Ranking Visibility to Active Division & Fixed Promotion/Relegation Zone Calculations
 - fix(gamification): Enforced strict division ranking privacy and accurate zone status mathematical thresholds (TASK-S6-18):
   - **Division Ranking Privacy Protection ([`WeeklyLeagueLeaderboard.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/components/WeeklyLeagueLeaderboard.tsx))**: Restricted participant ranking tables strictly to the student's active division (`userLeague`), preventing students from browsing or viewing other students' names, streaks, and XP in non-active leagues. When selecting another tier, an accessible informational screen is rendered:
