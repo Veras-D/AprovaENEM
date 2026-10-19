@@ -84,4 +84,20 @@ describe('useAuthStore', () => {
     expect(state.user).toBeNull();
     expect(localStorage.getItem('aprovaenem_auth_token')).toBeNull();
   });
+
+  it('should manage auth modal open/close and mode states', () => {
+    expect(useAuthStore.getState().isAuthModalOpen).toBe(false);
+    expect(useAuthStore.getState().authModalMode).toBe('login');
+
+    useAuthStore.getState().openAuthModal('register');
+    expect(useAuthStore.getState().isAuthModalOpen).toBe(true);
+    expect(useAuthStore.getState().authModalMode).toBe('register');
+
+    useAuthStore.getState().closeAuthModal();
+    expect(useAuthStore.getState().isAuthModalOpen).toBe(false);
+
+    useAuthStore.getState().openAuthModal();
+    expect(useAuthStore.getState().isAuthModalOpen).toBe(true);
+    expect(useAuthStore.getState().authModalMode).toBe('login');
+  });
 });

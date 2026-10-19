@@ -84,6 +84,68 @@ test.describe('Axe-Core Automated WCAG 2.1 Level AA & Lighthouse Accessibility A
   });
 
   test('has zero critical or serious accessibility violations on Gamification & Leaderboard', async ({ page }) => {
+    await page.route('**/api/v1/gamification/**', async (route) => {
+      const url = route.request().url();
+      if (url.includes('leaderboard')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            league: 'GOLD',
+            leagueTier: 'GOLD',
+            weekNumber: 42,
+            year: 2026,
+            resetsAt: '2026-10-18T23:59:59Z',
+            totalParticipants: 1,
+            entries: [
+              {
+                rank: 1,
+                userId: 'usr-student-1',
+                studentName: 'Estudante ENEM',
+                displayName: 'Estudante ENEM',
+                weeklyXp: 750,
+                streakDays: 7,
+                promotionZone: true,
+                isCurrentUser: true,
+              },
+            ],
+          }),
+        });
+      } else {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            userId: 'usr-student-1',
+            currentXp: 450,
+            level: 3,
+            levelTitle: 'Calouro Iniciante',
+            currentStreakDays: 5,
+            longestStreakDays: 14,
+            streakFreezeAvailable: true,
+            dailyGoalTarget: 5,
+            dailyGoalProgress: 3,
+            weeklyLeague: 'GOLD',
+            unlockedBadges: ['PRIMEIRA_QUESTAO', 'STREAK_DIAS'],
+          }),
+        });
+      }
+    });
+
+    await page.addInitScript(() => {
+      window.localStorage.setItem('aprovaenem_auth_token', 'mock-student-token');
+      window.localStorage.setItem(
+        'aprovaenem_auth_user',
+        JSON.stringify({
+          id: 'usr-student-1',
+          name: 'Estudante ENEM',
+          email: 'estudante@enem.com',
+          roles: ['ROLE_STUDENT'],
+          isEmailVerified: true,
+          createdAt: '2026-10-14T10:00:00Z',
+        })
+      );
+    });
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
@@ -104,6 +166,20 @@ test.describe('Axe-Core Automated WCAG 2.1 Level AA & Lighthouse Accessibility A
   });
 
   test('has zero critical or serious accessibility violations on Diagnostic Radar view', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('aprovaenem_auth_token', 'mock-student-token');
+      window.localStorage.setItem(
+        'aprovaenem_auth_user',
+        JSON.stringify({
+          id: 'usr-student-1',
+          name: 'Estudante ENEM',
+          email: 'estudante@enem.com',
+          roles: ['ROLE_STUDENT'],
+          isEmailVerified: true,
+          createdAt: '2026-10-14T10:00:00Z',
+        })
+      );
+    });
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
@@ -111,6 +187,23 @@ test.describe('Axe-Core Automated WCAG 2.1 Level AA & Lighthouse Accessibility A
     const diagBtn = page.getByRole('button', { name: /Diagnóstico/i }).first();
     await diagBtn.click();
     await expect(page.locator('main [role="region"][aria-label*="diagnósticos" i]').first()).toBeVisible();
+
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .disableRules(['color-contrast'])
+      .analyze();
+
+    const criticalOrSerious = results.violations.filter(
+      (v) => v.impact === 'critical' || v.impact === 'serious'
+    );
+    expect(criticalOrSerious).toEqual([]);
+  });
+
+  test('has zero critical or serious accessibility violations on Student Login Gate', async ({ page }) => {
+    await page.goto('/?section=leaderboard');
+    await page.waitForLoadState('domcontentloaded');
+
+    await expect(page.locator('main [role="region"][aria-label*="Conquistas e Ranking" i]').first()).toBeVisible();
 
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])

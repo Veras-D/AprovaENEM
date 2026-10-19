@@ -34,17 +34,13 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
 
   const activeSection = controlledSection ?? internalSection;
 
-  // Auth & LGPD Legal Modals State
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
-  const [authModalMode, setAuthModalMode] = useState<'register' | 'login'>('login');
+  const isAuthModalOpen = useAuthStore((s) => s.isAuthModalOpen);
+  const authModalMode = useAuthStore((s) => s.authModalMode);
+  const openAuthModal = useAuthStore((s) => s.openAuthModal);
+  const closeAuthModal = useAuthStore((s) => s.closeAuthModal);
   const [isLegalModalOpen, setIsLegalModalOpen] = useState<boolean>(false);
   const [legalModalTab, setLegalModalTab] = useState<'terms' | 'privacy'>('terms');
   const [isErasureModalOpen, setIsErasureModalOpen] = useState<boolean>(false);
-
-  const openAuthModal = (mode: 'register' | 'login' = 'login') => {
-    setAuthModalMode(mode);
-    setIsAuthModalOpen(true);
-  };
 
   const openLegalModal = (tab: 'terms' | 'privacy' = 'terms') => {
     setLegalModalTab(tab);
@@ -163,7 +159,7 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
       {/* Student Authentication & Registration Modal */}
       <RegisterModal
         isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
+        onClose={closeAuthModal}
         initialMode={authModalMode}
       />
 

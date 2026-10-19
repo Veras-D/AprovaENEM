@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-18
+### 🛡️ Student Feature Privacy & Unauthenticated Guest Navigation Isolation
+- feat(auth): Protected student personal features (`Ranking`, `Meu Progresso & Conquistas`, `Ranking da Liga`, and `Diagnóstico`) so that unauthenticated visitors cannot view personal metrics or synthetic mock data, and restricted public guest navigation strictly to exploratory features (TASK-S6-23):
+  - **Guest Navigation Isolation ([`Header.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/Header.tsx), [`BottomNav.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/BottomNav.tsx), [`MobileDrawer.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/MobileDrawer.tsx))**:
+    - Unauthenticated guests only see public exploratory actions (`Início`, `Praticar`) in the desktop navigation bar, mobile bottom navigation bar, and slide-over mobile drawer.
+    - Personal features (`Ranking`, `Diagnóstico`, `Minha Conta`) are completely hidden from guest navigation until student authentication.
+  - **Student Authentication Gates ([`GamificationDashboard.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/components/GamificationDashboard.tsx), [`DiagnosticDashboard.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/diagnostic/components/DiagnosticDashboard.tsx))**:
+    - Direct navigation via deep link (`?section=leaderboard` or `?section=diagnostics`) renders a dedicated, accessible Student Login Gate with in-place authentication, quick registration modal trigger (`openAuthModal('register')`), and return CTA (`Voltar ao Simulado Rápido`).
+    - Zero mock student data, XP levels, streak counts, unlocked badges, or personal TRI diagnostic radar charts are leaked to unauthenticated sessions.
+  - **Global Auth Modal State ([`useAuthStore.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/stores/useAuthStore.ts), [`RootLayout.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/layouts/RootLayout.tsx))**:
+    - Centralized auth modal visibility and mode (`'login' | 'register'`) in Zustand store, ensuring seamless opening from any gate or header button without prop drilling.
+  - **Comprehensive Cross-Browser & E2E Verification**:
+    - Verified 100% green test suite across 73 Vitest test suites (504/504 tests passing), 6 Cypress E2E tests, 118 Playwright cross-browser tests across all 5 engines and mobile viewports, 0 ESLint warnings (`max-warnings 0`), and clean Vite production build.
+
 ### 🏫 Institutional B2B Coordinator Portal Isolation & Dedicated Navigation
 - feat(institutional): Segregated institutional and pedagogical coordination class cohort diagnostics completely out of the student individual diagnostic portal into a dedicated coordinator page protected by strict authentication and role guards, and completely purged student study/quiz features from the coordinator view (TASK-S6-22):
   - **Zero Student Features in Coordinator Portal ([`Header.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/Header.tsx), [`BottomNav.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/BottomNav.tsx), [`MobileDrawer.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/MobileDrawer.tsx))**:

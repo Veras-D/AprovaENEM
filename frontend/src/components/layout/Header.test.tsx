@@ -47,7 +47,19 @@ describe('Header component', () => {
     expect(screen.getByAltText('AprovaENEM Social Logo')).toBeInTheDocument();
   });
 
-  it('should render desktop navigation links and trigger onNavigate', () => {
+  it('should render desktop navigation links and trigger onNavigate when authenticated', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-student-1',
+        email: 'aluno@enem.com',
+        name: 'Aluno ENEM',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-10-14T10:00:00Z',
+      },
+      token: 'mock-token',
+      isAuthenticated: true,
+    });
     const handleNavigate = vi.fn();
     renderWithClient(
       <Header onOpenDrawer={vi.fn()} activeSection="practice" onNavigate={handleNavigate} />
@@ -69,6 +81,17 @@ describe('Header component', () => {
     const brandBtn = screen.getByRole('button', { name: /AprovaENEM/i });
     fireEvent.click(brandBtn);
     expect(handleNavigate).toHaveBeenCalledWith('home');
+  });
+
+  it('should render only public navigation links and hide Ranking and Diagnóstico when user is unauthenticated', () => {
+    useAuthStore.setState({ user: null, token: null, isAuthenticated: false });
+    renderWithClient(<Header onOpenDrawer={vi.fn()} activeSection="practice" />);
+
+    expect(screen.getByRole('button', { name: /Início/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Praticar/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Ranking/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Diagnóstico/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Entrar/i })).toBeInTheDocument();
   });
 
   it('should trigger onOpenDrawer when mobile hamburger button is clicked', () => {

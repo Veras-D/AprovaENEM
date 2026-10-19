@@ -77,13 +77,23 @@ export const App: React.FC = () => {
           <LandingPage
             onStartPractice={() => handleNavigate('practice')}
             onNavigate={handleNavigate}
+            onOpenAuthModal={() => useAuthStore.getState().openAuthModal('login')}
           />
         ) : activeSection === 'leaderboard' ? (
-          <GamificationDashboard onStartPractice={() => handleNavigate('practice')} />
+          <GamificationDashboard
+            onStartPractice={() => handleNavigate('practice')}
+            onOpenAuthModal={(mode) => useAuthStore.getState().openAuthModal(mode ?? 'login')}
+          />
         ) : activeSection === 'diagnostics' ? (
-          <DiagnosticDashboard onPracticeTopic={() => handleNavigate('practice')} />
+          <DiagnosticDashboard
+            onPracticeTopic={() => handleNavigate('practice')}
+            onOpenAuthModal={(mode) => useAuthStore.getState().openAuthModal(mode ?? 'login')}
+          />
         ) : activeSection === 'institutional' ? (
-          <InstitutionalDashboard onNavigate={handleNavigate} />
+          <InstitutionalDashboard
+            onNavigate={handleNavigate}
+            onOpenAuthModal={() => useAuthStore.getState().openAuthModal('login')}
+          />
         ) : (
           <PracticeHero onOpenGamification={() => handleNavigate('leaderboard')} />
         )}

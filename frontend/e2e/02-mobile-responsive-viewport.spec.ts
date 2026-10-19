@@ -1,15 +1,78 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+
+async function setupAuthenticatedStudent(page: Page) {
+  await page.addInitScript(() => {
+    window.localStorage.setItem('aprovaenem_auth_token', 'mock-student-token');
+    window.localStorage.setItem(
+      'aprovaenem_auth_user',
+      JSON.stringify({
+        id: 'usr-student-1',
+        name: 'Estudante ENEM',
+        email: 'estudante@enem.com',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-10-14T10:00:00Z',
+      })
+    );
+  });
+}
 
 test.describe('Mobile Device Responsive Viewports & Touch Emulation', () => {
   test.beforeEach(async ({ page }) => {
-    await page.addInitScript(() => {
-      window.localStorage.clear();
+    await page.route('**/api/v1/gamification/**', async (route) => {
+      const url = route.request().url();
+      if (url.includes('leaderboard')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            league: 'GOLD',
+            leagueTier: 'GOLD',
+            weekNumber: 42,
+            year: 2026,
+            resetsAt: '2026-10-18T23:59:59Z',
+            totalParticipants: 1,
+            entries: [
+              {
+                rank: 1,
+                userId: 'usr-student-1',
+                studentName: 'Estudante ENEM',
+                displayName: 'Estudante ENEM',
+                weeklyXp: 750,
+                streakDays: 7,
+                promotionZone: true,
+                isCurrentUser: true,
+              },
+            ],
+          }),
+        });
+      } else {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            userId: 'usr-student-1',
+            currentXp: 450,
+            level: 3,
+            levelTitle: 'Calouro Iniciante',
+            currentStreakDays: 5,
+            longestStreakDays: 14,
+            streakFreezeAvailable: true,
+            dailyGoalTarget: 5,
+            dailyGoalProgress: 3,
+            weeklyLeague: 'GOLD',
+            unlockedBadges: ['PRIMEIRA_QUESTAO', 'STREAK_DIAS'],
+          }),
+        });
+      }
     });
-    await page.goto('/?section=practice');
-    await page.waitForLoadState('domcontentloaded');
   });
 
-  test('verifies mobile navigation elements adapt to viewport size', async ({ page, isMobile }) => {
+  test('verifies mobile navigation elements adapt to viewport size for authenticated students', async ({ page, isMobile }) => {
+    await setupAuthenticatedStudent(page);
+    await page.goto('/?section=practice');
+    await page.waitForLoadState('domcontentloaded');
+
     const bottomNav = page.locator('nav[aria-label="Navegação móvel inferior"]');
 
     if (isMobile) {
@@ -36,8 +99,32 @@ test.describe('Mobile Device Responsive Viewports & Touch Emulation', () => {
     }
   });
 
+  test('renders only public mobile navigation tabs when visitor is unauthenticated', async ({ page, isMobile }) => {
+    test.skip(!isMobile, 'Mobile bottom nav test is specific to mobile viewports');
+
+    // Unauthenticated guest navigation
+    await page.goto('/?section=practice');
+    await page.waitForLoadState('domcontentloaded');
+
+    const bottomNav = page.locator('nav[aria-label="Navegação móvel inferior"]');
+    await expect(bottomNav).toBeVisible();
+
+    // Public tabs
+    await expect(bottomNav.getByRole('button', { name: /Início/i })).toBeVisible();
+    await expect(bottomNav.getByRole('button', { name: /Praticar/i })).toBeVisible();
+    await expect(bottomNav.getByRole('button', { name: /Mais|Abrir menu/i })).toBeVisible();
+
+    // Personalized tabs must be hidden for unauthenticated visitors
+    await expect(bottomNav.getByRole('button', { name: /Ranking/i })).toBeHidden();
+    await expect(bottomNav.getByRole('button', { name: /Diagnóstico/i })).toBeHidden();
+  });
+
   test('opens mobile drawer menu and closes on escape or close button', async ({ page, isMobile }) => {
     test.skip(!isMobile, 'Mobile drawer is only triggered on mobile viewports');
+
+    await setupAuthenticatedStudent(page);
+    await page.goto('/?section=practice');
+    await page.waitForLoadState('domcontentloaded');
 
     // Open mobile drawer via bottom nav menu trigger
     const menuTrigger = page.locator('button[aria-label*="menu" i]').first();
@@ -61,6 +148,9 @@ test.describe('Mobile Device Responsive Viewports & Touch Emulation', () => {
   test('ensures interactive controls meet WCAG minimum touch target size on mobile', async ({ page, isMobile }) => {
     test.skip(!isMobile, 'Touch target validation is specific to mobile viewports');
 
+    await page.goto('/?section=practice');
+    await page.waitForLoadState('domcontentloaded');
+
     // Validate radio options have sufficient touch size (>= 44px)
     const radioItems = page.locator('[role="radio"]');
     const firstRadio = radioItems.first();
@@ -83,6 +173,9 @@ test.describe('Mobile Device Responsive Viewports & Touch Emulation', () => {
   });
 
   test('verifies horizontal viewport stability without horizontal overflow', async ({ page }) => {
+    await page.goto('/?section=practice');
+    await page.waitForLoadState('domcontentloaded');
+
     // Check that page content fits within viewport without unwanted horizontal scroll
     const hasHorizontalOverflow = await page.evaluate(() => {
       return document.documentElement.scrollWidth > window.innerWidth;
@@ -92,6 +185,10 @@ test.describe('Mobile Device Responsive Viewports & Touch Emulation', () => {
 
   test('allows switching views via mobile navigation bar', async ({ page, isMobile }) => {
     test.skip(!isMobile, 'Mobile navigation switching is tested on mobile viewports');
+
+    await setupAuthenticatedStudent(page);
+    await page.goto('/?section=practice');
+    await page.waitForLoadState('domcontentloaded');
 
     const bottomNav = page.locator('nav[aria-label="Navegação móvel inferior"]');
 

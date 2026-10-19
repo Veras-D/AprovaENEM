@@ -82,6 +82,11 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'diagnostics', label: 'Diagnóstico', icon: BarChart2, isAnchor: false },
   ];
 
+  const guestNavLinks: readonly NavLinkItem[] = [
+    { id: 'home', label: 'Início', icon: Home, isAnchor: false },
+    { id: 'practice', label: 'Praticar', icon: BookOpen, isAnchor: false },
+  ];
+
   const coordinatorNavLinks: readonly NavLinkItem[] = [
     { id: 'cohort-overview', label: 'Turmas', fullLabel: 'Turmas & Métricas', icon: Users, isAnchor: true },
     { id: 'cohort-radar', label: 'Radar', fullLabel: 'Radar Comparativo', icon: TrendingUp, isAnchor: true },
@@ -91,11 +96,15 @@ export const Header: React.FC<HeaderProps> = ({
 
   // In institutional mode, ONLY render cohort metric links if user is an authorized coordinator.
   // Unauthenticated visitors and regular students on the login/403 gate see zero cohort links.
+  // In student mode, unauthenticated guests only see public exploratory actions (Início, Praticar).
+  // Personalized features (Ranking, Diagnóstico) require authentication.
   const navLinks: readonly NavLinkItem[] = isInstitutional
     ? isCoordinator
       ? coordinatorNavLinks
       : []
-    : studentNavLinks;
+    : isAuthenticated
+      ? studentNavLinks
+      : guestNavLinks;
 
   const handleNavLinkClick = (link: { id: string; isAnchor?: boolean }) => {
     if (link.isAnchor) {

@@ -40,11 +40,36 @@ describe('MobileDrawer component', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('should render dialog, tenant brand, and navigation items when isOpen is true', () => {
+  it('should render dialog, tenant brand, and public navigation items when isOpen is true and unauthenticated', () => {
     renderWithClient(<MobileDrawer isOpen={true} onClose={vi.fn()} />);
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText('AprovaENEM Social')).toBeInTheDocument();
+    expect(screen.getByText('Início')).toBeInTheDocument();
+    expect(screen.getByText('Praticar Questões')).toBeInTheDocument();
+    expect(screen.getByText('Minha Conta')).toBeInTheDocument();
+
+    // Personalized student items must NOT be rendered for guests
+    expect(screen.queryByText('Ranking Semanal')).not.toBeInTheDocument();
+    expect(screen.queryByText('Diagnóstico & Desempenho')).not.toBeInTheDocument();
+  });
+
+  it('should render personalized student items (Ranking, Diagnóstico) when authenticated', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-student-1',
+        name: 'Aluno ENEM',
+        email: 'aluno@enem.com',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-10-14T10:00:00Z',
+      },
+      token: 'mock-token',
+      isAuthenticated: true,
+    });
+
+    renderWithClient(<MobileDrawer isOpen={true} onClose={vi.fn()} />);
+
     expect(screen.getByText('Início')).toBeInTheDocument();
     expect(screen.getByText('Praticar Questões')).toBeInTheDocument();
     expect(screen.getByText('Ranking Semanal')).toBeInTheDocument();
@@ -70,6 +95,18 @@ describe('MobileDrawer component', () => {
   });
 
   it('should navigate and close drawer when navigation item is clicked', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-student-1',
+        name: 'Aluno ENEM',
+        email: 'aluno@enem.com',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-10-14T10:00:00Z',
+      },
+      token: 'mock-token',
+      isAuthenticated: true,
+    });
     const handleNavigate = vi.fn();
     const handleClose = vi.fn();
     renderWithClient(

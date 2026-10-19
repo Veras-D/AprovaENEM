@@ -2,14 +2,36 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { App } from './App';
 import { useSessionStore } from '@/stores/useSessionStore';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 describe('App Root Integration Component', () => {
+  const mockStudent = {
+    id: 'usr-student-1',
+    email: 'aluno@enem.com',
+    name: 'Estudante ENEM',
+    roles: ['ROLE_STUDENT'],
+    isEmailVerified: true,
+    createdAt: '2026-10-14T10:00:00Z',
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
     useSessionStore.getState().clearSession();
+    useAuthStore.setState({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+    });
+    localStorage.clear();
+    window.history.pushState({}, '', '/');
+    window.location.hash = '';
   });
 
-  it('renders LandingPage by default, navigates to PracticeHero via CTA, and switches to GamificationDashboard', async () => {
+  it('renders LandingPage by default, navigates to PracticeHero via CTA, and switches to GamificationDashboard when authenticated', async () => {
+    localStorage.setItem('aprovaenem_auth_token', 'mock-student-token');
+    localStorage.setItem('aprovaenem_auth_user', JSON.stringify(mockStudent));
+    useAuthStore.getState().syncAuthFromStorage();
+
     render(<App />);
 
     // Default view is LandingPage
@@ -66,7 +88,11 @@ describe('App Root Integration Component', () => {
     });
   });
 
-  it('switches to DiagnosticDashboard via navigation', async () => {
+  it('switches to DiagnosticDashboard via navigation when authenticated', async () => {
+    localStorage.setItem('aprovaenem_auth_token', 'mock-student-token');
+    localStorage.setItem('aprovaenem_auth_user', JSON.stringify(mockStudent));
+    useAuthStore.getState().syncAuthFromStorage();
+
     render(<App />);
 
     const diagNavButtons = screen.getAllByRole('button', { name: /diagnóstico/i });
@@ -77,5 +103,37 @@ describe('App Root Integration Component', () => {
       expect(screen.getByText('Raio-X Diagnóstico de Habilidades')).toBeInTheDocument();
     });
     expect(screen.getByText('Matriz INEP ENEM')).toBeInTheDocument();
+  });
+
+  it('renders Student Login Gate when unauthenticated visitor navigates directly to ?section=leaderboard', async () => {
+    window.history.pushState({}, '', '/?section=leaderboard');
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Conquistas, Nível de XP & Ranking da Liga')).toBeInTheDocument();
+    });
+    expect(screen.getByText(/Acesso Restrito • Área do Aluno/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/E-mail do Aluno/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Entrar na Minha Conta/i })).toBeInTheDocument();
+
+    // Sensitive gamification metrics must NOT be rendered
+    expect(screen.queryByText('Painel de Conquistas & XP')).not.toBeInTheDocument();
+  });
+
+  it('renders Student Login Gate when unauthenticated visitor navigates directly to ?section=diagnostics', async () => {
+    window.history.pushState({}, '', '/?section=diagnostics');
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Diagnóstico Individual & Radar de Proficiência ENEM')).toBeInTheDocument();
+    });
+    expect(screen.getByText(/Acesso Restrito • Área do Aluno/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/E-mail do Aluno/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Entrar na Minha Conta/i })).toBeInTheDocument();
+
+    // Sensitive diagnostic metrics must NOT be rendered
+    expect(screen.queryByText('Raio-X Diagnóstico de Habilidades')).not.toBeInTheDocument();
   });
 });

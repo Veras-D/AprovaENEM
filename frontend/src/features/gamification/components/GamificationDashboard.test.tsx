@@ -1,12 +1,22 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GamificationDashboard } from './GamificationDashboard';
+import { useAuthStore } from '@/stores/useAuthStore';
 import type { GamificationProfileDto } from '@/api/types';
 
 describe('GamificationDashboard Component', () => {
   let queryClient: QueryClient;
+
+  beforeEach(() => {
+    useAuthStore.setState({
+      token: null,
+      user: null,
+      isAuthenticated: false,
+    });
+    vi.clearAllMocks();
+  });
 
   const mockProfile: GamificationProfileDto = {
     userId: 'user-gamify-1',
@@ -120,5 +130,39 @@ describe('GamificationDashboard Component', () => {
     renderWithProviders(<GamificationDashboard profile={mockProfile} defaultTab="leaderboard" />);
 
     expect(screen.getByRole('heading', { name: /^Liga Ouro$/i })).toBeInTheDocument();
+  });
+
+  it('renders Student Login Gate and hides gamification metrics when user is unauthenticated', () => {
+    renderWithProviders(<GamificationDashboard />);
+
+    expect(screen.getByText('Conquistas, Nível de XP & Ranking da Liga')).toBeInTheDocument();
+    expect(screen.getByText(/Acesso Restrito/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/E-mail do Aluno/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Senha$/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Entrar na Minha Conta/i })).toBeInTheDocument();
+
+    // Sensitive student metrics must NOT leak
+    expect(screen.queryByText('Painel de Conquistas & XP')).not.toBeInTheDocument();
+    expect(screen.queryByText('Meta Diária de Estudos')).not.toBeInTheDocument();
+  });
+
+  it('invokes onOpenAuthModal and onStartPractice from the Student Login Gate', () => {
+    const onOpenAuthModalMock = vi.fn();
+    const onStartPracticeMock = vi.fn();
+
+    renderWithProviders(
+      <GamificationDashboard
+        onOpenAuthModal={onOpenAuthModalMock}
+        onStartPractice={onStartPracticeMock}
+      />
+    );
+
+    const registerBtn = screen.getByText(/Cadastre-se gratuitamente/i);
+    fireEvent.click(registerBtn);
+    expect(onOpenAuthModalMock).toHaveBeenCalledWith('register');
+
+    const returnBtn = screen.getByText(/Voltar ao Simulado Rápido/i);
+    fireEvent.click(returnBtn);
+    expect(onStartPracticeMock).toHaveBeenCalledTimes(1);
   });
 });

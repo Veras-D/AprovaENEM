@@ -6,9 +6,13 @@ interface AuthState {
   readonly token: string | null;
   readonly user: UserProfile | null;
   readonly isAuthenticated: boolean;
+  readonly isAuthModalOpen: boolean;
+  readonly authModalMode: 'login' | 'register';
   readonly setAuth: (token: string, user: UserProfile) => void;
   readonly clearAuth: () => void;
   readonly syncAuthFromStorage: () => void;
+  readonly openAuthModal: (mode?: 'login' | 'register') => void;
+  readonly closeAuthModal: () => void;
 }
 
 const STORAGE_KEY_TOKEN = 'aprovaenem_auth_token';
@@ -34,16 +38,24 @@ export const useAuthStore = create<AuthState>((set) => {
     token: initialToken,
     user: initialUser,
     isAuthenticated: Boolean(initialToken),
+    isAuthModalOpen: false,
+    authModalMode: 'login',
     setAuth: (token: string, user: UserProfile) => {
       localStorage.setItem(STORAGE_KEY_TOKEN, token);
       localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
       useSessionStore.getState().migrateAnonymousProgress(user.id);
-      set({ token, user, isAuthenticated: true });
+      set({ token, user, isAuthenticated: true, isAuthModalOpen: false });
     },
     clearAuth: () => {
       localStorage.removeItem(STORAGE_KEY_TOKEN);
       localStorage.removeItem(STORAGE_KEY_USER);
-      set({ token: null, user: null, isAuthenticated: false });
+      set({ token: null, user: null, isAuthenticated: false, isAuthModalOpen: false });
+    },
+    openAuthModal: (mode: 'login' | 'register' = 'login') => {
+      set({ isAuthModalOpen: true, authModalMode: mode });
+    },
+    closeAuthModal: () => {
+      set({ isAuthModalOpen: false });
     },
     syncAuthFromStorage: () => {
       if (typeof window !== 'undefined') {

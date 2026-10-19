@@ -4,7 +4,24 @@ describe('Gamification & Diagnostic Dashboard E2E', () => {
     cy.visit('/');
   });
 
-  it('navigates to Gamification & Leaderboard view and renders level progress, streak, and badge shelf', () => {
+  it('navigates to Gamification & Leaderboard view and renders level progress, streak, and badge shelf for authenticated student', () => {
+    cy.visit('/', {
+      onBeforeLoad(win) {
+        win.localStorage.setItem('aprovaenem_auth_token', 'mock-student-token');
+        win.localStorage.setItem(
+          'aprovaenem_auth_user',
+          JSON.stringify({
+            id: 'usr-student-1',
+            name: 'Mariana Souza',
+            email: 'mariana@enem.com',
+            roles: ['ROLE_STUDENT'],
+            isEmailVerified: true,
+            createdAt: '2026-10-14T10:00:00Z',
+          })
+        );
+      },
+    });
+
     // Navigate to Leaderboard / Ranking section
     cy.get('header nav, [aria-label*="Navegação móvel inferior" i]').contains(/Ranking|Progresso/i).click();
 
@@ -21,7 +38,24 @@ describe('Gamification & Diagnostic Dashboard E2E', () => {
     cy.contains(/Liga|Bronze|Prata|Ouro|Diamante/i).should('be.visible');
   });
 
-  it('navigates to Diagnostic Dashboard and renders skill radar chart and accessible table view', () => {
+  it('navigates to Diagnostic Dashboard and renders skill radar chart and accessible table view for authenticated student', () => {
+    cy.visit('/', {
+      onBeforeLoad(win) {
+        win.localStorage.setItem('aprovaenem_auth_token', 'mock-student-token');
+        win.localStorage.setItem(
+          'aprovaenem_auth_user',
+          JSON.stringify({
+            id: 'usr-student-1',
+            name: 'Mariana Souza',
+            email: 'mariana@enem.com',
+            roles: ['ROLE_STUDENT'],
+            isEmailVerified: true,
+            createdAt: '2026-10-14T10:00:00Z',
+          })
+        );
+      },
+    });
+
     // Navigate to Diagnostic section
     cy.get('header nav, [aria-label*="Navegação móvel inferior" i]').contains(/Diagnóstico|Raio-X/i).click();
 
@@ -42,6 +76,33 @@ describe('Gamification & Diagnostic Dashboard E2E', () => {
     // Switch back to radar chart
     cy.contains(/Ver Gráfico/i).click();
     cy.get('[role="img"][aria-label*="radar" i]').should('exist');
+  });
+
+  it('protects student gamification and ranking portal with login gate for unauthenticated visitors', () => {
+    cy.visit('/?section=leaderboard');
+
+    // Verify Student Login Gate
+    cy.contains(/Conquistas, Nível de XP & Ranking da Liga/i).should('be.visible');
+    cy.contains(/Acesso Restrito/i).should('be.visible');
+    cy.contains(/E-mail do Aluno/i).should('be.visible');
+    cy.get('button').contains(/Entrar na Minha Conta/i).should('be.visible');
+
+    // Sensitive student stats must NOT be leaked
+    cy.contains('Meta Diária de Estudos').should('not.exist');
+    cy.contains('Conquistas e Medalhas').should('not.exist');
+  });
+
+  it('protects student diagnostic dashboard with login gate for unauthenticated visitors', () => {
+    cy.visit('/?section=diagnostics');
+
+    // Verify Student Diagnostic Gate
+    cy.contains(/Diagnóstico Individual & Radar de Proficiência ENEM/i).should('be.visible');
+    cy.contains(/Acesso Restrito/i).should('be.visible');
+    cy.contains(/E-mail do Aluno/i).should('be.visible');
+    cy.get('button').contains(/Entrar na Minha Conta/i).should('be.visible');
+
+    // Sensitive diagnostic metrics must NOT be leaked
+    cy.contains('Raio-X Diagnóstico de Habilidades').should('not.exist');
   });
 
   it('protects institutional coordinator portal with authentication login gate', () => {
