@@ -18,11 +18,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Progressive badges render real-time progress bars showing exact numerical progression (e.g., `35/50 questões (70%)`, `18/50 acertos (36%)`, `8/10 dúvidas resolvidas (80%)`).
     - Added metallic tier pills (`Bronze 🥉`, `Prata 🥈`, `Ouro 🥇`, `Diamante 💎`) displaying active tier and indicating the next tier goal.
     - Dual-tone progress bar styling: vibrant emerald (`bg-emerald-500`) for 100% unlocked achievements and motivating amber (`bg-amber-500`) for in-progress tiers.
+    - Enforced strict progress consistency for locked badges (`A Conquistar`), preventing them from displaying contradictory 100% progress or full progress bars:
+      - Synchronized `BADGE_CATALOG` initial mock progress targets (`STREAK_7_DIAS` to 4/7 dias, `FIM_DE_SEMANA_ATIVO` to 1/2 dias, `PRECISAO_CIRURGICA` to 3/5 acertos, `ACESSIBILIDADE_TOTAL` to 0/1 recurso).
+      - Added defensive runtime clamping in [`BadgeShelf.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/components/BadgeShelf.tsx) guaranteeing that unearned locked badges clamp progress below 100% (`Math.min(99, ...)` and `current <= target - 1`).
+      - Polished locked badge copy to use motivating action-oriented imperative grammar (*"Pratique durante 7 dias"*, *"Personalize seus recursos inclusivos"*).
   - **Category Pill Filters & Status Tabs ([`BadgeShelf.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/components/BadgeShelf.tsx))**:
     - Added horizontal category filter pills (`Todas`, `Jornada & Volume`, `Áreas do ENEM`, `Ofensiva & Hábito`, `Desafios & Precisão`, `Especiais & IA`) with accessible ARIA states.
     - Added status tabs (`Todas`, `Desbloqueadas`, `A Conquistar`) showing dynamic counts (e.g. `Desbloqueadas (2)`).
-    - Dynamic progress summary header indicating global achievements unlocked: `2 de 20 conquistas desbloqueadas (10%)`.
-  - **Comprehensive Test Coverage & Quality Gates**: Updated [`BadgeShelf.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/components/BadgeShelf.test.tsx) and verified 100% green test execution across all 71 Vitest test suites (464/464 tests passing), zero axe-core accessibility violations (23/23 tests green), zero ESLint warnings (`max-warnings 0`), and clean Vite production build.
+    - Dynamic progress summary header indicating global achievements unlocked: `3 de 20 conquistas desbloqueadas (15%)`.
+  - **Comprehensive Test Coverage & Quality Gates**: Added unit test `never displays 100% progress on locked badges` in [`BadgeShelf.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/components/BadgeShelf.test.tsx) and verified 100% green test execution across all 71 Vitest test suites (465/465 tests passing), zero axe-core accessibility violations (23/23 tests green), zero ESLint warnings (`max-warnings 0`), and clean Vite production build.
 
 ### 🏆 Restricted League Ranking Visibility to Active Division & Fixed Promotion/Relegation Zone Calculations
 - fix(gamification): Enforced strict division ranking privacy and accurate zone status mathematical thresholds (TASK-S6-18):

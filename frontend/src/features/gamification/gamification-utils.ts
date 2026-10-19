@@ -103,11 +103,11 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
   {
     id: 'STREAK_7_DIAS',
     name: 'Semana de Ouro',
-    description: 'Praticou durante 7 dias seguidos construindo uma rotina consistente.',
+    description: 'Pratique durante 7 dias seguidos construindo uma rotina consistente.',
     iconName: 'Zap',
     category: 'STREAK_HABIT',
     categoryLabel: 'Ofensiva & Hábito',
-    progress: { current: 7, target: 7, unit: 'dias' },
+    progress: { current: 4, target: 7, unit: 'dias' },
   },
   {
     id: 'STREAK_30_DIAS',
@@ -121,11 +121,11 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
   {
     id: 'FIM_DE_SEMANA_ATIVO',
     name: 'Foco no Fim de Semana',
-    description: 'Praticou no sábado e domingo mantendo a ofensiva de estudos sem interrupções.',
+    description: 'Pratique no sábado e domingo mantendo a ofensiva de estudos sem interrupções.',
     iconName: 'Calendar',
     category: 'STREAK_HABIT',
     categoryLabel: 'Ofensiva & Hábito',
-    progress: { current: 2, target: 2, unit: 'dias' },
+    progress: { current: 1, target: 2, unit: 'dias' },
   },
 
   // --- Grupo 3: Áreas do Conhecimento do ENEM (Progressivas por Matéria) ---
@@ -178,7 +178,7 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     iconName: 'Target',
     category: 'CHALLENGE',
     categoryLabel: 'Desafios & Precisão',
-    progress: { current: 5, target: 5, unit: 'acertos seguidos' },
+    progress: { current: 3, target: 5, unit: 'acertos seguidos' },
   },
   {
     id: 'GABARITO_PERFEITO',
@@ -231,11 +231,11 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
   {
     id: 'ACESSIBILIDADE_TOTAL',
     name: 'Inclusão & Acessibilidade',
-    description: 'Personalizou seus recursos inclusivos (VLibras, Leitor por Voz, Alto Contraste ou Régua).',
+    description: 'Personalize seus recursos inclusivos (VLibras, Leitor por Voz, Alto Contraste ou Régua).',
     iconName: 'Sparkles',
     category: 'SPECIAL',
     categoryLabel: 'Especiais & IA',
-    progress: { current: 1, target: 1, unit: 'recurso utilizado' },
+    progress: { current: 0, target: 1, unit: 'recurso utilizado' },
   },
   {
     id: 'NOTA_1000',

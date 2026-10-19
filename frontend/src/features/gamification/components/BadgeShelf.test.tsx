@@ -58,4 +58,26 @@ describe('BadgeShelf Component', () => {
     expect(screen.getAllByText(/Progresso:/i)).toHaveLength(3);
     expect(screen.queryByText('Mestre da Matemática')).not.toBeInTheDocument();
   });
+
+  it('never displays 100% progress on locked badges', () => {
+    render(<BadgeShelf unlockedBadges={mockUnlocked} />);
+
+    // Click "A Conquistar" to view only locked badges
+    const lockedTab = screen.getByRole('tab', { name: /A Conquistar/i });
+    fireEvent.click(lockedTab);
+
+    // Verify that none of the locked badges show 100%
+    const allProgressTexts = screen.getAllByText(/Progresso:/i);
+    expect(allProgressTexts.length).toBeGreaterThan(0);
+
+    // Check specific badges reported previously
+    expect(screen.getByText('4/7 dias (57%)')).toBeInTheDocument();
+    expect(screen.getByText('1/2 dias (50%)')).toBeInTheDocument();
+    expect(screen.getByText('3/5 acertos seguidos (60%)')).toBeInTheDocument();
+    expect(screen.getByText('0/1 recurso utilizado (0%)')).toBeInTheDocument();
+
+    // Verify that (100%) does NOT exist anywhere in the locked tab
+    expect(screen.queryByText(/\(100%\)/)).not.toBeInTheDocument();
+  });
 });
+

@@ -223,11 +223,23 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
             const IconComponent = BADGE_ICONS[badge.iconName] || Trophy;
 
             // Calculate progress percentage if available
-            const progress = badge.progress;
+            const rawProgress = badge.progress;
+            // Consistency rule:
+            // 1. If unlocked: progress is 100% (target / target) and renders in emerald
+            // 2. If locked: progress cannot reach 100%. If current >= target, clamp to at most target - 1 (or 0 if target is 1)
+            const progress = rawProgress
+              ? {
+                  ...rawProgress,
+                  current: isUnlocked
+                    ? rawProgress.target
+                    : Math.min(rawProgress.current, Math.max(0, rawProgress.target - 1)),
+                }
+              : undefined;
+
             const progressPct = progress
               ? isUnlocked
                 ? 100
-                : Math.min(100, Math.round((progress.current / progress.target) * 100))
+                : Math.min(99, Math.round((progress.current / progress.target) * 100))
               : isUnlocked
               ? 100
               : 0;
