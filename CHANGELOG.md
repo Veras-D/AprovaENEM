@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-18
+### 📝 Official ENEM Exam Simulation Mode & Clipboard Copy Hotkey Fix
+- feat(practice): Implemented authentic official ENEM exam simulation mode configurator by year and day, powering the renamed "Simulado Oficial ENEM" achievement, and resolved browser clipboard copy interception (TASK-S6-20):
+  - **Official ENEM Exam Simulation Modal ([`ExamSimulationModal.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/ExamSimulationModal.tsx))**:
+    - Created an accessible modal dialog adhering to WAI-ARIA modal patterns with focus trapping, `Escape` key and backdrop dismissal, and semantic fieldsets for configuring custom official simulations:
+      - *Edição / Ano*: Direct selection among official historical editions (`2023`, `2022`, `2021`, `2020`, `2019`). Excluded ambiguous "Todas" option to keep simulation true to official INEP exams.
+      - *Dia de Aplicação & Áreas*: Filter strictly by official INEP test days to simulate authentic exam sessions:
+        - **Dia 1 (1º Domingo)**: Linguagens, Códigos e suas Tecnologias (LC) + Ciências Humanas e suas Tecnologias (CH).
+        - **Dia 2 (2º Domingo)**: Ciências da Natureza e suas Tecnologias (CN) + Matemática e suas Tecnologias (MT).
+        - *Excluded Combined/Multidisciplinar Option*: Enforced strict single-day simulation structure matching the actual two-Sunday ENEM calendar.
+      - *Ritmo de Resolução*: Switch between *Ritmo Oficial INEP* (3 minutos por questão com alerta visual de tempo) and *Treino Livre* (cronômetro sem contagem regressiva).
+    - Eliminated redundant achievement callout banner to maintain a distraction-free, minimalist exam start modal.
+  - **Browser Clipboard Copying & Modifier Shortcut Protection ([`OptionSelector.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/OptionSelector.tsx), [`QuestionCard.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/QuestionCard.tsx))**:
+    - Fixed keyboard event listeners by guarding with `if (e.ctrlKey || e.metaKey || e.altKey) return;`.
+    - Previously, pressing `Ctrl+C` or `Cmd+C` to copy text on the question card was erroneously intercepted by the single-letter hotkey `'C'`, calling `e.preventDefault()` and selecting Option C while blocking the browser copy operation.
+    - Added dedicated unit test in [`OptionSelector.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/OptionSelector.test.tsx) asserting that modifier keys (`Ctrl+C`, `Cmd+C`, `Ctrl+A`) are ignored by the selector and never prevent standard clipboard operations.
+  - **Practice Toolbar & Session Integration ([`PracticeHero.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.tsx))**:
+    - Added *"Simular Prova Oficial"* secondary action button with `Layers` icon directly on the practice hero control bar.
+    - Added dynamic simulation session generator (`handleStartCustomSimulation`) that filters the question catalog according to selected day/areas and year, dynamically updates the practice session title (e.g. `Simulado Oficial ENEM 2023 — Dia 1 (Linguagens & Humanas)`), resets the session timer, and scrolls into view.
+    - Added keyboard navigation isolation when modal dialog is open to prevent accidental shortcut triggering.
+  - **Badge Re-alignment & Copy Optimization ([`gamification-utils.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/gamification-utils.ts))**:
+    - Renamed badge `SIMULADOS_COMPLETOS` from the confusing/punitive *"Dia de Prova"* (which implied practicing on the exact real-world ENEM exam Sunday) to **"Simulado Oficial ENEM"**.
+    - Updated copy to clearly reflect simulated exam completion: *"Simule e complete edições oficiais do ENEM por ano e dia de aplicação com controle de tempo."*
+  - **Comprehensive Test Coverage**: Added dedicated unit test suite [`ExamSimulationModal.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/ExamSimulationModal.test.tsx) (4/4 tests green), updated [`PracticeHero.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.test.tsx) (11/11 tests green), updated [`OptionSelector.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/OptionSelector.test.tsx) (8/8 tests green), updated [`BadgeShelf.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/components/BadgeShelf.test.tsx) (4/4 tests green), and verified 100% green execution across all 72 Vitest suites (471/471 tests passing), 0 ESLint warnings (`max-warnings 0`), 0 axe-core accessibility violations, and clean Vite production build.
+
 ### 🏅 Progressive Tiered Badges, Live Progress Bars & Categorized Mission Catalog
 - feat(gamification): Re-engineered achievements and medal shelf with progressive multi-tier tracks, live progress bars, and categorized mission filtering (TASK-S6-19):
   - **Authentic 20-Badge Mission Catalog ([`gamification-utils.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/gamification-utils.ts))**: Expanded the badge system from 9 flat, confusing badges into 20 motivating, ENEM-focused achievements categorized into 5 pedagogical domains with measurable criteria:

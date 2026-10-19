@@ -139,4 +139,27 @@ describe('OptionSelector Component', () => {
     const radios = screen.getAllByRole('radio');
     expect(radios.length).toBe(5);
   });
+
+  it('does not intercept browser shortcuts when modifier keys are pressed (e.g. Ctrl+C, Cmd+C, Ctrl+A)', () => {
+    const handleSelect = vi.fn();
+    render(
+      <OptionSelector
+        options={sampleOptions}
+        selectedOption={null}
+        onSelectOption={handleSelect}
+      />
+    );
+
+    // Press Ctrl+C (copy) - should NOT select Option C
+    fireEvent.keyDown(window, { key: 'c', ctrlKey: true });
+    expect(handleSelect).not.toHaveBeenCalled();
+
+    // Press Cmd+C (macOS copy) - should NOT select Option C
+    fireEvent.keyDown(window, { key: 'c', metaKey: true });
+    expect(handleSelect).not.toHaveBeenCalled();
+
+    // Press Ctrl+A (select all) - should NOT select Option A
+    fireEvent.keyDown(window, { key: 'a', ctrlKey: true });
+    expect(handleSelect).not.toHaveBeenCalled();
+  });
 });

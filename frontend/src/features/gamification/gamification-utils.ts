@@ -62,8 +62,8 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
   },
   {
     id: 'SIMULADOS_COMPLETOS',
-    name: 'Dia de Prova',
-    description: 'Complete simulados com controle de tempo como no dia oficial do ENEM.',
+    name: 'Simulado Oficial ENEM',
+    description: 'Simule e complete edições oficiais do ENEM por ano e dia de aplicação com controle de tempo.',
     iconName: 'Award',
     category: 'PROGRESSION',
     categoryLabel: 'Jornada & Volume',

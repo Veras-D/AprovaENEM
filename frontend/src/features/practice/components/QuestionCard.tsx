@@ -137,6 +137,10 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         return;
       }
 
+      if (e.ctrlKey || e.metaKey || e.altKey) {
+        return;
+      }
+
       if (e.code === 'Space' && onOpenSocraticTutor) {
         e.preventDefault();
         onOpenSocraticTutor();

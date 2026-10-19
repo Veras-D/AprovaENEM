@@ -42,6 +42,11 @@ export const OptionSelector: React.FC<OptionSelectorProps> = ({
         return;
       }
 
+      // Do not intercept browser shortcuts like Ctrl+C (copy), Cmd+C, Ctrl+A (select all)
+      if (e.ctrlKey || e.metaKey || e.altKey) {
+        return;
+      }
+
       // Enter hotkey to confirm answer if an option is selected
       if (e.key === 'Enter' && selectedOption && !isSubmitted && onSubmitAnswer) {
         e.preventDefault();

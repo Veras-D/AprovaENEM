@@ -54,7 +54,7 @@ describe('BadgeShelf Component', () => {
     fireEvent.click(progressionBtn);
 
     expect(screen.getByText('Maratonista do ENEM')).toBeInTheDocument();
-    expect(screen.getByText('Dia de Prova')).toBeInTheDocument();
+    expect(screen.getByText('Simulado Oficial ENEM')).toBeInTheDocument();
     expect(screen.getAllByText(/Progresso:/i)).toHaveLength(3);
     expect(screen.queryByText('Mestre da Matemática')).not.toBeInTheDocument();
   });

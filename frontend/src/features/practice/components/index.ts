@@ -20,6 +20,14 @@ export {
   type TimeUpModalProps,
 } from './TimeUpModal';
 export {
+  ExamSimulationModal,
+  type ExamSimulationModalProps,
+  type ExamSimulationConfig,
+  type SimulationDay,
+  type SimulationTiming,
+} from './ExamSimulationModal';
+export {
   TIME_ACCOMMODATION_OPTIONS,
   type TimeAccommodationOption,
 } from '../time-accommodation-constants';
+

@@ -273,4 +273,35 @@ describe('PracticeHero Component', () => {
 
     document.body.removeChild(input);
   });
+
+  it('opens ExamSimulationModal and starts a customized official exam session', () => {
+    renderWithProviders();
+
+    // Click "Simular Prova Oficial" button
+    const openSimBtn = screen.getByRole('button', {
+      name: /Simular edição oficial do ENEM por ano e dia/i,
+    });
+    fireEvent.click(openSimBtn);
+
+    // Modal should be open
+    expect(screen.getByText('Simular Edição Oficial do ENEM')).toBeInTheDocument();
+
+    // Select Dia 1 (LC + CH)
+    const day1Btn = screen.getByText(/Dia 1 — Linguagens & Ciências Humanas/i).closest('button');
+    expect(day1Btn).toBeTruthy();
+    if (day1Btn) fireEvent.click(day1Btn);
+
+    // Select Year 2023
+    const year2023 = screen.getByRole('radio', { name: '2023' });
+    fireEvent.click(year2023);
+
+    // Click "Iniciar Simulado" (exact name to avoid matching Reiniciar)
+    const startBtn = screen.getByRole('button', { name: /^Iniciar Simulado$/i });
+    fireEvent.click(startBtn);
+
+    // Modal should close and session title should update
+    expect(screen.queryByText('Simular Edição Oficial do ENEM')).not.toBeInTheDocument();
+    expect(screen.getByText(/Simulado Oficial ENEM 2023 — Dia 1/i)).toBeInTheDocument();
+  });
 });
+

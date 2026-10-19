@@ -12,6 +12,8 @@ import {
   SocraticTutorDrawer,
   TimeAccommodationModal,
   TimeUpModal,
+  ExamSimulationModal,
+  type ExamSimulationConfig,
 } from './components';
 import {
   RotateCcw,
@@ -19,6 +21,7 @@ import {
   BookOpen,
   Bot,
   Trophy,
+  Layers,
 } from 'lucide-react';
 import type { QuestionOptionLetter, PracticeSession } from '@/types';
 import { mapDtoToDomainQuestion } from './practice-mappers';
@@ -50,6 +53,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
   const [showCelebration, setShowCelebration] = useState<boolean>(false);
   const [isAccommodationsOpen, setIsAccommodationsOpen] = useState<boolean>(false);
   const [isTimeUpModalOpen, setIsTimeUpModalOpen] = useState<boolean>(false);
+  const [isSimulationModalOpen, setIsSimulationModalOpen] = useState<boolean>(false);
 
   // Initialize session with authentic mock questions if empty
   useEffect(() => {
@@ -57,7 +61,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
       const domainQuestions = MOCK_QUESTIONS.map(mapDtoToDomainQuestion);
       const mockSession: PracticeSession = {
         id: 'session-demo-enem',
-        title: 'Simulado Rápido Multidisciplinar ENEM',
+        title: 'Simulado Rápido ENEM',
         questionCount: domainQuestions.length,
         status: 'IN_PROGRESS',
         currentQuestionIndex: 0,
@@ -106,7 +110,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
     const domainQuestions = MOCK_QUESTIONS.map(mapDtoToDomainQuestion);
     const mockSession: PracticeSession = {
       id: `session-${Date.now()}`,
-      title: 'Simulado Rápido Multidisciplinar ENEM',
+      title: 'Simulado Rápido ENEM',
       questionCount: domainQuestions.length,
       status: 'IN_PROGRESS',
       currentQuestionIndex: 0,
@@ -115,6 +119,56 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
     };
     startSession(mockSession, domainQuestions);
   }, [startSession]);
+
+  const handleStartCustomSimulation = useCallback(
+    (config: ExamSimulationConfig) => {
+      setShowCelebration(false);
+      setIsTimeUpModalOpen(false);
+
+      // Filter by day/subject
+      let filteredDtos = MOCK_QUESTIONS;
+      if (config.day === 'DAY_1') {
+        filteredDtos = filteredDtos.filter((q) => q.subject === 'LC' || q.subject === 'CH');
+      } else if (config.day === 'DAY_2') {
+        filteredDtos = filteredDtos.filter((q) => q.subject === 'CN' || q.subject === 'MT');
+      }
+
+      // Filter by year
+      const yearFiltered = filteredDtos.filter((q) => q.year === config.year);
+      // Graceful fallback if specific year has limited items in mock bank
+      if (yearFiltered.length > 0) {
+        filteredDtos = yearFiltered;
+      }
+
+      // Update timing mode
+      if (config.timing === 'UNTIMED') {
+        setTimeMode('UNTIMED');
+      } else if (timeMode === 'UNTIMED') {
+        setTimeMode('STANDARD');
+      }
+
+      const domainQuestions = filteredDtos.map(mapDtoToDomainQuestion);
+      const dayLabel =
+        config.day === 'DAY_1'
+          ? 'Dia 1 (Linguagens & Humanas)'
+          : 'Dia 2 (Natureza & Matemática)';
+
+      const title = `Simulado Oficial ENEM ${config.year} — ${dayLabel}`;
+
+      const customSession: PracticeSession = {
+        id: `session-sim-${Date.now()}`,
+        title,
+        questionCount: domainQuestions.length,
+        status: 'IN_PROGRESS',
+        currentQuestionIndex: 0,
+        correctCount: 0,
+        createdAt: new Date().toISOString(),
+      };
+
+      startSession(customSession, domainQuestions);
+    },
+    [setTimeMode, startSession, timeMode]
+  );
 
   // Session summary calculations
   const totalQuestions = questions.length;
@@ -150,7 +204,13 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
       }
 
       // Don't navigate questions if any modal or drawer is open
-      if (isTutorOpen || isAccommodationsOpen || isTimeUpModalOpen || showCelebration) {
+      if (
+        isTutorOpen ||
+        isAccommodationsOpen ||
+        isTimeUpModalOpen ||
+        showCelebration ||
+        isSimulationModalOpen
+      ) {
         return;
       }
 
@@ -192,6 +252,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
     isAccommodationsOpen,
     isTimeUpModalOpen,
     showCelebration,
+    isSimulationModalOpen,
   ]);
 
   return (
@@ -204,7 +265,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
           </div>
           <div>
             <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
-              Simulado Rápido ENEM
+              {activeSession?.title || 'Simulado Rápido ENEM'}
             </h2>
             <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
               <span>{totalAnswered} de {totalQuestions} respondidas</span>
@@ -220,7 +281,21 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
           </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end flex-wrap sm:flex-nowrap">
+          {/* Custom Exam Simulation Selector (Year and Day 1/2) */}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setIsSimulationModalOpen(true)}
+            aria-label="Simular edição oficial do ENEM por ano e dia"
+            title="Escolha o ano (2023, 2022...) e o caderno de aplicação (Dia 1 ou Dia 2)"
+            className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 text-xs sm:text-sm font-semibold"
+          >
+            <Layers className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />
+            <span className="hidden sm:inline">Simular Prova Oficial</span>
+          </Button>
+
           {/* Socratic AI Tutor Quick Action */}
           {currentQuestion && (
             <Button
@@ -420,6 +495,13 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
           setIsTimeUpModalOpen(false);
         }}
         onClose={() => setIsTimeUpModalOpen(false)}
+      />
+
+      {/* Official ENEM Exam Simulation Configurator Modal (Year & Day 1/2) */}
+      <ExamSimulationModal
+        isOpen={isSimulationModalOpen}
+        onClose={() => setIsSimulationModalOpen(false)}
+        onStartSimulation={handleStartCustomSimulation}
       />
     </div>
   );

@@ -1,0 +1,319 @@
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  X,
+  Calendar,
+  Layers,
+  Clock,
+  BookOpen,
+  Calculator,
+  Compass,
+  CheckCircle2,
+  Sparkles,
+} from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+
+export type SimulationDay = 'DAY_1' | 'DAY_2';
+export type SimulationTiming = 'TIMED' | 'UNTIMED';
+
+export interface ExamSimulationConfig {
+  year: number;
+  day: SimulationDay;
+  timing: SimulationTiming;
+}
+
+export interface ExamSimulationModalProps {
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
+  readonly onStartSimulation: (config: ExamSimulationConfig) => void;
+}
+
+const AVAILABLE_YEARS: readonly number[] = [2023, 2022, 2021, 2020, 2019];
+
+export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
+  isOpen,
+  onClose,
+  onStartSimulation,
+}) => {
+  const [selectedYear, setSelectedYear] = useState<number>(2023);
+  const [selectedDay, setSelectedDay] = useState<SimulationDay>('DAY_1');
+  const [selectedTiming, setSelectedTiming] = useState<SimulationTiming>('TIMED');
+
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+
+  // Focus trap & Escape hotkey for WCAG compliance
+  useEffect(() => {
+    if (!isOpen) return;
+
+    previouslyFocusedElement.current = document.activeElement as HTMLElement;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      previouslyFocusedElement.current?.focus();
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  const handleConfirm = () => {
+    onStartSimulation({
+      year: selectedYear,
+      day: selectedDay,
+      timing: selectedTiming,
+    });
+    onClose();
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="simulation-modal-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        ref={modalRef}
+        className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-brand shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0">
+              <Layers className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <div>
+              <h2
+                id="simulation-modal-title"
+                className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100"
+              >
+                Simular Edição Oficial do ENEM
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Escolha o ano e o caderno de aplicação para treinar sob condições reais
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            aria-label="Fechar janela de simulação"
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+
+        {/* Modal Body */}
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-5 text-sm">
+          {/* Section 1: Year Selection */}
+          <div className="space-y-2.5">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-brand-primary" aria-hidden="true" />
+              1. Ano da Prova (Edição do ENEM)
+            </label>
+            <div
+              className="grid grid-cols-5 gap-2"
+              role="radiogroup"
+              aria-label="Ano da edição do ENEM"
+            >
+              {AVAILABLE_YEARS.map((yearOption) => {
+                const isSelected = selectedYear === yearOption;
+                return (
+                  <button
+                    key={yearOption}
+                    type="button"
+                    role="radio"
+                    aria-checked={isSelected}
+                    onClick={() => setSelectedYear(yearOption)}
+                    className={`py-2 px-2 rounded-lg text-xs font-semibold text-center transition-all border ${
+                      isSelected
+                        ? 'bg-brand-primary text-white border-brand-primary shadow-xs font-bold'
+                        : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {yearOption}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Section 2: Day / Subject Selection */}
+          <div className="space-y-2.5">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+              <Compass className="h-4 w-4 text-brand-primary" aria-hidden="true" />
+              2. Dia de Prova & Áreas do Conhecimento
+            </label>
+            <div className="grid grid-cols-1 gap-2.5" role="radiogroup" aria-label="Dia e áreas de prova">
+              {/* Dia 1 */}
+              <button
+                type="button"
+                role="radio"
+                aria-checked={selectedDay === 'DAY_1'}
+                onClick={() => setSelectedDay('DAY_1')}
+                className={`p-3 rounded-brand text-left transition-all border flex items-start justify-between gap-3 ${
+                  selectedDay === 'DAY_1'
+                    ? 'bg-brand-primary/5 dark:bg-brand-primary/10 border-brand-primary shadow-xs ring-1 ring-brand-primary/20'
+                    : 'bg-white dark:bg-slate-800/40 border-slate-200 dark:border-slate-700/80 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5">
+                    <BookOpen className="h-4 w-4" aria-hidden="true" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm">
+                        Dia 1 — Linguagens & Ciências Humanas
+                      </span>
+                      <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">
+                        1º Domingo
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Língua Portuguesa, Literatura, Língua Estrangeira (LC) + História, Geografia, Filosofia e Sociologia (CH).
+                    </p>
+                  </div>
+                </div>
+                {selectedDay === 'DAY_1' && (
+                  <CheckCircle2 className="h-4 w-4 text-brand-primary shrink-0 mt-1" aria-hidden="true" />
+                )}
+              </button>
+
+              {/* Dia 2 */}
+              <button
+                type="button"
+                role="radio"
+                aria-checked={selectedDay === 'DAY_2'}
+                onClick={() => setSelectedDay('DAY_2')}
+                className={`p-3 rounded-brand text-left transition-all border flex items-start justify-between gap-3 ${
+                  selectedDay === 'DAY_2'
+                    ? 'bg-brand-primary/5 dark:bg-brand-primary/10 border-brand-primary shadow-xs ring-1 ring-brand-primary/20'
+                    : 'bg-white dark:bg-slate-800/40 border-slate-200 dark:border-slate-700/80 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
+                    <Calculator className="h-4 w-4" aria-hidden="true" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm">
+                        Dia 2 — Ciências da Natureza & Matemática
+                      </span>
+                      <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                        2º Domingo
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Física, Química, Biologia (CN) + Matemática e suas Tecnologias (MT) com fórmulas e raciocínio lógico.
+                    </p>
+                  </div>
+                </div>
+                {selectedDay === 'DAY_2' && (
+                  <CheckCircle2 className="h-4 w-4 text-brand-primary shrink-0 mt-1" aria-hidden="true" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Section 3: Timing Mode */}
+          <div className="space-y-2.5">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+              <Clock className="h-4 w-4 text-brand-primary" aria-hidden="true" />
+              3. Modo de Tempo & Cronômetro
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5" role="radiogroup" aria-label="Modo de tempo">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={selectedTiming === 'TIMED'}
+                onClick={() => setSelectedTiming('TIMED')}
+                className={`p-3 rounded-brand text-left border transition-all ${
+                  selectedTiming === 'TIMED'
+                    ? 'bg-brand-primary/5 dark:bg-brand-primary/10 border-brand-primary ring-1 ring-brand-primary/20'
+                    : 'bg-white dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                <div className="font-semibold text-xs text-slate-900 dark:text-slate-100 flex items-center justify-between">
+                  <span>Ritmo Oficial INEP</span>
+                  {selectedTiming === 'TIMED' && <CheckCircle2 className="h-3.5 w-3.5 text-brand-primary" />}
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Contagem regressiva de 3 min/questão simulando a pressão oficial da prova.
+                </p>
+              </button>
+
+              <button
+                type="button"
+                role="radio"
+                aria-checked={selectedTiming === 'UNTIMED'}
+                onClick={() => setSelectedTiming('UNTIMED')}
+                className={`p-3 rounded-brand text-left border transition-all ${
+                  selectedTiming === 'UNTIMED'
+                    ? 'bg-brand-primary/5 dark:bg-brand-primary/10 border-brand-primary ring-1 ring-brand-primary/20'
+                    : 'bg-white dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                <div className="font-semibold text-xs text-slate-900 dark:text-slate-100 flex items-center justify-between">
+                  <span>Treino Livre (Sem Pressão)</span>
+                  {selectedTiming === 'UNTIMED' && <CheckCircle2 className="h-3.5 w-3.5 text-brand-primary" />}
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Sem contagem regressiva, ideal para estudo aprofundado e consulta com o Tutor IA.
+                </p>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-2.5 p-4 sm:p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60">
+          <Button type="button" variant="outline" size="sm" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            onClick={handleConfirm}
+            className="flex items-center gap-1.5"
+          >
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            Iniciar Simulado
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
