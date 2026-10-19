@@ -76,7 +76,7 @@ describe('BadgeShelf Component', () => {
     expect(screen.getByText('4/7 dias (57%)')).toBeInTheDocument();
     expect(screen.getByText('1/2 dias (50%)')).toBeInTheDocument();
     expect(screen.getByText('3/5 acertos seguidos (60%)')).toBeInTheDocument();
-    expect(screen.getByText('0/1 recurso utilizado (0%)')).toBeInTheDocument();
+    expect(screen.getByText('0/1 diagnóstico realizado (0%)')).toBeInTheDocument();
 
     // Verify that (100%) does NOT exist anywhere in the locked tab
     expect(screen.queryByText(/\(100%\)/)).not.toBeInTheDocument();

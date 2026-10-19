@@ -161,6 +161,9 @@ export function computeVisibleBadges(
 
       // Tier 0 is unlocked if the base badge ID is in unlockedSet
       if (tierIdx === 0) {
+        if (badge.id === 'DIAGNOSTICO_COMPLETO' && unlockedSet.has('ACESSIBILIDADE_TOTAL')) {
+          return true;
+        }
         return unlockedSet.has(badge.id);
       }
 
@@ -566,19 +569,19 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     ],
   },
   {
-    id: 'ACESSIBILIDADE_TOTAL',
-    name: 'Inclusão & Acessibilidade',
-    description: 'Personalize seus recursos inclusivos (VLibras, Leitor por Voz, Alto Contraste ou Régua).',
-    iconName: 'Sparkles',
+    id: 'DIAGNOSTICO_COMPLETO',
+    name: 'Raio-X Diagnóstico',
+    description: 'Realize avaliações diagnósticas para mapear proficiências e identificar pontos fracos.',
+    iconName: 'Activity',
     category: 'SPECIAL',
     categoryLabel: 'Especiais & IA',
     isProgressive: true,
-    progress: { current: 1, target: 1, unit: 'recurso utilizado', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    progress: { current: 0, target: 1, unit: 'diagnóstico realizado', currentTier: 'BRONZE', nextTier: 'SILVER' },
     tiers: [
-      { tier: 'BRONZE', label: 'Bronze', shortLabel: 'Bronze', target: 1, description: 'Utilize 1 recurso inclusivo na plataforma.' },
-      { tier: 'SILVER', label: 'Prata', shortLabel: 'Prata', target: 2, description: 'Personalize 2 recursos inclusivos para otimizar sua leitura.' },
-      { tier: 'GOLD', label: 'Ouro', shortLabel: 'Ouro', target: 3, description: 'Personalize 3 recursos inclusivos adaptando seu ambiente de estudos.' },
-      { tier: 'DIAMOND', label: 'Diamante', shortLabel: 'Diamante', target: 4, description: 'Utilize todos os 4 recursos inclusivos (VLibras, Leitor de Voz, Alto Contraste, Régua).' },
+      { tier: 'BRONZE', label: 'Bronze', shortLabel: 'Bronze', target: 1, description: 'Complete 1 avaliação diagnóstica para mapear suas proficiências TRI.' },
+      { tier: 'SILVER', label: 'Prata', shortLabel: 'Prata', target: 3, description: 'Complete 3 avaliações diagnósticas acompanhando a evolução dos seus pontos fracos.' },
+      { tier: 'GOLD', label: 'Ouro', shortLabel: 'Ouro', target: 5, description: 'Complete 5 avaliações diagnósticas com análise profunda de proficiências por área.' },
+      { tier: 'DIAMOND', label: 'Diamante', shortLabel: 'Diamante', target: 10, description: 'Complete 10 avaliações diagnósticas dominando o diagnóstico multidisciplinar do ENEM.' },
     ],
   },
   {

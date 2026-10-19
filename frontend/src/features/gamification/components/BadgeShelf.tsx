@@ -22,6 +22,7 @@ import {
   GraduationCap,
   TrendingUp,
   Gem,
+  Activity,
 } from 'lucide-react';
 import {
   BADGE_CATALOG,
@@ -58,6 +59,7 @@ const BADGE_ICONS: Record<string, React.ElementType> = {
   CheckCheck,
   GraduationCap,
   TrendingUp,
+  Activity,
 };
 
 interface TierTheme {
