@@ -110,8 +110,14 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
     { id: 'home', label: 'Ir para Portal do Aluno', icon: GraduationCap, isAnchor: false },
   ];
 
+  const gateNavItems = [
+    { id: 'home', label: 'Voltar ao Portal do Aluno', icon: GraduationCap, isAnchor: false },
+  ];
+
   const navItems = isInstitutional
-    ? coordinatorNavItems
+    ? isCoordinator
+      ? coordinatorNavItems
+      : gateNavItems
     : [
         ...baseNavItems,
         ...(isCoordinator
@@ -170,7 +176,11 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
                     : 'text-brand-primary'
                 }`}
               >
-                {isInstitutional ? 'Menu da Coordenação' : 'Menu de Navegação'}
+                {isInstitutional
+                  ? isCoordinator
+                    ? 'Menu da Coordenação'
+                    : 'Acesso da Coordenação'
+                  : 'Menu de Navegação'}
               </span>
             </div>
           </div>

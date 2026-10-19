@@ -276,4 +276,22 @@ describe('Header component', () => {
 
     document.body.removeChild(targetElement);
   });
+
+  it('should render Painel da Coordenação badge and NO cohort links when activeSection is institutional and user is unauthenticated', () => {
+    useAuthStore.setState({ user: null, isAuthenticated: false });
+
+    renderWithClient(<Header onOpenDrawer={vi.fn()} activeSection="institutional" />);
+
+    expect(screen.getByText('Painel da Coordenação')).toBeInTheDocument();
+    expect(screen.queryByText('Portal do Aluno', { selector: 'span' })).not.toBeInTheDocument();
+
+    // No cohort links should be leaked to unauthenticated users
+    expect(screen.queryByRole('button', { name: /Turmas & Métricas/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Radar Comparativo/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Tópicos Críticos/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Análise de Distratores/i })).not.toBeInTheDocument();
+
+    // Return button is present
+    expect(screen.getByRole('button', { name: /Voltar ao Portal do Aluno/i })).toBeInTheDocument();
+  });
 });

@@ -9,7 +9,9 @@ import {
   TrendingUp,
   Award,
   HelpCircle,
+  GraduationCap,
 } from 'lucide-react';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 export interface BottomNavProps {
   readonly activeSection?: string;
@@ -27,6 +29,16 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   onNavigate,
   onOpenDrawer,
 }) => {
+  const { user, isAuthenticated } = useAuthStore();
+  const isCoordinator = Boolean(
+    isAuthenticated &&
+      user?.roles?.some(
+        (role) =>
+          role === 'ROLE_ADMIN' ||
+          role === 'ROLE_INSTITUTIONAL_ADMIN'
+      )
+  );
+
   const isInstitutional = activeSection === 'institutional';
 
   const studentItems = [
@@ -43,7 +55,15 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     { id: 'cohort-distractors', label: 'Distratores', icon: HelpCircle, isAnchor: true },
   ];
 
-  const items = isInstitutional ? coordinatorItems : studentItems;
+  const gateItems = [
+    { id: 'home', label: 'Voltar ao Aluno', icon: GraduationCap, isAnchor: false },
+  ];
+
+  const items = isInstitutional
+    ? isCoordinator
+      ? coordinatorItems
+      : gateItems
+    : studentItems;
 
   const handleItemClick = (item: (typeof items)[number]) => {
     if (item.isAnchor) {

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BottomNav } from './BottomNav';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 describe('BottomNav component', () => {
   it('should render all 4 primary action items and the "Mais" drawer trigger', () => {
@@ -43,7 +44,19 @@ describe('BottomNav component', () => {
     expect(handleOpenDrawer).toHaveBeenCalledTimes(1);
   });
 
-  it('should render coordinator action items and NOT student items when activeSection is institutional', () => {
+  it('should render coordinator action items and NOT student items when activeSection is institutional and user is coordinator', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-coord',
+        email: 'coord@escola.gov.br',
+        name: 'Coordenador',
+        roles: ['ROLE_ADMIN'],
+        isEmailVerified: true,
+        createdAt: '2026-08-01T10:00:00Z',
+      },
+      isAuthenticated: true,
+    });
+
     render(<BottomNav onOpenDrawer={vi.fn()} activeSection="institutional" />);
 
     expect(screen.getByRole('button', { name: /^Turmas$/i })).toBeInTheDocument();
@@ -57,7 +70,31 @@ describe('BottomNav component', () => {
     expect(screen.queryByRole('button', { name: /^Diagnóstico$/i })).not.toBeInTheDocument();
   });
 
+  it('should render Voltar ao Aluno and Mais in bottom nav when institutional but unauthenticated', () => {
+    useAuthStore.setState({ user: null, isAuthenticated: false });
+
+    render(<BottomNav onOpenDrawer={vi.fn()} activeSection="institutional" />);
+
+    expect(screen.getByRole('button', { name: /Voltar ao Aluno/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Abrir menu de opções/i })).toBeInTheDocument();
+
+    expect(screen.queryByRole('button', { name: /^Turmas$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Radar$/i })).not.toBeInTheDocument();
+  });
+
   it('should scroll smoothly when clicking coordinator anchor button in bottom nav', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-coord',
+        email: 'coord@escola.gov.br',
+        name: 'Coordenador',
+        roles: ['ROLE_ADMIN'],
+        isEmailVerified: true,
+        createdAt: '2026-08-01T10:00:00Z',
+      },
+      isAuthenticated: true,
+    });
+
     const targetElement = document.createElement('div');
     targetElement.id = 'cohort-distractors';
     targetElement.scrollIntoView = vi.fn();

@@ -294,4 +294,17 @@ describe('MobileDrawer component', () => {
 
     document.body.removeChild(targetElement);
   });
+
+  it('should render Acesso da Coordenação and Voltar ao Portal do Aluno in drawer when institutional but unauthenticated', () => {
+    useAuthStore.setState({ user: null, isAuthenticated: false });
+
+    renderWithClient(<MobileDrawer isOpen={true} onClose={vi.fn()} activeSection="institutional" />);
+
+    expect(screen.getByText('Acesso da Coordenação')).toBeInTheDocument();
+    expect(screen.getByText('Voltar ao Portal do Aluno')).toBeInTheDocument();
+
+    expect(screen.queryByText('Visão Geral da Turma')).not.toBeInTheDocument();
+    expect(screen.queryByText('Radar Comparativo')).not.toBeInTheDocument();
+    expect(screen.queryByText('Praticar Questões')).not.toBeInTheDocument();
+  });
 });
