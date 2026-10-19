@@ -156,7 +156,19 @@ describe('Header component', () => {
     expect(handleLogout).toHaveBeenCalledTimes(1);
   });
 
-  it('should render Painel da Coordenação badge and Portal do Aluno return button when activeSection is institutional', () => {
+  it('should render Painel da Coordenação badge and Portal do Aluno return button when activeSection is institutional and user is coordinator', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-coord',
+        email: 'coord@escola.gov.br',
+        name: 'Coordenador',
+        roles: ['ROLE_INSTITUTIONAL_ADMIN'],
+        isEmailVerified: true,
+        createdAt: '2026-08-01T10:00:00Z',
+      },
+      isAuthenticated: true,
+    });
+
     const handleNavigate = vi.fn();
     renderWithClient(
       <Header onOpenDrawer={vi.fn()} activeSection="institutional" onNavigate={handleNavigate} />
@@ -169,5 +181,44 @@ describe('Header component', () => {
 
     fireEvent.click(returnBtn);
     expect(handleNavigate).toHaveBeenCalledWith('home');
+  });
+
+  it('should NOT render Painel da Coordenação button for unauthenticated users', () => {
+    renderWithClient(<Header onOpenDrawer={vi.fn()} activeSection="practice" />);
+    expect(screen.queryByText('Painel da Coordenação')).not.toBeInTheDocument();
+  });
+
+  it('should NOT render Painel da Coordenação button for regular students', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-student',
+        email: 'aluno@escola.gov.br',
+        name: 'Aluno',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-08-01T10:00:00Z',
+      },
+      isAuthenticated: true,
+    });
+
+    renderWithClient(<Header onOpenDrawer={vi.fn()} activeSection="practice" />);
+    expect(screen.queryByText('Painel da Coordenação')).not.toBeInTheDocument();
+  });
+
+  it('should render Painel da Coordenação button when user has coordinator role', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-coord',
+        email: 'coord@escola.gov.br',
+        name: 'Coordenador',
+        roles: ['ROLE_ADMIN'],
+        isEmailVerified: true,
+        createdAt: '2026-08-01T10:00:00Z',
+      },
+      isAuthenticated: true,
+    });
+
+    renderWithClient(<Header onOpenDrawer={vi.fn()} activeSection="practice" />);
+    expect(screen.getByText('Painel da Coordenação')).toBeInTheDocument();
   });
 });

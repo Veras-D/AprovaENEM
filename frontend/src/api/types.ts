@@ -281,7 +281,12 @@ export interface AuthLoginResponse {
     readonly id: string;
     readonly email: string;
     readonly name: string;
-    readonly roles: readonly ('ROLE_STUDENT' | 'ROLE_PREMIUM_STUDENT' | 'ROLE_ADMIN')[];
+    readonly roles: readonly (
+      | 'ROLE_STUDENT'
+      | 'ROLE_PREMIUM_STUDENT'
+      | 'ROLE_ADMIN'
+      | 'ROLE_INSTITUTIONAL_ADMIN'
+    )[];
     readonly isEmailVerified: boolean;
     readonly createdAt: string;
   };

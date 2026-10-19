@@ -195,4 +195,43 @@ describe('MobileDrawer component', () => {
     expect(handleClose).toHaveBeenCalledTimes(1);
     expect(handleLogout).toHaveBeenCalledTimes(1);
   });
+
+  it('should NOT render Painel da Coordenação item in drawer for unauthenticated users', () => {
+    renderWithClient(<MobileDrawer isOpen={true} onClose={vi.fn()} />);
+    expect(screen.queryByText(/Painel da Coordenação/i)).not.toBeInTheDocument();
+  });
+
+  it('should NOT render Painel da Coordenação item in drawer for regular students', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-student',
+        email: 'aluno@escola.gov.br',
+        name: 'Aluno',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-08-01T10:00:00Z',
+      },
+      isAuthenticated: true,
+    });
+
+    renderWithClient(<MobileDrawer isOpen={true} onClose={vi.fn()} />);
+    expect(screen.queryByText(/Painel da Coordenação/i)).not.toBeInTheDocument();
+  });
+
+  it('should render Painel da Coordenação item in drawer when user has coordinator role', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-coord',
+        email: 'coord@escola.gov.br',
+        name: 'Coordenadora Helena',
+        roles: ['ROLE_INSTITUTIONAL_ADMIN'],
+        isEmailVerified: true,
+        createdAt: '2026-08-01T10:00:00Z',
+      },
+      isAuthenticated: true,
+    });
+
+    renderWithClient(<MobileDrawer isOpen={true} onClose={vi.fn()} />);
+    expect(screen.getByText(/Painel da Coordenação/i)).toBeInTheDocument();
+  });
 });

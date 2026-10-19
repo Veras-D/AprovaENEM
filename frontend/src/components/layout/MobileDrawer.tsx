@@ -79,12 +79,27 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
     return null;
   }
 
-  const navItems = [
+  const isCoordinator = Boolean(
+    isAuthenticated &&
+      user?.roles?.some(
+        (role) =>
+          role === 'ROLE_ADMIN' ||
+          role === 'ROLE_INSTITUTIONAL_ADMIN'
+      )
+  );
+
+  const baseNavItems = [
     { id: 'home', label: 'Início', icon: Home },
     { id: 'practice', label: 'Praticar Questões', icon: BookOpen },
     { id: 'leaderboard', label: 'Ranking Semanal', icon: Trophy },
     { id: 'diagnostics', label: 'Diagnóstico & Desempenho', icon: BarChart2 },
-    { id: 'institutional', label: 'Painel da Coordenação (B2B)', icon: Building2 },
+  ];
+
+  const navItems = [
+    ...baseNavItems,
+    ...(isCoordinator
+      ? [{ id: 'institutional', label: 'Painel da Coordenação (B2B)', icon: Building2 }]
+      : []),
     { id: 'profile', label: 'Minha Conta', icon: User },
   ];
 

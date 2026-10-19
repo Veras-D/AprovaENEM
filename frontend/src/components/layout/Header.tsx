@@ -31,6 +31,15 @@ export const Header: React.FC<HeaderProps> = ({
   const { user, isAuthenticated, clearAuth } = useAuthStore();
   const clearSession = useSessionStore((s) => s.clearSession);
 
+  const isCoordinator = Boolean(
+    isAuthenticated &&
+      user?.roles?.some(
+        (role) =>
+          role === 'ROLE_ADMIN' ||
+          role === 'ROLE_INSTITUTIONAL_ADMIN'
+      )
+  );
+
   const handleLogout = () => {
     clearAuth();
     clearSession();
@@ -75,7 +84,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white truncate">
                   {currentTenant.name}
                 </span>
-                {activeSection === 'institutional' ? (
+                {activeSection === 'institutional' && isCoordinator ? (
                   <span className="hidden sm:inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30 shrink-0">
                     Painel da Coordenação
                   </span>
@@ -128,17 +137,17 @@ export const Header: React.FC<HeaderProps> = ({
               <GraduationCap className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="hidden sm:inline">Portal do Aluno</span>
             </button>
-          ) : (
+          ) : isCoordinator ? (
             <button
               type="button"
               onClick={() => onNavigate?.('institutional')}
-              className="hidden lg:flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-brand border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-800 transition-colors cursor-pointer"
+              className="hidden lg:flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-brand border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors cursor-pointer"
               title="Acessar o Painel da Coordenação e Métricas de Turma"
             >
               <Building2 className="h-3.5 w-3.5 text-indigo-500" aria-hidden="true" />
               <span>Painel da Coordenação</span>
             </button>
-          )}
+          ) : null}
 
           {/* Quick Dark Mode Toggle */}
           <button
