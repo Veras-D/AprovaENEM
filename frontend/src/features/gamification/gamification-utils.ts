@@ -17,6 +17,14 @@ export type BadgeCategory =
 
 export type BadgeTierLevel = 'BRONZE' | 'SILVER' | 'GOLD' | 'DIAMOND';
 
+export interface BadgeTierConfig {
+  readonly tier: BadgeTierLevel;
+  readonly label: string;
+  readonly shortLabel: string;
+  readonly target: number;
+  readonly description?: string;
+}
+
 export interface BadgeProgress {
   readonly current: number;
   readonly target: number;
@@ -34,6 +42,167 @@ export interface BadgeDefinition {
   readonly categoryLabel: string;
   readonly isProgressive?: boolean;
   readonly progress?: BadgeProgress;
+  readonly tiers?: readonly BadgeTierConfig[];
+}
+
+export interface VisibleBadgeItem {
+  readonly id: string;
+  readonly baseId: string;
+  readonly name: string;
+  readonly description: string;
+  readonly iconName: string;
+  readonly category: BadgeCategory;
+  readonly categoryLabel: string;
+  readonly isUnlocked: boolean;
+  readonly tierConfig?: BadgeTierConfig;
+  readonly progress?: {
+    readonly current: number;
+    readonly target: number;
+    readonly unit: string;
+    readonly percentage: number;
+  };
+  readonly remaining: number;
+}
+
+/**
+ * Computes the visible list of badge cards for the badge shelf.
+ * Progressive badges with completed tiers show each completed tier as a completed card,
+ * and spawn the very next active tier to be completed, while hiding further ranks.
+ */
+export function computeVisibleBadges(
+  catalog: readonly BadgeDefinition[],
+  unlockedBadges: readonly string[]
+): VisibleBadgeItem[] {
+  const unlockedSet = new Set(unlockedBadges);
+  const result: VisibleBadgeItem[] = [];
+
+  for (const badge of catalog) {
+    if (!badge.isProgressive || !badge.tiers || badge.tiers.length === 0) {
+      const isUnlocked = unlockedSet.has(badge.id);
+      const rawCurrent = badge.progress?.current ?? 0;
+      const target = badge.progress?.target ?? 1;
+      const unit = badge.progress?.unit ?? '';
+
+      const current = isUnlocked
+        ? target
+        : Math.min(rawCurrent, Math.max(0, target - 1));
+
+      const percentage = isUnlocked
+        ? 100
+        : Math.min(99, Math.round((current / target) * 100));
+
+      const remaining = Math.max(0, target - current);
+
+      result.push({
+        id: badge.id,
+        baseId: badge.id,
+        name: badge.name,
+        description: badge.description,
+        iconName: badge.iconName,
+        category: badge.category,
+        categoryLabel: badge.categoryLabel,
+        isUnlocked,
+        progress: badge.progress ? { current, target, unit, percentage } : undefined,
+        remaining,
+      });
+      continue;
+    }
+
+    // Progressive badge with tiers
+    const tiers = badge.tiers;
+    const rawCurrent = badge.progress?.current ?? 0;
+    const unit = badge.progress?.unit ?? '';
+
+    // Check which tiers are completed
+    const isTierCompleted = (tierIdx: number): boolean => {
+      const tier = tiers[tierIdx];
+      if (!tier) return false;
+
+      // Explicit tier ID in unlockedSet (e.g. 'MESTRE_MATEMATICA_SILVER')
+      if (unlockedSet.has(`${badge.id}_${tier.tier}`)) {
+        return true;
+      }
+
+      // Tier 0 is unlocked if the base badge ID is in unlockedSet
+      if (tierIdx === 0) {
+        return unlockedSet.has(badge.id);
+      }
+
+      // Higher tiers require previous tier completed AND (explicitly in unlockedSet or target reached if base is unlocked)
+      if (isTierCompleted(tierIdx - 1)) {
+        if (unlockedSet.has(`${badge.id}_${tier.tier}`)) {
+          return true;
+        }
+        if (unlockedSet.has(badge.id) && badge.progress && badge.progress.current >= tier.target) {
+          return true;
+        }
+      }
+
+      return false;
+    };
+
+    let firstIncompleteIdx = -1;
+
+    for (let i = 0; i < tiers.length; i++) {
+      const tier = tiers[i];
+      if (tier && isTierCompleted(i)) {
+        // Emit completed tier card
+        result.push({
+          id: `${badge.id}_${tier.tier}`,
+          baseId: badge.id,
+          name: badge.name,
+          description: tier.description ?? badge.description,
+          iconName: badge.iconName,
+          category: badge.category,
+          categoryLabel: badge.categoryLabel,
+          isUnlocked: true,
+          tierConfig: tier,
+          progress: {
+            current: tier.target,
+            target: tier.target,
+            unit,
+            percentage: 100,
+          },
+          remaining: 0,
+        });
+      } else {
+        firstIncompleteIdx = i;
+        break; // Stop! Do not emit future ranks!
+      }
+    }
+
+    // Spawn the active incomplete tier, if any
+    if (firstIncompleteIdx !== -1) {
+      const tier = tiers[firstIncompleteIdx];
+      if (tier) {
+        const current = Math.min(rawCurrent, Math.max(0, tier.target - 1));
+        const percentage =
+          tier.target > 0 ? Math.min(99, Math.round((current / tier.target) * 100)) : 0;
+        const remaining = Math.max(0, tier.target - current);
+
+        result.push({
+          id: `${badge.id}_${tier.tier}`,
+          baseId: badge.id,
+          name: badge.name,
+          description: tier.description ?? badge.description,
+          iconName: badge.iconName,
+          category: badge.category,
+          categoryLabel: badge.categoryLabel,
+          isUnlocked: false,
+          tierConfig: tier,
+          progress: {
+            current,
+            target: tier.target,
+            unit,
+            percentage,
+          },
+          remaining,
+        });
+      }
+    }
+  }
+
+  return result;
 }
 
 export const BADGE_CATEGORIES: readonly {
@@ -59,6 +228,12 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     categoryLabel: 'Jornada & Volume',
     isProgressive: true,
     progress: { current: 35, target: 50, unit: 'questões', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    tiers: [
+      { tier: 'BRONZE', label: 'Bronze 🥉', shortLabel: 'Bronze', target: 10, description: 'Resolva 10 questões no AprovaENEM rumo ao hábito de estudos.' },
+      { tier: 'SILVER', label: 'Prata 🥈', shortLabel: 'Prata', target: 50, description: 'Resolva 50 questões no AprovaENEM consolidando sua preparação.' },
+      { tier: 'GOLD', label: 'Ouro 🥇', shortLabel: 'Ouro', target: 150, description: 'Resolva 150 questões no AprovaENEM com alto ritmo de treino.' },
+      { tier: 'DIAMOND', label: 'Diamante 💎', shortLabel: 'Diamante', target: 500, description: 'Resolva 500 questões no AprovaENEM alcançando maestria total.' },
+    ],
   },
   {
     id: 'SIMULADOS_COMPLETOS',
@@ -69,6 +244,12 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     categoryLabel: 'Jornada & Volume',
     isProgressive: true,
     progress: { current: 3, target: 5, unit: 'simulados', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    tiers: [
+      { tier: 'BRONZE', label: 'Bronze 🥉', shortLabel: 'Bronze', target: 3, description: 'Complete 3 simulados oficiais do ENEM com controle de tempo.' },
+      { tier: 'SILVER', label: 'Prata 🥈', shortLabel: 'Prata', target: 5, description: 'Complete 5 simulados oficiais do ENEM com controle de tempo.' },
+      { tier: 'GOLD', label: 'Ouro 🥇', shortLabel: 'Ouro', target: 10, description: 'Complete 10 simulados oficiais do ENEM com controle de tempo.' },
+      { tier: 'DIAMOND', label: 'Diamante 💎', shortLabel: 'Diamante', target: 20, description: 'Complete 20 simulados oficiais do ENEM com controle de tempo.' },
+    ],
   },
   {
     id: 'ESCALADA_NIVEL',
@@ -79,6 +260,12 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     categoryLabel: 'Jornada & Volume',
     isProgressive: true,
     progress: { current: 3, target: 5, unit: 'nível', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    tiers: [
+      { tier: 'BRONZE', label: 'Bronze 🥉', shortLabel: 'Bronze', target: 3, description: 'Alcance o Nível 3 acumulando XP em simulados e questões.' },
+      { tier: 'SILVER', label: 'Prata 🥈', shortLabel: 'Prata', target: 5, description: 'Alcance o Nível 5 acumulando XP em simulados e questões.' },
+      { tier: 'GOLD', label: 'Ouro 🥇', shortLabel: 'Ouro', target: 10, description: 'Alcance o Nível 10 acumulando XP em simulados e questões.' },
+      { tier: 'DIAMOND', label: 'Diamante 💎', shortLabel: 'Diamante', target: 20, description: 'Alcance o Nível 20 multidisciplinar na plataforma.' },
+    ],
   },
 
   // --- Grupo 2: Ofensiva & Hábito Diário ---
@@ -137,7 +324,13 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     category: 'SUBJECT',
     categoryLabel: 'Áreas do ENEM',
     isProgressive: true,
-    progress: { current: 24, target: 50, unit: 'acertos', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    progress: { current: 50, target: 50, unit: 'acertos', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    tiers: [
+      { tier: 'BRONZE', label: 'Bronze 🥉', shortLabel: 'Bronze', target: 50, description: 'Acerte 50 questões de Matemática e suas Tecnologias (MT).' },
+      { tier: 'SILVER', label: 'Prata 🥈', shortLabel: 'Prata', target: 100, description: 'Acerte 100 questões de Matemática e suas Tecnologias (MT).' },
+      { tier: 'GOLD', label: 'Ouro 🥇', shortLabel: 'Ouro', target: 250, description: 'Acerte 250 questões de Matemática e suas Tecnologias (MT).' },
+      { tier: 'DIAMOND', label: 'Diamante 💎', shortLabel: 'Diamante', target: 500, description: 'Acerte 500 questões de Matemática e suas Tecnologias (MT).' },
+    ],
   },
   {
     id: 'MESTRE_NATUREZA',
@@ -148,6 +341,12 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     categoryLabel: 'Áreas do ENEM',
     isProgressive: true,
     progress: { current: 18, target: 50, unit: 'acertos', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    tiers: [
+      { tier: 'BRONZE', label: 'Bronze 🥉', shortLabel: 'Bronze', target: 50, description: 'Acerte 50 questões de Ciências da Natureza e suas Tecnologias (CN).' },
+      { tier: 'SILVER', label: 'Prata 🥈', shortLabel: 'Prata', target: 100, description: 'Acerte 100 questões de Ciências da Natureza e suas Tecnologias (CN).' },
+      { tier: 'GOLD', label: 'Ouro 🥇', shortLabel: 'Ouro', target: 250, description: 'Acerte 250 questões de Ciências da Natureza e suas Tecnologias (CN).' },
+      { tier: 'DIAMOND', label: 'Diamante 💎', shortLabel: 'Diamante', target: 500, description: 'Acerte 500 questões de Ciências da Natureza e suas Tecnologias (CN).' },
+    ],
   },
   {
     id: 'MESTRE_HUMANAS',
@@ -158,6 +357,12 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     categoryLabel: 'Áreas do ENEM',
     isProgressive: true,
     progress: { current: 30, target: 50, unit: 'acertos', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    tiers: [
+      { tier: 'BRONZE', label: 'Bronze 🥉', shortLabel: 'Bronze', target: 50, description: 'Acerte 50 questões de Ciências Humanas e suas Tecnologias (CH).' },
+      { tier: 'SILVER', label: 'Prata 🥈', shortLabel: 'Prata', target: 100, description: 'Acerte 100 questões de Ciências Humanas e suas Tecnologias (CH).' },
+      { tier: 'GOLD', label: 'Ouro 🥇', shortLabel: 'Ouro', target: 250, description: 'Acerte 250 questões de Ciências Humanas e suas Tecnologias (CH).' },
+      { tier: 'DIAMOND', label: 'Diamante 💎', shortLabel: 'Diamante', target: 500, description: 'Acerte 500 questões de Ciências Humanas e suas Tecnologias (CH).' },
+    ],
   },
   {
     id: 'MESTRE_LINGUAGENS',
@@ -168,6 +373,12 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     categoryLabel: 'Áreas do ENEM',
     isProgressive: true,
     progress: { current: 15, target: 50, unit: 'acertos', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    tiers: [
+      { tier: 'BRONZE', label: 'Bronze 🥉', shortLabel: 'Bronze', target: 50, description: 'Acerte 50 questões de Linguagens, Códigos e suas Tecnologias (LC).' },
+      { tier: 'SILVER', label: 'Prata 🥈', shortLabel: 'Prata', target: 100, description: 'Acerte 100 questões de Linguagens, Códigos e suas Tecnologias (LC).' },
+      { tier: 'GOLD', label: 'Ouro 🥇', shortLabel: 'Ouro', target: 250, description: 'Acerte 250 questões de Linguagens, Códigos e suas Tecnologias (LC).' },
+      { tier: 'DIAMOND', label: 'Diamante 💎', shortLabel: 'Diamante', target: 500, description: 'Acerte 500 questões de Linguagens, Códigos e suas Tecnologias (LC).' },
+    ],
   },
 
   // --- Grupo 4: Desafios & Precisão ---
@@ -218,6 +429,12 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     categoryLabel: 'Especiais & IA',
     isProgressive: true,
     progress: { current: 8, target: 10, unit: 'dúvidas', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    tiers: [
+      { tier: 'BRONZE', label: 'Bronze 🥉', shortLabel: 'Bronze', target: 10, description: 'Tire 10 dúvidas conceituais com o Tutor IA pedagógico.' },
+      { tier: 'SILVER', label: 'Prata 🥈', shortLabel: 'Prata', target: 25, description: 'Tire 25 dúvidas conceituais com o Tutor IA pedagógico.' },
+      { tier: 'GOLD', label: 'Ouro 🥇', shortLabel: 'Ouro', target: 50, description: 'Tire 50 dúvidas conceituais com o Tutor IA pedagógico.' },
+      { tier: 'DIAMOND', label: 'Diamante 💎', shortLabel: 'Diamante', target: 100, description: 'Tire 100 dúvidas conceituais com o Tutor IA pedagógico.' },
+    ],
   },
   {
     id: 'PODIO_LIGA',

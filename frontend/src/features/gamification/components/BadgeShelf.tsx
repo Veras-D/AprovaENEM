@@ -25,8 +25,9 @@ import {
 import {
   BADGE_CATALOG,
   BADGE_CATEGORIES,
-  type BadgeDefinition,
   type BadgeCategory,
+  computeVisibleBadges,
+  type VisibleBadgeItem,
 } from '../gamification-utils';
 import { Badge } from '@/components/ui/Badge';
 
@@ -58,23 +59,15 @@ const BADGE_ICONS: Record<string, React.ElementType> = {
   TrendingUp,
 };
 
-const TIER_PILLS: Record<string, { label: string; className: string }> = {
-  BRONZE: {
-    label: 'Bronze',
-    className: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-300 dark:border-amber-700/60',
-  },
-  SILVER: {
-    label: 'Prata',
-    className: 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-700',
-  },
-  GOLD: {
-    label: 'Ouro',
-    className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-950/60 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700',
-  },
-  DIAMOND: {
-    label: 'Diamante',
-    className: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-300 border-cyan-300 dark:border-cyan-700',
-  },
+const TIER_PILL_STYLES: Record<string, string> = {
+  BRONZE:
+    'bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-300 border-amber-300 dark:border-amber-700/80',
+  SILVER:
+    'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-700',
+  GOLD:
+    'bg-yellow-100 text-yellow-900 dark:bg-yellow-950/60 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700/80',
+  DIAMOND:
+    'bg-cyan-100 text-cyan-900 dark:bg-cyan-950/60 dark:text-cyan-300 border-cyan-300 dark:border-cyan-700/80',
 };
 
 export const BadgeShelf: React.FC<BadgeShelfProps> = ({
@@ -84,27 +77,31 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'UNLOCKED' | 'LOCKED'>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<BadgeCategory>('ALL');
 
-  const unlockedSet = useMemo(() => new Set(unlockedBadges), [unlockedBadges]);
-  const totalCount = BADGE_CATALOG.length;
-  const unlockedCount = BADGE_CATALOG.filter((b) => unlockedSet.has(b.id)).length;
-  const percentage = Math.round((unlockedCount / totalCount) * 100);
+  const visibleBadges = useMemo(
+    () => computeVisibleBadges(BADGE_CATALOG, unlockedBadges),
+    [unlockedBadges]
+  );
+
+  const totalCount = visibleBadges.length;
+  const unlockedCount = visibleBadges.filter((b) => b.isUnlocked).length;
+  const percentage = totalCount > 0 ? Math.round((unlockedCount / totalCount) * 100) : 0;
 
   const filteredBadges = useMemo(() => {
-    return BADGE_CATALOG.filter((badge) => {
+    return visibleBadges.filter((item) => {
       // Status filter
-      if (statusFilter === 'UNLOCKED' && !unlockedSet.has(badge.id)) {
+      if (statusFilter === 'UNLOCKED' && !item.isUnlocked) {
         return false;
       }
-      if (statusFilter === 'LOCKED' && unlockedSet.has(badge.id)) {
+      if (statusFilter === 'LOCKED' && item.isUnlocked) {
         return false;
       }
       // Category filter
-      if (categoryFilter !== 'ALL' && badge.category !== categoryFilter) {
+      if (categoryFilter !== 'ALL' && item.category !== categoryFilter) {
         return false;
       }
       return true;
     });
-  }, [statusFilter, categoryFilter, unlockedSet]);
+  }, [visibleBadges, statusFilter, categoryFilter]);
 
   return (
     <div
@@ -191,8 +188,8 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
           const isActive = categoryFilter === cat.id;
           const count =
             cat.id === 'ALL'
-              ? totalCount
-              : BADGE_CATALOG.filter((b) => b.category === cat.id).length;
+              ? visibleBadges.length
+              : visibleBadges.filter((b) => b.category === cat.id).length;
 
           return (
             <button
@@ -218,39 +215,14 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filteredBadges.map((badge: BadgeDefinition) => {
-            const isUnlocked = unlockedSet.has(badge.id);
-            const IconComponent = BADGE_ICONS[badge.iconName] || Trophy;
-
-            // Calculate progress percentage if available
-            const rawProgress = badge.progress;
-            // Consistency rule:
-            // 1. If unlocked: progress is 100% (target / target) and renders in emerald
-            // 2. If locked: progress cannot reach 100%. If current >= target, clamp to at most target - 1 (or 0 if target is 1)
-            const progress = rawProgress
-              ? {
-                  ...rawProgress,
-                  current: isUnlocked
-                    ? rawProgress.target
-                    : Math.min(rawProgress.current, Math.max(0, rawProgress.target - 1)),
-                }
-              : undefined;
-
-            const progressPct = progress
-              ? isUnlocked
-                ? 100
-                : Math.min(99, Math.round((progress.current / progress.target) * 100))
-              : isUnlocked
-              ? 100
-              : 0;
-
-            const tierInfo = progress?.currentTier ? TIER_PILLS[progress.currentTier] : null;
+          {filteredBadges.map((item: VisibleBadgeItem) => {
+            const IconComponent = BADGE_ICONS[item.iconName] || Trophy;
 
             return (
               <div
-                key={badge.id}
+                key={item.id}
                 className={`p-3.5 rounded-brand border transition-all flex flex-col justify-between gap-2.5 ${
-                  isUnlocked
+                  item.isUnlocked
                     ? 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800/60 shadow-xs'
                     : 'bg-slate-50/60 dark:bg-slate-800/30 border-slate-200/80 dark:border-slate-800'
                 }`}
@@ -259,12 +231,12 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
                   {/* Badge Icon */}
                   <div
                     className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 shadow-2xs ${
-                      isUnlocked
+                      item.isUnlocked
                         ? 'bg-amber-500 text-white'
                         : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
                     }`}
                   >
-                    {isUnlocked ? (
+                    {item.isUnlocked ? (
                       <IconComponent className="h-5 w-5" aria-hidden="true" />
                     ) : (
                       <Lock className="h-4 w-4" aria-hidden="true" />
@@ -274,59 +246,67 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
                   {/* Badge Metadata */}
                   <div className="space-y-1 min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-1">
-                      <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
-                        {badge.name}
-                      </span>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                          {item.name}
+                        </span>
+                        {item.tierConfig && (
+                          <span
+                            className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full border shrink-0 ${
+                              TIER_PILL_STYLES[item.tierConfig.tier] || ''
+                            }`}
+                          >
+                            {item.tierConfig.label}
+                          </span>
+                        )}
+                      </div>
                       <span
-                        className={`text-[10px] font-semibold px-1.5 py-0.2 rounded-full shrink-0 ${
-                          isUnlocked
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                        className={`text-[10px] px-1.5 py-0.2 rounded-full shrink-0 font-medium ${
+                          item.isUnlocked
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/80 font-bold'
                             : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
                         }`}
                       >
-                        {isUnlocked ? 'Conquistada ✓' : 'A Conquistar'}
+                        {item.isUnlocked ? 'Conquistada ✓' : 'A Conquistar'}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">
-                        {badge.categoryLabel}
+                        {item.categoryLabel}
                       </span>
-                      {tierInfo && (
-                        <span
-                          className={`text-[9px] font-bold px-1.5 py-0 rounded-full border ${tierInfo.className}`}
-                        >
-                          {tierInfo.label}
-                        </span>
-                      )}
                     </div>
 
                     <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed pt-0.5">
-                      {badge.description}
+                      {item.description}
                     </p>
                   </div>
                 </div>
 
-                {/* Progress Bar & Target Indicator */}
-                {progress && (
+                {/* Single Clean Progress Bar */}
+                {item.progress && (
                   <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800/80 space-y-1">
                     <div className="flex items-center justify-between text-[10px]">
                       <span className="text-slate-500 dark:text-slate-400 font-medium">
                         Progresso:
                       </span>
                       <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
-                        {isUnlocked ? progress.target : progress.current}/{progress.target}{' '}
-                        {progress.unit} ({progressPct}%)
+                        {item.progress.current}/{item.progress.target} {item.progress.unit} ({item.progress.percentage}%)
                       </span>
                     </div>
                     <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-300 ${
-                          isUnlocked ? 'bg-emerald-500' : 'bg-amber-500'
+                          item.isUnlocked ? 'bg-emerald-500' : 'bg-amber-500'
                         }`}
-                        style={{ width: `${progressPct}%` }}
+                        style={{ width: `${item.progress.percentage}%` }}
                       />
                     </div>
+                    {!item.isUnlocked && item.remaining > 0 && (
+                      <div className="text-[10px] text-amber-700 dark:text-amber-400 font-medium pt-0.5">
+                        Faltam {item.remaining} {item.progress.unit} para conquistar esta medalha!
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -337,3 +317,4 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
     </div>
   );
 };
+

@@ -79,5 +79,42 @@ describe('BadgeShelf Component', () => {
     // Verify that (100%) does NOT exist anywhere in the locked tab
     expect(screen.queryByText(/\(100%\)/)).not.toBeInTheDocument();
   });
+
+  it('shows completed tier as conquered and spawns next tier while hiding further ranks', () => {
+    // User has conquered Bronze for Mestre da Matemática
+    const unlockedWithMath = ['PRIMEIRA_QUESTAO', 'STREAK_3_DIAS', 'MESTRE_MATEMATICA'];
+    render(<BadgeShelf unlockedBadges={unlockedWithMath} />);
+
+    // Filter by Áreas do ENEM
+    const subjectBtn = screen.getByRole('button', { name: /Áreas do ENEM/i });
+    fireEvent.click(subjectBtn);
+
+    // Bronze tier is displayed across the 4 subject badges (Math conquered, others active)
+    expect(screen.getAllByText('Bronze 🥉')).toHaveLength(4);
+    expect(screen.getByText('50/50 acertos (100%)')).toBeInTheDocument();
+
+    // Next tier (Prata 🥈) is spawned as active to be completed only for Math
+    expect(screen.getByText('Prata 🥈')).toBeInTheDocument();
+    expect(screen.getByText('50/100 acertos (50%)')).toBeInTheDocument();
+    expect(screen.getByText(/Faltam 50 acertos para conquistar esta medalha!/i)).toBeInTheDocument();
+
+    // Ranks further (Ouro 🥇 and Diamante 💎) are NOT shown
+    expect(screen.queryByText('Ouro 🥇')).not.toBeInTheDocument();
+    expect(screen.queryByText('Diamante 💎')).not.toBeInTheDocument();
+
+    // When clicking "Desbloqueadas", only the conquered Math Bronze badge appears
+    const unlockedTab = screen.getByRole('tab', { name: /Desbloqueadas/i });
+    fireEvent.click(unlockedTab);
+    expect(screen.getByText('Bronze 🥉')).toBeInTheDocument();
+    expect(screen.getByText('50/50 acertos (100%)')).toBeInTheDocument();
+    expect(screen.queryByText('Prata 🥈')).not.toBeInTheDocument();
+
+    // When clicking "A Conquistar", the 3 unearned Bronze badges + Math Silver badge appear
+    const lockedTab = screen.getByRole('tab', { name: /A Conquistar/i });
+    fireEvent.click(lockedTab);
+    expect(screen.getAllByText('Bronze 🥉')).toHaveLength(3);
+    expect(screen.getByText('Prata 🥈')).toBeInTheDocument();
+    expect(screen.queryByText('50/50 acertos (100%)')).not.toBeInTheDocument();
+  });
 });
 
