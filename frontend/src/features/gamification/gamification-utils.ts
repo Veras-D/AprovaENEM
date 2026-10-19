@@ -120,22 +120,12 @@ export function computeVisibleBadges(
 
       // Explicit tier ID in unlockedSet (e.g. 'MESTRE_MATEMATICA_SILVER')
       if (unlockedSet.has(`${badge.id}_${tier.tier}`)) {
-        return true;
+        return tierIdx === 0 || isTierCompleted(tierIdx - 1);
       }
 
       // Tier 0 is unlocked if the base badge ID is in unlockedSet
       if (tierIdx === 0) {
         return unlockedSet.has(badge.id);
-      }
-
-      // Higher tiers require previous tier completed AND (explicitly in unlockedSet or target reached if base is unlocked)
-      if (isTierCompleted(tierIdx - 1)) {
-        if (unlockedSet.has(`${badge.id}_${tier.tier}`)) {
-          return true;
-        }
-        if (unlockedSet.has(badge.id) && badge.progress && badge.progress.current >= tier.target) {
-          return true;
-        }
       }
 
       return false;
@@ -324,7 +314,7 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     category: 'SUBJECT',
     categoryLabel: 'Áreas do ENEM',
     isProgressive: true,
-    progress: { current: 50, target: 50, unit: 'acertos', currentTier: 'BRONZE', nextTier: 'SILVER' },
+    progress: { current: 125, target: 250, unit: 'acertos', currentTier: 'SILVER', nextTier: 'GOLD' },
     tiers: [
       { tier: 'BRONZE', label: 'Bronze 🥉', shortLabel: 'Bronze', target: 50, description: 'Acerte 50 questões de Matemática e suas Tecnologias (MT).' },
       { tier: 'SILVER', label: 'Prata 🥈', shortLabel: 'Prata', target: 100, description: 'Acerte 100 questões de Matemática e suas Tecnologias (MT).' },

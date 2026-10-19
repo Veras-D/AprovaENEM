@@ -387,7 +387,7 @@ export const MOCK_GAMIFICATION_PROFILE: GamificationProfileDto = {
   dailyGoalTarget: 5,
   dailyGoalProgress: 3,
   weeklyLeague: 'GOLD',
-  unlockedBadges: ['PRIMEIRA_QUESTAO', 'STREAK_3_DIAS', 'MESTRE_MATEMATICA'],
+  unlockedBadges: ['PRIMEIRA_QUESTAO', 'STREAK_3_DIAS', 'MESTRE_MATEMATICA', 'MESTRE_MATEMATICA_SILVER'],
 };
 
 export const MOCK_LEAGUE_LEADERBOARDS: Record<'BRONZE' | 'SILVER' | 'GOLD' | 'DIAMOND', LeaderboardResponseDto> = {

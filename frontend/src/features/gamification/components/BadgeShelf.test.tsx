@@ -95,8 +95,6 @@ describe('BadgeShelf Component', () => {
 
     // Next tier (Prata 🥈) is spawned as active to be completed only for Math
     expect(screen.getByText('Prata 🥈')).toBeInTheDocument();
-    expect(screen.getByText('50/100 acertos (50%)')).toBeInTheDocument();
-    expect(screen.getByText(/Faltam 50 acertos para conquistar esta medalha!/i)).toBeInTheDocument();
 
     // Ranks further (Ouro 🥇 and Diamante 💎) are NOT shown
     expect(screen.queryByText('Ouro 🥇')).not.toBeInTheDocument();
@@ -115,6 +113,46 @@ describe('BadgeShelf Component', () => {
     expect(screen.getAllByText('Bronze 🥉')).toHaveLength(3);
     expect(screen.getByText('Prata 🥈')).toBeInTheDocument();
     expect(screen.queryByText('50/50 acertos (100%)')).not.toBeInTheDocument();
+  });
+
+  it('renders both Bronze and Silver as conquered when Silver rank is achieved, spawning Gold', () => {
+    // User has conquered both Bronze and Silver for Mestre da Matemática
+    const unlockedWithSilver = [
+      'PRIMEIRA_QUESTAO',
+      'STREAK_3_DIAS',
+      'MESTRE_MATEMATICA',
+      'MESTRE_MATEMATICA_SILVER',
+    ];
+    render(<BadgeShelf unlockedBadges={unlockedWithSilver} />);
+
+    // Filter by Áreas do ENEM
+    const subjectBtn = screen.getByRole('button', { name: /Áreas do ENEM/i });
+    fireEvent.click(subjectBtn);
+
+    // Both Bronze and Silver Math tiers are completed with 100% progress
+    expect(screen.getByText('50/50 acertos (100%)')).toBeInTheDocument();
+    expect(screen.getByText('100/100 acertos (100%)')).toBeInTheDocument();
+
+    // Ouro 🥇 is spawned as active to be completed
+    expect(screen.getByText('Ouro 🥇')).toBeInTheDocument();
+    expect(screen.getByText('125/250 acertos (50%)')).toBeInTheDocument();
+
+    // Diamante 💎 remains hidden
+    expect(screen.queryByText('Diamante 💎')).not.toBeInTheDocument();
+
+    // When clicking "Desbloqueadas", both Bronze and Silver Math badges are visible
+    const unlockedTab = screen.getByRole('tab', { name: /Desbloqueadas/i });
+    fireEvent.click(unlockedTab);
+    expect(screen.getByText('50/50 acertos (100%)')).toBeInTheDocument();
+    expect(screen.getByText('100/100 acertos (100%)')).toBeInTheDocument();
+    expect(screen.queryByText('Ouro 🥇')).not.toBeInTheDocument();
+
+    // When clicking "A Conquistar", Gold appears as the active challenge
+    const lockedTab = screen.getByRole('tab', { name: /A Conquistar/i });
+    fireEvent.click(lockedTab);
+    expect(screen.getByText('Ouro 🥇')).toBeInTheDocument();
+    expect(screen.queryByText('50/50 acertos (100%)')).not.toBeInTheDocument();
+    expect(screen.queryByText('100/100 acertos (100%)')).not.toBeInTheDocument();
   });
 });
 

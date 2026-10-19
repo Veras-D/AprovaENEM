@@ -302,11 +302,6 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
                         style={{ width: `${item.progress.percentage}%` }}
                       />
                     </div>
-                    {!item.isUnlocked && item.remaining > 0 && (
-                      <div className="text-[10px] text-amber-700 dark:text-amber-400 font-medium pt-0.5">
-                        Faltam {item.remaining} {item.progress.unit} para conquistar esta medalha!
-                      </div>
-                    )}
                   </div>
                 )}
               </div>

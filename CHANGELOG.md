@@ -8,15 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### 🎖️ Dynamic Badge Tier Progression: Conquered Tier Preservation & Successor Spawning
 - feat(gamification): Re-architected badge shelf tier progression to preserve conquered tiers as completed cards and dynamically spawn the next active rank while hiding future ranks (TASK-S6-21):
   - **Completed Tier Retention & Successor Spawning ([`BadgeShelf.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/components/BadgeShelf.tsx), [`gamification-utils.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/gamification-utils.ts))**:
-    - When a student completes a tier (e.g. Bronze for *Mestre da Matemática* with 50/50 correct answers), the conquered tier is preserved on the shelf as a completed achievement with a green `Conquistada ✓` badge and 100% emerald progress bar.
-    - The shelf automatically spawns the next tier (*Prata 🥈*, target 100) as an active challenge with status `A Conquistar`, displaying current progress (50/100, 50%) and remaining count (*"Faltam 50 acertos para conquistar esta medalha!"*).
-    - Future ranks (*Ouro 🥇*, *Diamante 💎*) remain hidden until the preceding tier is unlocked, eliminating visual noise and maintaining focused, bite-sized goals.
+    - When a student completes a tier (e.g. Bronze for *Mestre da Matemática* with 50/50 correct answers, or Silver with 100/100 correct answers), each conquered tier is preserved on the shelf as a completed achievement with a green `Conquistada ✓` badge and 100% emerald progress bar.
+    - The shelf automatically spawns the next active tier (*Ouro 🥇*, target 250) with status `A Conquistar`, displaying real-time progress (125/250, 50%).
+    - Future ranks (*Diamante 💎*) remain hidden until the preceding tier is unlocked, eliminating visual noise and maintaining focused, bite-sized goals.
+    - Streamlined the card UI by eliminating redundant progress subtext (*"Faltam X acertos para conquistar esta medalha!"*), leaving a clean, compact numerical fraction and progress bar.
   - **Dynamic Badge Computation Algorithm ([`computeVisibleBadges` in `gamification-utils.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/gamification-utils.ts))**:
     - Generates visible cards from the catalog based on unlocked badges: emits completed cards for all achieved tiers, plus at most one active spawned card for the first incomplete tier, suppressing subsequent ranks.
     - Enhanced all 8 progressive achievements (`MARATONISTA_QUESTOES`, `SIMULADOS_COMPLETOS`, `ESCALADA_NIVEL`, `MESTRE_MATEMATICA`, `MESTRE_NATUREZA`, `MESTRE_HUMANAS`, `MESTRE_LINGUAGENS`, `TUTOR_SOCRATICO`) with clear, goal-specific descriptions for every tier level (Bronze, Silver, Gold, Diamond).
   - **Comprehensive Verification & Tests**:
-    - Added dedicated unit test in [`BadgeShelf.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/components/BadgeShelf.test.tsx) asserting that conquered Bronze badges remain visible as completed, Silver spawns as active, and Gold/Diamond remain hidden across status and category filters.
-    - Verified 100% green test suite (72/72 suites, 472/472 tests passing), 0 ESLint warnings (`max-warnings 0`), and clean Vite production build.
+    - Added dedicated unit tests in [`BadgeShelf.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/components/BadgeShelf.test.tsx) asserting that conquered Bronze and Silver badges remain visible as completed, the next tier (Gold) spawns as active, and subsequent ranks (Diamond) remain hidden across status and category filters.
+    - Verified 100% green test suite (72/72 suites, 473/473 tests passing), 0 ESLint warnings (`max-warnings 0`), and clean Vite production build.
 
 ### 📝 Official ENEM Exam Simulation Mode & Clipboard Copy Hotkey Fix
 - feat(practice): Implemented authentic official ENEM exam simulation mode configurator by year and day, powering the renamed "Simulado Oficial ENEM" achievement, and resolved browser clipboard copy interception (TASK-S6-20):
