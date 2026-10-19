@@ -11,7 +11,6 @@ import {
   EyeOff,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 import { InstitutionalCohortView } from '@/features/diagnostic/components/InstitutionalCohortView';
 import { useTenantStore } from '@/stores/useTenantStore';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -97,7 +96,7 @@ export const InstitutionalDashboard: React.FC<InstitutionalDashboardProps> = ({
           <div className="space-y-1">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">
               <ShieldAlert className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Acesso Restrito &bull; B2B White-Label</span>
+              <span>Acesso Restrito &bull; Gestão Escolar</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
               Painel da Coordenação Pedagógica
@@ -281,12 +280,6 @@ export const InstitutionalDashboard: React.FC<InstitutionalDashboardProps> = ({
               <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
                 Painel da Coordenação Pedagógica
               </h1>
-              <Badge
-                variant="outline"
-                className="text-[10px] py-0 px-1.5 uppercase font-bold tracking-wider bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/30"
-              >
-                B2B White-Label
-              </Badge>
               {user?.name && (
                 <span className="text-[11px] font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-100/70 dark:bg-indigo-900/50 px-2 py-0.5 rounded-full">
                   Coordenador: {user.name}

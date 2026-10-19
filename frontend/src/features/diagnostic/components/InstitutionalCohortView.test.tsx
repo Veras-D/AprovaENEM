@@ -22,7 +22,7 @@ describe('InstitutionalCohortView Component', () => {
     renderWithProviders(<InstitutionalCohortView cohortData={MOCK_COHORT_DIAGNOSTICS} />);
 
     expect(screen.getByText('Painel Institucional da Turma')).toBeInTheDocument();
-    expect(screen.getByText('B2B White-Label')).toBeInTheDocument();
+    expect(screen.queryByText('B2B White-Label')).not.toBeInTheDocument();
 
     // KPI cards
     expect(screen.getByText('42')).toBeInTheDocument();

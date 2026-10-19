@@ -105,12 +105,6 @@ export const InstitutionalCohortView: React.FC<InstitutionalCohortViewProps> = (
               <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-slate-100">
                 Painel Institucional da Turma
               </h2>
-              <Badge
-                variant="outline"
-                className="bg-brand-primary/10 text-brand-primary border-brand-primary/30 text-xs py-0 px-2 font-bold uppercase tracking-wider"
-              >
-                B2B White-Label
-              </Badge>
             </div>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
               Mapeamento de proficiência coletiva, lacunas de aprendizagem e distratores recorrentes.

@@ -121,7 +121,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
     : [
         ...baseNavItems,
         ...(isCoordinator
-          ? [{ id: 'institutional', label: 'Painel da Coordenação (B2B)', icon: Building2, isAnchor: false }]
+          ? [{ id: 'institutional', label: 'Painel da Coordenação', icon: Building2, isAnchor: false }]
           : []),
         { id: 'profile', label: 'Minha Conta', icon: User, isAnchor: false },
       ];
