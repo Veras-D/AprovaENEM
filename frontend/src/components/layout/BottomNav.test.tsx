@@ -42,4 +42,34 @@ describe('BottomNav component', () => {
 
     expect(handleOpenDrawer).toHaveBeenCalledTimes(1);
   });
+
+  it('should render coordinator action items and NOT student items when activeSection is institutional', () => {
+    render(<BottomNav onOpenDrawer={vi.fn()} activeSection="institutional" />);
+
+    expect(screen.getByRole('button', { name: /^Turmas$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Radar$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Tópicos$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Distratores$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Abrir menu de opções/i })).toBeInTheDocument();
+
+    expect(screen.queryByRole('button', { name: /^Praticar$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Ranking$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Diagnóstico$/i })).not.toBeInTheDocument();
+  });
+
+  it('should scroll smoothly when clicking coordinator anchor button in bottom nav', () => {
+    const targetElement = document.createElement('div');
+    targetElement.id = 'cohort-distractors';
+    targetElement.scrollIntoView = vi.fn();
+    document.body.appendChild(targetElement);
+
+    render(<BottomNav onOpenDrawer={vi.fn()} activeSection="institutional" />);
+
+    const distractorsBtn = screen.getByRole('button', { name: /^Distratores$/i });
+    fireEvent.click(distractorsBtn);
+
+    expect(targetElement.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth' });
+
+    document.body.removeChild(targetElement);
+  });
 });

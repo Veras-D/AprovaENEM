@@ -234,4 +234,64 @@ describe('MobileDrawer component', () => {
     renderWithClient(<MobileDrawer isOpen={true} onClose={vi.fn()} />);
     expect(screen.getByText(/Painel da Coordenação/i)).toBeInTheDocument();
   });
+
+  it('should render coordinator navigation items and NOT student items when activeSection is institutional', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-coord',
+        email: 'coord@escola.gov.br',
+        name: 'Coordenadora Helena',
+        roles: ['ROLE_INSTITUTIONAL_ADMIN'],
+        isEmailVerified: true,
+        createdAt: '2026-08-01T10:00:00Z',
+      },
+      isAuthenticated: true,
+    });
+
+    renderWithClient(<MobileDrawer isOpen={true} onClose={vi.fn()} activeSection="institutional" />);
+
+    expect(screen.getByText('Menu da Coordenação')).toBeInTheDocument();
+    expect(screen.getByText('Visão Geral da Turma')).toBeInTheDocument();
+    expect(screen.getByText('Radar Comparativo')).toBeInTheDocument();
+    expect(screen.getByText('Tópicos Críticos por Área')).toBeInTheDocument();
+    expect(screen.getByText('Análise de Distratores')).toBeInTheDocument();
+    expect(screen.getByText('Ir para Portal do Aluno')).toBeInTheDocument();
+    expect(screen.getByText('Coordenador')).toBeInTheDocument();
+
+    expect(screen.queryByText('Praticar Questões')).not.toBeInTheDocument();
+    expect(screen.queryByText('Ranking Semanal')).not.toBeInTheDocument();
+    expect(screen.queryByText('Diagnóstico & Desempenho')).not.toBeInTheDocument();
+  });
+
+  it('should scroll smoothly and close drawer when clicking a coordinator section anchor', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-coord',
+        email: 'coord@escola.gov.br',
+        name: 'Coordenadora Helena',
+        roles: ['ROLE_ADMIN'],
+        isEmailVerified: true,
+        createdAt: '2026-08-01T10:00:00Z',
+      },
+      isAuthenticated: true,
+    });
+
+    const targetElement = document.createElement('div');
+    targetElement.id = 'cohort-areas';
+    targetElement.scrollIntoView = vi.fn();
+    document.body.appendChild(targetElement);
+
+    const handleClose = vi.fn();
+    renderWithClient(
+      <MobileDrawer isOpen={true} onClose={handleClose} activeSection="institutional" />
+    );
+
+    const areasBtn = screen.getByText('Tópicos Críticos por Área');
+    fireEvent.click(areasBtn);
+
+    expect(targetElement.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth' });
+    expect(handleClose).toHaveBeenCalledTimes(1);
+
+    document.body.removeChild(targetElement);
+  });
 });

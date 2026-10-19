@@ -221,4 +221,59 @@ describe('Header component', () => {
     renderWithClient(<Header onOpenDrawer={vi.fn()} activeSection="practice" />);
     expect(screen.getByText('Painel da Coordenação')).toBeInTheDocument();
   });
+
+  it('should render coordinator navigation links and NOT student links when activeSection is institutional', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-coord',
+        email: 'coord@escola.gov.br',
+        name: 'Coordenador',
+        roles: ['ROLE_ADMIN'],
+        isEmailVerified: true,
+        createdAt: '2026-08-01T10:00:00Z',
+      },
+      isAuthenticated: true,
+    });
+
+    renderWithClient(<Header onOpenDrawer={vi.fn()} activeSection="institutional" />);
+
+    // Coordinator navigation items MUST be present
+    expect(screen.getByRole('button', { name: /Turmas & Métricas/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Radar Comparativo/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Tópicos Críticos/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Análise de Distratores/i })).toBeInTheDocument();
+
+    // Student navigation items MUST NOT be present in coordinator mode
+    expect(screen.queryByRole('button', { name: /^Praticar$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Ranking$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Diagnóstico$/i })).not.toBeInTheDocument();
+  });
+
+  it('should scroll smoothly when clicking coordinator anchor links', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-coord',
+        email: 'coord@escola.gov.br',
+        name: 'Coordenador',
+        roles: ['ROLE_ADMIN'],
+        isEmailVerified: true,
+        createdAt: '2026-08-01T10:00:00Z',
+      },
+      isAuthenticated: true,
+    });
+
+    const targetElement = document.createElement('div');
+    targetElement.id = 'cohort-radar';
+    targetElement.scrollIntoView = vi.fn();
+    document.body.appendChild(targetElement);
+
+    renderWithClient(<Header onOpenDrawer={vi.fn()} activeSection="institutional" />);
+
+    const radarBtn = screen.getByRole('button', { name: /Radar Comparativo/i });
+    fireEvent.click(radarBtn);
+
+    expect(targetElement.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth' });
+
+    document.body.removeChild(targetElement);
+  });
 });

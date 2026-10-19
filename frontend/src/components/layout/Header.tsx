@@ -3,7 +3,23 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTenantStore } from '@/stores/useTenantStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useSessionStore } from '@/stores/useSessionStore';
-import { Home, BookOpen, Trophy, BarChart2, User, Menu, Sun, Moon, LogOut, Building2, GraduationCap } from 'lucide-react';
+import {
+  Home,
+  BookOpen,
+  Trophy,
+  BarChart2,
+  User,
+  Menu,
+  Sun,
+  Moon,
+  LogOut,
+  Building2,
+  GraduationCap,
+  Users,
+  TrendingUp,
+  Award,
+  HelpCircle,
+} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 export interface HeaderProps {
@@ -40,6 +56,8 @@ export const Header: React.FC<HeaderProps> = ({
       )
   );
 
+  const isInstitutional = activeSection === 'institutional';
+
   const handleLogout = () => {
     clearAuth();
     clearSession();
@@ -47,12 +65,32 @@ export const Header: React.FC<HeaderProps> = ({
     onLogout?.();
   };
 
-  const navLinks = [
-    { id: 'home', label: 'Início', icon: Home },
-    { id: 'practice', label: 'Praticar', icon: BookOpen },
-    { id: 'leaderboard', label: 'Ranking', icon: Trophy },
-    { id: 'diagnostics', label: 'Diagnóstico', icon: BarChart2 },
+  const studentNavLinks = [
+    { id: 'home', label: 'Início', icon: Home, isAnchor: false },
+    { id: 'practice', label: 'Praticar', icon: BookOpen, isAnchor: false },
+    { id: 'leaderboard', label: 'Ranking', icon: Trophy, isAnchor: false },
+    { id: 'diagnostics', label: 'Diagnóstico', icon: BarChart2, isAnchor: false },
   ];
+
+  const coordinatorNavLinks = [
+    { id: 'cohort-overview', label: 'Turmas & Métricas', icon: Users, isAnchor: true },
+    { id: 'cohort-radar', label: 'Radar Comparativo', icon: TrendingUp, isAnchor: true },
+    { id: 'cohort-areas', label: 'Tópicos Críticos', icon: Award, isAnchor: true },
+    { id: 'cohort-distractors', label: 'Análise de Distratores', icon: HelpCircle, isAnchor: true },
+  ];
+
+  const navLinks = isInstitutional ? coordinatorNavLinks : studentNavLinks;
+
+  const handleNavLinkClick = (link: { id: string; isAnchor?: boolean }) => {
+    if (link.isAnchor) {
+      const el = document.getElementById(link.id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      onNavigate?.(link.id);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
@@ -70,7 +108,18 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             type="button"
-            onClick={() => onNavigate?.('home')}
+            onClick={() => {
+              if (isInstitutional) {
+                const el = document.getElementById('cohort-overview');
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  onNavigate?.('institutional');
+                }
+              } else {
+                onNavigate?.('home');
+              }
+            }}
             className="flex items-center gap-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded-brand p-1 -m-1 transition-opacity hover:opacity-90"
           >
             <img
@@ -102,20 +151,25 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-6" aria-label="Navegação Principal">
+        <nav
+          className="hidden md:flex items-center gap-6"
+          aria-label={isInstitutional ? 'Navegação da Coordenação' : 'Navegação Principal'}
+        >
           {navLinks.map((link) => {
             const Icon = link.icon;
-            const isActive = activeSection === link.id;
+            const isActive = !isInstitutional && activeSection === link.id;
 
             return (
               <button
                 key={link.id}
                 type="button"
-                onClick={() => onNavigate?.(link.id)}
+                onClick={() => handleNavLinkClick(link)}
                 className={`inline-flex items-center gap-2 text-sm font-medium transition-colors py-1 ${
                   isActive
                     ? 'text-brand-primary font-bold border-b-2 border-brand-primary'
-                    : 'text-slate-700 dark:text-slate-300 hover:text-brand-primary dark:hover:text-brand-primary'
+                    : isInstitutional
+                      ? 'text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400'
+                      : 'text-slate-700 dark:text-slate-300 hover:text-brand-primary dark:hover:text-brand-primary'
                 }`}
               >
                 <Icon className="h-4 w-4" aria-hidden="true" />

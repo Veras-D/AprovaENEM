@@ -17,6 +17,11 @@ import {
   Sparkles,
   LogOut,
   Building2,
+  Users,
+  TrendingUp,
+  Award,
+  HelpCircle,
+  GraduationCap,
 } from 'lucide-react';
 
 export interface MobileDrawerProps {
@@ -88,23 +93,42 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
       )
   );
 
+  const isInstitutional = activeSection === 'institutional';
+
   const baseNavItems = [
-    { id: 'home', label: 'Início', icon: Home },
-    { id: 'practice', label: 'Praticar Questões', icon: BookOpen },
-    { id: 'leaderboard', label: 'Ranking Semanal', icon: Trophy },
-    { id: 'diagnostics', label: 'Diagnóstico & Desempenho', icon: BarChart2 },
+    { id: 'home', label: 'Início', icon: Home, isAnchor: false },
+    { id: 'practice', label: 'Praticar Questões', icon: BookOpen, isAnchor: false },
+    { id: 'leaderboard', label: 'Ranking Semanal', icon: Trophy, isAnchor: false },
+    { id: 'diagnostics', label: 'Diagnóstico & Desempenho', icon: BarChart2, isAnchor: false },
   ];
 
-  const navItems = [
-    ...baseNavItems,
-    ...(isCoordinator
-      ? [{ id: 'institutional', label: 'Painel da Coordenação (B2B)', icon: Building2 }]
-      : []),
-    { id: 'profile', label: 'Minha Conta', icon: User },
+  const coordinatorNavItems = [
+    { id: 'cohort-overview', label: 'Visão Geral da Turma', icon: Users, isAnchor: true },
+    { id: 'cohort-radar', label: 'Radar Comparativo', icon: TrendingUp, isAnchor: true },
+    { id: 'cohort-areas', label: 'Tópicos Críticos por Área', icon: Award, isAnchor: true },
+    { id: 'cohort-distractors', label: 'Análise de Distratores', icon: HelpCircle, isAnchor: true },
+    { id: 'home', label: 'Ir para Portal do Aluno', icon: GraduationCap, isAnchor: false },
   ];
 
-  const handleItemClick = (id: string) => {
-    onNavigate?.(id);
+  const navItems = isInstitutional
+    ? coordinatorNavItems
+    : [
+        ...baseNavItems,
+        ...(isCoordinator
+          ? [{ id: 'institutional', label: 'Painel da Coordenação (B2B)', icon: Building2, isAnchor: false }]
+          : []),
+        { id: 'profile', label: 'Minha Conta', icon: User, isAnchor: false },
+      ];
+
+  const handleItemClick = (item: (typeof navItems)[number]) => {
+    if (item.isAnchor) {
+      const el = document.getElementById(item.id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      onNavigate?.(item.id);
+    }
     onClose();
   };
 
@@ -139,8 +163,14 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
               >
                 {currentTenant.name}
               </h2>
-              <span className="text-[10px] font-semibold uppercase text-brand-primary">
-                Menu de Navegação
+              <span
+                className={`text-[10px] font-semibold uppercase ${
+                  isInstitutional
+                    ? 'text-indigo-600 dark:text-indigo-400'
+                    : 'text-brand-primary'
+                }`}
+              >
+                {isInstitutional ? 'Menu da Coordenação' : 'Menu de Navegação'}
               </span>
             </div>
           </div>
@@ -169,6 +199,11 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
                   <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
                     {user.email}
                   </p>
+                  {isCoordinator && (
+                    <span className="inline-block mt-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30">
+                      Coordenador
+                    </span>
+                  )}
                 </div>
               </div>
               <button
@@ -205,19 +240,24 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
         </div>
 
         {/* Navigation Links */}
-        <nav className="flex-1 overflow-y-auto p-4 space-y-1.5" aria-label="Navegação móvel">
+        <nav
+          className="flex-1 overflow-y-auto p-4 space-y-1.5"
+          aria-label={isInstitutional ? 'Navegação móvel da coordenação' : 'Navegação móvel'}
+        >
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = activeSection === item.id;
+            const isActive = !isInstitutional && activeSection === item.id;
             return (
               <button
                 key={item.id}
                 type="button"
-                onClick={() => handleItemClick(item.id)}
+                onClick={() => handleItemClick(item)}
                 className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-brand text-sm font-medium transition-colors text-left ${
                   isActive
                     ? 'bg-brand-primary text-brand-primary-foreground shadow-sm'
-                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    : isInstitutional
+                      ? 'text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400'
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />

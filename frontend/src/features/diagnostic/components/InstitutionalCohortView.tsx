@@ -152,7 +152,7 @@ export const InstitutionalCohortView: React.FC<InstitutionalCohortViewProps> = (
       </div>
 
       {/* 4 KPI Metrics Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div id="cohort-overview" className="grid grid-cols-2 lg:grid-cols-4 gap-4 scroll-mt-20">
         {/* Matriculados */}
         <div className="p-4 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-1">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
@@ -211,7 +211,7 @@ export const InstitutionalCohortView: React.FC<InstitutionalCohortViewProps> = (
       </div>
 
       {/* Main Grid: Cohort Radar Spider & Collective Benchmarking */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <div id="cohort-radar" className="grid grid-cols-1 lg:grid-cols-12 gap-5 scroll-mt-20">
         <div className="lg:col-span-7 p-5 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs flex flex-col items-center justify-center">
           <div className="w-full flex items-center justify-between mb-2">
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -379,7 +379,7 @@ export const InstitutionalCohortView: React.FC<InstitutionalCohortViewProps> = (
       </div>
 
       {/* 4 Area Cards with Critical Weak Topics */}
-      <div className="space-y-3">
+      <div id="cohort-areas" className="space-y-3 scroll-mt-20">
         <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
           <Award className="h-4 w-4 text-brand-primary" aria-hidden="true" />
           Diagnóstico por Disciplina & Tópicos Mais Críticos
@@ -448,7 +448,7 @@ export const InstitutionalCohortView: React.FC<InstitutionalCohortViewProps> = (
 
       {/* Common Distractor Pitfalls Panel */}
       {cohort.commonDistractorPitfalls && cohort.commonDistractorPitfalls.length > 0 && (
-        <div className="p-5 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-4">
+        <div id="cohort-distractors" className="p-5 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-4 scroll-mt-20">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">

@@ -5,8 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-18
-### 🏫 Institutional B2B Coordinator Portal Isolation & Authentication Guard
-- feat(institutional): Segregated institutional and pedagogical coordination class cohort diagnostics completely out of the student individual diagnostic portal into a dedicated coordinator page protected by strict authentication and role guards (TASK-S6-22):
+### 🏫 Institutional B2B Coordinator Portal Isolation & Dedicated Navigation
+- feat(institutional): Segregated institutional and pedagogical coordination class cohort diagnostics completely out of the student individual diagnostic portal into a dedicated coordinator page protected by strict authentication and role guards, and completely purged student study/quiz features from the coordinator view (TASK-S6-22):
+  - **Zero Student Features in Coordinator Portal ([`Header.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/Header.tsx), [`BottomNav.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/BottomNav.tsx), [`MobileDrawer.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/MobileDrawer.tsx))**:
+    - When in institutional mode (`activeSection === 'institutional'`), all student study features (`Praticar`), gamification leaderboards (`Ranking`), and student self-diagnostics (`Diagnóstico`) are 100% removed from desktop navigation, mobile bottom navigation, and mobile slide-over drawer.
+    - Replaced with dedicated pedagogical coordinator sections tailored for academic staff and school leadership:
+      - `Turmas & Métricas` (`#cohort-overview`): Cohort enrollment capacity (42), active participants (39), engagement rate (92.8%), and collective class average (74.5%).
+      - `Radar Comparativo` (`#cohort-radar`): TRI proficiency radar spider chart benchmarked against national ENEM baseline (60%) and institutional targets (70%), with toggleable tabular breakdown.
+      - `Tópicos Críticos` (`#cohort-areas`): Area-by-area proficiency cards with collective progress bars and top weak topics identified for curriculum intervention.
+      - `Análise de Distratores` (`#cohort-distractors`): Recurrent student misconception pitfalls and misleading option traps with pedagogical explanations.
+    - Added dedicated smooth-scrolling handlers with `scroll-mt-20` on all 4 section anchors.
+    - Equipped the top bar and mobile drawer with an intentional *"Portal do Aluno"* button (`GraduationCap` icon) allowing coordinators to preview the student experience at will without polluting the institutional workspace.
   - **Strict Security Gate & Role-Based Access Control ([`InstitutionalDashboard.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/institutional/components/InstitutionalDashboard.tsx))**:
     - **Unauthenticated Visitors Gate**: Unauthenticated users visiting `?section=institutional` are presented with an Institutional Coordinator Security Gate featuring a confidentiality notice, Lock icon, and in-place institutional credential login form (`coordinator-email`, `coordinator-password`). Zero cohort metrics, class averages, or student lists are rendered or leaked into the DOM.
     - **Student Role Restriction (403 Forbidden)**: Authenticated students (`ROLE_STUDENT`) attempting to access the institutional area are intercepted by a 403 Forbidden access denied screen stating that their student profile cannot view confidential school metrics, providing *"Voltar aos Meus Estudos"* and *"Entrar com Outra Conta"* actions.
@@ -19,9 +28,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Guarantees 100% role isolation: students exclusively see their own personal TRI skill radar (`StudentDiagnosticRadar.tsx`), consolidated domain mastery insights, areas of opportunity, and personalized recommended revision topics.
   - **Comprehensive Verification & Tests**:
     - Added dedicated unit tests in [`InstitutionalDashboard.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/institutional/components/InstitutionalDashboard.test.tsx) asserting unauthenticated login gate, student 403 forbidden screen, coordinator authorized unlocking, and in-place form authentication.
-    - Updated [`Header.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/Header.test.tsx) asserting zero coordinator buttons for unauthenticated visitors and students, and proper rendering for coordinators.
-    - Updated [`MobileDrawer.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/MobileDrawer.test.tsx) asserting coordinator drawer item role gating.
-    - Verified 100% green test suite across 73 test suites (485/485 tests passing), 0 ESLint warnings (`max-warnings 0`), and clean Vite production build.
+    - Updated [`Header.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/Header.test.tsx) asserting zero coordinator buttons for unauthenticated visitors and students, proper rendering of coordinator navigation links, and absence of student links in institutional mode.
+    - Updated [`BottomNav.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/BottomNav.test.tsx) asserting dynamic switching to coordinator actions and smooth anchor scrolling.
+    - Updated [`MobileDrawer.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/MobileDrawer.test.tsx) asserting coordinator drawer items and role-specific subtitle.
+    - Verified 100% green test suite across 73 test suites (491/491 tests passing), 0 ESLint warnings (`max-warnings 0`), and clean Vite production build.
 
 ### 🎖️ Dynamic Badge Progression: Progressive Rankings & One-Time Milestones
 - feat(gamification): Re-architected badge shelf progression with dynamic tier ranks (Bronze, Silver, Gold, Diamond) for ongoing skill tracks and clean one-time milestone cards for authentic single-event achievements (TASK-S6-21):
