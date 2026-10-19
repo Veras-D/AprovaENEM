@@ -9,14 +9,14 @@ describe('BadgeShelf Component', () => {
     render(<BadgeShelf unlockedBadges={mockUnlocked} />);
 
     expect(screen.getByText('Conquistas e Medalhas')).toBeInTheDocument();
-    expect(screen.getByText(/2\/22/)).toBeInTheDocument();
+    expect(screen.getByText(/2\/23/)).toBeInTheDocument();
   });
 
   it('filters badges based on active status filter tab', () => {
     render(<BadgeShelf unlockedBadges={mockUnlocked} />);
 
-    // Initially "Todas" tab is selected: both Primeiro Passo and Chama Acesa have conquered Bronze & spawned Prata
-    expect(screen.getAllByText('Primeiro Passo')).toHaveLength(2);
+    // Initially "Todas" tab is selected: one-time milestone Primeiro Passo is conquered, Chama Acesa has Bronze conquered & spawned Prata
+    expect(screen.getAllByText('Primeiro Passo')).toHaveLength(1);
     expect(screen.getAllByText('Chama Acesa')).toHaveLength(2);
     expect(screen.getAllByText('Bronze').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Prata').length).toBeGreaterThan(0);
@@ -29,11 +29,11 @@ describe('BadgeShelf Component', () => {
     expect(screen.getByText('Chama Acesa')).toBeInTheDocument();
     expect(screen.queryByText('Prata')).not.toBeInTheDocument();
 
-    // Click "A Conquistar": spawned incomplete cards (Primeiro Passo Prata & Chama Acesa Prata)
+    // Click "A Conquistar": spawned incomplete cards (Chama Acesa Prata, but no Primeiro Passo since it's conquered)
     const lockedTab = screen.getByRole('tab', { name: /A Conquistar/i });
     fireEvent.click(lockedTab);
 
-    expect(screen.getByText('Primeiro Passo')).toBeInTheDocument();
+    expect(screen.queryByText('Primeiro Passo')).not.toBeInTheDocument();
     expect(screen.getByText('Chama Acesa')).toBeInTheDocument();
     expect(screen.getAllByText('Prata').length).toBeGreaterThan(0);
   });
@@ -57,7 +57,8 @@ describe('BadgeShelf Component', () => {
 
     expect(screen.getByText('Maratonista do ENEM')).toBeInTheDocument();
     expect(screen.getByText('Simulado Oficial ENEM')).toBeInTheDocument();
-    expect(screen.getAllByText(/Progresso:/i)).toHaveLength(3);
+    expect(screen.getByText('Raio-X Diagnóstico')).toBeInTheDocument();
+    expect(screen.getAllByText(/Progresso:/i)).toHaveLength(4);
     expect(screen.queryByText('Mestre da Matemática')).not.toBeInTheDocument();
   });
 
