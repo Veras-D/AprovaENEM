@@ -155,4 +155,19 @@ describe('Header component', () => {
     expect(removeQueriesSpy).toHaveBeenCalledTimes(1);
     expect(handleLogout).toHaveBeenCalledTimes(1);
   });
+
+  it('should render Painel da Coordenação badge and Portal do Aluno return button when activeSection is institutional', () => {
+    const handleNavigate = vi.fn();
+    renderWithClient(
+      <Header onOpenDrawer={vi.fn()} activeSection="institutional" onNavigate={handleNavigate} />
+    );
+
+    expect(screen.getByText('Painel da Coordenação')).toBeInTheDocument();
+
+    const returnBtn = screen.getByRole('button', { name: /Portal do Aluno/i });
+    expect(returnBtn).toBeInTheDocument();
+
+    fireEvent.click(returnBtn);
+    expect(handleNavigate).toHaveBeenCalledWith('home');
+  });
 });

@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTenantStore } from '@/stores/useTenantStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useSessionStore } from '@/stores/useSessionStore';
-import { Home, BookOpen, Trophy, BarChart2, User, Menu, Sun, Moon, LogOut } from 'lucide-react';
+import { Home, BookOpen, Trophy, BarChart2, User, Menu, Sun, Moon, LogOut, Building2, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 export interface HeaderProps {
@@ -75,9 +75,15 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white truncate">
                   {currentTenant.name}
                 </span>
-                <span className="hidden sm:inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary border border-brand-primary/20 shrink-0">
-                  Portal do Aluno
-                </span>
+                {activeSection === 'institutional' ? (
+                  <span className="hidden sm:inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30 shrink-0">
+                    Painel da Coordenação
+                  </span>
+                ) : (
+                  <span className="hidden sm:inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary border border-brand-primary/20 shrink-0">
+                    Portal do Aluno
+                  </span>
+                )}
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 hidden lg:block truncate max-w-md">
                 {currentTenant.tagline}
@@ -110,8 +116,30 @@ export const Header: React.FC<HeaderProps> = ({
           })}
         </nav>
 
-        {/* Action Controls: Theme Toggle & Auth/Guest Indicator */}
+        {/* Action Controls: Portal Switcher, Theme Toggle & Auth/Guest Indicator */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {activeSection === 'institutional' ? (
+            <button
+              type="button"
+              onClick={() => onNavigate?.('home')}
+              className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-brand bg-brand-primary text-white hover:bg-brand-primary/90 transition-colors shadow-2xs cursor-pointer"
+              title="Ir para o Portal do Aluno"
+            >
+              <GraduationCap className="h-3.5 w-3.5" aria-hidden="true" />
+              <span className="hidden sm:inline">Portal do Aluno</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onNavigate?.('institutional')}
+              className="hidden lg:flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-brand border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-800 transition-colors cursor-pointer"
+              title="Acessar o Painel da Coordenação e Métricas de Turma"
+            >
+              <Building2 className="h-3.5 w-3.5 text-indigo-500" aria-hidden="true" />
+              <span>Painel da Coordenação</span>
+            </button>
+          )}
+
           {/* Quick Dark Mode Toggle */}
           <button
             type="button"

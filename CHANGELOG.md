@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-18
+### 🏫 Institutional B2B Coordinator Portal Isolation & Student Diagnostic Radar Separation
+- feat(institutional): Segregated institutional and pedagogical coordination class cohort diagnostics completely out of the student individual diagnostic portal into a dedicated coordinator page (TASK-S6-22):
+  - **Dedicated Institutional Portal Feature ([`InstitutionalDashboard.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/institutional/components/InstitutionalDashboard.tsx))**:
+    - Created a specialized B2B coordinator view mounted on route `?section=institutional`, dedicated to school principals, teachers, and pedagogical directors.
+    - Features a distinctive coordinator banner with `<Building2 />` icon, `B2B White-Label` badge, and dynamic tenant labeling (*"Métricas consolidadas de turmas, aderência aos simulados e diagnóstico pedagógico de [Tenant]"*).
+    - Includes a prominent *"Voltar ao Portal do Aluno"* return button with `<ArrowLeft />` and `<GraduationCap />` icons for seamless navigation back to the student study area.
+    - Houses the class cohort diagnostic suite: class selector (`3º Ano EM - Turma Medicina`), key cohort KPIs (Enrolled Students, Active Participants, Cohort Engagement, Class Average vs baseline), collective TRI radar comparison chart, pedagogical coordination action memos, and recurrence distractor breakdown.
+  - **100% Student-Focused Diagnostic Radar ([`DiagnosticDashboard.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/diagnostic/components/DiagnosticDashboard.tsx))**:
+    - Stripped out all mode-switching tabs (`tab-student-diagnostic` vs `tab-institutional-cohort`) and removed `InstitutionalCohortView` from the student view.
+    - Guarantees 100% role isolation: students exclusively see their own personal TRI skill radar (`StudentDiagnosticRadar.tsx`), consolidated domain mastery insights, areas of opportunity, and personalized recommended revision topics, with zero leakage of institutional cohort size, active attempts, or school pedagogical memos.
+  - **Dynamic Portal Switcher & Header Navigation ([`Header.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/Header.tsx), [`MobileDrawer.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/MobileDrawer.tsx), [`App.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/App.tsx))**:
+    - Header brand badge dynamically adapts between `"Portal do Aluno"` (brand blue) when studying and `"Painel da Coordenação"` (indigo pill) when inspecting school metrics.
+    - Action controls render an *"Área da Escola"* button with `<Building2 />` icon in student view, and an illuminated *"Portal do Aluno"* button in coordinator view.
+    - Mobile drawer includes a dedicated navigation item (*"Painel da Coordenação (B2B)"*) with `<Building2 />` icon.
+    - Deep-linking support in `App.tsx` via `?section=institutional` with browser history and popstate listeners.
+  - **Comprehensive Verification & Tests**:
+    - Added dedicated unit tests in [`InstitutionalDashboard.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/institutional/components/InstitutionalDashboard.test.tsx) asserting coordinator header rendering, B2B badge, and return navigation.
+    - Updated [`DiagnosticDashboard.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/diagnostic/components/DiagnosticDashboard.test.tsx) asserting zero institutional tabs and 100% student radar presentation.
+    - Updated [`Header.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/Header.test.tsx) asserting institutional badge and switcher behavior.
+    - Verified 100% green test suite across 73 test suites (476/476 tests passing), 0 ESLint warnings (`max-warnings 0`), and clean Vite production build.
+
 ### 🎖️ Dynamic Badge Progression: Progressive Rankings & One-Time Milestones
 - feat(gamification): Re-architected badge shelf progression with dynamic tier ranks (Bronze, Silver, Gold, Diamond) for ongoing skill tracks and clean one-time milestone cards for authentic single-event achievements (TASK-S6-21):
   - **Progressive Rankings & One-Time Milestones ([`gamification-utils.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/gamification-utils.ts), [`BadgeShelf.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/gamification/components/BadgeShelf.tsx))**:

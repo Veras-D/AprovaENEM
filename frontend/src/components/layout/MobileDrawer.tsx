@@ -16,6 +16,7 @@ import {
   Eye,
   Sparkles,
   LogOut,
+  Building2,
 } from 'lucide-react';
 
 export interface MobileDrawerProps {
@@ -83,6 +84,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
     { id: 'practice', label: 'Praticar Questões', icon: BookOpen },
     { id: 'leaderboard', label: 'Ranking Semanal', icon: Trophy },
     { id: 'diagnostics', label: 'Diagnóstico & Desempenho', icon: BarChart2 },
+    { id: 'institutional', label: 'Painel da Coordenação (B2B)', icon: Building2 },
     { id: 'profile', label: 'Minha Conta', icon: User },
   ];
 
