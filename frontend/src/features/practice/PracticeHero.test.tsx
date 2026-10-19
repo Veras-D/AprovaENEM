@@ -279,7 +279,7 @@ describe('PracticeHero Component', () => {
 
     // Click "Simular Prova Oficial" button
     const openSimBtn = screen.getByRole('button', {
-      name: /Simular edição oficial do ENEM por ano e dia/i,
+      name: /Simular Prova Oficial/i,
     });
     fireEvent.click(openSimBtn);
 

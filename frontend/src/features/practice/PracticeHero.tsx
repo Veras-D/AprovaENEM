@@ -288,7 +288,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
             variant="outline"
             size="sm"
             onClick={() => setIsSimulationModalOpen(true)}
-            aria-label="Simular edição oficial do ENEM por ano e dia"
+            aria-label="Simular Prova Oficial"
             title="Escolha o ano (2023, 2022...) e o caderno de aplicação (Dia 1 ou Dia 2)"
             className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 text-xs sm:text-sm font-semibold"
           >
@@ -303,7 +303,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
               variant="outline"
               size="sm"
               onClick={() => setIsTutorOpen(true)}
-              aria-label="Tirar dúvida com o Tutor IA"
+              aria-label="Tirar Dúvida (IA)"
               title="Tem dúvida nesta questão? Peça dicas e explicações passo a passo com Inteligência Artificial"
               className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 text-xs sm:text-sm font-medium"
             >

@@ -219,10 +219,10 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     isProgressive: true,
     progress: { current: 35, target: 50, unit: 'questões', currentTier: 'BRONZE', nextTier: 'SILVER' },
     tiers: [
-      { tier: 'BRONZE', label: 'Bronze 🥉', shortLabel: 'Bronze', target: 10, description: 'Resolva 10 questões no AprovaENEM rumo ao hábito de estudos.' },
-      { tier: 'SILVER', label: 'Prata 🥈', shortLabel: 'Prata', target: 50, description: 'Resolva 50 questões no AprovaENEM consolidando sua preparação.' },
-      { tier: 'GOLD', label: 'Ouro 🥇', shortLabel: 'Ouro', target: 150, description: 'Resolva 150 questões no AprovaENEM com alto ritmo de treino.' },
-      { tier: 'DIAMOND', label: 'Diamante 💎', shortLabel: 'Diamante', target: 500, description: 'Resolva 500 questões no AprovaENEM alcançando maestria total.' },
+      { tier: 'BRONZE', label: 'Bronze', shortLabel: 'Bronze', target: 10, description: 'Resolva 10 questões no AprovaENEM rumo ao hábito de estudos.' },
+      { tier: 'SILVER', label: 'Prata', shortLabel: 'Prata', target: 50, description: 'Resolva 50 questões no AprovaENEM consolidando sua preparação.' },
+      { tier: 'GOLD', label: 'Ouro', shortLabel: 'Ouro', target: 150, description: 'Resolva 150 questões no AprovaENEM com alto ritmo de treino.' },
+      { tier: 'DIAMOND', label: 'Diamante', shortLabel: 'Diamante', target: 500, description: 'Resolva 500 questões no AprovaENEM alcançando maestria total.' },
     ],
   },
   {
@@ -235,10 +235,10 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     isProgressive: true,
     progress: { current: 3, target: 5, unit: 'simulados', currentTier: 'BRONZE', nextTier: 'SILVER' },
     tiers: [
-      { tier: 'BRONZE', label: 'Bronze 🥉', shortLabel: 'Bronze', target: 3, description: 'Complete 3 simulados oficiais do ENEM com controle de tempo.' },
-      { tier: 'SILVER', label: 'Prata 🥈', shortLabel: 'Prata', target: 5, description: 'Complete 5 simulados oficiais do ENEM com controle de tempo.' },
-      { tier: 'GOLD', label: 'Ouro 🥇', shortLabel: 'Ouro', target: 10, description: 'Complete 10 simulados oficiais do ENEM com controle de tempo.' },
-      { tier: 'DIAMOND', label: 'Diamante 💎', shortLabel: 'Diamante', target: 20, description: 'Complete 20 simulados oficiais do ENEM com controle de tempo.' },
+      { tier: 'BRONZE', label: 'Bronze', shortLabel: 'Bronze', target: 3, description: 'Complete 3 simulados oficiais do ENEM com controle de tempo.' },
+      { tier: 'SILVER', label: 'Prata', shortLabel: 'Prata', target: 5, description: 'Complete 5 simulados oficiais do ENEM com controle de tempo.' },
+      { tier: 'GOLD', label: 'Ouro', shortLabel: 'Ouro', target: 10, description: 'Complete 10 simulados oficiais do ENEM com controle de tempo.' },
+      { tier: 'DIAMOND', label: 'Diamante', shortLabel: 'Diamante', target: 20, description: 'Complete 20 simulados oficiais do ENEM com controle de tempo.' },
     ],
   },
   {
@@ -251,10 +251,10 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     isProgressive: true,
     progress: { current: 3, target: 5, unit: 'nível', currentTier: 'BRONZE', nextTier: 'SILVER' },
     tiers: [
-      { tier: 'BRONZE', label: 'Bronze 🥉', shortLabel: 'Bronze', target: 3, description: 'Alcance o Nível 3 acumulando XP em simulados e questões.' },
-      { tier: 'SILVER', label: 'Prata 🥈', shortLabel: 'Prata', target: 5, description: 'Alcance o Nível 5 acumulando XP em simulados e questões.' },
-      { tier: 'GOLD', label: 'Ouro 🥇', shortLabel: 'Ouro', target: 10, description: 'Alcance o Nível 10 acumulando XP em simulados e questões.' },
-      { tier: 'DIAMOND', label: 'Diamante 💎', shortLabel: 'Diamante', target: 20, description: 'Alcance o Nível 20 multidisciplinar na plataforma.' },
+      { tier: 'BRONZE', label: 'Bronze', shortLabel: 'Bronze', target: 3, description: 'Alcance o Nível 3 acumulando XP em simulados e questões.' },
+      { tier: 'SILVER', label: 'Prata', shortLabel: 'Prata', target: 5, description: 'Alcance o Nível 5 acumulando XP em simulados e questões.' },
+      { tier: 'GOLD', label: 'Ouro', shortLabel: 'Ouro', target: 10, description: 'Alcance o Nível 10 acumulando XP em simulados e questões.' },
+      { tier: 'DIAMOND', label: 'Diamante', shortLabel: 'Diamante', target: 20, description: 'Alcance o Nível 20 multidisciplinar na plataforma.' },
     ],
   },
 
@@ -316,10 +316,10 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     isProgressive: true,
     progress: { current: 125, target: 250, unit: 'acertos', currentTier: 'SILVER', nextTier: 'GOLD' },
     tiers: [
-      { tier: 'BRONZE', label: 'Bronze 🥉', shortLabel: 'Bronze', target: 50, description: 'Acerte 50 questões de Matemática e suas Tecnologias (MT).' },
-      { tier: 'SILVER', label: 'Prata 🥈', shortLabel: 'Prata', target: 100, description: 'Acerte 100 questões de Matemática e suas Tecnologias (MT).' },
-      { tier: 'GOLD', label: 'Ouro 🥇', shortLabel: 'Ouro', target: 250, description: 'Acerte 250 questões de Matemática e suas Tecnologias (MT).' },
-      { tier: 'DIAMOND', label: 'Diamante 💎', shortLabel: 'Diamante', target: 500, description: 'Acerte 500 questões de Matemática e suas Tecnologias (MT).' },
+      { tier: 'BRONZE', label: 'Bronze', shortLabel: 'Bronze', target: 50, description: 'Acerte 50 questões de Matemática e suas Tecnologias (MT).' },
+      { tier: 'SILVER', label: 'Prata', shortLabel: 'Prata', target: 100, description: 'Acerte 100 questões de Matemática e suas Tecnologias (MT).' },
+      { tier: 'GOLD', label: 'Ouro', shortLabel: 'Ouro', target: 250, description: 'Acerte 250 questões de Matemática e suas Tecnologias (MT).' },
+      { tier: 'DIAMOND', label: 'Diamante', shortLabel: 'Diamante', target: 500, description: 'Acerte 500 questões de Matemática e suas Tecnologias (MT).' },
     ],
   },
   {
@@ -332,10 +332,10 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     isProgressive: true,
     progress: { current: 18, target: 50, unit: 'acertos', currentTier: 'BRONZE', nextTier: 'SILVER' },
     tiers: [
-      { tier: 'BRONZE', label: 'Bronze 🥉', shortLabel: 'Bronze', target: 50, description: 'Acerte 50 questões de Ciências da Natureza e suas Tecnologias (CN).' },
-      { tier: 'SILVER', label: 'Prata 🥈', shortLabel: 'Prata', target: 100, description: 'Acerte 100 questões de Ciências da Natureza e suas Tecnologias (CN).' },
-      { tier: 'GOLD', label: 'Ouro 🥇', shortLabel: 'Ouro', target: 250, description: 'Acerte 250 questões de Ciências da Natureza e suas Tecnologias (CN).' },
-      { tier: 'DIAMOND', label: 'Diamante 💎', shortLabel: 'Diamante', target: 500, description: 'Acerte 500 questões de Ciências da Natureza e suas Tecnologias (CN).' },
+      { tier: 'BRONZE', label: 'Bronze', shortLabel: 'Bronze', target: 50, description: 'Acerte 50 questões de Ciências da Natureza e suas Tecnologias (CN).' },
+      { tier: 'SILVER', label: 'Prata', shortLabel: 'Prata', target: 100, description: 'Acerte 100 questões de Ciências da Natureza e suas Tecnologias (CN).' },
+      { tier: 'GOLD', label: 'Ouro', shortLabel: 'Ouro', target: 250, description: 'Acerte 250 questões de Ciências da Natureza e suas Tecnologias (CN).' },
+      { tier: 'DIAMOND', label: 'Diamante', shortLabel: 'Diamante', target: 500, description: 'Acerte 500 questões de Ciências da Natureza e suas Tecnologias (CN).' },
     ],
   },
   {
@@ -348,10 +348,10 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     isProgressive: true,
     progress: { current: 30, target: 50, unit: 'acertos', currentTier: 'BRONZE', nextTier: 'SILVER' },
     tiers: [
-      { tier: 'BRONZE', label: 'Bronze 🥉', shortLabel: 'Bronze', target: 50, description: 'Acerte 50 questões de Ciências Humanas e suas Tecnologias (CH).' },
-      { tier: 'SILVER', label: 'Prata 🥈', shortLabel: 'Prata', target: 100, description: 'Acerte 100 questões de Ciências Humanas e suas Tecnologias (CH).' },
-      { tier: 'GOLD', label: 'Ouro 🥇', shortLabel: 'Ouro', target: 250, description: 'Acerte 250 questões de Ciências Humanas e suas Tecnologias (CH).' },
-      { tier: 'DIAMOND', label: 'Diamante 💎', shortLabel: 'Diamante', target: 500, description: 'Acerte 500 questões de Ciências Humanas e suas Tecnologias (CH).' },
+      { tier: 'BRONZE', label: 'Bronze', shortLabel: 'Bronze', target: 50, description: 'Acerte 50 questões de Ciências Humanas e suas Tecnologias (CH).' },
+      { tier: 'SILVER', label: 'Prata', shortLabel: 'Prata', target: 100, description: 'Acerte 100 questões de Ciências Humanas e suas Tecnologias (CH).' },
+      { tier: 'GOLD', label: 'Ouro', shortLabel: 'Ouro', target: 250, description: 'Acerte 250 questões de Ciências Humanas e suas Tecnologias (CH).' },
+      { tier: 'DIAMOND', label: 'Diamante', shortLabel: 'Diamante', target: 500, description: 'Acerte 500 questões de Ciências Humanas e suas Tecnologias (CH).' },
     ],
   },
   {
@@ -364,10 +364,10 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     isProgressive: true,
     progress: { current: 15, target: 50, unit: 'acertos', currentTier: 'BRONZE', nextTier: 'SILVER' },
     tiers: [
-      { tier: 'BRONZE', label: 'Bronze 🥉', shortLabel: 'Bronze', target: 50, description: 'Acerte 50 questões de Linguagens, Códigos e suas Tecnologias (LC).' },
-      { tier: 'SILVER', label: 'Prata 🥈', shortLabel: 'Prata', target: 100, description: 'Acerte 100 questões de Linguagens, Códigos e suas Tecnologias (LC).' },
-      { tier: 'GOLD', label: 'Ouro 🥇', shortLabel: 'Ouro', target: 250, description: 'Acerte 250 questões de Linguagens, Códigos e suas Tecnologias (LC).' },
-      { tier: 'DIAMOND', label: 'Diamante 💎', shortLabel: 'Diamante', target: 500, description: 'Acerte 500 questões de Linguagens, Códigos e suas Tecnologias (LC).' },
+      { tier: 'BRONZE', label: 'Bronze', shortLabel: 'Bronze', target: 50, description: 'Acerte 50 questões de Linguagens, Códigos e suas Tecnologias (LC).' },
+      { tier: 'SILVER', label: 'Prata', shortLabel: 'Prata', target: 100, description: 'Acerte 100 questões de Linguagens, Códigos e suas Tecnologias (LC).' },
+      { tier: 'GOLD', label: 'Ouro', shortLabel: 'Ouro', target: 250, description: 'Acerte 250 questões de Linguagens, Códigos e suas Tecnologias (LC).' },
+      { tier: 'DIAMOND', label: 'Diamante', shortLabel: 'Diamante', target: 500, description: 'Acerte 500 questões de Linguagens, Códigos e suas Tecnologias (LC).' },
     ],
   },
 
@@ -420,10 +420,10 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     isProgressive: true,
     progress: { current: 8, target: 10, unit: 'dúvidas', currentTier: 'BRONZE', nextTier: 'SILVER' },
     tiers: [
-      { tier: 'BRONZE', label: 'Bronze 🥉', shortLabel: 'Bronze', target: 10, description: 'Tire 10 dúvidas conceituais com o Tutor IA pedagógico.' },
-      { tier: 'SILVER', label: 'Prata 🥈', shortLabel: 'Prata', target: 25, description: 'Tire 25 dúvidas conceituais com o Tutor IA pedagógico.' },
-      { tier: 'GOLD', label: 'Ouro 🥇', shortLabel: 'Ouro', target: 50, description: 'Tire 50 dúvidas conceituais com o Tutor IA pedagógico.' },
-      { tier: 'DIAMOND', label: 'Diamante 💎', shortLabel: 'Diamante', target: 100, description: 'Tire 100 dúvidas conceituais com o Tutor IA pedagógico.' },
+      { tier: 'BRONZE', label: 'Bronze', shortLabel: 'Bronze', target: 10, description: 'Tire 10 dúvidas conceituais com o Tutor IA pedagógico.' },
+      { tier: 'SILVER', label: 'Prata', shortLabel: 'Prata', target: 25, description: 'Tire 25 dúvidas conceituais com o Tutor IA pedagógico.' },
+      { tier: 'GOLD', label: 'Ouro', shortLabel: 'Ouro', target: 50, description: 'Tire 50 dúvidas conceituais com o Tutor IA pedagógico.' },
+      { tier: 'DIAMOND', label: 'Diamante', shortLabel: 'Diamante', target: 100, description: 'Tire 100 dúvidas conceituais com o Tutor IA pedagógico.' },
     ],
   },
   {

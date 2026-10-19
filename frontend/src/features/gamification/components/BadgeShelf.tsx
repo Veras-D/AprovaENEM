@@ -21,6 +21,7 @@ import {
   CheckCheck,
   GraduationCap,
   TrendingUp,
+  Gem,
 } from 'lucide-react';
 import {
   BADGE_CATALOG,
@@ -57,6 +58,71 @@ const BADGE_ICONS: Record<string, React.ElementType> = {
   CheckCheck,
   GraduationCap,
   TrendingUp,
+};
+
+interface TierTheme {
+  readonly cardUnlocked: string;
+  readonly cardLocked: string;
+  readonly iconUnlocked: string;
+  readonly pill: string;
+  readonly icon: React.ElementType;
+  readonly iconColor: string;
+  readonly progressBar: string;
+}
+
+const TIER_THEMES: Record<string, TierTheme> = {
+  BRONZE: {
+    cardUnlocked:
+      'bg-amber-50/70 dark:bg-amber-950/25 border-amber-600/50 dark:border-amber-700/60 shadow-xs',
+    cardLocked:
+      'bg-slate-50/60 dark:bg-slate-800/30 border-amber-600/20 dark:border-amber-800/30',
+    iconUnlocked:
+      'bg-amber-700 text-amber-50 shadow-xs ring-2 ring-amber-600/40',
+    pill:
+      'bg-amber-100 text-amber-950 dark:bg-amber-950/70 dark:text-amber-200 border-amber-300 dark:border-amber-700/80',
+    icon: Medal,
+    iconColor: 'text-amber-700 dark:text-amber-400',
+    progressBar: 'bg-amber-600 dark:bg-amber-500',
+  },
+  SILVER: {
+    cardUnlocked:
+      'bg-slate-100/80 dark:bg-slate-800/50 border-slate-400 dark:border-slate-500 shadow-xs',
+    cardLocked:
+      'bg-slate-50/60 dark:bg-slate-800/30 border-slate-300 dark:border-slate-700',
+    iconUnlocked:
+      'bg-slate-500 dark:bg-slate-400 text-white shadow-xs ring-2 ring-slate-300 dark:ring-slate-500',
+    pill:
+      'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-600',
+    icon: Medal,
+    iconColor: 'text-slate-600 dark:text-slate-300',
+    progressBar: 'bg-slate-500 dark:bg-slate-400',
+  },
+  GOLD: {
+    cardUnlocked:
+      'bg-yellow-50/70 dark:bg-yellow-950/25 border-yellow-400 dark:border-yellow-500 shadow-xs',
+    cardLocked:
+      'bg-slate-50/60 dark:bg-slate-800/30 border-yellow-300/40 dark:border-yellow-800/40',
+    iconUnlocked:
+      'bg-amber-400 text-amber-950 font-bold shadow-xs ring-2 ring-yellow-400/50',
+    pill:
+      'bg-yellow-100 text-yellow-950 dark:bg-yellow-950/70 dark:text-yellow-200 border-yellow-300 dark:border-yellow-700/80',
+    icon: Crown,
+    iconColor: 'text-amber-600 dark:text-yellow-400',
+    progressBar: 'bg-amber-500 dark:bg-amber-400',
+  },
+  DIAMOND: {
+    cardUnlocked:
+      'bg-cyan-50/70 dark:bg-cyan-950/25 border-cyan-400 dark:border-cyan-500 shadow-xs',
+    cardLocked:
+      'bg-slate-50/60 dark:bg-slate-800/30 border-cyan-300/40 dark:border-cyan-800/40',
+    iconUnlocked:
+      'bg-cyan-600 dark:bg-cyan-500 text-white shadow-xs ring-2 ring-cyan-300 dark:ring-cyan-600',
+    pill:
+      'bg-cyan-100 text-cyan-950 dark:bg-cyan-950/70 dark:text-cyan-200 border-cyan-300 dark:border-cyan-700/80',
+    icon: Gem,
+    iconColor: 'text-cyan-600 dark:text-cyan-400',
+    progressBar: 'bg-cyan-500 dark:bg-cyan-400',
+  },
 };
 
 const TIER_PILL_STYLES: Record<string, string> = {
@@ -217,29 +283,47 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {filteredBadges.map((item: VisibleBadgeItem) => {
             const IconComponent = BADGE_ICONS[item.iconName] || Trophy;
+            const tierTheme = item.tierConfig ? TIER_THEMES[item.tierConfig.tier] : undefined;
+            const TierVectorIcon = tierTheme?.icon;
 
             return (
               <div
                 key={item.id}
                 className={`p-3.5 rounded-brand border transition-all flex flex-col justify-between gap-2.5 ${
                   item.isUnlocked
-                    ? 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800/60 shadow-xs'
-                    : 'bg-slate-50/60 dark:bg-slate-800/30 border-slate-200/80 dark:border-slate-800'
+                    ? tierTheme?.cardUnlocked ??
+                      'bg-amber-50/40 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800/60 shadow-xs'
+                    : tierTheme?.cardLocked ??
+                      'bg-slate-50/60 dark:bg-slate-800/30 border-slate-200/80 dark:border-slate-800'
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  {/* Badge Icon */}
-                  <div
-                    className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 shadow-2xs ${
-                      item.isUnlocked
-                        ? 'bg-amber-500 text-white'
-                        : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
-                    }`}
-                  >
-                    {item.isUnlocked ? (
-                      <IconComponent className="h-5 w-5" aria-hidden="true" />
-                    ) : (
-                      <Lock className="h-4 w-4" aria-hidden="true" />
+                  {/* Badge Icon with corner rank emblem */}
+                  <div className="relative shrink-0">
+                    <div
+                      className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 shadow-2xs ${
+                        item.isUnlocked
+                          ? tierTheme?.iconUnlocked ?? 'bg-amber-500 text-white'
+                          : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
+                      }`}
+                    >
+                      {item.isUnlocked ? (
+                        <IconComponent className="h-5 w-5" aria-hidden="true" />
+                      ) : (
+                        <Lock className="h-4 w-4" aria-hidden="true" />
+                      )}
+                    </div>
+                    {TierVectorIcon && (
+                      <span
+                        className={`absolute -bottom-1 -right-1 h-4.5 w-4.5 rounded-full flex items-center justify-center shadow-xs border ${
+                          item.isUnlocked
+                            ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'
+                            : 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 opacity-70'
+                        }`}
+                        aria-hidden="true"
+                      >
+                        <TierVectorIcon className={`h-2.5 w-2.5 ${tierTheme.iconColor}`} />
+                      </span>
                     )}
                   </div>
 
@@ -252,11 +336,17 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
                         </span>
                         {item.tierConfig && (
                           <span
-                            className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full border shrink-0 ${
-                              TIER_PILL_STYLES[item.tierConfig.tier] || ''
+                            className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border shrink-0 inline-flex items-center gap-1 ${
+                              tierTheme?.pill ?? TIER_PILL_STYLES[item.tierConfig.tier] ?? ''
                             }`}
                           >
-                            {item.tierConfig.label}
+                            {TierVectorIcon && (
+                              <TierVectorIcon
+                                className={`h-2.5 w-2.5 ${tierTheme?.iconColor}`}
+                                aria-hidden="true"
+                              />
+                            )}
+                            <span>{item.tierConfig.label}</span>
                           </span>
                         )}
                       </div>
@@ -297,7 +387,9 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
                     <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-300 ${
-                          item.isUnlocked ? 'bg-emerald-500' : 'bg-amber-500'
+                          item.isUnlocked
+                            ? 'bg-emerald-500'
+                            : (tierTheme?.progressBar ?? 'bg-amber-500')
                         }`}
                         style={{ width: `${item.progress.percentage}%` }}
                       />
