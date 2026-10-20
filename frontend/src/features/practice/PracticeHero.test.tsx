@@ -326,5 +326,65 @@ describe('PracticeHero Component', () => {
     expect(screen.queryByText('Simular Edição Oficial do ENEM')).not.toBeInTheDocument();
     expect(screen.getByText(/Simulado Oficial ENEM 2023 — Dia 1/i)).toBeInTheDocument();
   });
+
+  it('presents different, novel questions when clicking "Refazer Diagnóstico" after completing diagnostic', async () => {
+    renderWithProviders();
+
+    // Verify initial Question 1 statement
+    const initialQuestion1Text = 'Um estudante do ensino médio deseja calcular a economia gerada';
+    expect(screen.getByText(new RegExp(initialQuestion1Text, 'i'))).toBeInTheDocument();
+
+    const initialQuestionIds = useSessionStore.getState().questions.map((q) => q.id);
+    expect(initialQuestionIds).toHaveLength(5);
+
+    // Complete all 5 initial questions
+    act(() => {
+      const qs = useSessionStore.getState().questions;
+      qs.forEach((q) => {
+        useSessionStore.getState().recordAttempt({
+          questionId: q.id,
+          selectedOption: 'A',
+          correctOption: 'A',
+          isCorrect: true,
+          awardedXp: 15,
+        });
+      });
+    });
+
+    // Wait for celebratory overlay and close it
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: /Parabéns! Diagnóstico Concluído!/i })).toBeInTheDocument();
+    });
+    const closeCelebrationBtn = screen.getByRole('button', { name: /Continuar Estudando/i });
+    fireEvent.click(closeCelebrationBtn);
+
+    // Verify calibrated diagnostic view is displayed with "Refazer Diagnóstico" button
+    expect(screen.getByText('Diagnóstico ENEM Calibrado')).toBeInTheDocument();
+    const retakeButtons = screen.getAllByRole('button', { name: /Refazer Diagnóstico/i });
+    expect(retakeButtons.length).toBeGreaterThan(0);
+
+    // Click "Refazer Diagnóstico"
+    fireEvent.click(retakeButtons[0]!);
+
+    // Session should be restarted in active mode with 0 answered
+    expect(screen.getByText(/0 de 5 respondidas/i)).toBeInTheDocument();
+
+    // Verify new questions are loaded and distinct from the initial set
+    const recalQuestionIds = useSessionStore.getState().questions.map((q) => q.id);
+    expect(recalQuestionIds).toHaveLength(5);
+
+    // Initial question 1 should NOT be in the active recalibration session
+    expect(screen.queryByText(new RegExp(initialQuestion1Text, 'i'))).not.toBeInTheDocument();
+
+    // Every question ID in the recalibration session should be different from the initial question IDs
+    initialQuestionIds.forEach((initialId) => {
+      expect(recalQuestionIds).not.toContain(initialId);
+    });
+
+    // The new Question 1 should be rendered
+    const currentQ1 = useSessionStore.getState().questions[0];
+    expect(currentQ1).toBeDefined();
+    expect(screen.getByText(new RegExp(currentQ1!.statement.slice(0, 30), 'i'))).toBeInTheDocument();
+  });
 });
 

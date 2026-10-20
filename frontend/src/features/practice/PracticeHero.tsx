@@ -27,7 +27,10 @@ import type { DiagnosticReportDto, QuestionItemDto } from '@/api/types';
 import { mapDtoToDomainQuestion } from './practice-mappers';
 import { CelebrationOverlay } from '@/features/gamification';
 import { DiagnosticResultView } from '@/features/diagnostic/components/DiagnosticResultView';
-import { generateDiagnosticFromSession } from '@/features/diagnostic/diagnostic-utils';
+import {
+  generateDiagnosticFromSession,
+  selectDiagnosticQuestions,
+} from '@/features/diagnostic/diagnostic-utils';
 
 export interface PracticeHeroProps {
   readonly onOpenGamification?: () => void;
@@ -60,6 +63,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     isDiagnosticCompleted,
     completeSession,
     resetDiagnostic,
+    recordDiagnosticSeenQuestions,
   } = useSessionStore();
 
   const { timeMode, setTimeMode } = useAccessibilityStore();
@@ -72,7 +76,9 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
   // Initialize session with authentic mock questions if empty and diagnostic not already completed
   useEffect(() => {
     if (questions.length === 0 && !isDiagnosticCompleted) {
-      const domainQuestions = MOCK_QUESTIONS.map(mapDtoToDomainQuestion);
+      const initialDtos = selectDiagnosticQuestions(MOCK_QUESTIONS, [], 5);
+      const domainQuestions = initialDtos.map(mapDtoToDomainQuestion);
+      recordDiagnosticSeenQuestions(initialDtos.map((q) => q.id));
       const mockSession: PracticeSession = {
         id: 'session-demo-enem',
         title: 'Simulado Rápido ENEM',
@@ -84,7 +90,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       };
       startSession(mockSession, domainQuestions);
     }
-  }, [questions.length, isDiagnosticCompleted, startSession]);
+  }, [questions.length, isDiagnosticCompleted, startSession, recordDiagnosticSeenQuestions]);
 
   const currentQuestion = questions[currentQuestionIndex] || null;
   const currentAttempt = currentQuestion ? attempts[currentQuestion.id] : undefined;
@@ -121,10 +127,21 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
   const handleRestart = useCallback(() => {
     setShowCelebration(false);
     setIsTimeUpModalOpen(false);
+
+    // Collect questions to exclude from recalibration to ensure different questions are presented
+    const currentIds = questions.map((q) => q.id);
+    const seenIds = useSessionStore.getState().seenDiagnosticQuestionIds;
+    const excludeIds = Array.from(new Set([...seenIds, ...currentIds]));
+
     resetDiagnostic();
-    const domainQuestions = MOCK_QUESTIONS.map(mapDtoToDomainQuestion);
+
+    // Select novel balanced questions across ENEM areas
+    const newDtos = selectDiagnosticQuestions(MOCK_QUESTIONS, excludeIds, 5);
+    const domainQuestions = newDtos.map(mapDtoToDomainQuestion);
+    recordDiagnosticSeenQuestions(newDtos.map((q) => q.id));
+
     const mockSession: PracticeSession = {
-      id: `session-${Date.now()}`,
+      id: `session-recal-${Date.now()}`,
       title: 'Simulado Rápido ENEM',
       questionCount: domainQuestions.length,
       status: 'IN_PROGRESS',
@@ -133,7 +150,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       createdAt: new Date().toISOString(),
     };
     startSession(mockSession, domainQuestions);
-  }, [resetDiagnostic, startSession]);
+  }, [questions, resetDiagnostic, recordDiagnosticSeenQuestions, startSession]);
 
   const handlePracticeWeakTopic = useCallback(
     (topic: string) => {

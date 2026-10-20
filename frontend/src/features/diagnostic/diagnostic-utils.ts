@@ -1,4 +1,10 @@
-import type { MasteryLevel, DiagnosticRadarAreaDto, DiagnosticReportDto } from '@/api/types';
+import type {
+  MasteryLevel,
+  DiagnosticRadarAreaDto,
+  DiagnosticReportDto,
+  QuestionItemDto,
+} from '@/api/types';
+import { MOCK_QUESTIONS } from '@/api/mocks/mock-data';
 
 export interface AreaMetadata {
   readonly code: string;
@@ -283,4 +289,87 @@ export function generateDiagnosticFromSession(
         : ['Interpretação Textual e Gráficos', 'Geometria e Proporcionalidade'],
     generatedAt: new Date().toISOString(),
   };
+}
+
+/**
+ * Selects a balanced set of diagnostic questions across the 4 ENEM knowledge areas
+ * (MT, CN, CH, LC), prioritizing questions that have not yet been presented in previous rounds.
+ *
+ * @param pool The full question catalog (defaults to MOCK_QUESTIONS)
+ * @param excludeIds List of question IDs that were previously seen or answered
+ * @param count Total number of questions to pick (default: 5 for ENEM diagnostic)
+ */
+export function selectDiagnosticQuestions(
+  pool: readonly QuestionItemDto[] = MOCK_QUESTIONS,
+  excludeIds: readonly string[] = [],
+  count: number = 5
+): readonly QuestionItemDto[] {
+  if (pool.length <= count) {
+    return pool;
+  }
+
+  // Canonical first-run behavior: if no questions need to be excluded, return canonical initial batch
+  if (excludeIds.length === 0) {
+    return pool.slice(0, count);
+  }
+
+  const areaCodes: readonly ('MT' | 'CN' | 'CH' | 'LC')[] = ['MT', 'CN', 'CH', 'LC'];
+
+  // Identify unseen candidates outside excludeIds
+  let candidatePool = pool.filter((q) => !excludeIds.includes(q.id));
+
+  // If candidate pool has fewer than count questions, reset history but still exclude the most recent count items
+  if (candidatePool.length < count) {
+    const recentExclude = excludeIds.slice(-count);
+    const fallback = pool.filter((q) => !recentExclude.includes(q.id));
+    candidatePool = fallback.length >= count ? fallback : [...pool];
+  }
+
+  const selected: QuestionItemDto[] = [];
+  const selectedIds = new Set<string>();
+
+  // 1. Pick 1 question from each of the 4 areas to ensure balanced ENEM representation
+  for (const code of areaCodes) {
+    if (selected.length >= count) break;
+    const areaCandidates = candidatePool.filter(
+      (q) => !selectedIds.has(q.id) && getAreaCode(q.subject || q.knowledgeArea || '') === code
+    );
+    if (areaCandidates.length > 0) {
+      const picked = areaCandidates[0]!;
+      selected.push(picked);
+      selectedIds.add(picked.id);
+    } else {
+      // Fallback: pick any question in this area not yet selected
+      const fallbackArea = pool.filter(
+        (q) => !selectedIds.has(q.id) && getAreaCode(q.subject || q.knowledgeArea || '') === code
+      );
+      if (fallbackArea.length > 0) {
+        const picked = fallbackArea[0]!;
+        selected.push(picked);
+        selectedIds.add(picked.id);
+      }
+    }
+  }
+
+  // 2. Fill remaining slots up to count with candidate questions
+  for (const q of candidatePool) {
+    if (selected.length >= count) break;
+    if (!selectedIds.has(q.id)) {
+      selected.push(q);
+      selectedIds.add(q.id);
+    }
+  }
+
+  // 3. Final safety fallback to meet exact count
+  if (selected.length < count) {
+    for (const q of pool) {
+      if (selected.length >= count) break;
+      if (!selectedIds.has(q.id)) {
+        selected.push(q);
+        selectedIds.add(q.id);
+      }
+    }
+  }
+
+  return selected;
 }

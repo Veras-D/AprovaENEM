@@ -59,6 +59,7 @@ export interface SessionState {
   readonly questionElapsedSeconds: number;
   readonly flaggedQuestions: Readonly<Record<string, boolean>>;
   readonly isMigratingProgress: boolean;
+  readonly seenDiagnosticQuestionIds: readonly string[];
 
   readonly startSession: (session: PracticeSession, questions?: readonly Question[]) => void;
   readonly setPhase: (phase: SessionPhase) => void;
@@ -74,6 +75,7 @@ export interface SessionState {
   readonly setDiagnosticReport: (report: DiagnosticReport | DiagnosticReportDto) => void;
   readonly resetDiagnostic: () => void;
   readonly clearSession: () => void;
+  readonly recordDiagnosticSeenQuestions: (ids: readonly string[]) => void;
   readonly migrateAnonymousProgress: (userId: string) => MigrationResult;
 }
 
@@ -124,6 +126,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   elapsedSeconds: 0,
   questionElapsedSeconds: 0,
   isMigratingProgress: false,
+  seenDiagnosticQuestionIds: [],
 
   startSession: (session, questions = []) =>
     set({
@@ -350,7 +353,14 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       elapsedSeconds: 0,
       questionElapsedSeconds: 0,
       isMigratingProgress: false,
+      seenDiagnosticQuestionIds: [],
     });
+  },
+
+  recordDiagnosticSeenQuestions: (ids) => {
+    const { seenDiagnosticQuestionIds } = get();
+    const updated = Array.from(new Set([...seenDiagnosticQuestionIds, ...ids]));
+    set({ seenDiagnosticQuestionIds: updated });
   },
 
   migrateAnonymousProgress: (userId: string): MigrationResult => {

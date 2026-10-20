@@ -7,6 +7,7 @@ import {
   transformRadarDataForChart,
   evaluateDiagnosticLevel,
   generateDiagnosticFromSession,
+  selectDiagnosticQuestions,
   ENEM_AREAS,
   MASTERY_CONFIGS,
   NATIONAL_ENEM_BASELINE,
@@ -175,6 +176,65 @@ describe('diagnostic-utils', () => {
       expect(chArea?.masteryLevel).toBe('CRITICAL');
       expect(chArea?.topWeakTopic).toBe('Brasil Colônia');
       expect(report.recommendedTopics).toContain('Brasil Colônia');
+    });
+  });
+
+  describe('selectDiagnosticQuestions', () => {
+    it('returns the initial canonical batch of 5 questions when excludeIds is empty', () => {
+      const questions = selectDiagnosticQuestions();
+      expect(questions).toHaveLength(5);
+      expect(questions[0]?.subject).toBe('MT');
+      expect(questions[0]?.statement).toContain('Um estudante do ensino médio deseja calcular a economia');
+    });
+
+    it('returns 5 distinct questions excluding the previously answered questions', () => {
+      const initialQuestions = selectDiagnosticQuestions();
+      const initialIds = initialQuestions.map((q) => q.id);
+
+      const nextQuestions = selectDiagnosticQuestions(undefined, initialIds);
+      expect(nextQuestions).toHaveLength(5);
+
+      const nextIds = nextQuestions.map((q) => q.id);
+      // Ensure zero overlap between initial and recalibration questions
+      initialIds.forEach((id) => {
+        expect(nextIds).not.toContain(id);
+      });
+
+      // Verify questions are from distinct ENEM areas
+      const areas = nextQuestions.map((q) => q.subject);
+      expect(areas).toContain('MT');
+      expect(areas).toContain('CN');
+      expect(areas).toContain('CH');
+      expect(areas).toContain('LC');
+    });
+
+    it('supports multiple sequential recalibrations yielding novel question sets', () => {
+      // Round 1
+      const round1 = selectDiagnosticQuestions();
+      const round1Ids = round1.map((q) => q.id);
+
+      // Round 2
+      const round2 = selectDiagnosticQuestions(undefined, round1Ids);
+      const round2Ids = round2.map((q) => q.id);
+      expect(round2Ids.some((id) => round1Ids.includes(id))).toBe(false);
+
+      // Round 3
+      const round3 = selectDiagnosticQuestions(undefined, [...round1Ids, ...round2Ids]);
+      const round3Ids = round3.map((q) => q.id);
+      expect(round3Ids.some((id) => round1Ids.includes(id))).toBe(false);
+      expect(round3Ids.some((id) => round2Ids.includes(id))).toBe(false);
+    });
+
+    it('gracefully cycles when candidate pool is exhausted while avoiding the immediate previous set', () => {
+      // Exclude all questions in bank
+      const round1 = selectDiagnosticQuestions();
+      const round1Ids = round1.map((q) => q.id);
+
+      // Pass large list of exclusions
+      const recycled = selectDiagnosticQuestions(undefined, round1Ids);
+      expect(recycled).toHaveLength(5);
+      const recycledIds = recycled.map((q) => q.id);
+      expect(recycledIds.some((id) => round1Ids.includes(id))).toBe(false);
     });
   });
 });

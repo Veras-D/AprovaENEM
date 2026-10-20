@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-18
+### 🔀 Dynamic Non-Repeating Question Selector on Diagnostic Recalibration ("Refazer Diagnóstico")
+- feat(practice): Implemented balanced, non-repeating dynamic question selection when retaking diagnostic assessment, presenting students with novel ENEM questions across all four knowledge areas (TASK-S6-28):
+  - **Enriched ENEM Question Catalog ([`mock-data.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/api/mocks/mock-data.ts))**:
+    - Expanded `MOCK_QUESTIONS` from 5 static questions to 20 authentic ENEM items (5 questions per knowledge area: Matemática, Ciências da Natureza, Ciências Humanas, and Linguagens & Códigos).
+    - Added corresponding comprehensive pedagogical resolutions to `MOCK_RESOLUTIONS` for all 20 questions, featuring full step-by-step mathematical and conceptual explanations, complete 5-alternative distractor analysis (A through E), and INEP exam attributions.
+  - **Dynamic Diagnostic Sampling Algorithm ([`diagnostic-utils.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/diagnostic/diagnostic-utils.ts))**:
+    - Implemented `selectDiagnosticQuestions(pool, excludeIds, count)`:
+      - Canonical first-run behavior: returns the canonical initial batch of 5 questions when `excludeIds` is empty, preserving test reproducibility and baseline calibration.
+      - Recalibration behavior: filters candidate questions outside `excludeIds`, ensuring that previously presented questions are strictly excluded.
+      - ENEM Area Balance: guarantees representation across the 4 ENEM knowledge areas (at least 1 MT, 1 CN, 1 CH, 1 LC) plus multidisciplinary elective questions.
+      - Graceful Cycling: detects candidate pool exhaustion across multiple sequential retakes and resets history while still avoiding the immediately preceding round's questions.
+  - **Question Tracking & Session Reinitialization ([`useSessionStore.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/stores/useSessionStore.ts), [`PracticeHero.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.tsx))**:
+    - Added `seenDiagnosticQuestionIds` tracking and `recordDiagnosticSeenQuestions` action in `useSessionStore`.
+    - Preserved `seenDiagnosticQuestionIds` across `resetDiagnostic()` so that recalibration sessions know which questions were previously completed.
+    - Updated `handleRestart` in `PracticeHero.tsx` to collect all previous question IDs, sample novel balanced questions via `selectDiagnosticQuestions`, record them to seen history, and initialize the active session cleanly.
+  - **Verification & Test Coverage**:
+    - Added unit test suite for `selectDiagnosticQuestions` in [`diagnostic-utils.test.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/diagnostic/diagnostic-utils.test.ts) (4 tests covering initial batch, exclusion filtering, multi-round recalibrations, and pool cycling).
+    - Added integration test in [`PracticeHero.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.test.tsx) verifying that clicking "Refazer Diagnóstico" from the calibrated diagnostic view restarts the session with completely different questions and zero overlapping IDs.
+    - Verified 100% green across all 74 Vitest test suites (519/519 tests passing), 0 ESLint warnings (`max-warnings 0`), clean Vite production build, and all 5 Cypress E2E specs (26/26 tests passing).
+
 ### 🎨 Calibrated Action Toolbar Button Height Alignment & Text Wrapping Elimination
 - fix(ui): Resolved visual height mismatch and text wrapping on action buttons in the calibrated diagnostic header bar (`PracticeHero.tsx`, `Button.tsx`, `DiagnosticResultView.tsx`) (TASK-S6-27):
   - **Button Text Wrapping Elimination ([`Button.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/ui/Button.tsx))**:
