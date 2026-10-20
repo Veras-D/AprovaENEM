@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSessionStore } from '@/stores/useSessionStore';
 import { useAccessibilityStore } from '@/stores/useAccessibilityStore';
+import { useQuestionsQuery, useSubmitAnswerMutation } from '@/api/hooks';
 import { MOCK_QUESTIONS, MOCK_RESOLUTIONS } from '@/api/mocks/mock-data';
 import { Button } from '@/components/ui/Button';
 import {
@@ -73,14 +74,24 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
   const [isTimeUpModalOpen, setIsTimeUpModalOpen] = useState<boolean>(false);
   const [isSimulationModalOpen, setIsSimulationModalOpen] = useState<boolean>(false);
 
-  // Initialize session with authentic mock questions if empty and diagnostic not already completed
+  const questionsQuery = useQuestionsQuery({ size: 100 });
+  const submitAnswerMutation = useSubmitAnswerMutation();
+
+  const questionsPool = useMemo(() => {
+    if (questionsQuery.data?.content && questionsQuery.data.content.length > 0) {
+      return questionsQuery.data.content;
+    }
+    return MOCK_QUESTIONS;
+  }, [questionsQuery.data?.content]);
+
+  // Initialize session with live backend questions (or fallback pool) if empty and diagnostic not already completed
   useEffect(() => {
     if (questions.length === 0 && !isDiagnosticCompleted) {
-      const initialDtos = selectDiagnosticQuestions(MOCK_QUESTIONS, [], 5);
+      const initialDtos = selectDiagnosticQuestions(questionsPool, [], 5);
       const domainQuestions = initialDtos.map(mapDtoToDomainQuestion);
       recordDiagnosticSeenQuestions(initialDtos.map((q) => q.id));
-      const mockSession: PracticeSession = {
-        id: 'session-demo-enem',
+      const initialSession: PracticeSession = {
+        id: `session-enem-${Date.now()}`,
         title: 'Simulado Rápido ENEM',
         questionCount: domainQuestions.length,
         status: 'IN_PROGRESS',
@@ -88,9 +99,47 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
         correctCount: 0,
         createdAt: new Date().toISOString(),
       };
-      startSession(mockSession, domainQuestions);
+      startSession(initialSession, domainQuestions);
     }
-  }, [questions.length, isDiagnosticCompleted, startSession, recordDiagnosticSeenQuestions]);
+  }, [questions.length, isDiagnosticCompleted, startSession, recordDiagnosticSeenQuestions, questionsPool]);
+
+  // Upgrade to live backend questions when available if student has not interacted yet
+  useEffect(() => {
+    if (
+      questionsQuery.isSuccess &&
+      questionsQuery.data?.content &&
+      questionsQuery.data.content.length > 0 &&
+      Object.keys(selectedAnswers).length === 0 &&
+      Object.keys(attempts).length === 0 &&
+      !isDiagnosticCompleted
+    ) {
+      const isUsingFallback = questions.some((q) => MOCK_QUESTIONS.some((mq) => mq.id === q.id));
+      if (isUsingFallback) {
+        const liveDtos = selectDiagnosticQuestions(questionsQuery.data.content, [], 5);
+        const domainQuestions = liveDtos.map(mapDtoToDomainQuestion);
+        recordDiagnosticSeenQuestions(liveDtos.map((q) => q.id));
+        const liveSession: PracticeSession = {
+          id: `session-live-${Date.now()}`,
+          title: 'Simulado Rápido ENEM',
+          questionCount: domainQuestions.length,
+          status: 'IN_PROGRESS',
+          currentQuestionIndex: 0,
+          correctCount: 0,
+          createdAt: new Date().toISOString(),
+        };
+        startSession(liveSession, domainQuestions);
+      }
+    }
+  }, [
+    questionsQuery.isSuccess,
+    questionsQuery.data?.content,
+    selectedAnswers,
+    attempts,
+    isDiagnosticCompleted,
+    questions,
+    recordDiagnosticSeenQuestions,
+    startSession,
+  ]);
 
   const currentQuestion = questions[currentQuestionIndex] || null;
   const currentAttempt = currentQuestion ? attempts[currentQuestion.id] : undefined;
@@ -114,6 +163,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     const resolution = MOCK_RESOLUTIONS[currentQuestion.id];
     const isCorrect = resolution ? currentSelectedOption === resolution.correctOption : false;
 
+    // 1. Record attempt synchronously for instant UI grading and responsiveness
     recordAttempt({
       questionId: currentQuestion.id,
       selectedOption: currentSelectedOption,
@@ -122,7 +172,36 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       explanation: resolution?.baseExplanation,
       awardedXp: isCorrect ? 15 : 5,
     });
-  }, [currentQuestion, currentSelectedOption, recordAttempt]);
+
+    // 2. Submit to backend if active session is available
+    const sessionId = activeSession?.id;
+    if (sessionId && !sessionId.startsWith('session-demo')) {
+      submitAnswerMutation.mutate(
+        {
+          sessionId,
+          req: {
+            questionId: currentQuestion.id,
+            selectedOption: currentSelectedOption,
+            timeSpentSeconds: 30,
+          },
+        },
+        {
+          onSuccess: (result) => {
+            recordAttempt({
+              questionId: currentQuestion.id,
+              selectedOption: currentSelectedOption,
+              correctOption: result.correctOption,
+              isCorrect: result.isCorrect,
+              explanation: result.baseExplanation,
+              keyConcepts: result.keyConcepts,
+              authorAttribution: 'Equipe Pedagógica AprovaENEM / INEP',
+              awardedXp: result.isCorrect ? 15 : 5,
+            });
+          },
+        }
+      );
+    }
+  }, [currentQuestion, currentSelectedOption, activeSession?.id, submitAnswerMutation, recordAttempt]);
 
   const handleRestart = useCallback(() => {
     setShowCelebration(false);
@@ -136,7 +215,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     resetDiagnostic();
 
     // Select novel balanced questions across ENEM areas
-    const newDtos = selectDiagnosticQuestions(MOCK_QUESTIONS, excludeIds, 5);
+    const newDtos = selectDiagnosticQuestions(questionsPool, excludeIds, 5);
     const domainQuestions = newDtos.map(mapDtoToDomainQuestion);
     recordDiagnosticSeenQuestions(newDtos.map((q) => q.id));
 
@@ -150,20 +229,20 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       createdAt: new Date().toISOString(),
     };
     startSession(mockSession, domainQuestions);
-  }, [questions, resetDiagnostic, recordDiagnosticSeenQuestions, startSession]);
+  }, [questions, resetDiagnostic, recordDiagnosticSeenQuestions, startSession, questionsPool]);
 
   const handlePracticeWeakTopic = useCallback(
     (topic: string) => {
       setShowCelebration(false);
       setIsTimeUpModalOpen(false);
-      let filteredDtos: readonly QuestionItemDto[] = MOCK_QUESTIONS.filter(
+      let filteredDtos: readonly QuestionItemDto[] = questionsPool.filter(
         (q) =>
           q.topic?.toLowerCase().includes(topic.toLowerCase()) ||
           q.discipline?.toLowerCase().includes(topic.toLowerCase()) ||
           q.subject?.toLowerCase() === topic.toLowerCase()
       );
       if (filteredDtos.length === 0) {
-        filteredDtos = MOCK_QUESTIONS;
+        filteredDtos = questionsPool;
       }
       const domainQuestions = filteredDtos.map(mapDtoToDomainQuestion);
       const newSession: PracticeSession = {
@@ -177,7 +256,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       };
       startSession(newSession, domainQuestions);
     },
-    [startSession]
+    [questionsPool, startSession]
   );
 
   const handleStartCustomSimulation = useCallback(
@@ -186,7 +265,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       setIsTimeUpModalOpen(false);
 
       // Filter by day/subject
-      let filteredDtos = MOCK_QUESTIONS;
+      let filteredDtos = questionsPool;
       if (config.day === 'DAY_1') {
         filteredDtos = filteredDtos.filter((q) => q.subject === 'LC' || q.subject === 'CH');
       } else if (config.day === 'DAY_2') {
@@ -195,7 +274,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
 
       // Filter by year
       const yearFiltered = filteredDtos.filter((q) => q.year === config.year);
-      // Graceful fallback if specific year has limited items in mock bank
+      // Graceful fallback if specific year has limited items in bank
       if (yearFiltered.length > 0) {
         filteredDtos = yearFiltered;
       }
@@ -540,7 +619,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
                   correctOption={correctOption ?? 'A'}
                   baseExplanation={currentAttempt.explanation || currentResolution?.baseExplanation || ''}
                   distractorAnalysis={currentResolution?.distractorAnalysis}
-                  attribution={currentResolution?.attribution}
+                  attribution={currentAttempt.authorAttribution || currentResolution?.attribution || 'Equipe Pedagógica AprovaENEM / INEP'}
                   awardedXp={currentAttempt.awardedXp}
                   onNextQuestion={nextQuestion}
                   hasNextQuestion={currentQuestionIndex < totalQuestions - 1}

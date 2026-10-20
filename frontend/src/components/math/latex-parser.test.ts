@@ -89,6 +89,20 @@ describe('latex-parser.ts — ENEM Math & Formula Tokenizer', () => {
       expect(tokens[0]!.type).toBe('text');
     });
 
+    it('should sanitize and safely render malformed pseudo-escaped currency like $R\\$\\ 4{,}50$', () => {
+      const text =
+        'Uma empresa de transporte por aplicativo cobra uma tarifa fixa de bandeirada de $R\\$\\ 4{,}50$ mais $R\\$\\ 2{,}20$ por quilômetro rodado. Se um passageiro pagou um total de $R\\$\\ 37{,}50$ por uma corrida, qual foi a distância total percorrida?';
+      const tokens = parseLatexTokens(text);
+
+      // Should sanitize into a single clean text token without any KaTeX parse errors
+      expect(tokens).toHaveLength(1);
+      expect(tokens[0]!.type).toBe('text');
+      expect(tokens[0]!.content).toContain('R$ 4,50');
+      expect(tokens[0]!.content).toContain('R$ 2,20');
+      expect(tokens[0]!.content).toContain('R$ 37,50');
+      expect(tokens[0]!.content).not.toContain('R\\');
+    });
+
     it('should accurately distinguish Brazilian currency from real math in the same sentence', () => {
       const text =
         'O custo total foi de R$ 150,00, modelado pela função $C(x) = 25x + 50$, com $x \\ge 1$.';

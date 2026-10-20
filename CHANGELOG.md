@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-18
+### 🌐 Live Question Ingestion Integration & Currency LaTeX Delimiter Sanitization
+- feat(practice): Connected frontend practice simulator directly to live backend exam question ingestion catalog and sanitized Brazilian currency LaTeX delimiters (TASK-S6-29):
+  - **Live Backend Ingestion Integration ([`exam.service.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/api/services/exam.service.ts), [`PracticeHero.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.tsx))**:
+    - Connected `PracticeHero.tsx` to `useQuestionsQuery({ size: 100 })` and `useSubmitAnswerMutation()`, fetching real historical ENEM questions directly from the PostgreSQL question database (`exam_db` via `exam-service` / gateway `/api/v1/questions` and `/api/v1/sessions`).
+    - Implemented DTO normalization in `examService.getQuestions()` and `examService.startSession()` to map backend microservice field names (`items`, `optionText`, `difficultyLevel`) into standard frontend types with automatic discipline-to-area mapping.
+    - Added live attempt submission handling: answer confirmations submit to `POST /api/v1/sessions/{id}/attempts`, receiving official INEP gabaritos, full pedagogical explanations, and key concepts directly from the database while providing immediate responsive UI grading.
+    - Updated `handleRestart` ("Refazer Diagnóstico"), `handlePracticeWeakTopic`, and `handleStartCustomSimulation` to pull questions from the live backend catalog pool.
+  - **Brazilian Real Currency LaTeX Sanitization ([`latex-parser.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/math/latex-parser.ts), [`latex-parser.test.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/math/latex-parser.test.ts))**:
+    - Resolved the KaTeX red parse error on questions containing currency notations (`$R\$\ 4{,}50$`, `R\$ 12,00`, `R$ 4{,}50`).
+    - Added `sanitizeCurrencyDelimiters()` to normalize pseudo-escaped currency formats into clean plain-text representations (`R$ 4,50`) prior to formula tokenization, preventing delimiter collisions with KaTeX math parsing.
+    - Added comprehensive unit tests in `latex-parser.test.ts` (11/11 tests green).
+  - **Race Condition Prevention in Practice State ([`PracticeHero.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.tsx), [`useSessionStore.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/stores/useSessionStore.ts))**:
+    - Guarded live query hydration against active user interaction (`selectedAnswers.length === 0 && attempts.length === 0`), preventing race conditions where background query resolutions could overwrite in-progress student selections.
+    - Added `authorAttribution` and `keyConcepts` fields to `SessionAttemptRecord` and `RecordAttemptPayload` to preserve live backend pedagogical attributions in `InstantFeedback`.
+  - **Verification & Test Coverage**:
+    - 74 Vitest test suites (520/520 tests passing, 0 failures, 0 skipped).
+    - 5 Cypress E2E specs (26/26 tests passing, 100% green).
+    - Backend Temurin 21 Maven tests passing (`0 failures, 0 errors`).
+
 ### 🔀 Dynamic Non-Repeating Question Selector on Diagnostic Recalibration ("Refazer Diagnóstico")
 - feat(practice): Implemented balanced, non-repeating dynamic question selection when retaking diagnostic assessment, presenting students with novel ENEM questions across all four knowledge areas (TASK-S6-28):
   - **Enriched ENEM Question Catalog ([`mock-data.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/api/mocks/mock-data.ts))**:

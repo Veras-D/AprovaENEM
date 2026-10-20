@@ -22,6 +22,8 @@ export interface SessionAttemptRecord {
   readonly correctOption?: QuestionOptionLetter;
   readonly isCorrect?: boolean;
   readonly explanation?: string;
+  readonly keyConcepts?: string;
+  readonly authorAttribution?: string;
   readonly awardedXp?: number;
   readonly timeSpentSeconds: number;
   readonly answeredAt: string;
@@ -33,6 +35,8 @@ export interface RecordAttemptPayload {
   readonly correctOption?: QuestionOptionLetter;
   readonly isCorrect?: boolean;
   readonly explanation?: string;
+  readonly keyConcepts?: string;
+  readonly authorAttribution?: string;
   readonly awardedXp?: number;
   readonly timeSpentSeconds?: number;
 }
@@ -162,6 +166,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       correctOption: payload.correctOption,
       isCorrect: payload.isCorrect,
       explanation: payload.explanation,
+      keyConcepts: payload.keyConcepts,
+      authorAttribution: payload.authorAttribution,
       awardedXp: payload.awardedXp,
       timeSpentSeconds: timeSpent,
       answeredAt: new Date().toISOString(),

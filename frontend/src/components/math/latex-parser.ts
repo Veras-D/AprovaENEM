@@ -34,13 +34,29 @@ const INLINE_PAREN_REGEX = /\\\(([\s\S]+?)\\\)/g;
  * - Opening $ must be followed by non-whitespace
  * - Closing $ must be preceded by non-whitespace and not followed by a digit
  */
-const INLINE_DOLLAR_REGEX = /(?<![RU]S\s?|R\$|\$)\$([^$\s\n](?:[^$\n]*?[^$\s\n])?)\$(?!\d|\$)/g;
+const INLINE_DOLLAR_REGEX = /(?<![RU]S\s?|[RU]S\\|R\$|R\\\$|\$)\$([^$\s\n](?:[^$\n]*?[^$\s\n])?)\$(?!\d|\$)/g;
 
-export function parseLatexTokens(input: string): readonly LatexToken[] {
-  if (!input) {
+/**
+ * Sanitizes malformed or pseudo-escaped Brazilian currency notations like $R\$\ 4{,}50$ or R\$ 4,50
+ * into clean standard text notation ("R$ 4,50") to prevent KaTeX math delimiter false positives.
+ */
+export function sanitizeCurrencyDelimiters(text: string): string {
+  if (!text) return '';
+  return text
+    // Replace $R\$\ 4{,}50$ or $R\$ 4,50$ with R$ 4,50
+    .replace(/\$R\\?\$\\?\s*([0-9]+(?:\{,\}[0-9]+|,[0-9]+)?)\$/g, (_m, val) => `R$ ${val.replace(/\{,\}/g, ',')}`)
+    // Replace escaped R\$ with R$
+    .replace(/R\\(?=\$)/g, 'R')
+    // Replace R$ 4{,}50 with R$ 4,50
+    .replace(/([RU]S?\$)\s*([0-9]+)\{,\}([0-9]+)/g, '$1 $2,$3');
+}
+
+export function parseLatexTokens(rawInput: string): readonly LatexToken[] {
+  if (!rawInput) {
     return [];
   }
 
+  const input = sanitizeCurrencyDelimiters(rawInput);
   const matches: MatchOccurrence[] = [];
 
   // Helper to extract matches from a regex
