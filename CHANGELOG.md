@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-18
+### 🎨 Calibrated Action Toolbar Button Height Alignment & Text Wrapping Elimination
+- fix(ui): Resolved visual height mismatch and text wrapping on action buttons in the calibrated diagnostic header bar (`PracticeHero.tsx`, `Button.tsx`, `DiagnosticResultView.tsx`) (TASK-S6-27):
+  - **Button Text Wrapping Elimination ([`Button.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/ui/Button.tsx))**:
+    - Added `whitespace-nowrap` to base button styles (`baseStyles`), preventing multi-word buttons from awkwardly wrapping text into two lines and expanding their vertical height.
+  - **Uniform Action Button Height & Padding ([`PracticeHero.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.tsx), [`DiagnosticResultView.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/diagnostic/components/DiagnosticResultView.tsx))**:
+    - Standardized all 4 action buttons ("Painel Diagnóstico", "Simular Prova Oficial", "Ranking", "Refazer Diagnóstico") with uniform height (`h-9`), padding (`px-3`), font sizing (`text-xs sm:text-sm font-semibold`), `whitespace-nowrap`, and `shrink-0`.
+    - Eliminated the defect where single-word "Ranking" appeared shrunken (36px) and vertically misaligned between taller two-line buttons (52px).
+  - **Responsive Layout Breakpoint**:
+    - Adjusted container layout from `sm:flex-row` to `lg:flex-row lg:items-center` with `flex-wrap` and `justify-start lg:justify-end`, preventing horizontal button crowding on tablet viewports.
+  - **Verification**:
+    - Verified with 74 Vitest test suites (514/514 tests green), 0 ESLint warnings (`max-warnings 0`), and clean Vite production build.
+
 ### 🧪 CI Pipeline Cypress E2E Suite Resilience & Student Auth Intercepts
 - fix(ci): Resolved GitHub Actions CI failure on the Cypress Interactive E2E Suite by correcting unauthenticated navigation assumptions, handling streak copy regex, and stubbing gamification endpoints against 401 token invalidation (TASK-S6-26):
   - **A11y Spec Authenticated Student Navigation ([`05-accessibility-wcag-audit.cy.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/cypress/e2e/05-accessibility-wcag-audit.cy.ts))**:

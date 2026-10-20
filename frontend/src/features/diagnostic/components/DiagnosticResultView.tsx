@@ -81,14 +81,14 @@ export const DiagnosticResultView: React.FC<DiagnosticResultViewProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+          <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 flex-wrap">
             {onStartOfficialSimulation && (
               <Button
                 type="button"
                 variant="primary"
                 size="sm"
                 onClick={onStartOfficialSimulation}
-                className="text-xs sm:text-sm font-semibold"
+                className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
               >
                 <Layers className="h-4 w-4 mr-1.5" aria-hidden="true" />
                 Simular Prova Oficial
@@ -100,7 +100,7 @@ export const DiagnosticResultView: React.FC<DiagnosticResultViewProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={onRetakeDiagnostic}
-                className="text-xs sm:text-sm"
+                className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
                 title="Refazer avaliação diagnóstica para calibrar novamente"
               >
                 <RotateCcw className="h-4 w-4 mr-1.5" aria-hidden="true" />

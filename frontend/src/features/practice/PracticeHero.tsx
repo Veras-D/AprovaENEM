@@ -320,9 +320,9 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     <div className="space-y-6">
       {/* Timed Quiz Control Bar / Calibrated Status Header */}
       {isCompleted ? (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-brand border border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-brand border border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-xs">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-brand bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            <div className="p-2 rounded-brand bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
               <BarChart2 className="h-5 w-5" aria-hidden="true" />
             </div>
             <div>
@@ -338,14 +338,14 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end flex-wrap sm:flex-nowrap">
+          <div className="flex items-center gap-2 sm:gap-2.5 w-full lg:w-auto justify-start lg:justify-end flex-wrap">
             {onOpenDiagnostics && (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={onOpenDiagnostics}
-                className="text-xs sm:text-sm font-semibold"
+                className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
                 aria-label="Abrir central de diagnósticos"
               >
                 <BarChart2 className="h-4 w-4 mr-1.5" aria-hidden="true" />
@@ -357,7 +357,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
               variant="primary"
               size="sm"
               onClick={() => setIsSimulationModalOpen(true)}
-              className="text-xs sm:text-sm font-semibold"
+              className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
             >
               <Layers className="h-4 w-4 mr-1.5" aria-hidden="true" />
               Simular Prova Oficial
@@ -368,7 +368,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={onOpenGamification}
-                className="text-xs sm:text-sm"
+                className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
               >
                 <Trophy className="h-4 w-4 mr-1.5" aria-hidden="true" />
                 Ranking
@@ -379,7 +379,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
               variant="outline"
               size="sm"
               onClick={handleRestart}
-              className="text-xs sm:text-sm"
+              className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
               title="Refazer avaliação diagnóstica para recalibrar"
             >
               <RotateCcw className="h-4 w-4 mr-1.5" aria-hidden="true" />
