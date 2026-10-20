@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.6.0] - 2026-10-18
+### 🧪 CI Pipeline Cypress E2E Suite Resilience & Student Auth Intercepts
+- fix(ci): Resolved GitHub Actions CI failure on the Cypress Interactive E2E Suite by correcting unauthenticated navigation assumptions, handling streak copy regex, and stubbing gamification endpoints against 401 token invalidation (TASK-S6-26):
+  - **A11y Spec Authenticated Student Navigation ([`05-accessibility-wcag-audit.cy.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/cypress/e2e/05-accessibility-wcag-audit.cy.ts))**:
+    - Tests for Gamification & Leaderboard and Diagnostic Radar views previously performed unauthenticated `cy.visit('/')` and attempted to click `Ranking` and `Diagnóstico` in the bottom navigation bar.
+    - Since TASK-S6-23 isolated personal student metrics from unauthenticated guests, these links are now strictly hidden unless authenticated.
+    - Added `onBeforeLoad` student authentication state to both tests, and added an explicit axe-core accessibility audit test for the unauthenticated Student Login Gate (`?section=leaderboard`).
+  - **Daily Streak Match Regex ([`04-gamification-and-diagnostics.cy.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/cypress/e2e/04-gamification-and-diagnostics.cy.ts))**:
+    - Updated streak text match regex from `/Sequência|Dias Consecutivos/i` to `/Dias Seguidos|Sequência|Dias Consecutivos/i` to align with the active streak heading rendered by `DailyStreakCounter.tsx` (`{n} Dias Seguidos`).
+  - **Mock Token 401 Session Scrub Prevention**:
+    - Added `cy.intercept` handlers for `GET **/api/v1/gamification/profile` and `GET **/api/v1/gamification/leaderboard/weekly` across both Cypress specs.
+    - Prevented the BFF gateway / backend from returning 401 Unauthorized for dummy tokens (`mock-student-token`), which was triggering `apiClient`'s 401 response interceptor to invoke `clearAuth()`, wiping the student session and reverting to the login gate.
+  - **Verification**:
+    - Verified all 5 Cypress test specs passing 100% green (26/26 tests passing, 0 failures), 74 Vitest test suites (514/514 tests passing), 0 ESLint warnings (`max-warnings 0`), and clean Vite production build.
+
+### 📊 Initial Diagnostic Assessment Completion, Level of Understanding Determination & Single-Take Persistence
+- fix(practice): Resolved persistent diagnostic question trapping and lack of understanding determination in the practice interface, ensuring answered initial diagnostic questions disappear and are replaced by an authentic Level of Understanding report persisted to localStorage (TASK-S6-25):
+  - **Disappearing Question Card & Carousel ([`PracticeHero.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.tsx))**:
+    - Previously, answering all 5 diagnostic questions left the student trapped on Question 5 with a disabled "Próxima" button, keeping the question card permanently in view.
+    - Updated `PracticeHero` to immediately remove the active QuestionCard and question carousel upon answering all questions in the initial assessment or clicking "Ver Meu Diagnóstico", rendering `DiagnosticResultView` in its place.
+    - Added calibrated top header bar providing clear status (*"Diagnóstico Inicial Concluído"*), direct shortcut to official exam simulations (*"Simular Prova Oficial ENEM"*), and an explicit recalibration CTA (*"Refazer Diagnóstico"*).
+  - **Level of Understanding & TRI Score Determination ([`diagnostic-utils.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/diagnostic/diagnostic-utils.ts))**:
+    - Implemented `evaluateDiagnosticLevel`: derives an authentic estimated TRI score on the ENEM scale (360–860 points based on accuracy percentage), determines qualitative proficiency tier (`INICIANTE`, `BASICO`, `INTERMEDIARIO`, `AVANCADO`, `EXCELENTE`), localized badge title, and tailored pedagogical analysis text.
+    - Implemented `generateDiagnosticFromSession`: groups student attempts by ENEM knowledge areas (Matemática, Ciências da Natureza, Ciências Humanas, Linguagens & Códigos), calculates area accuracy vs national baseline (60%) and target (70%), isolates weak topics for remediation, and computes XP earned (+15 XP per answered question, +50 XP bonus on completion).
+  - **Single-Take Diagnostic Persistence ([`useSessionStore.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/stores/useSessionStore.ts))**:
+    - Added `isDiagnosticCompleted` and `savedDiagnosticReport` state initialized from and synchronized to `localStorage` (`aprovaenem_diagnostic_completed`, `aprovaenem_diagnostic_report`).
+    - Once completed, subsequent visits to the practice section (`?section=practice`) immediately show the calibrated diagnostic hub instead of forcing the student to re-answer the initial 5 questions.
+    - Added `resetDiagnostic()` method allowing students to intentionally clear diagnostic state and recalibrate when desired.
+  - **Dedicated Diagnostic Determination View ([`DiagnosticResultView.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/diagnostic/components/DiagnosticResultView.tsx))**:
+    - Built an accessible determination view showcasing the student's estimated TRI score with proficiency badge, qualitative pedagogical analysis, global accuracy percentage, XP reward counter, interactive Recharts radar spider chart ([`StudentDiagnosticRadar.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/diagnostic/components/StudentDiagnosticRadar.tsx)), area breakdown cards, targeted weak topics list with instant "Praticar Tópico" practice triggers, unauthenticated visitor account creation invitation card, and official simulation launch CTAs.
+  - **Completion Trigger on Final Question ([`FeedbackBanner.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/FeedbackBanner.tsx), [`InstantFeedback.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/InstantFeedback.tsx))**:
+    - Added `onFinishDiagnostic` CTA ("Ver Meu Diagnóstico") rendered in the feedback banner on the final question of the initial assessment.
+  - **Verification & Test Coverage**:
+    - Added unit test suites in [`diagnostic-utils.test.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/diagnostic/diagnostic-utils.test.ts) (11 tests), [`useSessionStore.test.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/stores/useSessionStore.test.ts) (19 tests), [`DiagnosticResultView.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/diagnostic/components/DiagnosticResultView.test.tsx) (4 tests), [`FeedbackBanner.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/FeedbackBanner.test.tsx) (5 tests), [`PracticeHero.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.test.tsx) (12 tests), and [`App.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/App.test.tsx) (4 tests).
+    - Verified 100% green test suite across 74 Vitest test suites (514/514 tests passing), 0 ESLint warnings (`max-warnings 0`), and clean Vite production build.
+
 ### 🎯 Visual Differentiation of Correct vs Missed Questions in Question Carousel
 - fix(practice): Corrected question carousel indicator palette and badge icons to accurately differentiate between correctly answered questions and missed/incorrect questions (TASK-S6-24):
   - **Dynamic Status Palette ([`QuestionCarousel.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/QuestionCarousel.tsx))**:

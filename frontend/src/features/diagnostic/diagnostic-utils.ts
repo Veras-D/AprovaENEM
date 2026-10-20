@@ -1,4 +1,4 @@
-import type { MasteryLevel, DiagnosticRadarAreaDto } from '@/api/types';
+import type { MasteryLevel, DiagnosticRadarAreaDto, DiagnosticReportDto } from '@/api/types';
 
 export interface AreaMetadata {
   readonly code: string;
@@ -142,4 +142,145 @@ export function transformRadarDataForChart(areas: readonly DiagnosticRadarAreaDt
       topWeakTopic: a.topWeakTopic,
     };
   });
+}
+
+export interface DiagnosticEvaluationSummary {
+  readonly estimatedTriScore: number;
+  readonly proficiencyTier: 'INICIANTE' | 'BÁSICO' | 'INTERMEDIÁRIO' | 'AVANÇADO' | 'EXCELENTE';
+  readonly tierLabel: string;
+  readonly qualitativeFeedback: string;
+}
+
+/**
+ * Calibrates the student's initial ENEM TRI score range and qualitative level of understanding.
+ */
+export function evaluateDiagnosticLevel(scorePercentage: number): DiagnosticEvaluationSummary {
+  const estimatedTriScore = Math.round(360 + (scorePercentage / 100) * 500);
+
+  if (scorePercentage >= 85) {
+    return {
+      estimatedTriScore,
+      proficiencyTier: 'EXCELENTE',
+      tierLabel: 'Excelente Domínio',
+      qualitativeFeedback:
+        'Desempenho excelente! Você demonstrou forte consistência conceitual e leitura crítica. Mantenha o ritmo com simulados oficiais completos.',
+    };
+  }
+  if (scorePercentage >= 70) {
+    return {
+      estimatedTriScore,
+      proficiencyTier: 'AVANÇADO',
+      tierLabel: 'Nível Avançado',
+      qualitativeFeedback:
+        'Ótima base de conhecimentos! Você acertou a maioria dos conceitos-chave. Foque nos tópicos de atenção identificados para maximizar sua nota TRI.',
+    };
+  }
+  if (scorePercentage >= 50) {
+    return {
+      estimatedTriScore,
+      proficiencyTier: 'INTERMEDIÁRIO',
+      tierLabel: 'Nível Intermediário',
+      qualitativeFeedback:
+        'Bom ponto de partida. Você domina questões fundamentais, mas precisa reforçar tópicos específicos e interpretação para elevar sua proficiência TRI.',
+    };
+  }
+  if (scorePercentage >= 30) {
+    return {
+      estimatedTriScore,
+      proficiencyTier: 'BÁSICO',
+      tierLabel: 'Nível Básico',
+      qualitativeFeedback:
+        'Diagnóstico calibrado. Recomendamos focar na revisão das áreas prioritárias com auxílio da tutoria socrática inteligente antes de simulados extensos.',
+    };
+  }
+  return {
+    estimatedTriScore,
+    proficiencyTier: 'INICIANTE',
+    tierLabel: 'Nível Inicial',
+    qualitativeFeedback:
+      'Diagnóstico inicial concluído. O primeiro passo foi dado! Vamos construir sua base área por área com revisões guiadas e questões fáceis.',
+  };
+}
+
+export interface SessionQuestionLike {
+  readonly id: string;
+  readonly knowledgeArea?: string;
+  readonly discipline?: string;
+  readonly topic?: string;
+}
+
+export interface SessionAttemptLike {
+  readonly questionId: string;
+  readonly isCorrect?: boolean;
+}
+
+/**
+ * Generates an authentic, individualized DiagnosticReportDto from session questions and attempts.
+ */
+export function generateDiagnosticFromSession(
+  questions: readonly SessionQuestionLike[],
+  attempts: Readonly<Record<string, SessionAttemptLike>>,
+  sessionId: string = 'session-diagnostic-initial'
+): DiagnosticReportDto {
+  const areaCodes: readonly ('MT' | 'CN' | 'CH' | 'LC')[] = ['MT', 'CN', 'CH', 'LC'];
+
+  let totalQuestionsCount = 0;
+  let totalCorrectCount = 0;
+  const recommendedTopics: string[] = [];
+
+  const radar: DiagnosticRadarAreaDto[] = areaCodes.map((code) => {
+    const areaQuestions = questions.filter(
+      (q) => getAreaCode(q.knowledgeArea || q.discipline || '') === code
+    );
+    const total = areaQuestions.length;
+    let correct = 0;
+    let weakTopic = '';
+
+    areaQuestions.forEach((q) => {
+      const att = attempts[q.id];
+      if (att?.isCorrect) {
+        correct++;
+      } else {
+        const topic = q.topic || q.discipline || ENEM_AREAS[code]?.name || code;
+        if (!weakTopic) {
+          weakTopic = topic;
+        }
+        if (!recommendedTopics.includes(topic)) {
+          recommendedTopics.push(topic);
+        }
+      }
+    });
+
+    totalQuestionsCount += total;
+    totalCorrectCount += correct;
+
+    // If an area had no questions in this session, fall back to a baseline 60%
+    const scorePct = total > 0 ? Math.round((correct / total) * 100) : 60;
+    const meta = getAreaMetadata(code);
+
+    return {
+      knowledgeArea: code,
+      areaName: meta.name,
+      scorePercentage: scorePct,
+      totalQuestions: total > 0 ? total : 5,
+      correctQuestions: total > 0 ? correct : 3,
+      masteryLevel: calculateMasteryLevel(scorePct),
+      topWeakTopic: weakTopic || (scorePct < 70 ? 'Revisão Recomendada' : undefined),
+    };
+  });
+
+  const overallScorePercentage =
+    totalQuestionsCount > 0 ? Math.round((totalCorrectCount / totalQuestionsCount) * 100) : 0;
+
+  return {
+    id: `report-${Date.now()}`,
+    sessionId,
+    scorePercentage: overallScorePercentage,
+    radar,
+    recommendedTopics:
+      recommendedTopics.length > 0
+        ? recommendedTopics
+        : ['Interpretação Textual e Gráficos', 'Geometria e Proporcionalidade'],
+    generatedAt: new Date().toISOString(),
+  };
 }

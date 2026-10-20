@@ -251,7 +251,19 @@ describe('useSessionStore — Student Session State Machine', () => {
       const state = useSessionStore.getState();
       expect(state.phase).toBe('DIAGNOSTIC');
       expect(state.diagnosticReport).toEqual(mockReport);
+      expect(state.isDiagnosticCompleted).toBe(true);
       expect(state.activeSession?.status).toBe('COMPLETED');
+      expect(localStorage.getItem('aprovaenem_diagnostic_completed')).toBe('true');
+    });
+
+    it('should reset diagnostic state and clear localStorage when resetDiagnostic is called', () => {
+      useSessionStore.getState().resetDiagnostic();
+
+      const state = useSessionStore.getState();
+      expect(state.isDiagnosticCompleted).toBe(false);
+      expect(state.savedDiagnosticReport).toBeNull();
+      expect(state.diagnosticReport).toBeNull();
+      expect(localStorage.getItem('aprovaenem_diagnostic_completed')).toBeNull();
     });
 
     it('should clear session state when clearSession is invoked', () => {

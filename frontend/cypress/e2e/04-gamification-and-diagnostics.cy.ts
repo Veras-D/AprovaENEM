@@ -1,6 +1,39 @@
 describe('Gamification & Diagnostic Dashboard E2E', () => {
   beforeEach(() => {
     cy.clearLocalStorage();
+    cy.intercept('GET', '**/api/v1/gamification/profile', {
+      statusCode: 200,
+      body: {
+        userId: 'usr-student-1',
+        currentXp: 450,
+        level: 3,
+        levelTitle: 'Calouro Iniciante',
+        currentStreakDays: 5,
+        longestStreakDays: 14,
+        streakFreezeAvailable: true,
+        dailyGoalTarget: 5,
+        dailyGoalProgress: 3,
+        weeklyLeague: 'GOLD',
+        unlockedBadges: ['PRIMEIRA_QUESTAO', 'STREAK_DIAS', 'MESTRE_MATEMATICA', 'MESTRE_MATEMATICA_SILVER'],
+      },
+    }).as('getGamificationProfile');
+
+    cy.intercept('GET', '**/api/v1/gamification/leaderboard/weekly', {
+      statusCode: 200,
+      body: {
+        league: 'GOLD',
+        leagueTier: 'GOLD',
+        weekNumber: 42,
+        year: 2026,
+        resetsAt: '2026-10-18T23:59:59Z',
+        totalParticipants: 10,
+        entries: [
+          { rank: 1, userId: 'usr-b1', studentName: 'Camila Fernandes', displayName: 'Camila Fernandes', weeklyXp: 480, streakDays: 4, promotionZone: true, isCurrentUser: false },
+          { rank: 2, userId: 'usr-student-1', studentName: 'Mariana Souza', displayName: 'Mariana Souza (Você)', weeklyXp: 450, streakDays: 5, promotionZone: true, isCurrentUser: true },
+        ],
+      },
+    }).as('getWeeklyLeaderboard');
+
     cy.visit('/');
   });
 
@@ -29,7 +62,7 @@ describe('Gamification & Diagnostic Dashboard E2E', () => {
     cy.contains(/Nível|Calouro Iniciante|Focado no SISU|XP/i).should('be.visible');
 
     // Verify Daily Streak Counter
-    cy.contains(/Sequência|Dias Consecutivos/i).should('be.visible');
+    cy.contains(/Dias Seguidos|Sequência|Dias Consecutivos/i).should('be.visible');
 
     // Verify Badge Shelf
     cy.contains(/Conquistas|Medalhas|Emblemas/i).should('be.visible');

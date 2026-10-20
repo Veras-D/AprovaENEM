@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RootLayout } from '@/layouts/RootLayout';
 import { PracticeHero } from '@/features/practice/PracticeHero';
@@ -8,6 +8,8 @@ import { InstitutionalDashboard } from '@/features/institutional';
 import { LandingPage } from '@/features/home';
 import { useTenantStore } from '@/stores/useTenantStore';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useSessionStore } from '@/stores/useSessionStore';
+import type { DiagnosticReportDto } from '@/api/types';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,6 +41,15 @@ const getInitialSection = (): SectionType => {
 
 export const App: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string>(getInitialSection);
+  const { savedDiagnosticReport, diagnosticReport } = useSessionStore();
+
+  const studentDiagnostic = useMemo(() => {
+    if (savedDiagnosticReport) return savedDiagnosticReport;
+    if (diagnosticReport && 'radar' in diagnosticReport && diagnosticReport.radar) {
+      return diagnosticReport as DiagnosticReportDto;
+    }
+    return undefined;
+  }, [savedDiagnosticReport, diagnosticReport]);
 
   useEffect(() => {
     void useTenantStore.getState().resolveAndApplyTenant();
@@ -86,6 +97,7 @@ export const App: React.FC = () => {
           />
         ) : activeSection === 'diagnostics' ? (
           <DiagnosticDashboard
+            studentReport={studentDiagnostic}
             onPracticeTopic={() => handleNavigate('practice')}
             onOpenAuthModal={(mode) => useAuthStore.getState().openAuthModal(mode ?? 'login')}
           />
@@ -95,7 +107,11 @@ export const App: React.FC = () => {
             onOpenAuthModal={() => useAuthStore.getState().openAuthModal('login')}
           />
         ) : (
-          <PracticeHero onOpenGamification={() => handleNavigate('leaderboard')} />
+          <PracticeHero
+            onOpenGamification={() => handleNavigate('leaderboard')}
+            onOpenDiagnostics={() => handleNavigate('diagnostics')}
+            onOpenAuthModal={(mode) => useAuthStore.getState().openAuthModal(mode ?? 'login')}
+          />
         )}
       </RootLayout>
     </QueryClientProvider>

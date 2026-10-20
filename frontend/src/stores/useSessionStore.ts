@@ -5,6 +5,7 @@ import type {
   QuestionOptionLetter,
   DiagnosticReport,
 } from '@/types';
+import type { DiagnosticReportDto } from '@/api/types';
 
 export type SessionPhase =
   | 'IDLE'
@@ -51,7 +52,9 @@ export interface SessionState {
   readonly questions: readonly Question[];
   readonly attempts: Readonly<Record<string, SessionAttemptRecord>>;
   readonly selectedAnswers: Readonly<Record<string, QuestionOptionLetter>>;
-  readonly diagnosticReport: DiagnosticReport | null;
+  readonly diagnosticReport: DiagnosticReport | DiagnosticReportDto | null;
+  readonly savedDiagnosticReport: DiagnosticReportDto | null;
+  readonly isDiagnosticCompleted: boolean;
   readonly elapsedSeconds: number;
   readonly questionElapsedSeconds: number;
   readonly flaggedQuestions: Readonly<Record<string, boolean>>;
@@ -67,14 +70,17 @@ export interface SessionState {
   readonly goToQuestion: (index: number) => boolean;
   readonly tickTimer: (deltaSeconds?: number) => void;
   readonly resetQuestionTimer: () => void;
-  readonly completeSession: (report?: DiagnosticReport) => void;
-  readonly setDiagnosticReport: (report: DiagnosticReport) => void;
+  readonly completeSession: (report?: DiagnosticReport | DiagnosticReportDto) => void;
+  readonly setDiagnosticReport: (report: DiagnosticReport | DiagnosticReportDto) => void;
+  readonly resetDiagnostic: () => void;
   readonly clearSession: () => void;
   readonly migrateAnonymousProgress: (userId: string) => MigrationResult;
 }
 
 const STORAGE_KEY_ANON_SESSION = 'aprovaenem_anon_session_id';
 const STORAGE_KEY_MIGRATION = 'aprovaenem_migrated_progress';
+const STORAGE_KEY_DIAGNOSTIC_COMPLETED = 'aprovaenem_diagnostic_completed';
+const STORAGE_KEY_DIAGNOSTIC_REPORT = 'aprovaenem_diagnostic_report';
 
 function getOrCreateAnonymousSessionId(): string {
   if (typeof window === 'undefined') {
@@ -88,6 +94,21 @@ function getOrCreateAnonymousSessionId(): string {
   return id;
 }
 
+function getSavedDiagnosticCompleted(): boolean {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED) === 'true';
+}
+
+function getSavedDiagnosticReport(): DiagnosticReportDto | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_DIAGNOSTIC_REPORT);
+    return raw ? (JSON.parse(raw) as DiagnosticReportDto) : null;
+  } catch {
+    return null;
+  }
+}
+
 export const useSessionStore = create<SessionState>((set, get) => ({
   phase: 'IDLE',
   activeSession: null,
@@ -97,7 +118,9 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   attempts: {},
   selectedAnswers: {},
   flaggedQuestions: {},
-  diagnosticReport: null,
+  diagnosticReport: getSavedDiagnosticReport(),
+  savedDiagnosticReport: getSavedDiagnosticReport(),
+  isDiagnosticCompleted: getSavedDiagnosticCompleted(),
   elapsedSeconds: 0,
   questionElapsedSeconds: 0,
   isMigratingProgress: false,
@@ -238,9 +261,20 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       : null;
 
     if (report) {
+      if (typeof localStorage !== 'undefined') {
+        try {
+          localStorage.setItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED, 'true');
+          localStorage.setItem(STORAGE_KEY_DIAGNOSTIC_REPORT, JSON.stringify(report));
+        } catch {
+          // LocalStorage quota or privacy sandbox
+        }
+      }
+
       set({
         activeSession: completedSession,
         diagnosticReport: report,
+        savedDiagnosticReport: (report as DiagnosticReportDto) ?? null,
+        isDiagnosticCompleted: true,
         phase: 'DIAGNOSTIC',
       });
     } else {
@@ -251,13 +285,57 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
   },
 
-  setDiagnosticReport: (report) =>
+  setDiagnosticReport: (report) => {
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED, 'true');
+        localStorage.setItem(STORAGE_KEY_DIAGNOSTIC_REPORT, JSON.stringify(report));
+      } catch {
+        // Storage quota
+      }
+    }
     set({
       diagnosticReport: report,
+      savedDiagnosticReport: (report as DiagnosticReportDto) ?? null,
+      isDiagnosticCompleted: true,
       phase: 'DIAGNOSTIC',
-    }),
+    });
+  },
 
-  clearSession: () =>
+  resetDiagnostic: () => {
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED);
+        localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_REPORT);
+      } catch {
+        // Storage quota
+      }
+    }
+    set({
+      isDiagnosticCompleted: false,
+      savedDiagnosticReport: null,
+      diagnosticReport: null,
+      phase: 'IDLE',
+      activeSession: null,
+      questions: [],
+      attempts: {},
+      selectedAnswers: {},
+      flaggedQuestions: {},
+      currentQuestionIndex: 0,
+      elapsedSeconds: 0,
+      questionElapsedSeconds: 0,
+    });
+  },
+
+  clearSession: () => {
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED);
+        localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_REPORT);
+      } catch {
+        // Storage quota
+      }
+    }
     set({
       phase: 'IDLE',
       activeSession: null,
@@ -267,10 +345,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       selectedAnswers: {},
       flaggedQuestions: {},
       diagnosticReport: null,
+      savedDiagnosticReport: null,
+      isDiagnosticCompleted: false,
       elapsedSeconds: 0,
       questionElapsedSeconds: 0,
       isMigratingProgress: false,
-    }),
+    });
+  },
 
   migrateAnonymousProgress: (userId: string): MigrationResult => {
     const { anonymousSessionId, activeSession, attempts } = get();

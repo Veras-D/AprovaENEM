@@ -3,7 +3,6 @@ import { useSessionStore } from '@/stores/useSessionStore';
 import { useAccessibilityStore } from '@/stores/useAccessibilityStore';
 import { MOCK_QUESTIONS, MOCK_RESOLUTIONS } from '@/api/mocks/mock-data';
 import { Button } from '@/components/ui/Button';
-import { Card, CardHeader, CardBody } from '@/components/ui/Card';
 import {
   QuizTimer,
   QuestionCard,
@@ -17,21 +16,30 @@ import {
 } from './components';
 import {
   RotateCcw,
-  Award,
   BookOpen,
   Bot,
   Trophy,
   Layers,
+  BarChart2,
 } from 'lucide-react';
 import type { QuestionOptionLetter, PracticeSession } from '@/types';
+import type { DiagnosticReportDto, QuestionItemDto } from '@/api/types';
 import { mapDtoToDomainQuestion } from './practice-mappers';
 import { CelebrationOverlay } from '@/features/gamification';
+import { DiagnosticResultView } from '@/features/diagnostic/components/DiagnosticResultView';
+import { generateDiagnosticFromSession } from '@/features/diagnostic/diagnostic-utils';
 
 export interface PracticeHeroProps {
   readonly onOpenGamification?: () => void;
+  readonly onOpenDiagnostics?: () => void;
+  readonly onOpenAuthModal?: (mode?: 'login' | 'register') => void;
 }
 
-export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }) => {
+export const PracticeHero: React.FC<PracticeHeroProps> = ({
+  onOpenGamification,
+  onOpenDiagnostics,
+  onOpenAuthModal,
+}) => {
   const {
     questions,
     currentQuestionIndex,
@@ -46,6 +54,12 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
     previousQuestion,
     goToQuestion,
     activeSession,
+    phase,
+    diagnosticReport,
+    savedDiagnosticReport,
+    isDiagnosticCompleted,
+    completeSession,
+    resetDiagnostic,
   } = useSessionStore();
 
   const { timeMode, setTimeMode } = useAccessibilityStore();
@@ -55,9 +69,9 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
   const [isTimeUpModalOpen, setIsTimeUpModalOpen] = useState<boolean>(false);
   const [isSimulationModalOpen, setIsSimulationModalOpen] = useState<boolean>(false);
 
-  // Initialize session with authentic mock questions if empty
+  // Initialize session with authentic mock questions if empty and diagnostic not already completed
   useEffect(() => {
-    if (questions.length === 0) {
+    if (questions.length === 0 && !isDiagnosticCompleted) {
       const domainQuestions = MOCK_QUESTIONS.map(mapDtoToDomainQuestion);
       const mockSession: PracticeSession = {
         id: 'session-demo-enem',
@@ -70,7 +84,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
       };
       startSession(mockSession, domainQuestions);
     }
-  }, [questions.length, startSession]);
+  }, [questions.length, isDiagnosticCompleted, startSession]);
 
   const currentQuestion = questions[currentQuestionIndex] || null;
   const currentAttempt = currentQuestion ? attempts[currentQuestion.id] : undefined;
@@ -107,6 +121,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
   const handleRestart = useCallback(() => {
     setShowCelebration(false);
     setIsTimeUpModalOpen(false);
+    resetDiagnostic();
     const domainQuestions = MOCK_QUESTIONS.map(mapDtoToDomainQuestion);
     const mockSession: PracticeSession = {
       id: `session-${Date.now()}`,
@@ -118,7 +133,35 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
       createdAt: new Date().toISOString(),
     };
     startSession(mockSession, domainQuestions);
-  }, [startSession]);
+  }, [resetDiagnostic, startSession]);
+
+  const handlePracticeWeakTopic = useCallback(
+    (topic: string) => {
+      setShowCelebration(false);
+      setIsTimeUpModalOpen(false);
+      let filteredDtos: readonly QuestionItemDto[] = MOCK_QUESTIONS.filter(
+        (q) =>
+          q.topic?.toLowerCase().includes(topic.toLowerCase()) ||
+          q.discipline?.toLowerCase().includes(topic.toLowerCase()) ||
+          q.subject?.toLowerCase() === topic.toLowerCase()
+      );
+      if (filteredDtos.length === 0) {
+        filteredDtos = MOCK_QUESTIONS;
+      }
+      const domainQuestions = filteredDtos.map(mapDtoToDomainQuestion);
+      const newSession: PracticeSession = {
+        id: `session-topic-${Date.now()}`,
+        title: `Treino Focado • ${topic || 'Revisão Recomendada'}`,
+        questionCount: domainQuestions.length,
+        status: 'IN_PROGRESS',
+        currentQuestionIndex: 0,
+        correctCount: 0,
+        createdAt: new Date().toISOString(),
+      };
+      startSession(newSession, domainQuestions);
+    },
+    [startSession]
+  );
 
   const handleStartCustomSimulation = useCallback(
     (config: ExamSimulationConfig) => {
@@ -183,12 +226,30 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
     return Object.values(flaggedQuestions).filter(Boolean).length;
   }, [flaggedQuestions]);
 
-  // Trigger celebratory confetti modal upon answering all questions
+  const isCompleted =
+    phase === 'DIAGNOSTIC' ||
+    activeSession?.status === 'COMPLETED' ||
+    (isAllAnswered && totalQuestions > 0) ||
+    (isDiagnosticCompleted && questions.length === 0);
+
+  const activeReport: DiagnosticReportDto = useMemo(() => {
+    if (diagnosticReport && 'radar' in diagnosticReport && diagnosticReport.radar) {
+      return diagnosticReport as DiagnosticReportDto;
+    }
+    if (savedDiagnosticReport) {
+      return savedDiagnosticReport;
+    }
+    return generateDiagnosticFromSession(questions, attempts, activeSession?.id);
+  }, [diagnosticReport, savedDiagnosticReport, questions, attempts, activeSession?.id]);
+
+  // Trigger celebratory confetti modal and complete diagnostic upon answering all questions
   useEffect(() => {
-    if (isAllAnswered) {
+    if (isAllAnswered && activeSession?.status !== 'COMPLETED' && phase !== 'DIAGNOSTIC') {
+      const report = generateDiagnosticFromSession(questions, attempts, activeSession?.id);
+      completeSession(report);
       setShowCelebration(true);
     }
-  }, [isAllAnswered]);
+  }, [isAllAnswered, activeSession, phase, questions, attempts, completeSession]);
 
   // Keyboard navigation shortcuts: ArrowLeft / ArrowRight, PageUp / PageDown, [ / ]
   useEffect(() => {
@@ -257,202 +318,226 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
 
   return (
     <div className="space-y-6">
-      {/* Timed Quiz Control Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-brand bg-brand-primary/10 text-brand-primary">
-            <BookOpen className="h-5 w-5" aria-hidden="true" />
-          </div>
-          <div>
-            <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
-              {activeSession?.title || 'Simulado Rápido ENEM'}
-            </h2>
-            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-              <span>{totalAnswered} de {totalQuestions} respondidas</span>
-              {flaggedCount > 0 && (
-                <>
-                  <span>&bull;</span>
-                  <span className="text-amber-600 dark:text-amber-400 font-medium">
-                    {flaggedCount} marcada(s) para revisão
-                  </span>
-                </>
-              )}
+      {/* Timed Quiz Control Bar / Calibrated Status Header */}
+      {isCompleted ? (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-brand border border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-brand bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+              <BarChart2 className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <div>
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <span>Diagnóstico ENEM Calibrado</span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-500/20">
+                  {correctCount}/{totalQuestions} ({activeReport.scorePercentage}% Acertos)
+                </span>
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Sua proficiência inicial foi avaliada. Você pode praticar tópicos recomendados ou simular provas oficiais completas.
+              </p>
             </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end flex-wrap sm:flex-nowrap">
-          {/* Custom Exam Simulation Selector (Year and Day 1/2) */}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setIsSimulationModalOpen(true)}
-            aria-label="Simular Prova Oficial"
-            title="Escolha o ano (2023, 2022...) e o caderno de aplicação (Dia 1 ou Dia 2)"
-            className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 text-xs sm:text-sm font-semibold"
-          >
-            <Layers className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />
-            <span className="hidden sm:inline">Simular Prova Oficial</span>
-          </Button>
-
-          {/* Socratic AI Tutor Quick Action */}
-          {currentQuestion && (
+          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end flex-wrap sm:flex-nowrap">
+            {onOpenDiagnostics && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onOpenDiagnostics}
+                className="text-xs sm:text-sm font-semibold"
+                aria-label="Abrir central de diagnósticos"
+              >
+                <BarChart2 className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                Painel Diagnóstico
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={() => setIsSimulationModalOpen(true)}
+              className="text-xs sm:text-sm font-semibold"
+            >
+              <Layers className="h-4 w-4 mr-1.5" aria-hidden="true" />
+              Simular Prova Oficial
+            </Button>
+            {onOpenGamification && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onOpenGamification}
+                className="text-xs sm:text-sm"
+              >
+                <Trophy className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                Ranking
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setIsTutorOpen(true)}
-              aria-label="Tirar Dúvida (IA)"
-              title="Tem dúvida nesta questão? Peça dicas e explicações passo a passo com Inteligência Artificial"
-              className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 text-xs sm:text-sm font-medium"
+              onClick={handleRestart}
+              className="text-xs sm:text-sm"
+              title="Refazer avaliação diagnóstica para recalibrar"
             >
-              <Bot className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />
-              <span className="hidden sm:inline">Tirar Dúvida (IA)</span>
+              <RotateCcw className="h-4 w-4 mr-1.5" aria-hidden="true" />
+              Refazer Diagnóstico
             </Button>
-          )}
-
-          {/* Quiz Timer with INEP Exam Accommodations (3 min per question benchmark) */}
-          <QuizTimer
-            key={currentQuestionIndex}
-            initialSeconds={180}
-            isCountdown={timeMode !== 'UNTIMED'}
-            timeMode={timeMode}
-            onOpenAccommodations={() => setIsAccommodationsOpen(true)}
-            onTimeUp={() => setIsTimeUpModalOpen(true)}
-          />
-
-          {/* Reset / Restart Quiz */}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleRestart}
-            aria-label="Reiniciar simulado"
-            title="Reiniciar simulado"
-          >
-            <RotateCcw className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />
-            <span className="hidden sm:inline">Reiniciar</span>
-          </Button>
+          </div>
         </div>
-      </div>
-
-      {/* Question Carousel / Palette */}
-      {totalQuestions > 0 && (
-        <QuestionCarousel
-          totalQuestions={totalQuestions}
-          currentIndex={currentQuestionIndex}
-          onSelectIndex={goToQuestion}
-          onNext={nextQuestion}
-          onPrevious={previousQuestion}
-          isAnswered={(idx) => Boolean(questions[idx] && attempts[questions[idx].id])}
-          isCorrect={(idx) => (questions[idx] ? attempts[questions[idx].id]?.isCorrect : undefined)}
-          isFlagged={(idx) => Boolean(questions[idx] && flaggedQuestions[questions[idx].id])}
-        />
-      )}
-
-      {/* Main Interactive Question Card */}
-      {currentQuestion && (
-        <section aria-labelledby="active-question-section">
-          <h2 id="active-question-section" className="sr-only">
-            Questão ativa do simulado
-          </h2>
-
-          <QuestionCard
-            question={currentQuestion}
-            selectedOption={currentSelectedOption}
-            onSelectOption={handleSelectOption}
-            onSubmitAnswer={handleConfirmAnswer}
-            onOpenSocraticTutor={() => setIsTutorOpen(true)}
-            isSubmitted={isCurrentSubmitted}
-            correctOption={correctOption}
-            isFlagged={Boolean(flaggedQuestions[currentQuestion.id])}
-            onToggleFlag={() => toggleFlagQuestion(currentQuestion.id)}
-          />
-
-          {/* Instant Grading Resolution & Distractor Breakdown Accordion */}
-          {isCurrentSubmitted && currentAttempt && (
-            <InstantFeedback
-              className="mt-4"
-              isCorrect={Boolean(currentAttempt.isCorrect)}
-              selectedOption={currentAttempt.selectedOption}
-              correctOption={correctOption ?? 'A'}
-              baseExplanation={currentAttempt.explanation || currentResolution?.baseExplanation || ''}
-              distractorAnalysis={currentResolution?.distractorAnalysis}
-              attribution={currentResolution?.attribution}
-              awardedXp={currentAttempt.awardedXp}
-              onNextQuestion={nextQuestion}
-              hasNextQuestion={currentQuestionIndex < totalQuestions - 1}
-              onOpenSocraticTutor={() => setIsTutorOpen(true)}
-            />
-          )}
-        </section>
-      )}
-
-      {/* Session Completed Celebratory Card */}
-      {isAllAnswered && (
-        <Card className="border-2 border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-md">
-          <CardHeader className="flex flex-row items-center gap-3 pb-2">
-            <div className="p-2.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-300">
-              <Award className="h-6 w-6" aria-hidden="true" />
+      ) : (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-brand bg-brand-primary/10 text-brand-primary">
+              <BookOpen className="h-5 w-5" aria-hidden="true" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-emerald-950 dark:text-emerald-100">
-                Simulado Rápido Concluído!
-              </h3>
-              <p className="text-xs text-emerald-800 dark:text-emerald-300">
-                Você respondeu a todas as {totalQuestions} questões com sucesso.
-              </p>
-            </div>
-          </CardHeader>
-          <CardBody className="space-y-4 pt-2">
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <div className="p-3 rounded-brand bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900 text-center">
-                <span className="block text-2xl font-black text-emerald-600 dark:text-emerald-400">
-                  {correctCount}/{totalQuestions}
-                </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">Acertos ({Math.round((correctCount / totalQuestions) * 100)}%)</span>
-              </div>
-              <div className="p-3 rounded-brand bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900 text-center">
-                <span className="block text-2xl font-black text-amber-500">
-                  +{totalXp}
-                </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">Pontos de XP</span>
-              </div>
-              <div className="col-span-2 sm:col-span-1 p-3 rounded-brand bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900 text-center">
-                <span className="block text-2xl font-black text-slate-700 dark:text-slate-300">
-                  {flaggedCount}
-                </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">Marcadas para Revisão</span>
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
+                {activeSession?.title || 'Simulado Rápido ENEM'}
+              </h2>
+              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <span>{totalAnswered} de {totalQuestions} respondidas</span>
+                {flaggedCount > 0 && (
+                  <>
+                    <span>&bull;</span>
+                    <span className="text-amber-600 dark:text-amber-400 font-medium">
+                      {flaggedCount} marcada(s) para revisão
+                    </span>
+                  </>
+                )}
               </div>
             </div>
+          </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
-              {onOpenGamification && (
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="md"
-                  onClick={onOpenGamification}
-                  className="w-full sm:w-auto"
-                >
-                  <Trophy className="h-4 w-4 mr-2" aria-hidden="true" />
-                  Ver Conquistas & Ranking
-                </Button>
-              )}
+          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end flex-wrap sm:flex-nowrap">
+            {/* Custom Exam Simulation Selector (Year and Day 1/2) */}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsSimulationModalOpen(true)}
+              aria-label="Simular Prova Oficial"
+              title="Escolha o ano (2023, 2022...) e o caderno de aplicação (Dia 1 ou Dia 2)"
+              className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 text-xs sm:text-sm font-semibold"
+            >
+              <Layers className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />
+              <span className="hidden sm:inline">Simular Prova Oficial</span>
+            </Button>
+
+            {/* Socratic AI Tutor Quick Action */}
+            {currentQuestion && (
               <Button
                 type="button"
                 variant="outline"
-                size="md"
-                onClick={handleRestart}
-                className="w-full sm:w-auto"
+                size="sm"
+                onClick={() => setIsTutorOpen(true)}
+                aria-label="Tirar Dúvida (IA)"
+                title="Tem dúvida nesta questão? Peça dicas e explicações passo a passo com Inteligência Artificial"
+                className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 text-xs sm:text-sm font-medium"
               >
-                <RotateCcw className="h-4 w-4 mr-2" aria-hidden="true" />
-                Refazer Simulado
+                <Bot className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />
+                <span className="hidden sm:inline">Tirar Dúvida (IA)</span>
               </Button>
-            </div>
-          </CardBody>
-        </Card>
+            )}
+
+            {/* Quiz Timer with INEP Exam Accommodations (3 min per question benchmark) */}
+            <QuizTimer
+              key={currentQuestionIndex}
+              initialSeconds={180}
+              isCountdown={timeMode !== 'UNTIMED'}
+              timeMode={timeMode}
+              onOpenAccommodations={() => setIsAccommodationsOpen(true)}
+              onTimeUp={() => setIsTimeUpModalOpen(true)}
+            />
+
+            {/* Reset / Restart Quiz */}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleRestart}
+              aria-label="Reiniciar simulado"
+              title="Reiniciar simulado"
+            >
+              <RotateCcw className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />
+              <span className="hidden sm:inline">Reiniciar</span>
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content: If completed, render full Diagnostic Result & Understanding Level View; otherwise Question Palette & Active Question Card */}
+      {isCompleted ? (
+        <DiagnosticResultView
+          report={activeReport}
+          awardedXp={totalXp}
+          flaggedCount={flaggedCount}
+          onOpenAuthModal={onOpenAuthModal}
+          onPracticeTopic={handlePracticeWeakTopic}
+          onStartOfficialSimulation={() => setIsSimulationModalOpen(true)}
+          onRetakeDiagnostic={handleRestart}
+        />
+      ) : (
+        <>
+          {/* Question Carousel / Palette */}
+          {totalQuestions > 0 && (
+            <QuestionCarousel
+              totalQuestions={totalQuestions}
+              currentIndex={currentQuestionIndex}
+              onSelectIndex={goToQuestion}
+              onNext={nextQuestion}
+              onPrevious={previousQuestion}
+              isAnswered={(idx) => Boolean(questions[idx] && attempts[questions[idx].id])}
+              isCorrect={(idx) => (questions[idx] ? attempts[questions[idx].id]?.isCorrect : undefined)}
+              isFlagged={(idx) => Boolean(questions[idx] && flaggedQuestions[questions[idx].id])}
+            />
+          )}
+
+          {/* Main Interactive Question Card */}
+          {currentQuestion && (
+            <section aria-labelledby="active-question-section">
+              <h2 id="active-question-section" className="sr-only">
+                Questão ativa do simulado
+              </h2>
+
+              <QuestionCard
+                question={currentQuestion}
+                selectedOption={currentSelectedOption}
+                onSelectOption={handleSelectOption}
+                onSubmitAnswer={handleConfirmAnswer}
+                onOpenSocraticTutor={() => setIsTutorOpen(true)}
+                isSubmitted={isCurrentSubmitted}
+                correctOption={correctOption}
+                isFlagged={Boolean(flaggedQuestions[currentQuestion.id])}
+                onToggleFlag={() => toggleFlagQuestion(currentQuestion.id)}
+              />
+
+              {/* Instant Grading Resolution & Distractor Breakdown Accordion */}
+              {isCurrentSubmitted && currentAttempt && (
+                <InstantFeedback
+                  className="mt-4"
+                  isCorrect={Boolean(currentAttempt.isCorrect)}
+                  selectedOption={currentAttempt.selectedOption}
+                  correctOption={correctOption ?? 'A'}
+                  baseExplanation={currentAttempt.explanation || currentResolution?.baseExplanation || ''}
+                  distractorAnalysis={currentResolution?.distractorAnalysis}
+                  attribution={currentResolution?.attribution}
+                  awardedXp={currentAttempt.awardedXp}
+                  onNextQuestion={nextQuestion}
+                  hasNextQuestion={currentQuestionIndex < totalQuestions - 1}
+                  onFinishDiagnostic={() => {
+                    const report = generateDiagnosticFromSession(questions, attempts, activeSession?.id);
+                    completeSession(report);
+                    setShowCelebration(true);
+                  }}
+                  onOpenSocraticTutor={() => setIsTutorOpen(true)}
+                />
+              )}
+            </section>
+          )}
+        </>
       )}
 
       {/* Socratic AI Tutor Drawer bound to current question */}
@@ -468,8 +553,8 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({ onOpenGamification }
       <CelebrationOverlay
         isOpen={showCelebration}
         onClose={() => setShowCelebration(false)}
-        title="Parabéns! Simulado Concluído!"
-        subtitle={`Você respondeu a todas as ${totalQuestions} questões com ${correctCount} acertos!`}
+        title="Parabéns! Diagnóstico Concluído!"
+        subtitle={`Você respondeu a todas as ${totalQuestions} questões e calibrou sua nota TRI!`}
         xpAwarded={totalXp}
       />
 

@@ -202,18 +202,19 @@ describe('PracticeHero Component', () => {
 
     // Celebration modal overlay should now be open with celebratory title
     await waitFor(() => {
-      expect(screen.getByRole('dialog', { name: /Parabéns! Simulado Concluído!/i })).toBeInTheDocument();
+      expect(screen.getByRole('dialog', { name: /Parabéns! Diagnóstico Concluído!/i })).toBeInTheDocument();
     });
 
     // Close the celebration modal
     const closeCelebrationBtn = screen.getByRole('button', { name: /Continuar Estudando/i });
     fireEvent.click(closeCelebrationBtn);
 
-    // Completed summary card should be visible
-    expect(screen.getByText('Simulado Rápido Concluído!')).toBeInTheDocument();
+    // Completed diagnostic view should be visible, displaying Level of Understanding and radar
+    expect(screen.getByText('Seu Diagnóstico ENEM & Nível de Compreensão')).toBeInTheDocument();
+    expect(screen.getByText('Diagnóstico ENEM Calibrado')).toBeInTheDocument();
 
-    // Click "Ver Conquistas & Ranking"
-    const gamificationBtn = screen.getByRole('button', { name: /Ver Conquistas & Ranking/i });
+    // Click "Ranking" action
+    const gamificationBtn = screen.getByRole('button', { name: /^Ranking$/i });
     expect(gamificationBtn).toBeInTheDocument();
     fireEvent.click(gamificationBtn);
 

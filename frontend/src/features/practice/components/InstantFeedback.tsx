@@ -16,6 +16,7 @@ export interface InstantFeedbackProps {
   readonly awardedXp?: number;
   readonly onNextQuestion?: () => void;
   readonly hasNextQuestion?: boolean;
+  readonly onFinishDiagnostic?: () => void;
   readonly onOpenSocraticTutor?: () => void;
   readonly className?: string;
 }
@@ -30,6 +31,7 @@ export const InstantFeedback: React.FC<InstantFeedbackProps> = ({
   awardedXp,
   onNextQuestion,
   hasNextQuestion,
+  onFinishDiagnostic,
   onOpenSocraticTutor,
   className = '',
 }) => {
@@ -43,6 +45,7 @@ export const InstantFeedback: React.FC<InstantFeedbackProps> = ({
         awardedXp={awardedXp}
         onNextQuestion={onNextQuestion}
         hasNextQuestion={hasNextQuestion}
+        onFinishDiagnostic={onFinishDiagnostic}
       />
 
       {/* Step-by-Step Resolution Accordion with Distractor Analysis */}

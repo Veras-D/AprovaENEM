@@ -70,4 +70,22 @@ describe('FeedbackBanner Component', () => {
       screen.queryByRole('button', { name: /avançar para a próxima questão/i })
     ).not.toBeInTheDocument();
   });
+
+  it('should render finalize diagnostic button when hasNextQuestion is false and onFinishDiagnostic is provided', () => {
+    const handleFinish = vi.fn();
+    render(
+      <FeedbackBanner
+        isCorrect={true}
+        selectedOption="A"
+        correctOption="A"
+        hasNextQuestion={false}
+        onFinishDiagnostic={handleFinish}
+      />
+    );
+
+    const finishBtn = screen.getByRole('button', { name: /finalizar e ver meu diagnóstico de proficiência/i });
+    expect(finishBtn).toBeInTheDocument();
+    fireEvent.click(finishBtn);
+    expect(handleFinish).toHaveBeenCalledTimes(1);
+  });
 });

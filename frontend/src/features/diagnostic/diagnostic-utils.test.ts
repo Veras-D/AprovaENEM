@@ -5,6 +5,8 @@ import {
   calculateMasteryLevel,
   formatScore,
   transformRadarDataForChart,
+  evaluateDiagnosticLevel,
+  generateDiagnosticFromSession,
   ENEM_AREAS,
   MASTERY_CONFIGS,
   NATIONAL_ENEM_BASELINE,
@@ -118,6 +120,61 @@ describe('diagnostic-utils', () => {
         score: 45,
         masteryLevel: 'CRITICAL',
       });
+    });
+  });
+
+  describe('evaluateDiagnosticLevel', () => {
+    it('calibrates estimated TRI score and qualitative level according to accuracy', () => {
+      const exec = evaluateDiagnosticLevel(90);
+      expect(exec.proficiencyTier).toBe('EXCELENTE');
+      expect(exec.estimatedTriScore).toBeGreaterThanOrEqual(800);
+
+      const adv = evaluateDiagnosticLevel(75);
+      expect(adv.proficiencyTier).toBe('AVANÇADO');
+      expect(adv.tierLabel).toBe('Nível Avançado');
+
+      const inter = evaluateDiagnosticLevel(60);
+      expect(inter.proficiencyTier).toBe('INTERMEDIÁRIO');
+      expect(inter.estimatedTriScore).toBe(660);
+
+      const basic = evaluateDiagnosticLevel(40);
+      expect(basic.proficiencyTier).toBe('BÁSICO');
+
+      const init = evaluateDiagnosticLevel(10);
+      expect(init.proficiencyTier).toBe('INICIANTE');
+    });
+  });
+
+  describe('generateDiagnosticFromSession', () => {
+    it('generates an authentic DiagnosticReportDto mapping attempts to ENEM areas', () => {
+      const mockQuestions = [
+        { id: 'q1', knowledgeArea: 'MT', topic: 'Potência Elétrica' },
+        { id: 'q2', knowledgeArea: 'CN', topic: 'Cinemática' },
+        { id: 'q3', knowledgeArea: 'CH', topic: 'Brasil Colônia' },
+        { id: 'q4', knowledgeArea: 'LC', topic: 'Figuras de Linguagem' },
+      ];
+
+      const mockAttempts = {
+        q1: { questionId: 'q1', isCorrect: true },
+        q2: { questionId: 'q2', isCorrect: true },
+        q3: { questionId: 'q3', isCorrect: false },
+        q4: { questionId: 'q4', isCorrect: true },
+      };
+
+      const report = generateDiagnosticFromSession(mockQuestions, mockAttempts, 'sess-test-1');
+      expect(report.sessionId).toBe('sess-test-1');
+      expect(report.scorePercentage).toBe(75); // 3 of 4 = 75%
+      expect(report.radar).toHaveLength(4);
+
+      const mtArea = report.radar?.find((r: DiagnosticRadarAreaDto) => r.knowledgeArea === 'MT');
+      expect(mtArea?.scorePercentage).toBe(100);
+      expect(mtArea?.masteryLevel).toBe('MASTERED');
+
+      const chArea = report.radar?.find((r: DiagnosticRadarAreaDto) => r.knowledgeArea === 'CH');
+      expect(chArea?.scorePercentage).toBe(0);
+      expect(chArea?.masteryLevel).toBe('CRITICAL');
+      expect(chArea?.topWeakTopic).toBe('Brasil Colônia');
+      expect(report.recommendedTopics).toContain('Brasil Colônia');
     });
   });
 });

@@ -11,6 +11,7 @@ export interface FeedbackBannerProps {
   readonly awardedXp?: number;
   readonly onNextQuestion?: () => void;
   readonly hasNextQuestion?: boolean;
+  readonly onFinishDiagnostic?: () => void;
   readonly className?: string;
 }
 
@@ -21,6 +22,7 @@ export const FeedbackBanner: React.FC<FeedbackBannerProps> = ({
   awardedXp = isCorrect ? 15 : 5,
   onNextQuestion,
   hasNextQuestion = false,
+  onFinishDiagnostic,
   className = '',
 }) => {
   const containerStyles = isCorrect
@@ -99,6 +101,21 @@ export const FeedbackBanner: React.FC<FeedbackBannerProps> = ({
             aria-label="Avançar para a próxima questão"
           >
             <span>Próxima Questão</span>
+            <ArrowRight className="h-4 w-4 ml-1.5" aria-hidden="true" />
+          </Button>
+        )}
+
+        {/* Finalize Diagnostic Action (when at the end of questions) */}
+        {!hasNextQuestion && onFinishDiagnostic && (
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            onClick={onFinishDiagnostic}
+            className="self-end sm:self-auto shrink-0 shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+            aria-label="Finalizar e ver meu diagnóstico de proficiência"
+          >
+            <span>Ver Meu Diagnóstico</span>
             <ArrowRight className="h-4 w-4 ml-1.5" aria-hidden="true" />
           </Button>
         )}
