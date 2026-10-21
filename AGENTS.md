@@ -190,6 +190,6 @@ When making changes across the monorepo, update all related documentation recurs
 | **REST Endpoint / Route** | 1. [`docs/specifications/05-api-specification.md`](docs/specifications/05-api-specification.md)<br>2. Controller OpenAPI annotations (`@Operation`)<br>3. [`docs/postman/AprovaENEM.postman_collection.json`](docs/postman/AprovaENEM.postman_collection.json)<br>4. [`docs/BACKLOG.md`](docs/BACKLOG.md) |
 | **Database Schema / Entity** | 1. [`docs/specifications/04-data-modeling.md`](docs/specifications/04-data-modeling.md)<br>2. Flyway migration script (`V*.sql`)<br>3. JPA Entity & Domain Model |
 | **Domain Events / AMQP** | 1. Event record in `common-core`<br>2. [`docs/specifications/03-system-architecture.md`](docs/specifications/03-system-architecture.md)<br>3. Publisher & listener unit tests |
-| **Frontend UI / Components** | 1. [`docs/specifications/06-frontend-architecture.md`](docs/specifications/06-frontend-architecture.md)<br>2. Component unit test in Vitest<br>3. [`docs/BACKLOG.md`](docs/BACKLOG.md) |
+| **Frontend UI / Components** | 1. [`docs/specifications/03-system-architecture.md`](docs/specifications/03-system-architecture.md)<br>2. Component unit test in Vitest<br>3. [`docs/BACKLOG.md`](docs/BACKLOG.md) |
 | **Accessibility / Legal / LGPD** | 1. [`README.md`](README.md)<br>2. [`docs/BACKLOG.md`](docs/BACKLOG.md)<br>3. [`CHANGELOG.md`](CHANGELOG.md) |
 | **Task / Sprint Progress** | 1. [`docs/BACKLOG.md`](docs/BACKLOG.md)<br>2. [`CHANGELOG.md`](CHANGELOG.md) |
