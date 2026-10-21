@@ -341,7 +341,7 @@ describe('PracticeHero Component', () => {
     fireEvent.click(startBtn);
 
     // Modal should close and session title should update
-    expect(screen.queryByText('Simular Edição Oficial do ENEM')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByText(/Simulado Oficial ENEM 2023 — Dia 1/i)).toBeInTheDocument();
   });
 
@@ -363,7 +363,7 @@ describe('PracticeHero Component', () => {
     fireEvent.click(startBtn);
 
     // Modal closes and session title reflects Simulado Oficial Misto
-    expect(screen.queryByText('Simular Edição Oficial do ENEM')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByText(/Simulado Oficial Misto — Dia 1/i)).toBeInTheDocument();
 
     // Verify exactly 90 questions loaded in session store

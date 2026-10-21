@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X, AlertTriangle, Trash2, CheckCircle2, AlertOctagon, Loader2, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -34,17 +35,30 @@ export const AccountErasureModal: React.FC<AccountErasureModalProps> = ({
 
   const modalRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+  const [shouldRender, setShouldRender] = useState<boolean>(isOpen);
+  const [isClosing, setIsClosing] = useState<boolean>(false);
 
   // Reset state when modal opens/closes
   useEffect(() => {
     if (isOpen) {
+      setShouldRender(true);
+      setIsClosing(false);
       setHasAcknowledgedLoss(false);
       setHasAcknowledgedIrreversible(false);
       setConfirmationInput('');
       setErrorMessage(null);
       setIsSuccess(false);
+      return;
     }
-  }, [isOpen]);
+    if (shouldRender) {
+      setIsClosing(true);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+        setIsClosing(false);
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, shouldRender]);
 
   // Focus trap and Escape key listener
   useEffect(() => {
@@ -95,7 +109,7 @@ export const AccountErasureModal: React.FC<AccountErasureModalProps> = ({
     };
   }, [isOpen, onClose, deleteAccountMutation.isPending]);
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
   const isConfirmed =
     hasAcknowledgedLoss &&
@@ -120,17 +134,22 @@ export const AccountErasureModal: React.FC<AccountErasureModalProps> = ({
     }
   };
 
-  return (
+  const modalContent = (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 m-0"
       role="dialog"
       aria-modal="true"
+      aria-hidden={isClosing || undefined}
       aria-labelledby="erasure-modal-title"
       aria-describedby="erasure-modal-description"
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm transition-opacity"
+        className={`fixed inset-0 bg-slate-900/70 backdrop-blur-sm ${
+          isClosing
+            ? 'animate-out fade-out duration-150'
+            : 'animate-in fade-in duration-200'
+        }`}
         onClick={() => {
           if (!deleteAccountMutation.isPending && !isSuccess) {
             onClose();
@@ -142,7 +161,11 @@ export const AccountErasureModal: React.FC<AccountErasureModalProps> = ({
       {/* Modal Card */}
       <div
         ref={modalRef}
-        className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-brand shadow-2xl border border-rose-200 dark:border-rose-950 flex flex-col z-10 animate-in fade-in zoom-in-95 duration-200 overflow-hidden"
+        className={`relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-brand shadow-2xl border border-rose-200 dark:border-rose-950 flex flex-col z-10 overflow-hidden ${
+          isClosing
+            ? 'animate-out fade-out zoom-out-95 duration-150'
+            : 'animate-in fade-in zoom-in-95 duration-200'
+        }`}
       >
         {/* Header Banner */}
         <div className="bg-rose-50 dark:bg-rose-950/40 p-4 sm:p-5 border-b border-rose-200 dark:border-rose-900 flex items-start justify-between gap-3 shrink-0">
@@ -337,4 +360,7 @@ export const AccountErasureModal: React.FC<AccountErasureModalProps> = ({
       </div>
     </div>
   );
+
+  const portalRoot = typeof document !== 'undefined' ? document.getElementById('root') : null;
+  return portalRoot ? createPortal(modalContent, portalRoot) : modalContent;
 };

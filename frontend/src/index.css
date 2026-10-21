@@ -157,3 +157,184 @@ body {
   width: 0 !important;
   height: 0 !important;
 }
+
+/* ============================================================================
+   UI Transition & Entrance Animations (Drawers, Modals, Accordions, Cards)
+   ============================================================================ */
+@keyframes fade-in-only {
+  from {
+    opacity: var(--tw-enter-opacity, 0);
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out-only {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: var(--tw-exit-opacity, 0);
+  }
+}
+
+@keyframes enter-transform-animation {
+  from {
+    opacity: var(--tw-enter-opacity, 1);
+    transform: translate3d(
+        var(--tw-enter-translate-x, 0),
+        var(--tw-enter-translate-y, 0),
+        0
+      )
+      scale3d(
+        var(--tw-enter-scale, 1),
+        var(--tw-enter-scale, 1),
+        var(--tw-enter-scale, 1)
+      );
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+}
+
+@keyframes exit-transform-animation {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+  to {
+    opacity: var(--tw-exit-opacity, 1);
+    transform: translate3d(
+        var(--tw-exit-translate-x, 0),
+        var(--tw-exit-translate-y, 0),
+        0
+      )
+      scale3d(
+        var(--tw-exit-scale, 1),
+        var(--tw-exit-scale, 1),
+        var(--tw-exit-scale, 1)
+      );
+  }
+}
+
+.animate-in {
+  animation-name: fade-in-only;
+  animation-duration: 200ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  --tw-enter-opacity: 0;
+  --tw-enter-scale: 1;
+  --tw-enter-translate-x: 0px;
+  --tw-enter-translate-y: 0px;
+}
+
+.animate-out {
+  animation-name: fade-out-only;
+  animation-duration: 150ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
+  animation-fill-mode: forwards;
+  --tw-exit-opacity: 0;
+  --tw-exit-scale: 1;
+  --tw-exit-translate-x: 0px;
+  --tw-exit-translate-y: 0px;
+}
+
+.fade-in {
+  --tw-enter-opacity: 0;
+}
+
+.fade-out {
+  --tw-exit-opacity: 0;
+}
+
+.zoom-in-95 {
+  animation-name: enter-transform-animation;
+  animation-fill-mode: both;
+  --tw-enter-opacity: 0;
+  --tw-enter-scale: 0.95;
+}
+
+.zoom-out-95 {
+  animation-name: exit-transform-animation;
+  animation-fill-mode: forwards;
+  --tw-exit-opacity: 0;
+  --tw-exit-scale: 0.95;
+}
+
+.slide-in-from-right {
+  animation-name: enter-transform-animation;
+  animation-fill-mode: both;
+  --tw-enter-opacity: 0;
+  --tw-enter-translate-x: 100%;
+}
+
+.slide-out-to-right {
+  animation-name: exit-transform-animation;
+  animation-fill-mode: forwards;
+  --tw-exit-opacity: 0;
+  --tw-exit-translate-x: 100%;
+}
+
+.slide-in-from-left {
+  animation-name: enter-transform-animation;
+  animation-fill-mode: both;
+  --tw-enter-opacity: 0;
+  --tw-enter-translate-x: -100%;
+}
+
+.slide-in-from-bottom-5 {
+  animation-name: enter-transform-animation;
+  animation-fill-mode: both;
+  --tw-enter-opacity: 0;
+  --tw-enter-translate-y: 1.25rem;
+}
+
+.slide-out-to-bottom-5 {
+  animation-name: exit-transform-animation;
+  animation-fill-mode: forwards;
+  --tw-exit-opacity: 0;
+  --tw-exit-translate-y: 1.25rem;
+}
+
+.slide-in-from-top-2 {
+  animation-name: enter-transform-animation;
+  animation-fill-mode: both;
+  --tw-enter-opacity: 0;
+  --tw-enter-translate-y: -0.5rem;
+}
+
+.animate-in.duration-100,
+.animate-out.duration-100 {
+  animation-duration: 120ms;
+}
+
+.animate-in.duration-150,
+.animate-out.duration-150 {
+  animation-duration: 150ms;
+}
+
+.animate-in.duration-200,
+.animate-out.duration-200 {
+  animation-duration: 220ms;
+}
+
+.animate-in.duration-300,
+.animate-out.duration-300 {
+  animation-duration: 300ms;
+}
+
+@keyframes card-swap-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-card-enter {
+  animation: card-swap-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { ZoomIn, ZoomOut, X, Image as ImageIcon, AlertCircle } from 'lucide-react';
 
 export interface ZoomableImageProps {
@@ -21,8 +22,26 @@ export const ZoomableImage: React.FC<ZoomableImageProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [hasError, setHasError] = useState<boolean>(false);
   const [isZoomed, setIsZoomed] = useState<boolean>(false);
+  const [shouldRenderModal, setShouldRenderModal] = useState<boolean>(false);
+  const [isClosingModal, setIsClosingModal] = useState<boolean>(false);
   const zoomModalRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isZoomed) {
+      setShouldRenderModal(true);
+      setIsClosingModal(false);
+      return;
+    }
+    if (shouldRenderModal) {
+      setIsClosingModal(true);
+      const timer = setTimeout(() => {
+        setShouldRenderModal(false);
+        setIsClosingModal(false);
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isZoomed, shouldRenderModal]);
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (contentRef.current && !contentRef.current.contains(e.target as Node)) {
@@ -117,50 +136,63 @@ export const ZoomableImage: React.FC<ZoomableImageProps> = ({
       </figure>
 
       {/* Accessible Lightbox Modal */}
-      {isZoomed && (
-        <div
-          ref={zoomModalRef}
-          data-testid="zoom-modal-backdrop"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200 cursor-zoom-out"
-          role="dialog"
-          aria-modal="true"
-          aria-label={`Visualização ampliada: ${alt}`}
-          onClick={handleBackdropClick}
-        >
+      {shouldRenderModal && (() => {
+        const lightboxContent = (
           <div
-            ref={contentRef}
-            className="relative max-w-5xl max-h-[90vh] flex flex-col items-center cursor-default"
+            ref={zoomModalRef}
+            data-testid="zoom-modal-backdrop"
+            className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md cursor-zoom-out ${
+              isClosingModal
+                ? 'animate-out fade-out duration-150'
+                : 'animate-in fade-in duration-200'
+            }`}
+            role="dialog"
+            aria-modal="true"
+            aria-hidden={isClosingModal || undefined}
+            aria-label={`Visualização ampliada: ${alt}`}
+            onClick={handleBackdropClick}
           >
-            {/* Close button */}
-            <button
-              type="button"
-              onClick={() => setIsZoomed(false)}
-              className="absolute -top-12 right-0 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-              aria-label="Fechar visualização ampliada"
+            <div
+              ref={contentRef}
+              className={`relative max-w-5xl max-h-[90vh] flex flex-col items-center cursor-default ${
+                isClosingModal
+                  ? 'animate-out fade-out zoom-out-95 duration-150'
+                  : 'animate-in fade-in zoom-in-95 duration-200'
+              }`}
             >
-              <X className="h-6 w-6" aria-hidden="true" />
-            </button>
-
-            <img
-              src={src}
-              alt={alt}
-              className="max-h-[80vh] w-auto max-w-full object-contain rounded-brand shadow-2xl border border-white/10"
-            />
-
-            <div className="mt-3 flex items-center justify-between w-full text-white/80 text-xs px-2">
-              <span className="truncate max-w-md">{alt}</span>
+              {/* Close button */}
               <button
                 type="button"
                 onClick={() => setIsZoomed(false)}
-                className="inline-flex items-center gap-1 hover:text-white underline"
+                className="absolute -top-12 right-0 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                aria-label="Fechar visualização ampliada"
               >
-                <ZoomOut className="h-3.5 w-3.5" aria-hidden="true" />
-                Fechar
+                <X className="h-6 w-6" aria-hidden="true" />
               </button>
+
+              <img
+                src={src}
+                alt={alt}
+                className="max-h-[80vh] w-auto max-w-full object-contain rounded-brand shadow-2xl border border-white/10"
+              />
+
+              <div className="mt-3 flex items-center justify-between w-full text-white/80 text-xs px-2">
+                <span className="truncate max-w-md">{alt}</span>
+                <button
+                  type="button"
+                  onClick={() => setIsZoomed(false)}
+                  className="inline-flex items-center gap-1 hover:text-white underline"
+                >
+                  <ZoomOut className="h-3.5 w-3.5" aria-hidden="true" />
+                  Fechar
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+        const portalRoot = typeof document !== 'undefined' ? document.getElementById('root') : null;
+        return portalRoot ? createPortal(lightboxContent, portalRoot) : lightboxContent;
+      })()}
     </>
   );
 };

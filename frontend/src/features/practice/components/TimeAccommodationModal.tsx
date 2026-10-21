@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Clock, ShieldCheck, HeartHandshake, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -21,6 +22,24 @@ export const TimeAccommodationModal: React.FC<TimeAccommodationModalProps> = ({
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+  const [shouldRender, setShouldRender] = React.useState<boolean>(isOpen);
+  const [isClosing, setIsClosing] = React.useState<boolean>(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+      setIsClosing(false);
+      return;
+    }
+    if (shouldRender) {
+      setIsClosing(true);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+        setIsClosing(false);
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, shouldRender]);
 
   // Keyboard accessibility: Escape to dismiss and Focus Trap
   useEffect(() => {
@@ -65,24 +84,33 @@ export const TimeAccommodationModal: React.FC<TimeAccommodationModalProps> = ({
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
-  return (
+  const modalContent = (
     <div
       role="dialog"
       aria-modal="true"
+      aria-hidden={isClosing || undefined}
       aria-labelledby="accommodations-modal-title"
       aria-describedby="accommodations-modal-desc"
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 m-0"
     >
       <div
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+        className={`fixed inset-0 bg-slate-900/60 backdrop-blur-sm ${
+          isClosing
+            ? 'animate-out fade-out duration-150'
+            : 'animate-in fade-in duration-200'
+        }`}
         onClick={onClose}
         aria-hidden="true"
       />
       <div
         ref={modalRef}
-        className="relative z-10 w-full max-w-xl rounded-brand bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200"
+        className={`relative z-10 w-full max-w-xl rounded-brand bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] ${
+          isClosing
+            ? 'animate-out fade-out zoom-out-95 duration-150'
+            : 'animate-in fade-in zoom-in-95 duration-200'
+        }`}
       >
         {/* Modal Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80">
@@ -184,4 +212,7 @@ export const TimeAccommodationModal: React.FC<TimeAccommodationModalProps> = ({
       </div>
     </div>
   );
+
+  const portalRoot = typeof document !== 'undefined' ? document.getElementById('root') : null;
+  return portalRoot ? createPortal(modalContent, portalRoot) : modalContent;
 };

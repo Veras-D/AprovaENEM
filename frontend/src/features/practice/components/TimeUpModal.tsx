@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Clock, AlertTriangle, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
@@ -27,6 +28,24 @@ export const TimeUpModal: React.FC<TimeUpModalProps> = ({
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+  const [shouldRender, setShouldRender] = useState<boolean>(isOpen);
+  const [isClosing, setIsClosing] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+      setIsClosing(false);
+      return;
+    }
+    if (shouldRender) {
+      setIsClosing(true);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+        setIsClosing(false);
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, shouldRender]);
 
   const handleDismiss = useCallback(() => {
     if (onClose) {
@@ -79,25 +98,34 @@ export const TimeUpModal: React.FC<TimeUpModalProps> = ({
     };
   }, [isOpen, handleDismiss]);
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
-  return (
+  const modalContent = (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 m-0"
       role="dialog"
       aria-modal="true"
+      aria-hidden={isClosing || undefined}
       aria-labelledby="timeup-modal-title"
       aria-describedby="timeup-modal-description"
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+        className={`fixed inset-0 bg-slate-900/60 backdrop-blur-sm ${
+          isClosing
+            ? 'animate-out fade-out duration-150'
+            : 'animate-in fade-in duration-200'
+        }`}
         onClick={handleDismiss}
         aria-hidden="true"
       />
       <div
         ref={modalRef}
-        className="relative z-10 w-full max-w-md rounded-brand bg-white dark:bg-slate-900 border border-amber-500/40 dark:border-amber-500/30 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className={`relative z-10 w-full max-w-md rounded-brand bg-white dark:bg-slate-900 border border-amber-500/40 dark:border-amber-500/30 shadow-2xl overflow-hidden ${
+          isClosing
+            ? 'animate-out fade-out zoom-out-95 duration-150'
+            : 'animate-in fade-in zoom-in-95 duration-200'
+        }`}
       >
         {/* Modal Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 bg-amber-50/60 dark:bg-amber-950/20">
@@ -189,4 +217,7 @@ export const TimeUpModal: React.FC<TimeUpModalProps> = ({
       </div>
     </div>
   );
+
+  const portalRoot = typeof document !== 'undefined' ? document.getElementById('root') : null;
+  return portalRoot ? createPortal(modalContent, portalRoot) : modalContent;
 };

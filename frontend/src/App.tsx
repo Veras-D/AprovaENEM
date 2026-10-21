@@ -84,35 +84,37 @@ export const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <RootLayout activeSection={activeSection} onNavigate={handleNavigate}>
-        {activeSection === 'home' ? (
-          <LandingPage
-            onStartPractice={() => handleNavigate('practice')}
-            onNavigate={handleNavigate}
-            onOpenAuthModal={() => useAuthStore.getState().openAuthModal('login')}
-          />
-        ) : activeSection === 'leaderboard' ? (
-          <GamificationDashboard
-            onStartPractice={() => handleNavigate('practice')}
-            onOpenAuthModal={(mode) => useAuthStore.getState().openAuthModal(mode ?? 'login')}
-          />
-        ) : activeSection === 'diagnostics' ? (
-          <DiagnosticDashboard
-            studentReport={studentDiagnostic}
-            onPracticeTopic={() => handleNavigate('practice')}
-            onOpenAuthModal={(mode) => useAuthStore.getState().openAuthModal(mode ?? 'login')}
-          />
-        ) : activeSection === 'institutional' ? (
-          <InstitutionalDashboard
-            onNavigate={handleNavigate}
-            onOpenAuthModal={() => useAuthStore.getState().openAuthModal('login')}
-          />
-        ) : (
-          <PracticeHero
-            onOpenGamification={() => handleNavigate('leaderboard')}
-            onOpenDiagnostics={() => handleNavigate('diagnostics')}
-            onOpenAuthModal={(mode) => useAuthStore.getState().openAuthModal(mode ?? 'login')}
-          />
-        )}
+        <div key={activeSection} className="animate-in fade-in duration-150">
+          {activeSection === 'home' ? (
+            <LandingPage
+              onStartPractice={() => handleNavigate('practice')}
+              onNavigate={handleNavigate}
+              onOpenAuthModal={() => useAuthStore.getState().openAuthModal('login')}
+            />
+          ) : activeSection === 'leaderboard' ? (
+            <GamificationDashboard
+              onStartPractice={() => handleNavigate('practice')}
+              onOpenAuthModal={(mode) => useAuthStore.getState().openAuthModal(mode ?? 'login')}
+            />
+          ) : activeSection === 'diagnostics' ? (
+            <DiagnosticDashboard
+              studentReport={studentDiagnostic}
+              onPracticeTopic={() => handleNavigate('practice')}
+              onOpenAuthModal={(mode) => useAuthStore.getState().openAuthModal(mode ?? 'login')}
+            />
+          ) : activeSection === 'institutional' ? (
+            <InstitutionalDashboard
+              onNavigate={handleNavigate}
+              onOpenAuthModal={() => useAuthStore.getState().openAuthModal('login')}
+            />
+          ) : (
+            <PracticeHero
+              onOpenGamification={() => handleNavigate('leaderboard')}
+              onOpenDiagnostics={() => handleNavigate('diagnostics')}
+              onOpenAuthModal={(mode) => useAuthStore.getState().openAuthModal(mode ?? 'login')}
+            />
+          )}
+        </div>
       </RootLayout>
     </QueryClientProvider>
   );

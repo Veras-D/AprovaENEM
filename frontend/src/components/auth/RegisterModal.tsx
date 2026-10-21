@@ -58,6 +58,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 
   const modalRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+  const [shouldRender, setShouldRender] = useState<boolean>(isOpen);
+  const [isClosing, setIsClosing] = useState<boolean>(false);
 
   const loginMutation = useLoginMutation();
   const registerMutation = useRegisterMutation();
@@ -65,11 +67,22 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   // Reset form when opening or changing mode
   useEffect(() => {
     if (isOpen) {
+      setShouldRender(true);
+      setIsClosing(false);
       setMode(initialMode);
       setFormError(null);
       setIsSuccess(false);
+      return;
     }
-  }, [isOpen, initialMode]);
+    if (shouldRender) {
+      setIsClosing(true);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+        setIsClosing(false);
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, initialMode, shouldRender]);
 
   // Focus trap & Escape listener
   useEffect(() => {
@@ -202,7 +215,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
   return (
     <>
@@ -210,11 +223,16 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
         className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 m-0"
         role="dialog"
         aria-modal="true"
+        aria-hidden={isClosing || undefined}
         aria-labelledby="auth-modal-title"
       >
         {/* Backdrop */}
         <div
-          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+          className={`fixed inset-0 bg-slate-900/60 backdrop-blur-sm ${
+            isClosing
+              ? 'animate-out fade-out duration-150'
+              : 'animate-in fade-in duration-200'
+          }`}
           onClick={onClose}
           aria-hidden="true"
         />
@@ -222,7 +240,11 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
         {/* Modal Dialog Card */}
         <div
           ref={modalRef}
-          className="relative w-full max-w-lg max-h-[92vh] bg-white dark:bg-slate-900 rounded-brand shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col z-10 animate-in fade-in zoom-in-95 duration-200 overflow-hidden"
+          className={`relative w-full max-w-lg max-h-[92vh] bg-white dark:bg-slate-900 rounded-brand shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col z-10 overflow-hidden ${
+            isClosing
+              ? 'animate-out fade-out zoom-out-95 duration-150'
+              : 'animate-in fade-in zoom-in-95 duration-200'
+          }`}
         >
           {/* Header */}
           <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 shrink-0">

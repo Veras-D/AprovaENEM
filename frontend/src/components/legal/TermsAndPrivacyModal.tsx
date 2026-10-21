@@ -39,13 +39,27 @@ export const TermsAndPrivacyModal: React.FC<TermsAndPrivacyModalProps> = ({
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
 
   // Sync initial tab and reset state when opening
+  const [shouldRender, setShouldRender] = useState<boolean>(isOpen);
+  const [isClosing, setIsClosing] = useState<boolean>(false);
+
   useEffect(() => {
     if (isOpen) {
+      setShouldRender(true);
+      setIsClosing(false);
       setActiveTab(initialTab);
       setExportStatus('idle');
       setExportErrorMessage(null);
+      return;
     }
-  }, [isOpen, initialTab]);
+    if (shouldRender) {
+      setIsClosing(true);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+        setIsClosing(false);
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, initialTab, shouldRender]);
 
   // Accessibility: Focus trap & Escape key listener
   useEffect(() => {
@@ -143,18 +157,23 @@ export const TermsAndPrivacyModal: React.FC<TermsAndPrivacyModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 m-0"
       role="dialog"
       aria-modal="true"
+      aria-hidden={isClosing || undefined}
       aria-labelledby="legal-modal-title"
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+        className={`fixed inset-0 bg-slate-900/60 backdrop-blur-sm ${
+          isClosing
+            ? 'animate-out fade-out duration-150'
+            : 'animate-in fade-in duration-200'
+        }`}
         onClick={onClose}
         aria-hidden="true"
       />
@@ -162,7 +181,11 @@ export const TermsAndPrivacyModal: React.FC<TermsAndPrivacyModalProps> = ({
       {/* Modal Dialog Card */}
       <div
         ref={modalRef}
-        className="relative w-full max-w-2xl max-h-[90vh] bg-white dark:bg-slate-900 rounded-brand shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col z-10 animate-in fade-in zoom-in-95 duration-200"
+        className={`relative w-full max-w-2xl max-h-[90vh] bg-white dark:bg-slate-900 rounded-brand shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col z-10 ${
+          isClosing
+            ? 'animate-out fade-out zoom-out-95 duration-150'
+            : 'animate-in fade-in zoom-in-95 duration-200'
+        }`}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 shrink-0">

@@ -655,6 +655,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
               </h2>
 
               <QuestionCard
+                key={currentQuestion.id}
                 question={currentQuestion}
                 selectedOption={currentSelectedOption}
                 onSelectOption={handleSelectOption}
@@ -664,6 +665,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
                 correctOption={correctOption}
                 isFlagged={Boolean(flaggedQuestions[currentQuestion.id])}
                 onToggleFlag={() => toggleFlagQuestion(currentQuestion.id)}
+                className="animate-card-enter"
               />
 
               {/* Instant Grading Resolution & Distractor Breakdown Accordion */}

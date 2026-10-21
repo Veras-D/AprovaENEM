@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Trophy, Sparkles, Star, Award, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
@@ -50,6 +51,24 @@ export const CelebrationOverlay: React.FC<CelebrationOverlayProps> = ({
   const awardedXp = propAwardedXp ?? xpAwarded ?? 50;
   const modalRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+  const [shouldRender, setShouldRender] = useState<boolean>(isOpen);
+  const [isClosing, setIsClosing] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+      setIsClosing(false);
+      return;
+    }
+    if (shouldRender) {
+      setIsClosing(true);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+        setIsClosing(false);
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, shouldRender]);
 
   // Check prefers-reduced-motion
   const prefersReducedMotion = useMemo(() => {
@@ -94,19 +113,24 @@ export const CelebrationOverlay: React.FC<CelebrationOverlayProps> = ({
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
-  return (
+  const modalContent = (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 m-0"
       role="dialog"
       aria-modal="true"
+      aria-hidden={isClosing || undefined}
       aria-labelledby="celebration-title"
       ref={modalRef}
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+        className={`fixed inset-0 bg-black/60 backdrop-blur-xs ${
+          isClosing
+            ? 'animate-out fade-out duration-150'
+            : 'animate-in fade-in duration-200'
+        }`}
         onClick={onClose}
         aria-hidden="true"
         data-testid="celebration-backdrop"
@@ -139,7 +163,11 @@ export const CelebrationOverlay: React.FC<CelebrationOverlayProps> = ({
 
       {/* Celebration Modal Card */}
       <div
-        className={`relative z-50 w-full max-w-sm sm:max-w-md p-6 sm:p-8 rounded-2xl bg-white dark:bg-slate-900 border-2 border-amber-400/60 dark:border-amber-500/40 shadow-2xl text-center space-y-4 animate-in fade-in zoom-in-95 duration-200 ${className}`}
+        className={`relative z-50 w-full max-w-sm sm:max-w-md p-6 sm:p-8 rounded-2xl bg-white dark:bg-slate-900 border-2 border-amber-400/60 dark:border-amber-500/40 shadow-2xl text-center space-y-4 ${
+          isClosing
+            ? 'animate-out fade-out zoom-out-95 duration-150'
+            : 'animate-in fade-in zoom-in-95 duration-200'
+        } ${className}`}
       >
         {/* Close Button */}
         <button
@@ -213,4 +241,7 @@ export const CelebrationOverlay: React.FC<CelebrationOverlayProps> = ({
       </div>
     </div>
   );
+
+  const portalRoot = typeof document !== 'undefined' ? document.getElementById('root') : null;
+  return portalRoot ? createPortal(modalContent, portalRoot) : modalContent;
 };

@@ -158,12 +158,14 @@ export const OptionSelector: React.FC<OptionSelectorProps> = ({
               aria-checked={isSelected}
               disabled={disabled}
               onClick={() => onSelectOption(option.letter)}
-              className={`w-full text-left p-3.5 sm:p-4 rounded-brand border-2 flex items-start justify-between gap-3.5 transition-all min-h-[52px] group focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${optionStyles}`}
+              className={`w-full text-left p-3.5 sm:p-4 rounded-brand border-2 flex items-start justify-between gap-3.5 transition-all duration-150 active:scale-[0.995] disabled:active:scale-100 min-h-[52px] group focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${optionStyles}`}
             >
               <div className="flex items-start gap-3.5 flex-1 min-w-0">
                 {/* Option Letter Pill */}
                 <span
-                  className={`h-7 w-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 transition-colors ${badgeStyles}`}
+                  className={`h-7 w-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 transition-all duration-150 ${
+                    isSelected ? 'scale-105' : 'group-hover:scale-105'
+                  } ${badgeStyles}`}
                 >
                   {option.letter}
                 </span>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   Bot,
@@ -44,11 +45,29 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
   const [isStatementExpanded, setIsStatementExpanded] = useState<boolean>(false);
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState<boolean>(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState<boolean>(false);
+  const [shouldRender, setShouldRender] = useState<boolean>(isOpen);
+  const [isClosing, setIsClosing] = useState<boolean>(false);
 
   const drawerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+      setIsClosing(false);
+      return;
+    }
+    if (shouldRender) {
+      setIsClosing(true);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+        setIsClosing(false);
+      }, 180);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, shouldRender]);
 
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -170,21 +189,26 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
     });
   };
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
-  return (
+  const drawerContent = (
     <>
       <div
         className="fixed inset-0 z-50 flex justify-end m-0 p-0"
         role="dialog"
         aria-modal="true"
+        aria-hidden={isClosing || undefined}
         aria-label="Tutor IA Socrático"
         aria-labelledby="tutor-drawer-title"
         aria-describedby="tutor-drawer-desc"
       >
         {/* Backdrop */}
         <div
-          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity m-0"
+          className={`fixed inset-0 bg-slate-900/60 backdrop-blur-sm m-0 ${
+            isClosing
+              ? 'animate-out fade-out duration-150'
+              : 'animate-in fade-in duration-200'
+          }`}
           onClick={onClose}
           aria-hidden="true"
           data-testid="socratic-drawer-backdrop"
@@ -194,7 +218,11 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
         <section
           ref={drawerRef}
           data-testid="socratic-tutor-drawer"
-          className={`relative z-10 w-full sm:max-w-md md:max-w-lg lg:max-w-xl bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col focus:outline-hidden m-0 h-full animate-in slide-in-from-right duration-200 ${className}`}
+          className={`relative z-10 w-full sm:max-w-md md:max-w-lg lg:max-w-xl bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col focus:outline-hidden m-0 h-full ${
+            isClosing
+              ? 'animate-out slide-out-to-right duration-150'
+              : 'animate-in slide-in-from-right duration-200'
+          } ${className}`}
         >
         {/* Drawer Header */}
         <header className="p-4 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm flex items-center justify-between gap-3 shrink-0">
@@ -537,4 +565,7 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
     />
   </>
 );
+
+  const portalRoot = typeof document !== 'undefined' ? document.getElementById('root') : null;
+  return portalRoot ? createPortal(drawerContent, portalRoot) : drawerContent;
 };

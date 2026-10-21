@@ -38,6 +38,24 @@ export const AccessibilityToolbar: React.FC = () => {
 
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const [shouldRender, setShouldRender] = React.useState<boolean>(isToolbarOpen);
+  const [isClosing, setIsClosing] = React.useState<boolean>(false);
+
+  useEffect(() => {
+    if (isToolbarOpen) {
+      setShouldRender(true);
+      setIsClosing(false);
+      return;
+    }
+    if (shouldRender) {
+      setIsClosing(true);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+        setIsClosing(false);
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isToolbarOpen, shouldRender]);
 
   // Keyboard shortcut: Alt + A to toggle panel; Escape to close
   useEffect(() => {
@@ -89,15 +107,20 @@ export const AccessibilityToolbar: React.FC = () => {
       </button>
 
       {/* Accessible Floating Modal Panel */}
-      {isToolbarOpen && (
+      {shouldRender && (
         <div
           ref={panelRef}
           id="accessibility-panel"
           tabIndex={-1}
           role="dialog"
           aria-modal="true"
+          aria-hidden={isClosing || undefined}
           aria-labelledby="a11y-panel-title"
-          className="fixed bottom-36 md:bottom-20 right-4 md:right-6 z-50 w-[92vw] max-w-sm bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-2xl shadow-2xl p-5 text-slate-800 dark:text-slate-100 max-h-[82vh] overflow-y-auto animate-in slide-in-from-bottom-5 duration-200 focus:outline-none"
+          className={`fixed bottom-36 md:bottom-20 right-4 md:right-6 z-50 w-[92vw] max-w-sm bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-2xl shadow-2xl p-5 text-slate-800 dark:text-slate-100 max-h-[82vh] overflow-y-auto focus:outline-none ${
+            isClosing
+              ? 'animate-out fade-out slide-out-to-bottom-5 duration-150'
+              : 'animate-in slide-in-from-bottom-5 duration-200'
+          }`}
         >
           {/* Header */}
           <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">

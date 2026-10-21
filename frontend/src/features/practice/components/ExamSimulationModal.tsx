@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   Calendar,
@@ -59,6 +60,24 @@ export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
 
   const modalRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+  const [shouldRender, setShouldRender] = useState<boolean>(isOpen);
+  const [isClosing, setIsClosing] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+      setIsClosing(false);
+      return;
+    }
+    if (shouldRender) {
+      setIsClosing(true);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+        setIsClosing(false);
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, shouldRender]);
 
   // Keep selectedYear synced with available completed editions
   useEffect(() => {
@@ -129,7 +148,7 @@ export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
       : currentEdition.day2QuestionCount;
   }, [currentEdition, selectedDay, isMixed]);
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
   const handleConfirm = () => {
     if (completedEditions.length === 0) return;
@@ -141,23 +160,32 @@ export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
     onClose();
   };
 
-  return (
+  const modalContent = (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 m-0"
       role="dialog"
       aria-modal="true"
+      aria-hidden={isClosing || undefined}
       aria-labelledby="simulation-modal-title"
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+        className={`fixed inset-0 bg-slate-900/60 backdrop-blur-sm ${
+          isClosing
+            ? 'animate-out fade-out duration-150'
+            : 'animate-in fade-in duration-200'
+        }`}
         onClick={onClose}
         aria-hidden="true"
       />
 
       <div
         ref={modalRef}
-        className="relative z-10 w-full max-w-xl bg-white dark:bg-slate-900 rounded-brand shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200"
+        className={`relative z-10 w-full max-w-xl bg-white dark:bg-slate-900 rounded-brand shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh] ${
+          isClosing
+            ? 'animate-out fade-out zoom-out-95 duration-150'
+            : 'animate-in fade-in zoom-in-95 duration-200'
+        }`}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800">
@@ -429,4 +457,7 @@ export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
       </div>
     </div>
   );
+
+  const portalRoot = typeof document !== 'undefined' ? document.getElementById('root') : null;
+  return portalRoot ? createPortal(modalContent, portalRoot) : modalContent;
 };

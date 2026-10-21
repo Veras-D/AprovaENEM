@@ -50,6 +50,24 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
     useTenantStore();
   const { user, isAuthenticated, clearAuth } = useAuthStore();
   const clearSession = useSessionStore((s) => s.clearSession);
+  const [shouldRender, setShouldRender] = React.useState<boolean>(isOpen);
+  const [isClosing, setIsClosing] = React.useState<boolean>(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+      setIsClosing(false);
+      return;
+    }
+    if (shouldRender) {
+      setIsClosing(true);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+        setIsClosing(false);
+      }, 180);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, shouldRender]);
 
   const handleLogout = () => {
     clearAuth();
@@ -80,7 +98,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) {
+  if (!shouldRender) {
     return null;
   }
 
@@ -150,17 +168,28 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
       className="fixed inset-0 z-50 md:hidden flex"
       role="dialog"
       aria-modal="true"
+      aria-hidden={isClosing || undefined}
       aria-labelledby="mobile-drawer-title"
     >
       {/* Dimmed Overlay Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+        className={`fixed inset-0 bg-slate-900/60 backdrop-blur-sm ${
+          isClosing
+            ? 'animate-out fade-out duration-150'
+            : 'animate-in fade-in duration-200'
+        }`}
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Slide-in Drawer Container */}
-      <div className="relative ml-auto w-full max-w-xs bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col z-10 border-l border-slate-200 dark:border-slate-800 animate-in slide-in-from-right duration-200">
+      <div
+        className={`relative ml-auto w-full max-w-xs bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col z-10 border-l border-slate-200 dark:border-slate-800 ${
+          isClosing
+            ? 'animate-out slide-out-to-right duration-150'
+            : 'animate-in slide-in-from-right duration-200'
+        }`}
+      >
         {/* Drawer Header */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2.5">

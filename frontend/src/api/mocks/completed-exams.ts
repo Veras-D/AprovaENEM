@@ -13,17 +13,50 @@ export interface OfficialExamEdition {
   readonly statusLabel: string;
 }
 
+interface RawResolutionRecord {
+  readonly questionId: string;
+  readonly correctOption?: string;
+  readonly correctOptionLetter?: string;
+  readonly baseExplanation?: string;
+  readonly explanation?: string;
+  readonly distractorAnalysis?: Readonly<Record<string, string>>;
+  readonly attribution?: string;
+}
+
+function normalizeResolutions(
+  rawMap: Readonly<Record<string, RawResolutionRecord>>,
+  year: number
+): Readonly<Record<string, QuestionResolutionDto>> {
+  const normalized: Record<string, QuestionResolutionDto> = {};
+  for (const [key, val] of Object.entries(rawMap)) {
+    normalized[key] = {
+      questionId: val.questionId || key,
+      correctOption: (val.correctOption || val.correctOptionLetter || 'A') as QuestionResolutionDto['correctOption'],
+      baseExplanation: val.baseExplanation || val.explanation || '',
+      distractorAnalysis: val.distractorAnalysis as QuestionResolutionDto['distractorAnalysis'],
+      attribution: val.attribution || `Gabarito Oficial INEP / ENEM ${year}`,
+    };
+  }
+  return normalized;
+}
+
 export const ENEM_2023_OFFICIAL_QUESTIONS: readonly QuestionItemDto[] =
   enem2023Data.questions as unknown as QuestionItemDto[];
 
 export const ENEM_2023_OFFICIAL_RESOLUTIONS: Readonly<Record<string, QuestionResolutionDto>> =
-  enem2023Data.resolutions as unknown as Record<string, QuestionResolutionDto>;
+  normalizeResolutions(
+    enem2023Data.resolutions as unknown as Record<string, RawResolutionRecord>,
+    2023
+  );
 
 export const ENEM_2022_OFFICIAL_QUESTIONS: readonly QuestionItemDto[] =
   enem2022Data.questions as unknown as QuestionItemDto[];
 
 export const ENEM_2022_OFFICIAL_RESOLUTIONS: Readonly<Record<string, QuestionResolutionDto>> =
-  enem2022Data.resolutions as unknown as Record<string, QuestionResolutionDto>;
+  normalizeResolutions(
+    enem2022Data.resolutions as unknown as Record<string, RawResolutionRecord>,
+    2022
+  );
 
 export const ALL_OFFICIAL_RESOLUTIONS: Readonly<Record<string, QuestionResolutionDto>> = {
   ...ENEM_2022_OFFICIAL_RESOLUTIONS,
