@@ -147,7 +147,7 @@ export const AccessibilityToolbar: React.FC = () => {
             role="dialog"
             aria-modal="true"
             aria-labelledby="a11y-panel-title"
-            className="relative z-10 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl p-5 text-slate-800 dark:text-slate-100 max-h-[82vh] overflow-y-auto overflow-x-hidden focus:outline-none"
+            className="relative z-10 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl p-5 text-slate-800 dark:text-slate-100 max-h-[82vh] overflow-y-auto overflow-x-hidden scrollbar-none focus:outline-none"
           >
             {/* Header */}
           <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">

@@ -36,16 +36,54 @@ export const TermsAndPrivacyModal: React.FC<TermsAndPrivacyModalProps> = ({
   const [exportErrorMessage, setExportErrorMessage] = useState<string | null>(null);
 
   const modalRef = useRef<HTMLDivElement>(null);
+  const contentInnerRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
 
   // Sync initial tab and reset state when opening
   const [shouldRender, setShouldRender] = useState<boolean>(isOpen);
   const [isClosing, setIsClosing] = useState<boolean>(false);
+  const [bodyHeight, setBodyHeight] = useState<number | undefined>(undefined);
+  const [hasSwitchedTab, setHasSwitchedTab] = useState<boolean>(false);
+
+  const handleSwitchTab = (nextTab: 'terms' | 'privacy') => {
+    if (nextTab === activeTab) return;
+    if (contentInnerRef.current && contentInnerRef.current.offsetHeight > 0) {
+      setBodyHeight(contentInnerRef.current.offsetHeight);
+    }
+    setHasSwitchedTab(true);
+    setActiveTab(nextTab);
+  };
+
+  useEffect(() => {
+    if (!shouldRender || !hasSwitchedTab || !contentInnerRef.current) return undefined;
+    const el = contentInnerRef.current;
+
+    let raf2 = 0;
+    const raf1 = window.requestAnimationFrame(() => {
+      raf2 = window.requestAnimationFrame(() => {
+        if (el.offsetHeight > 0) {
+          setBodyHeight(el.offsetHeight);
+        }
+      });
+    });
+
+    const settleTimer = window.setTimeout(() => {
+      setBodyHeight(undefined);
+    }, 520);
+
+    return () => {
+      window.cancelAnimationFrame(raf1);
+      window.cancelAnimationFrame(raf2);
+      window.clearTimeout(settleTimer);
+    };
+  }, [shouldRender, hasSwitchedTab, activeTab, exportErrorMessage]);
 
   useEffect(() => {
     if (isOpen) {
       setShouldRender(true);
       setIsClosing(false);
+      setHasSwitchedTab(false);
+      setBodyHeight(undefined);
       setActiveTab(initialTab);
       setExportStatus('idle');
       setExportErrorMessage(null);
@@ -182,7 +220,7 @@ export const TermsAndPrivacyModal: React.FC<TermsAndPrivacyModalProps> = ({
       {/* Modal Dialog Card */}
       <div
         ref={modalRef}
-        className={`relative w-full max-w-2xl max-h-[90vh] bg-white dark:bg-slate-900 rounded-brand shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col z-10 ${
+        className={`relative w-full max-w-2xl max-h-[90vh] bg-white dark:bg-slate-900 rounded-brand shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col z-10 overflow-hidden ${
           isClosing
             ? 'animate-out fade-out zoom-out-95 duration-150'
             : 'animate-in fade-in zoom-in-95 duration-200'
@@ -217,27 +255,33 @@ export const TermsAndPrivacyModal: React.FC<TermsAndPrivacyModalProps> = ({
           </button>
         </div>
 
-        {/* Tab Navigation */}
+        {/* Tab Navigation with Sliding Active Pill */}
         <div
           role="tablist"
           aria-label="Documentos legais"
-          className="flex border-b border-slate-200 dark:border-slate-800 px-4 sm:px-5 shrink-0 bg-slate-50/50 dark:bg-slate-900/50"
+          className="relative grid grid-cols-2 border-b border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950/60 p-1.5 shrink-0"
         >
+          <div
+            aria-hidden="true"
+            className={`pointer-events-none absolute top-1.5 bottom-1.5 left-1.5 w-[calc(50%-0.375rem)] rounded-brand bg-white dark:bg-slate-800 shadow-sm border border-brand-primary/30 dark:border-brand-primary/40 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              activeTab === 'privacy' ? 'translate-x-full' : 'translate-x-0'
+            }`}
+          />
           <button
             id="tab-terms"
             type="button"
             role="tab"
             aria-selected={activeTab === 'terms'}
             aria-controls="panel-terms"
-            onClick={() => setActiveTab('terms')}
-            className={`flex items-center gap-2 py-3 px-3 text-xs sm:text-sm font-semibold border-b-2 transition-all ${
+            onClick={() => handleSwitchTab('terms')}
+            className={`relative z-10 flex items-center justify-center gap-2 py-2.5 px-3 text-xs sm:text-sm font-bold rounded-brand transition-colors duration-300 cursor-pointer ${
               activeTab === 'terms'
-                ? 'border-brand-primary text-brand-primary'
-                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
+                ? 'text-brand-primary'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <FileText className="h-4 w-4" aria-hidden="true" />
-            Termos de Uso
+            <FileText className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>Termos de Uso</span>
           </button>
 
           <button
@@ -246,27 +290,32 @@ export const TermsAndPrivacyModal: React.FC<TermsAndPrivacyModalProps> = ({
             role="tab"
             aria-selected={activeTab === 'privacy'}
             aria-controls="panel-privacy"
-            onClick={() => setActiveTab('privacy')}
-            className={`flex items-center gap-2 py-3 px-3 text-xs sm:text-sm font-semibold border-b-2 transition-all ${
+            onClick={() => handleSwitchTab('privacy')}
+            className={`relative z-10 flex items-center justify-center gap-2 py-2.5 px-3 text-xs sm:text-sm font-bold rounded-brand transition-colors duration-300 cursor-pointer ${
               activeTab === 'privacy'
-                ? 'border-brand-primary text-brand-primary'
-                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
+                ? 'text-brand-primary'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <Lock className="h-4 w-4" aria-hidden="true" />
-            Política de Privacidade & LGPD
+            <Lock className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>Política de Privacidade & LGPD</span>
           </button>
         </div>
 
-        {/* Scrollable Content Container */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+        {/* Scrollable Content Container (scrollbar hidden + smooth FLIP height transition) */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-none min-h-0">
+          <div
+            style={bodyHeight !== undefined ? { height: `${bodyHeight}px` } : undefined}
+            className="transition-[height] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] overflow-hidden"
+          >
+            <div ref={contentInnerRef} className="p-4 sm:p-6 space-y-6 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
           {/* TAB 1: TERMOS DE USO */}
           {activeTab === 'terms' && (
             <div
               id="panel-terms"
               role="tabpanel"
               aria-labelledby="tab-terms"
-              className="space-y-5 animate-tab-from-left"
+              className={`space-y-5 ${hasSwitchedTab ? 'animate-tab-from-left' : ''}`}
             >
               <section className="space-y-2">
                 <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -318,7 +367,7 @@ export const TermsAndPrivacyModal: React.FC<TermsAndPrivacyModalProps> = ({
               id="panel-privacy"
               role="tabpanel"
               aria-labelledby="tab-privacy"
-              className="space-y-5 animate-tab-from-right"
+              className={`space-y-5 ${hasSwitchedTab ? 'animate-tab-from-right' : ''}`}
             >
               {/* Highlight Banner: Data Minimization */}
               <div className="p-3.5 sm:p-4 rounded-brand bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30 text-emerald-900 dark:text-emerald-100 flex items-start gap-3">
@@ -461,6 +510,8 @@ export const TermsAndPrivacyModal: React.FC<TermsAndPrivacyModalProps> = ({
               </section>
             </div>
           )}
+            </div>
+          </div>
         </div>
 
         {/* Footer */}

@@ -358,7 +358,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
           </div>
 
           {/* Body Content with smooth non-flex height transition */}
-          <div className="overflow-y-auto overflow-x-hidden min-h-0">
+          <div className="overflow-y-auto overflow-x-hidden scrollbar-none min-h-0">
             <div
               style={bodyHeight !== undefined ? { height: `${bodyHeight}px` } : undefined}
               className="transition-[height] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] overflow-hidden"

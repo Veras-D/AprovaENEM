@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - docs(readme): Added dedicated "External Datasets, Open-Source Projects & Third-Party Services" reference table in [`README.md`](README.md) attributing [`enem.dev`](https://enem.dev/) (`yunger7/enem-api`), INEP Microdados, VLibras (`spbgovbr-vlibras`), OpenDyslexic, Atkinson Hyperlegible, Google Gemini API, IBM Docling (`DS4SD/docling`), Resend/AWS SES/Firebase FCM, and `willfarrell/docker-autoheal`.
 
+### Fixed
+- fix(ui): Hidden the visible native scrollbar track across modal dialog bodies using `.scrollbar-none` and added a `500ms` sliding segmented tab pill and FLIP height transition between "Termos de Uso" and "Política de Privacidade & LGPD" in [`TermsAndPrivacyModal.tsx`](frontend/src/components/legal/TermsAndPrivacyModal.tsx), as well as `.scrollbar-none` in [`RegisterModal.tsx`](frontend/src/components/auth/RegisterModal.tsx), [`AccessibilityToolbar.tsx`](frontend/src/components/accessibility/AccessibilityToolbar.tsx), [`ExamSimulationModal.tsx`](frontend/src/features/practice/components/ExamSimulationModal.tsx), and [`TimeAccommodationModal.tsx`](frontend/src/features/practice/components/TimeAccommodationModal.tsx) ([`TASK-S6-33`](docs/BACKLOG.md#task-s6-33)).
+
 ## [0.6.7] - 2026-10-21
 
 ### Added

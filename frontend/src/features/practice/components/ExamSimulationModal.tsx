@@ -217,7 +217,7 @@ export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
         </div>
 
         {/* Modal Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto space-y-5 text-sm">
+        <div className="p-4 sm:p-6 overflow-y-auto scrollbar-none space-y-5 text-sm">
           {/* Section 1: Year Selection */}
           <div className="space-y-2.5">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">

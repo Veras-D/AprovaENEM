@@ -146,7 +146,7 @@ export const TimeAccommodationModal: React.FC<TimeAccommodationModalProps> = ({
         </div>
 
         {/* Modal Body: Mode List */}
-        <div className="p-4 sm:p-6 overflow-y-auto space-y-3.5">
+        <div className="p-4 sm:p-6 overflow-y-auto scrollbar-none space-y-3.5">
           {TIME_ACCOMMODATION_OPTIONS.map((option) => {
             const isSelected = currentMode === option.mode;
 
