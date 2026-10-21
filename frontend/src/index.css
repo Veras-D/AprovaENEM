@@ -338,3 +338,38 @@ body {
 .animate-card-enter {
   animation: card-swap-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* ============================================================================
+   Accessibility Floating Panel Origin Scale Animation (From/To Trigger Icon)
+   ============================================================================ */
+@keyframes a11y-popover-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.15);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes a11y-popover-exit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.15);
+  }
+}
+
+.animate-a11y-open {
+  transform-origin: calc(100% - 28px) calc(100% + 28px);
+  animation: a11y-popover-enter 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-a11y-close {
+  transform-origin: calc(100% - 28px) calc(100% + 28px);
+  animation: a11y-popover-exit 180ms cubic-bezier(0.32, 0, 0.67, 0) forwards;
+}

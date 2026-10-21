@@ -52,7 +52,7 @@ export const AccessibilityToolbar: React.FC = () => {
       const timer = setTimeout(() => {
         setShouldRender(false);
         setIsClosing(false);
-      }, 150);
+      }, 180);
       return () => clearTimeout(timer);
     }
   }, [isToolbarOpen, shouldRender]);
@@ -98,12 +98,19 @@ export const AccessibilityToolbar: React.FC = () => {
         ref={triggerRef}
         type="button"
         onClick={() => setToolbarOpen(!isToolbarOpen)}
-        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40 p-3.5 bg-brand-primary text-brand-primary-foreground rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all focus:outline-none focus:ring-4 focus:ring-brand-accent flex items-center justify-center border-2 border-white/20"
+        className={`fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40 p-3.5 bg-brand-primary text-brand-primary-foreground rounded-full shadow-2xl hover:scale-105 active:scale-90 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-brand-accent flex items-center justify-center border-2 border-white/20 ${
+          isToolbarOpen && !isClosing ? 'scale-95 ring-4 ring-brand-primary/30' : ''
+        }`}
         aria-label="Menu de ferramentas de acessibilidade (Alt + A)"
         aria-expanded={isToolbarOpen}
         aria-controls="accessibility-panel"
       >
-        <Accessibility className="h-6 w-6 stroke-[2.2]" aria-hidden="true" />
+        <Accessibility
+          className={`h-6 w-6 stroke-[2.2] transition-transform duration-300 ${
+            isToolbarOpen && !isClosing ? 'rotate-12 scale-110' : 'rotate-0 scale-100'
+          }`}
+          aria-hidden="true"
+        />
       </button>
 
       {/* Accessible Floating Modal Panel */}
@@ -117,9 +124,7 @@ export const AccessibilityToolbar: React.FC = () => {
           aria-hidden={isClosing || undefined}
           aria-labelledby="a11y-panel-title"
           className={`fixed bottom-36 md:bottom-20 right-4 md:right-6 z-50 w-[92vw] max-w-sm bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-2xl shadow-2xl p-5 text-slate-800 dark:text-slate-100 max-h-[82vh] overflow-y-auto focus:outline-none ${
-            isClosing
-              ? 'animate-out fade-out slide-out-to-bottom-5 duration-150'
-              : 'animate-in slide-in-from-bottom-5 duration-200'
+            isClosing ? 'animate-a11y-close pointer-events-none' : 'animate-a11y-open'
           }`}
         >
           {/* Header */}
