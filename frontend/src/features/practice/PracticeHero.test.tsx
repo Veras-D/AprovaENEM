@@ -40,7 +40,7 @@ describe('PracticeHero Component', () => {
     expect(qs).toHaveLength(5);
     const q0 = qs[0]!;
     expect(screen.getByText(new RegExp(`^Questão #${q0.externalId}$`))).toBeInTheDocument();
-    expect(screen.getByText(new RegExp(q0.knowledgeArea, 'i'))).toBeInTheDocument();
+    expect(screen.getAllByText(new RegExp(q0.knowledgeArea, 'i')).length).toBeGreaterThan(0);
 
     // 5 questions in carousel
     expect(screen.getByRole('button', { name: /Ir para a questão 1/i })).toBeInTheDocument();

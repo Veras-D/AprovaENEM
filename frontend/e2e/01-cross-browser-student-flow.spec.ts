@@ -25,8 +25,8 @@ test.describe('Student Practice Quiz Journey & KaTeX Math Rendering', () => {
     // Verify ENEM metadata header
     await expect(page.getByText(/ENEM/i).first()).toBeVisible();
 
-    // Verify KaTeX math formula rendering exists and has non-zero geometry
-    const mathElement = page.locator('.katex, .math-block, [aria-label*="fórmula"], [aria-label*="expressão"]').first();
+    // Verify question statement / KaTeX math formula rendering exists and has non-zero geometry
+    const mathElement = page.locator('.katex, .math-block, .math-renderer, [aria-label*="fórmula"], [aria-label*="expressão"]').first();
     await expect(mathElement).toBeVisible();
     const box = await mathElement.boundingBox();
     expect(box).not.toBeNull();

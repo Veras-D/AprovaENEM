@@ -16,8 +16,8 @@ describe('Student Practice Quiz Journey E2E', () => {
     cy.get('[data-testid="question-card"]').should('be.visible');
     cy.contains('ENEM').should('be.visible');
 
-    // Verify KaTeX math formula rendering exists
-    cy.get('.katex, .math-block, [aria-label*="fórmula"], [aria-label*="expressão"]').should('exist');
+    // Verify question statement & math/markdown renderer exists
+    cy.get('.katex, .math-block, .math-renderer, [aria-label*="fórmula"], [aria-label*="expressão"]').should('exist');
 
     // Verify Quiz timer is present
     cy.contains(/(\d{2}:\d{2}|Sem Limite)/).should('be.visible');

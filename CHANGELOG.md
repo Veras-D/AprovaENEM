@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(practice): Resolved raw Markdown syntax leakage (`![](url)` raw image tags and `**bold**` asterisks) in question statements.
 - fix(practice): Added `shouldRenderHeaderFigure` guard in [`QuestionCard.tsx`](frontend/src/features/practice/components/QuestionCard.tsx) preventing duplicate figures when a question statement embeds images directly at author-intended paragraph positions.
 - fix(practice): Replaced raw Unicode symbol `π` with LaTeX math delimiter `$\pi$` in ENEM 2023 item 136 statement to ensure consistent math typesetting and unblock Playwright cross-browser test matrix.
+- fix(ci): Resolved Vitest, Cypress E2E, and Playwright cross-browser test regressions following dynamic starter diagnostic blueprint activation ([`PracticeHero.test.tsx`](frontend/src/features/practice/PracticeHero.test.tsx), [`01-student-quiz-journey.cy.ts`](frontend/cypress/e2e/01-student-quiz-journey.cy.ts), [`01-cross-browser-student-flow.spec.ts`](frontend/e2e/01-cross-browser-student-flow.spec.ts)) ([`TASK-S6-33`](docs/BACKLOG.md#task-s6-33)).
 
 ### Security
 - sec(practice): Enforced strict URL protocol sanitization (`isSafeUrl`) allowing only `https://`, `http://`, `/`, `./`, and `data:image/` while neutralizing `javascript:` XSS vectors in Markdown links and images.
