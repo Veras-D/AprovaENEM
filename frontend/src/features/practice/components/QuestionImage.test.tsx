@@ -54,4 +54,43 @@ describe('QuestionImage Component', () => {
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
+
+  it('should close lightbox modal when clicking outside of the image (backdrop click)', () => {
+    render(<QuestionImage src={sampleSrc} alt="Diagrama de circuitos" />);
+
+    const img = screen.getByRole('img');
+    fireEvent.load(img);
+
+    // Click to open zoom modal
+    fireEvent.click(img);
+
+    const dialog = screen.getByRole('dialog', { name: /Visualização ampliada/i });
+    expect(dialog).toBeInTheDocument();
+
+    // Click outside the image on the backdrop overlay
+    fireEvent.click(dialog);
+
+    // Modal should be closed
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('should NOT close lightbox modal when clicking directly on the zoomed image', () => {
+    render(<QuestionImage src={sampleSrc} alt="Diagrama de circuitos" />);
+
+    const img = screen.getByRole('img');
+    fireEvent.load(img);
+
+    // Click to open zoom modal
+    fireEvent.click(img);
+
+    const dialog = screen.getByRole('dialog', { name: /Visualização ampliada/i });
+    expect(dialog).toBeInTheDocument();
+
+    // Get the zoomed image inside the dialog and click it
+    const zoomedImg = screen.getAllByRole('img', { name: 'Diagrama de circuitos' })[1]!;
+    fireEvent.click(zoomedImg);
+
+    // Modal should remain open
+    expect(screen.getByRole('dialog', { name: /Visualização ampliada/i })).toBeInTheDocument();
+  });
 });

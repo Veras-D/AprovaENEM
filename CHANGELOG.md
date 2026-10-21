@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - docs(privacy): Purged all absolute machine paths and `file:///` URLs across documentation, changelogs, and configuration files, replacing them with repository-relative paths to prevent environment and username leakage.
 
 ### Fixed
+- fix(ui): Added backdrop click-to-dismiss behavior in [`ZoomableImage.tsx`](frontend/src/components/ui/ZoomableImage.tsx), closing the enlarged image lightbox modal whenever clicking outside the image container.
 - fix(a11y): Sanitized Markdown images, links, formatting, and raw URLs in Web Speech API audio reader ([`tts-utils.ts`](frontend/src/features/practice/tts-utils.ts)), preventing "Ouvir questão" from reading raw image URLs, Markdown syntax, or UUID filenames out loud.
 - fix(ui): Removed private coordinator access link ('Acesso da Coordenação') from the public student LGPD privacy footer in [`RootLayout.tsx`](frontend/src/layouts/RootLayout.tsx), restricting coordination portal access exclusively to authenticated coordinators via role-guarded header and drawer navigation.
 - fix(practice): Resolved raw Markdown syntax leakage (`![](url)` raw image tags and `**bold**` asterisks) in question statements.

@@ -22,6 +22,13 @@ export const ZoomableImage: React.FC<ZoomableImageProps> = ({
   const [hasError, setHasError] = useState<boolean>(false);
   const [isZoomed, setIsZoomed] = useState<boolean>(false);
   const zoomModalRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (contentRef.current && !contentRef.current.contains(e.target as Node)) {
+      setIsZoomed(false);
+    }
+  };
 
   useEffect(() => {
     if (!isZoomed) return;
@@ -113,12 +120,17 @@ export const ZoomableImage: React.FC<ZoomableImageProps> = ({
       {isZoomed && (
         <div
           ref={zoomModalRef}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200"
+          data-testid="zoom-modal-backdrop"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200 cursor-zoom-out"
           role="dialog"
           aria-modal="true"
           aria-label={`Visualização ampliada: ${alt}`}
+          onClick={handleBackdropClick}
         >
-          <div className="relative max-w-5xl max-h-[90vh] flex flex-col items-center">
+          <div
+            ref={contentRef}
+            className="relative max-w-5xl max-h-[90vh] flex flex-col items-center cursor-default"
+          >
             {/* Close button */}
             <button
               type="button"
