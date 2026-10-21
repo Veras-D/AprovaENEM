@@ -29,7 +29,7 @@ export const TimeAccommodationModal: React.FC<TimeAccommodationModalProps> = ({
     if (isOpen) {
       setShouldRender(true);
       setIsClosing(false);
-      return;
+      return undefined;
     }
     if (shouldRender) {
       setIsClosing(true);
@@ -39,6 +39,7 @@ export const TimeAccommodationModal: React.FC<TimeAccommodationModalProps> = ({
       }, 150);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isOpen, shouldRender]);
 
   // Keyboard accessibility: Escape to dismiss and Focus Trap

@@ -45,7 +45,7 @@ export const AccessibilityToolbar: React.FC = () => {
     if (isToolbarOpen) {
       setShouldRender(true);
       setIsClosing(false);
-      return;
+      return undefined;
     }
     if (shouldRender) {
       setIsClosing(true);
@@ -55,6 +55,7 @@ export const AccessibilityToolbar: React.FC = () => {
       }, 180);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isToolbarOpen, shouldRender]);
 
   // Keyboard shortcut: Alt + A to toggle panel; Escape to close

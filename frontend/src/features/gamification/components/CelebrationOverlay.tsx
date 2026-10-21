@@ -58,7 +58,7 @@ export const CelebrationOverlay: React.FC<CelebrationOverlayProps> = ({
     if (isOpen) {
       setShouldRender(true);
       setIsClosing(false);
-      return;
+      return undefined;
     }
     if (shouldRender) {
       setIsClosing(true);
@@ -68,6 +68,7 @@ export const CelebrationOverlay: React.FC<CelebrationOverlayProps> = ({
       }, 150);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isOpen, shouldRender]);
 
   // Check prefers-reduced-motion

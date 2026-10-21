@@ -48,7 +48,7 @@ export const AccountErasureModal: React.FC<AccountErasureModalProps> = ({
       setConfirmationInput('');
       setErrorMessage(null);
       setIsSuccess(false);
-      return;
+      return undefined;
     }
     if (shouldRender) {
       setIsClosing(true);
@@ -58,6 +58,7 @@ export const AccountErasureModal: React.FC<AccountErasureModalProps> = ({
       }, 150);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isOpen, shouldRender]);
 
   // Focus trap and Escape key listener

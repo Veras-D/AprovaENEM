@@ -57,7 +57,7 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
     if (isOpen) {
       setShouldRender(true);
       setIsClosing(false);
-      return;
+      return undefined;
     }
     if (shouldRender) {
       setIsClosing(true);
@@ -67,6 +67,7 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
       }, 180);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isOpen, shouldRender]);
 
   const user = useAuthStore((s) => s.user);

@@ -35,7 +35,7 @@ export const TimeUpModal: React.FC<TimeUpModalProps> = ({
     if (isOpen) {
       setShouldRender(true);
       setIsClosing(false);
-      return;
+      return undefined;
     }
     if (shouldRender) {
       setIsClosing(true);
@@ -45,6 +45,7 @@ export const TimeUpModal: React.FC<TimeUpModalProps> = ({
       }, 150);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isOpen, shouldRender]);
 
   const handleDismiss = useCallback(() => {

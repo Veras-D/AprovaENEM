@@ -72,7 +72,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       setMode(initialMode);
       setFormError(null);
       setIsSuccess(false);
-      return;
+      return undefined;
     }
     if (shouldRender) {
       setIsClosing(true);
@@ -82,6 +82,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       }, 150);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isOpen, initialMode, shouldRender]);
 
   // Focus trap & Escape listener

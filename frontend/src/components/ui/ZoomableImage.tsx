@@ -31,7 +31,7 @@ export const ZoomableImage: React.FC<ZoomableImageProps> = ({
     if (isZoomed) {
       setShouldRenderModal(true);
       setIsClosingModal(false);
-      return;
+      return undefined;
     }
     if (shouldRenderModal) {
       setIsClosingModal(true);
@@ -41,6 +41,7 @@ export const ZoomableImage: React.FC<ZoomableImageProps> = ({
       }, 150);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isZoomed, shouldRenderModal]);
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {

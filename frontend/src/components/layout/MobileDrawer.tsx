@@ -57,7 +57,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
     if (isOpen) {
       setShouldRender(true);
       setIsClosing(false);
-      return;
+      return undefined;
     }
     if (shouldRender) {
       setIsClosing(true);
@@ -67,6 +67,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
       }, 180);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isOpen, shouldRender]);
 
   const handleLogout = () => {

@@ -67,7 +67,7 @@ export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
     if (isOpen) {
       setShouldRender(true);
       setIsClosing(false);
-      return;
+      return undefined;
     }
     if (shouldRender) {
       setIsClosing(true);
@@ -77,6 +77,7 @@ export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
       }, 150);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isOpen, shouldRender]);
 
   // Keep selectedYear synced with available completed editions

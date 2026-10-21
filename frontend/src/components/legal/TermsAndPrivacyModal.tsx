@@ -49,7 +49,7 @@ export const TermsAndPrivacyModal: React.FC<TermsAndPrivacyModalProps> = ({
       setActiveTab(initialTab);
       setExportStatus('idle');
       setExportErrorMessage(null);
-      return;
+      return undefined;
     }
     if (shouldRender) {
       setIsClosing(true);
@@ -59,6 +59,7 @@ export const TermsAndPrivacyModal: React.FC<TermsAndPrivacyModalProps> = ({
       }, 150);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isOpen, initialTab, shouldRender]);
 
   // Accessibility: Focus trap & Escape key listener
