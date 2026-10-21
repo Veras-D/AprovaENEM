@@ -65,7 +65,7 @@ const BLOCK_IMAGE_REGEX = /^\s*!\[(.*?)\]\((https?:\/\/[^\s)]+|\/[^\s)]+|data:im
  */
 export function unescapeMarkdown(text: string): string {
   if (!text) return '';
-  return text.replace(/\\([!\"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~])/g, '$1');
+  return text.replace(/\\([!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~])/g, '$1');
 }
 
 /**
