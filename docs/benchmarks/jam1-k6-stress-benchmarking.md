@@ -166,7 +166,7 @@ Simulates concurrent student activity: starting practice sessions, submitting an
 ## 5. Execution Guide & Reproducibility
 
 ### 5.1 Running with the Execution Shell Script
-The stress testing suite can be run directly against any environment using [`run-k6-stress.sh`](file:///home/verivi/Veras/Projects/ReconectaRecode/tests/stress/run-k6-stress.sh):
+The stress testing suite can be run directly against any environment using [`run-k6-stress.sh`](tests/stress/run-k6-stress.sh):
 
 ```bash
 # Run all 3 scenarios sequentially
@@ -179,7 +179,7 @@ CI_FAST=true ./tests/stress/run-k6-stress.sh leaderboard
 ```
 
 ### 5.2 Running with Docker Compose Services
-Alternatively, execute using the containerized k6 stack in [`docker-compose.k6.yml`](file:///home/verivi/Veras/Projects/ReconectaRecode/tests/stress/docker-compose.k6.yml):
+Alternatively, execute using the containerized k6 stack in [`docker-compose.k6.yml`](tests/stress/docker-compose.k6.yml):
 
 ```bash
 docker compose -f tests/stress/docker-compose.k6.yml run --rm k6-catalog

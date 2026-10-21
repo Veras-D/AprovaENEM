@@ -53,7 +53,7 @@ When executed directly via `mvn com.github.spotbugs:spotbugs-maven-plugin:4.8.6.
 ## 3. Detailed Investigation of the 6 Workarounds
 
 ### Workaround 1: Checkstyle MethodName Regex Workaround
-* **File:** [`backend/config/checkstyle/checkstyle.xml`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/config/checkstyle/checkstyle.xml#L37-L39)
+* **File:** [`backend/config/checkstyle/checkstyle.xml`](backend/config/checkstyle/checkstyle.xml#L37-L39)
 * **Observed Change:**
   ```xml
   <module name="MethodName">
@@ -78,7 +78,7 @@ When executed directly via `mvn com.github.spotbugs:spotbugs-maven-plugin:4.8.6.
 ---
 
 ### Workaround 2: PMD Cyclomatic & NPath Complexity Threshold Workaround
-* **File:** [`backend/config/pmd/pmd-ruleset.xml`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/config/pmd/pmd-ruleset.xml#L29-L35)
+* **File:** [`backend/config/pmd/pmd-ruleset.xml`](backend/config/pmd/pmd-ruleset.xml#L29-L35)
 * **Observed Change:**
   ```xml
   <rule ref="category/java/design.xml/CyclomaticComplexity">
@@ -100,12 +100,12 @@ When executed directly via `mvn com.github.spotbugs:spotbugs-maven-plugin:4.8.6.
   - **SonarQube & Clean Code Standard:** Standard threshold is **10** for cyclomatic complexity. Methods with CC > 10 should be decomposed.
 * **Empirical Codebase Analysis:**
   When PMD was executed against the codebase with the industry-standard threshold of **10**, **6 methods failed**:
-  1. [`GamificationService.awardXpForActivity`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/src/main/java/com/aprovaenem/auth/application/service/GamificationService.java#L108): **CC = 11** (nested streak, tier, and bonus conditionals).
-  2. [`GamificationService.getWeeklyLeaderboard`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/src/main/java/com/aprovaenem/auth/application/service/GamificationService.java#L192): **CC = 11** (paging, rank extraction, null fallbacks).
-  3. [`PracticeSessionController.startSession`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/in/web/PracticeSessionController.java#L43): **CC = 12** (session header parsing, anonymous token extraction, parameter verification in controller).
-  4. [`QuestionRepositoryAdapter.toDomain`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/out/persistence/adapter/QuestionRepositoryAdapter.java#L88): **CC = 10** (borderline; manual mapping ternary chains).
-  5. [`QuestionRepositoryAdapter.toEntity`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/out/persistence/adapter/QuestionRepositoryAdapter.java#L150): **CC = 14** (extensive ternary null checking and relationship resolution).
-  6. [`RagKnowledgeAdapter.findRelevantChunks`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/out/rag/RagKnowledgeAdapter.java#L22): **CC = 11** (SQL parameter preparation, fallback searches).
+  1. [`GamificationService.awardXpForActivity`](backend/auth-service/src/main/java/com/aprovaenem/auth/application/service/GamificationService.java#L108): **CC = 11** (nested streak, tier, and bonus conditionals).
+  2. [`GamificationService.getWeeklyLeaderboard`](backend/auth-service/src/main/java/com/aprovaenem/auth/application/service/GamificationService.java#L192): **CC = 11** (paging, rank extraction, null fallbacks).
+  3. [`PracticeSessionController.startSession`](backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/in/web/PracticeSessionController.java#L43): **CC = 12** (session header parsing, anonymous token extraction, parameter verification in controller).
+  4. [`QuestionRepositoryAdapter.toDomain`](backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/out/persistence/adapter/QuestionRepositoryAdapter.java#L88): **CC = 10** (borderline; manual mapping ternary chains).
+  5. [`QuestionRepositoryAdapter.toEntity`](backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/out/persistence/adapter/QuestionRepositoryAdapter.java#L150): **CC = 14** (extensive ternary null checking and relationship resolution).
+  6. [`RagKnowledgeAdapter.findRelevantChunks`](backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/out/rag/RagKnowledgeAdapter.java#L22): **CC = 11** (SQL parameter preparation, fallback searches).
 * **Risk Level:** **High** (Complexity creates defect density, impairs testability, and caused the SpotBugs NPE finding at `GamificationService:230`).
 * **Recommendation:**
   1. Lower `methodReportLevel` back to standard **10** and add `NPathComplexity` (threshold 200).
@@ -116,7 +116,7 @@ When executed directly via `mvn com.github.spotbugs:spotbugs-maven-plugin:4.8.6.
 ---
 
 ### Workaround 3: DTO Mapper Architecture Purity & QuestionDtoMapper
-* **File:** [`backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/in/web/QuestionDtoMapper.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/in/web/QuestionDtoMapper.java)
+* **File:** [`backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/in/web/QuestionDtoMapper.java`](backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/in/web/QuestionDtoMapper.java)
 * **Observed State:**
   Created in commit `c329731` as a static utility class with a private constructor in `infrastructure/adapter/in/web/`.
 * **Root Cause:**
@@ -143,7 +143,7 @@ When executed directly via `mvn com.github.spotbugs:spotbugs-maven-plugin:4.8.6.
 ---
 
 ### Workaround 4: POSIX Shell Script JSON Parsing Workaround in `tests/smoke/preflight-smoke.sh`
-* **File:** [`tests/smoke/preflight-smoke.sh`](file:///home/verivi/Veras/Projects/ReconectaRecode/tests/smoke/preflight-smoke.sh#L94-L114)
+* **File:** [`tests/smoke/preflight-smoke.sh`](tests/smoke/preflight-smoke.sh#L94-L114)
 * **Observed Workaround:**
   ```bash
   SESSION_ID=$(echo "${SESSION_RESPONSE}" | (grep -o '"sessionId":"[^"]*"' || true) | head -n 1 | cut -d'"' -f4 || true)
@@ -176,7 +176,7 @@ When executed directly via `mvn com.github.spotbugs:spotbugs-maven-plugin:4.8.6.
 ---
 
 ### Workaround 5: Newman `--delay-request 100` Rate Limiter Workaround
-* **File:** [`.github/workflows/ci.yml`](file:///home/verivi/Veras/Projects/ReconectaRecode/.github/workflows/ci.yml#L155)
+* **File:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml#L155)
 * **Observed Change:**
   ```yaml
   newman run docs/postman/AprovaENEM.postman_collection.json \
@@ -207,7 +207,7 @@ When executed directly via `mvn com.github.spotbugs:spotbugs-maven-plugin:4.8.6.
 ---
 
 ### Workaround 6: Password Pepper Implementation & Backward Compatibility
-* **File:** [`backend/auth-service/src/main/java/com/aprovaenem/auth/infrastructure/adapter/out/security/BCryptPasswordEncoderAdapter.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/src/main/java/com/aprovaenem/auth/infrastructure/adapter/out/security/BCryptPasswordEncoderAdapter.java)
+* **File:** [`backend/auth-service/src/main/java/com/aprovaenem/auth/infrastructure/adapter/out/security/BCryptPasswordEncoderAdapter.java`](backend/auth-service/src/main/java/com/aprovaenem/auth/infrastructure/adapter/out/security/BCryptPasswordEncoderAdapter.java)
 * **Observed Implementation:**
   - Uses `HMAC-SHA256(pepper, rawPassword) -> Base64 -> BCrypt`.
   - Fallback check in `matches(...)` allows existing unpeppered passwords.

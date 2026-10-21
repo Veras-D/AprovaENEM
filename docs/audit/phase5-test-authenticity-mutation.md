@@ -95,7 +95,7 @@ TOTAL                  | 54    | 295     | 855     | 0     | 207     | 86       
 The audit identified two test methods containing **zero assertions and zero Mockito verifications**, representing completely hollow test executions that provide false confidence.
 
 #### Defect Case 1: `TutorChatRepositoryAdapterTest.java`
-* **File:** [`TutorChatRepositoryAdapterTest.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/test/java/com/aprovaenem/exam/infrastructure/adapter/out/persistence/adapter/TutorChatRepositoryAdapterTest.java#L175-L183)
+* **File:** [`TutorChatRepositoryAdapterTest.java`](backend/exam-service/src/test/java/com/aprovaenem/exam/infrastructure/adapter/out/persistence/adapter/TutorChatRepositoryAdapterTest.java#L175-L183)
 * **Lines:** 175–183
 * **Code:**
 ```java
@@ -118,7 +118,7 @@ void shouldHandleNonExistentThreadInReset() {
   ```
 
 #### Defect Case 2: `RabbitMQNotificationPublisherAdapterTest.java`
-* **File:** [`RabbitMQNotificationPublisherAdapterTest.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/src/test/java/com/aprovaenem/auth/infrastructure/adapter/out/messaging/RabbitMQNotificationPublisherAdapterTest.java#L52-L71)
+* **File:** [`RabbitMQNotificationPublisherAdapterTest.java`](backend/auth-service/src/test/java/com/aprovaenem/auth/infrastructure/adapter/out/messaging/RabbitMQNotificationPublisherAdapterTest.java#L52-L71)
 * **Lines:** 52–71
 * **Code:**
 ```java
@@ -181,10 +181,10 @@ These catches exist inside multithreaded test harness helper loops (`CountDownLa
 
 * **Severity:** **HIGH**
 * **Affected Files:**
-  - [`NotificationControllerWebMvcTest.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/notification-service/src/test/java/com/aprovaenem/notification/infrastructure/adapter/in/web/NotificationControllerWebMvcTest.java#L36) (line 36)
-  - [`QuestionCatalogControllerWebMvcTest.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/test/java/com/aprovaenem/exam/infrastructure/adapter/in/web/QuestionCatalogControllerWebMvcTest.java#L42) (line 42)
-  - [`SocraticTutorControllerWebMvcTest.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/test/java/com/aprovaenem/exam/infrastructure/adapter/in/web/SocraticTutorControllerWebMvcTest.java#L46) (line 46)
-  - [`PracticeSessionControllerWebMvcTest.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/test/java/com/aprovaenem/exam/infrastructure/adapter/in/web/PracticeSessionControllerWebMvcTest.java#L41) (line 41)
+  - [`NotificationControllerWebMvcTest.java`](backend/notification-service/src/test/java/com/aprovaenem/notification/infrastructure/adapter/in/web/NotificationControllerWebMvcTest.java#L36) (line 36)
+  - [`QuestionCatalogControllerWebMvcTest.java`](backend/exam-service/src/test/java/com/aprovaenem/exam/infrastructure/adapter/in/web/QuestionCatalogControllerWebMvcTest.java#L42) (line 42)
+  - [`SocraticTutorControllerWebMvcTest.java`](backend/exam-service/src/test/java/com/aprovaenem/exam/infrastructure/adapter/in/web/SocraticTutorControllerWebMvcTest.java#L46) (line 46)
+  - [`PracticeSessionControllerWebMvcTest.java`](backend/exam-service/src/test/java/com/aprovaenem/exam/infrastructure/adapter/in/web/PracticeSessionControllerWebMvcTest.java#L41) (line 41)
 
 #### Anti-Pattern Demonstration:
 ```java
@@ -203,7 +203,7 @@ class QuestionCatalogControllerWebMvcTest { ... }
 
 This directly explains why Phase 4 penetration testing discovered **SEC-P4-03** (`PATCH /api/v1/questions/{id}/status` unauthenticated BOLA): the controller slice test was completely blind to missing security rules because filters were turned off.
 
-In contrast, [`AuthControllerWebMvcTest.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/src/test/java/com/aprovaenem/auth/infrastructure/adapter/in/web/AuthControllerWebMvcTest.java#L46-L48) properly imports `SecurityConfig.class`, `JwtAuthenticationFilter.class`, and tests both authenticated (`@WithMockUser`) and unauthenticated (`@WithAnonymousUser`) scenarios.
+In contrast, [`AuthControllerWebMvcTest.java`](backend/auth-service/src/test/java/com/aprovaenem/auth/infrastructure/adapter/in/web/AuthControllerWebMvcTest.java#L46-L48) properly imports `SecurityConfig.class`, `JwtAuthenticationFilter.class`, and tests both authenticated (`@WithMockUser`) and unauthenticated (`@WithAnonymousUser`) scenarios.
 
 ---
 
@@ -212,7 +212,7 @@ In contrast, [`AuthControllerWebMvcTest.java`](file:///home/verivi/Veras/Project
 In `SocraticTutorServiceTest.java`, over-permissive Mockito matchers allow substantial logic mutations to survive silently.
 
 #### Example 1: RAG Query & Chunk Count Mutation
-* **File:** [`SocraticTutorServiceTest.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/test/java/com/aprovaenem/exam/application/service/SocraticTutorServiceTest.java#L147)
+* **File:** [`SocraticTutorServiceTest.java`](backend/exam-service/src/test/java/com/aprovaenem/exam/application/service/SocraticTutorServiceTest.java#L147)
 * **Production Code:**
   ```java
   List<PedagogicalChunk> ragChunks = ragPort.findRelevantChunks(question.getStatement() + " " + message, 3);
@@ -225,7 +225,7 @@ In `SocraticTutorServiceTest.java`, over-permissive Mockito matchers allow subst
   Because `anyString()` and `anyInt()` are used, if a developer mutates the chunk count from `3` to `0` or `100`, or mutates the query string to omit `question.getStatement()`, the test continues to pass!
 
 #### Example 2: AI Message Model Attribution Loss
-* **File:** [`SocraticTutorService.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/main/java/com/aprovaenem/exam/application/service/SocraticTutorService.java#L134)
+* **File:** [`SocraticTutorService.java`](backend/exam-service/src/main/java/com/aprovaenem/exam/application/service/SocraticTutorService.java#L134)
 * **Production Code:**
   ```java
   TutorChatMessage aiMsg = new TutorChatMessage(
@@ -250,7 +250,7 @@ In `SocraticTutorServiceTest.java`, over-permissive Mockito matchers allow subst
 Tests that merely pass mock data through a 1-line delegating service method without testing any business invariant:
 
 #### Example 1: `QuestionCatalogServiceTest.java`
-* **File:** [`QuestionCatalogServiceTest.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/test/java/com/aprovaenem/exam/application/service/QuestionCatalogServiceTest.java#L40-L64)
+* **File:** [`QuestionCatalogServiceTest.java`](backend/exam-service/src/test/java/com/aprovaenem/exam/application/service/QuestionCatalogServiceTest.java#L40-L64)
 * **Code:**
 ```java
 PagedResult<Question> expectedPage = new PagedResult<>(List.of(q1), 0, 10, 1L, 1);
@@ -267,7 +267,7 @@ verify(questionRepository).findAll(filter);
   `QuestionCatalogService.getQuestions()` is simply `return questionRepository.findAll(filter);`. The test configures `expectedPage` in the mock, calls the method, and asserts that the mock returned what was put into it. It exercises zero business logic.
 
 #### Example 2: `NotificationServiceTest.java`
-* **File:** [`NotificationServiceTest.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/notification-service/src/test/java/com/aprovaenem/notification/application/service/NotificationServiceTest.java#L205-L215)
+* **File:** [`NotificationServiceTest.java`](backend/notification-service/src/test/java/com/aprovaenem/notification/application/service/NotificationServiceTest.java#L205-L215)
 * **Code:**
 ```java
 when(notificationLogRepository.countByUserIdAndStatus(userId, "SENT")).thenReturn(3L);
@@ -284,7 +284,7 @@ verify(notificationLogRepository).countByUserIdAndStatus(userId, "SENT");
 
 ### 4.4 Dead Logic Testing in `GamificationService`
 
-* **File:** [`GamificationService.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/src/main/java/com/aprovaenem/auth/application/service/GamificationService.java#L349-L358)
+* **File:** [`GamificationService.java`](backend/auth-service/src/main/java/com/aprovaenem/auth/application/service/GamificationService.java#L349-L358)
 * **Lines:** 349–358
 * **Code:**
 ```java
@@ -301,7 +301,7 @@ for (int i = 0; i < total; i++) {
 ```
 * **Defect**:
   `promoteCount` and `relegateCount` are computed, logged, but **never used** to promote or relegate users between tiers (`LeagueTier`).
-  In [`GamificationServiceTest.java:349`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/src/test/java/com/aprovaenem/auth/application/service/GamificationServiceTest.java#L349-L372), `shouldPerformWeeklyLeagueReset` only asserts `board.setRankPosition(1)` and `(2)`. Mutating or removing `promoteCount` and `relegateCount` is completely invisible because the production code has dead logic.
+  In [`GamificationServiceTest.java:349`](backend/auth-service/src/test/java/com/aprovaenem/auth/application/service/GamificationServiceTest.java#L349-L372), `shouldPerformWeeklyLeagueReset` only asserts `board.setRankPosition(1)` and `(2)`. Mutating or removing `promoteCount` and `relegateCount` is completely invisible because the production code has dead logic.
 
 ---
 
@@ -411,7 +411,7 @@ TOTAL / AVERAGE              | 50                | 40             | 10          
 
 ### 6.2 Cryptographic & JWT Boundary Testing (`AUD-P5-05`)
 
-Evaluation of [`JwtTokenProviderTest.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/src/test/java/com/aprovaenem/auth/infrastructure/adapter/out/security/JwtTokenProviderTest.java#L56-L63) and [`JwtTokenValidatorTest.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/notification-service/src/test/java/com/aprovaenem/notification/infrastructure/security/JwtTokenValidatorTest.java#L48-L54) revealed critical gaps in cryptographic boundary validation:
+Evaluation of [`JwtTokenProviderTest.java`](backend/auth-service/src/test/java/com/aprovaenem/auth/infrastructure/adapter/out/security/JwtTokenProviderTest.java#L56-L63) and [`JwtTokenValidatorTest.java`](backend/notification-service/src/test/java/com/aprovaenem/notification/infrastructure/security/JwtTokenValidatorTest.java#L48-L54) revealed critical gaps in cryptographic boundary validation:
 
 ```
 +-------------------------------------------------------------+---------------+
@@ -449,7 +449,7 @@ The domain entity tests (`QuestionTest`, `StudentAttemptTest`, `PracticeSessionT
 
 ### 6.4 Pre-Flight Smoke Suite Robustness (`tests/smoke/preflight-smoke.sh`) (`AUD-P5-08`)
 
-Inspection of [`preflight-smoke.sh`](file:///home/verivi/Veras/Projects/ReconectaRecode/tests/smoke/preflight-smoke.sh#L37-L136) identified several architectural testing weaknesses:
+Inspection of [`preflight-smoke.sh`](tests/smoke/preflight-smoke.sh#L37-L136) identified several architectural testing weaknesses:
 
 1. **Absence of Negative Validation**:
    All 7 probes execute exclusively happy paths:
@@ -494,7 +494,7 @@ graph TD
 ### 7.2 Code-Level Remediation Specifications
 
 #### 1. Fix Zero-Assertion Tests in Persistence & Messaging Adapters
-In [`TutorChatRepositoryAdapterTest.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/test/java/com/aprovaenem/exam/infrastructure/adapter/out/persistence/adapter/TutorChatRepositoryAdapterTest.java#L177):
+In [`TutorChatRepositoryAdapterTest.java`](backend/exam-service/src/test/java/com/aprovaenem/exam/infrastructure/adapter/out/persistence/adapter/TutorChatRepositoryAdapterTest.java#L177):
 ```java
 @Test
 @DisplayName("Should handle non-existent thread in resetThread gracefully")
@@ -509,7 +509,7 @@ void shouldHandleNonExistentThreadInReset() {
 }
 ```
 
-In [`RabbitMQNotificationPublisherAdapterTest.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/src/test/java/com/aprovaenem/auth/infrastructure/adapter/out/messaging/RabbitMQNotificationPublisherAdapterTest.java#L54):
+In [`RabbitMQNotificationPublisherAdapterTest.java`](backend/auth-service/src/test/java/com/aprovaenem/auth/infrastructure/adapter/out/messaging/RabbitMQNotificationPublisherAdapterTest.java#L54):
 ```java
 @Test
 @DisplayName("Should catch and handle AmqpException gracefully without rethrowing")
@@ -568,7 +568,7 @@ class QuestionCatalogControllerWebMvcTest {
 ---
 
 #### 3. Kill Surviving Void Call Mutant in `PracticeSessionServiceTest`
-In [`PracticeSessionServiceTest.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/test/java/com/aprovaenem/exam/application/service/PracticeSessionServiceTest.java#L274-L284):
+In [`PracticeSessionServiceTest.java`](backend/exam-service/src/test/java/com/aprovaenem/exam/application/service/PracticeSessionServiceTest.java#L274-L284):
 ```java
 DiagnosticReport report = practiceSessionService.completeSession(sessionId);
 
@@ -584,7 +584,7 @@ verify(diagnosticReportRepository).save(any(DiagnosticReport.class));
 ---
 
 #### 4. Expand JWT Cryptographic Test Matrix
-In [`JwtTokenProviderTest.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/src/test/java/com/aprovaenem/auth/infrastructure/adapter/out/security/JwtTokenProviderTest.java):
+In [`JwtTokenProviderTest.java`](backend/auth-service/src/test/java/com/aprovaenem/auth/infrastructure/adapter/out/security/JwtTokenProviderTest.java):
 ```java
 @Test
 @DisplayName("Should reject expired JWT token")
@@ -616,7 +616,7 @@ void shouldRejectTokenWithWrongSecretKey() {
 ---
 
 #### 5. Replace Over-Permissive Matchers in `SocraticTutorServiceTest`
-In [`SocraticTutorServiceTest.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/test/java/com/aprovaenem/exam/application/service/SocraticTutorServiceTest.java):
+In [`SocraticTutorServiceTest.java`](backend/exam-service/src/test/java/com/aprovaenem/exam/application/service/SocraticTutorServiceTest.java):
 ```java
 // Kill MUT-TUT-05 and MUT-TUT-11:
 when(ragPort.findRelevantChunks(eq(question.getStatement() + " " + "O que significa F=ma?"), eq(3)))

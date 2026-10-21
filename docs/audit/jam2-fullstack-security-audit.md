@@ -278,7 +278,7 @@ gantt
 ### 6.1 Tier P0: Immediate Pre-Cloud Launch Blockers (Production Gate)
 
 #### Hotfix P0-01: Disable Production Sourcemaps (`VULN-JAM2-02`)
-- **Target File:** [`frontend/vite.config.ts:25`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/vite.config.ts#L25)
+- **Target File:** [`frontend/vite.config.ts:25`](frontend/vite.config.ts#L25)
 - **Concrete Code Patch:**
   ```typescript
   build: {
@@ -289,7 +289,7 @@ gantt
   ```
 
 #### Hotfix P0-02: Support Multi-Tenant Subdomains in Gateway CORS (`VULN-JAM2-03`)
-- **Target File:** [`backend/frontend-api/src/main/resources/application.yml:18-23`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/frontend-api/src/main/resources/application.yml#L18-L23)
+- **Target File:** [`backend/frontend-api/src/main/resources/application.yml:18-23`](backend/frontend-api/src/main/resources/application.yml#L18-L23)
 - **Concrete Code Patch:**
   ```yaml
   cors-configurations:
@@ -308,7 +308,7 @@ gantt
   ```
 
 #### Hotfix P0-03: Multi-Stage Socratic AI Guardrails & Output Sanitizer (`VULN-JAM2-01`)
-- **Target File:** [`backend/exam-service/.../GeminiTutorClientAdapter.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/out/ai/GeminiTutorClientAdapter.java)
+- **Target File:** [`backend/exam-service/.../GeminiTutorClientAdapter.java`](backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/out/ai/GeminiTutorClientAdapter.java)
 - **Concrete Code Patch:**
   ```java
   private static final Pattern ANSWER_DISCLOSURE_PATTERN = Pattern.compile(
@@ -335,7 +335,7 @@ gantt
   ```
 
 #### Hotfix P0-04: Add Accessible UI Logout Button (`VULN-JAM2-05`)
-- **Target Files:** [`frontend/src/components/layout/Header.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/Header.tsx#L112-L139), [`MobileDrawer.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/layout/MobileDrawer.tsx#L125-L160)
+- **Target Files:** [`frontend/src/components/layout/Header.tsx`](frontend/src/components/layout/Header.tsx#L112-L139), [`MobileDrawer.tsx`](frontend/src/components/layout/MobileDrawer.tsx#L125-L160)
 - **Concrete Code Patch:**
   Add a button with `aria-label="Encerrar sessão"` calling atomic session teardown:
   ```typescript

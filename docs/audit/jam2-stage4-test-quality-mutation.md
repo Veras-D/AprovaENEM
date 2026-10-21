@@ -128,21 +128,21 @@ flowchart TD
 
 #### Path A: Question Card & Quiz Grading Engine
 
-* **Production Code**: [`QuestionCard.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/QuestionCard.tsx#L140-L165) / [`PracticeHero.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/PracticeHero.tsx)
+* **Production Code**: [`QuestionCard.tsx`](frontend/src/features/practice/components/QuestionCard.tsx#L140-L165) / [`PracticeHero.tsx`](frontend/src/features/practice/components/PracticeHero.tsx)
 * **Mutation Injected (AOR / ROR)**: Invert grading condition `const isCorrect = selectedOption === question.correctOption;` to `selectedOption !== question.correctOption;`.
 * **Behavior in Vitest**:
-  - In [`QuestionCard.integration.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/QuestionCard.integration.test.tsx#L55-L78), the test explicitly asserts:
+  - In [`QuestionCard.integration.test.tsx`](frontend/src/features/practice/components/QuestionCard.integration.test.tsx#L55-L78), the test explicitly asserts:
     ```typescript
     expect(screen.getByText('Resposta Correta!')).toBeInTheDocument();
     expect(screen.queryByText('Resposta Incorreta')).not.toBeInTheDocument();
     ```
   - **Result: KILLED** (`AssertionError: expected 'Resposta Incorreta' not to be in document`).
 * **Behavior in Cypress & Playwright (Surviving Mutant `AUD-JAM2-T02`)**:
-  - In [`01-student-quiz-journey.cy.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/cypress/e2e/01-student-quiz-journey.cy.ts#L34):
+  - In [`01-student-quiz-journey.cy.ts`](frontend/cypress/e2e/01-student-quiz-journey.cy.ts#L34):
     ```typescript
     cy.contains(/XP|Resposta Correta|Resposta Incorreta|Gabarito/i).should('be.visible');
     ```
-  - In [`01-cross-browser-student-flow.spec.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/e2e/01-cross-browser-student-flow.spec.ts#L55):
+  - In [`01-cross-browser-student-flow.spec.ts`](frontend/e2e/01-cross-browser-student-flow.spec.ts#L55):
     ```typescript
     await expect(page.locator('body')).toContainText(/Resposta Correta|Resposta Incorreta|Gabarito/i);
     ```
@@ -152,38 +152,38 @@ flowchart TD
 
 #### Path B: KaTeX LaTeX Math Rendering & Fallback Engine
 
-* **Production Code**: [`InlineMath.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/math/InlineMath.tsx#L18-L29), [`BlockMath.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/math/BlockMath.tsx#L18-L29), [`latex-parser.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/math/latex-parser.ts)
+* **Production Code**: [`InlineMath.tsx`](frontend/src/components/math/InlineMath.tsx#L18-L29), [`BlockMath.tsx`](frontend/src/components/math/BlockMath.tsx#L18-L29), [`latex-parser.ts`](frontend/src/components/math/latex-parser.ts)
 * **Mutations Injected**:
   1. *Mutation B1 (CRCR)*: Remove `try/catch` block wrapping `katex.renderToString()`.
   2. *Mutation B2 (LVR)*: Remove currency defense lookbehind in `INLINE_DOLLAR_REGEX` (`(?<![RU]S\s?|R\$|\$)`).
 * **Behavior in Vitest**:
-  - [`MathRenderer.resilience.test.tsx:60-73`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/math/MathRenderer.resilience.test.tsx#L60-L73) spies on `katex.renderToString` and forces it to throw `new Error('KaTeX simulation fatal error')`.
+  - [`MathRenderer.resilience.test.tsx:60-73`](frontend/src/components/math/MathRenderer.resilience.test.tsx#L60-L73) spies on `katex.renderToString` and forces it to throw `new Error('KaTeX simulation fatal error')`.
   - The test verifies that `.inline-math-error` and `.block-math-error` CSS classes are rendered with raw text fallback:
     ```typescript
     const errorContainer = screen.getByText(/fatalInline/);
     expect(errorContainer).toHaveClass('inline-math-error');
     ```
-  - [`latex-parser.test.ts:45-68`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/math/latex-parser.test.ts#L45-L68) validates that `R$ 120,50` is tokenized as `text` rather than `inline-math`.
+  - [`latex-parser.test.ts:45-68`](frontend/src/components/math/latex-parser.test.ts#L45-L68) validates that `R$ 120,50` is tokenized as `text` rather than `inline-math`.
   - **Result: BOTH MUTANTS KILLED** (`100% kill rate`).
 * **Architectural Vulnerability Identified (`AUD-JAM2-T06`)**:
-  - While `katex.renderToString` is wrapped in a `try/catch`, the higher-level [`MathRenderer.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/components/math/MathRenderer.tsx#L20-L76) component does not contain a React Error Boundary. If `parseLatexTokens()` throws an unhandled error (e.g. stack overflow on deeply nested regex or null pointer), the entire question card unmounts.
+  - While `katex.renderToString` is wrapped in a `try/catch`, the higher-level [`MathRenderer.tsx`](frontend/src/components/math/MathRenderer.tsx#L20-L76) component does not contain a React Error Boundary. If `parseLatexTokens()` throws an unhandled error (e.g. stack overflow on deeply nested regex or null pointer), the entire question card unmounts.
 
 ---
 
 #### Path C: Socratic AI Tutor Turn Tracking & Quota Limits
 
-* **Production Code**: [`SocraticTutorDrawer.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/SocraticTutorDrawer.tsx#L64-L67), [`SocraticQuotaWidget.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/SocraticQuotaWidget.tsx#L18-L45)
+* **Production Code**: [`SocraticTutorDrawer.tsx`](frontend/src/features/practice/components/SocraticTutorDrawer.tsx#L64-L67), [`SocraticQuotaWidget.tsx`](frontend/src/features/practice/components/SocraticQuotaWidget.tsx#L18-L45)
 * **Mutations Injected**:
   1. *Mutation C1 (ROR)*: Mutate `isTurnQuotaExhausted = remainingTurns <= 0` to `remainingTurns < 0`.
   2. *Mutation C2 (VDCR)*: Remove progress bar attribute calculation in `SocraticQuotaWidget`.
 * **Behavior in Vitest**:
-  - In [`SocraticTutorDrawer.test.tsx:239-275`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/SocraticTutorDrawer.test.tsx#L239-L275), when `remainingTurns: 0` is returned from the mock thread:
+  - In [`SocraticTutorDrawer.test.tsx:239-275`](frontend/src/features/practice/components/SocraticTutorDrawer.test.tsx#L239-L275), when `remainingTurns: 0` is returned from the mock thread:
     ```typescript
     expect(screen.getByText(/Limite de 6 turnos atingido para esta questão/i)).toBeInTheDocument();
     expect(screen.queryByPlaceholderText(/Digite sua dúvida/i)).not.toBeInTheDocument();
     ```
     If `remainingTurns <= 0` is mutated to `< 0`, the textarea remains mounted and the banner is not displayed.
-  - In [`SocraticQuotaWidget.test.tsx:6-15`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/SocraticQuotaWidget.test.tsx#L6-L15):
+  - In [`SocraticQuotaWidget.test.tsx:6-15`](frontend/src/features/practice/components/SocraticQuotaWidget.test.tsx#L6-L15):
     ```typescript
     expect(progressbar).toHaveAttribute('aria-valuenow', '2');
     expect(progressbar).toHaveAttribute('aria-valuemax', '6');
@@ -194,7 +194,7 @@ flowchart TD
 
 #### Path D: Accessibility State, Styling & Storage Persistence
 
-* **Production Code**: [`useAccessibilityStore.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/stores/useAccessibilityStore.ts#L62-L124)
+* **Production Code**: [`useAccessibilityStore.ts`](frontend/src/stores/useAccessibilityStore.ts#L62-L124)
 * **Mutations Injected (VDCR)**: Remove the persistence call in `applyAccessibilityToDocument()`:
   ```typescript
   // MUTATION: Comment out lines 118-123
@@ -203,7 +203,7 @@ flowchart TD
   // } catch {}
   ```
 * **Behavior in Vitest (Surviving Mutant `AUD-JAM2-T01`)**:
-  - The test suite [`useAccessibilityStore.test.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/stores/useAccessibilityStore.test.ts#L29-L135) tests:
+  - The test suite [`useAccessibilityStore.test.ts`](frontend/src/stores/useAccessibilityStore.test.ts#L29-L135) tests:
     1. Setting `fontScale(150)` -> asserts `document.documentElement.getAttribute('data-font-scale') === '150'`.
     2. Setting `contrastMode('high-contrast')` -> asserts `document.documentElement.hasAttribute('data-high-contrast') === true`.
     3. Setting `colorBlindness('protanopia')` -> asserts `document.documentElement.getAttribute('data-colorblind') === 'protanopia'`.
@@ -218,9 +218,9 @@ flowchart TD
 ### 4.1 Axe-Core Automated Audit Coverage
 
 The codebase incorporates automated accessibility checks across both unit and end-to-end tiers:
-- **Unit/Integration (`@axe-core/react` & Vitest)**: [`accessibility-audit.a11y.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/tests/accessibility-audit.a11y.test.tsx) mounts 14 individual components and asserts zero axe violations.
-- **E2E Cypress (`cypress-axe`)**: [`05-accessibility-wcag-audit.cy.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/cypress/e2e/05-accessibility-wcag-audit.cy.ts) executes audits across 5 views.
-- **E2E Playwright (`@axe-core/playwright`)**: [`05-accessibility-lighthouse-audit.spec.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/e2e/05-accessibility-lighthouse-audit.spec.ts) runs axe audits against Chrome, Firefox, and WebKit.
+- **Unit/Integration (`@axe-core/react` & Vitest)**: [`accessibility-audit.a11y.test.tsx`](frontend/src/tests/accessibility-audit.a11y.test.tsx) mounts 14 individual components and asserts zero axe violations.
+- **E2E Cypress (`cypress-axe`)**: [`05-accessibility-wcag-audit.cy.ts`](frontend/cypress/e2e/05-accessibility-wcag-audit.cy.ts) executes audits across 5 views.
+- **E2E Playwright (`@axe-core/playwright`)**: [`05-accessibility-lighthouse-audit.spec.ts`](frontend/e2e/05-accessibility-lighthouse-audit.spec.ts) runs axe audits against Chrome, Firefox, and WebKit.
 
 ### 4.2 The Color Contrast Blindspot (`AUD-JAM2-T03`)
 
@@ -246,7 +246,7 @@ const results = await new AxeBuilder({ page })
 Headless browsers (especially in Docker or CI environments without hardware GPU acceleration) frequently miscalculate color contrast for elements rendered with CSS custom properties featuring alpha transparency (e.g., `bg-brand-primary/10`, `backdrop-blur-xs`). To avoid false-positive test flakiness in CI, the development team disabled the rule in E2E.
 
 #### The Testing Gap:
-While mathematical unit tests in [`color-contrast.test.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/tenants/color-contrast.test.ts) and [`theme-injection.integration.test.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/tenants/theme-injection.integration.test.ts) verify that theme color pairs meet the 4.5:1 ratio, **no test verifies contrast across rendered DOM elements (cards, badges, muted text, disabled buttons, and KaTeX fractions)**. Any contrast regression in production UI components will pass the automated CI pipeline completely undetected.
+While mathematical unit tests in [`color-contrast.test.ts`](frontend/src/tenants/color-contrast.test.ts) and [`theme-injection.integration.test.ts`](frontend/src/tenants/theme-injection.integration.test.ts) verify that theme color pairs meet the 4.5:1 ratio, **no test verifies contrast across rendered DOM elements (cards, badges, muted text, disabled buttons, and KaTeX fractions)**. Any contrast regression in production UI components will pass the automated CI pipeline completely undetected.
 
 ---
 
@@ -257,7 +257,7 @@ While mathematical unit tests in [`color-contrast.test.ts`](file:///home/verivi/
 Two instances of vacuous `expect(...).toBeDefined()` assertions were identified where tests do not verify DOM reality:
 
 #### Case 1: `OptionSelector.test.tsx`
-* **File Citation**: [`OptionSelector.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/OptionSelector.test.tsx#L67-L72)
+* **File Citation**: [`OptionSelector.test.tsx`](frontend/src/features/practice/components/OptionSelector.test.tsx#L67-L72)
 * **Lines**: 67–72
 * **Defective Code**:
   ```typescript
@@ -270,7 +270,7 @@ Two instances of vacuous `expect(...).toBeDefined()` assertions were identified 
 * **Flaw**: `screen.getByRole` already throws if the element is not found. Calling `expect(optionD).toBeDefined()` merely asserts that the JavaScript reference exists. It **fails to assert** `expect(optionD).toBeDisabled()` or `expect(optionD).toHaveAttribute('aria-disabled', 'true')`!
 
 #### Case 2: `QuestionCarousel.test.tsx`
-* **File Citation**: [`QuestionCarousel.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/QuestionCarousel.test.tsx#L78-L82)
+* **File Citation**: [`QuestionCarousel.test.tsx`](frontend/src/features/practice/components/QuestionCarousel.test.tsx#L78-L82)
 * **Lines**: 78–82
 * **Defective Code**:
   ```typescript
@@ -284,7 +284,7 @@ Two instances of vacuous `expect(...).toBeDefined()` assertions were identified 
 
 ### 5.2 React Testing Library `act(...)` Warning (`AUD-JAM2-T04`)
 
-During the execution of [`accessibility-audit.a11y.test.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/tests/accessibility-audit.a11y.test.tsx#L475):
+During the execution of [`accessibility-audit.a11y.test.tsx`](frontend/src/tests/accessibility-audit.a11y.test.tsx#L475):
 
 ```text
 console.error
@@ -305,7 +305,7 @@ console.error
 
 ### 6.1 Patch 1: Harden Accessibility Store Persistence Test (`AUD-JAM2-T01`)
 
-Update [`useAccessibilityStore.test.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/stores/useAccessibilityStore.test.ts) to verify that `localStorage.setItem` receives the updated state JSON:
+Update [`useAccessibilityStore.test.ts`](frontend/src/stores/useAccessibilityStore.test.ts) to verify that `localStorage.setItem` receives the updated state JSON:
 
 ```typescript
 // File: frontend/src/stores/useAccessibilityStore.test.ts

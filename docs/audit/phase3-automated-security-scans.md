@@ -70,7 +70,7 @@ pie title Vulnerability Distribution by Severity (SCA & Containers)
 The secret entropy audit was executed using **Gitleaks v8.18.4** inside an isolated Docker container against the entire repository commit tree (82 commits) and uncommitted workspace files:
 
 ```bash
-docker run --rm -v /home/verivi/Veras/Projects/ReconectaRecode:/repo \
+docker run --rm -v $(pwd):/repo \
   zricethezav/gitleaks:latest detect --source="/repo" --verbose
 ```
 
@@ -85,7 +85,7 @@ docker run --rm -v /home/verivi/Veras/Projects/ReconectaRecode:/repo \
 ---
 
 ### 2.3 Deep Audit of `.gitleaks.toml` Allowlist
-* **File Citation:** [`.gitleaks.toml`](file:///home/verivi/Veras/Projects/ReconectaRecode/.gitleaks.toml#L1-L9)
+* **File Citation:** [`.gitleaks.toml`](.gitleaks.toml#L1-L9)
 * **Observed Configuration:**
   ```toml
   [allowlist]
@@ -121,7 +121,7 @@ regexes = [
 ---
 
 ### 2.4 Environment Fallbacks & Plaintext Defaults Audit
-* **File Citation:** [`docker-compose.yml`](file:///home/verivi/Veras/Projects/ReconectaRecode/docker-compose.yml#L106)
+* **File Citation:** [`docker-compose.yml`](docker-compose.yml#L106)
 * **Observed Configuration:**
   ```yaml
   SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-aprovaenem_secure_password_2026}
@@ -238,14 +238,14 @@ The vast majority of Critical and High CVEs originate from the declared **Spring
 
 | Module / Dockerfile | Base Image | Multi-Stage? | Runtime User | Build Tools in Runtime? | Privilege Rating |
 | :--- | :--- | :---: | :---: | :---: | :---: |
-| [`frontend-api`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/frontend-api/Dockerfile) | `eclipse-temurin:21-jre-alpine` | Yes | `spring:spring` (`uid=100`) | No | **COMPLIANT ✅** |
-| [`auth-service`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/Dockerfile) | `eclipse-temurin:21-jre-alpine` | Yes | `spring:spring` (`uid=100`) | No | **COMPLIANT ✅** |
-| [`exam-service`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/Dockerfile) | `eclipse-temurin:21-jre-alpine` | Yes | `spring:spring` (`uid=100`) | No | **COMPLIANT ✅** |
-| [`notification-service`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/notification-service/Dockerfile) | `eclipse-temurin:21-jre-alpine` | Yes | `spring:spring` (`uid=100`) | No | **COMPLIANT ✅** |
-| [`ingestion-service`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/ingestion-service/Dockerfile) | `python:3.11-slim` | **No** | **root (`uid=0`)** | **Yes (`build-essential`)** | **CRITICAL DEFECT ❌** |
+| [`frontend-api`](backend/frontend-api/Dockerfile) | `eclipse-temurin:21-jre-alpine` | Yes | `spring:spring` (`uid=100`) | No | **COMPLIANT ✅** |
+| [`auth-service`](backend/auth-service/Dockerfile) | `eclipse-temurin:21-jre-alpine` | Yes | `spring:spring` (`uid=100`) | No | **COMPLIANT ✅** |
+| [`exam-service`](backend/exam-service/Dockerfile) | `eclipse-temurin:21-jre-alpine` | Yes | `spring:spring` (`uid=100`) | No | **COMPLIANT ✅** |
+| [`notification-service`](backend/notification-service/Dockerfile) | `eclipse-temurin:21-jre-alpine` | Yes | `spring:spring` (`uid=100`) | No | **COMPLIANT ✅** |
+| [`ingestion-service`](backend/ingestion-service/Dockerfile) | `python:3.11-slim` | **No** | **root (`uid=0`)** | **Yes (`build-essential`)** | **CRITICAL DEFECT ❌** |
 
 #### Defect Detail: `ingestion-service` Execution as Root
-* **File Citation:** [`backend/ingestion-service/Dockerfile:1-23`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/ingestion-service/Dockerfile#L1-L23)
+* **File Citation:** [`backend/ingestion-service/Dockerfile:1-23`](backend/ingestion-service/Dockerfile#L1-L23)
 * **Observed Flaw:**
   ```dockerfile
   FROM python:3.11-slim
@@ -269,7 +269,7 @@ USER appuser:appuser
 ---
 
 ### 4.2 Jar Artifact File Ownership & JVM Container Flags
-* **File Citation:** All Java Dockerfiles (e.g. [`auth-service/Dockerfile:27`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/Dockerfile#L27))
+* **File Citation:** All Java Dockerfiles (e.g. [`auth-service/Dockerfile:27`](backend/auth-service/Dockerfile#L27))
 * **Observed Line:**
   ```dockerfile
   COPY --from=build /app/auth-service/target/*.jar app.jar
@@ -285,7 +285,7 @@ USER appuser:appuser
 ### 4.3 Orchestration & Perimeter Hardening (`docker-compose.yml`)
 
 #### 1. Absence of Resource Limits (Denial-of-Service Risk)
-* **File Citation:** [`docker-compose.yml:56-200`](file:///home/verivi/Veras/Projects/ReconectaRecode/docker-compose.yml#L56-L200)
+* **File Citation:** [`docker-compose.yml:56-200`](docker-compose.yml#L56-L200)
 * **Flaw:** None of the 13 declared services specify CPU or RAM caps. A memory leak in `exam-service` or heavy pgvector index operations can exhaust all 100% of host RAM, triggering the Linux kernel OOM killer to terminate database or gateway containers unpredictably.
 * **Remediation:**
   ```yaml
@@ -299,14 +299,14 @@ USER appuser:appuser
   ```
 
 #### 2. Excessive Docker Socket Privilege in `autoheal`
-* **File Citation:** [`docker-compose.yml:14-26`](file:///home/verivi/Veras/Projects/ReconectaRecode/docker-compose.yml#L14-L26)
+* **File Citation:** [`docker-compose.yml:14-26`](docker-compose.yml#L14-L26)
 * **Flaw:** Mounting `/var/run/docker.sock` provides unmitigated control over the Docker engine. If the `autoheal` image (`willfarrell/autoheal:latest`) contains vulnerabilities or is compromised, an attacker can launch privileged containers with host root filesystem mounts.
 * **Remediation:** Replace host Docker socket autohealing with native Docker Compose or Kubernetes health probes (`restart: always` coupled with healthchecks), removing the Docker daemon socket mount.
 
 #### 3. Network Isolation Evaluation
 * **Bridge Networks:** `frontend-edge` and `aprovaenem-internal`.
 * **Strengths:** `aprovaenem-internal` correctly declares `internal: true`. Containers attached to `aprovaenem-internal` cannot receive direct connections from external network interfaces.
-* **Development Override Risk:** [`docker-compose.override.dev.yml`](file:///home/verivi/Veras/Projects/ReconectaRecode/docker-compose.override.dev.yml#L15-L62) binds PostgreSQL (`5432-5434`), Redis (`6379`), and RabbitMQ (`5672`, `15672`) directly to `0.0.0.0` on the host. If run on a public VPS, all internal storage is exposed to the internet.
+* **Development Override Risk:** [`docker-compose.override.dev.yml`](docker-compose.override.dev.yml#L15-L62) binds PostgreSQL (`5432-5434`), Redis (`6379`), and RabbitMQ (`5672`, `15672`) directly to `0.0.0.0` on the host. If run on a public VPS, all internal storage is exposed to the internet.
 
 ---
 
@@ -314,7 +314,7 @@ USER appuser:appuser
 
 ### 5.1 Ingress Proxy Review (`infrastructure/nginx/nginx.conf`)
 
-* **File Citation:** [`infrastructure/nginx/nginx.conf`](file:///home/verivi/Veras/Projects/ReconectaRecode/infrastructure/nginx/nginx.conf#L40-L120)
+* **File Citation:** [`infrastructure/nginx/nginx.conf`](infrastructure/nginx/nginx.conf#L40-L120)
 
 #### 1. OWASP Security Header Compliance Matrix
 
@@ -332,7 +332,7 @@ USER appuser:appuser
 ---
 
 ### 5.2 Critical Nginx Context Header Clearing Bug
-* **File Citation:** [`infrastructure/nginx/nginx.conf:68-75`](file:///home/verivi/Veras/Projects/ReconectaRecode/infrastructure/nginx/nginx.conf#L68-L75)
+* **File Citation:** [`infrastructure/nginx/nginx.conf:68-75`](infrastructure/nginx/nginx.conf#L68-L75)
 * **Observed Directive:**
   ```nginx
   location /assets/questions/ {
@@ -361,7 +361,7 @@ In Nginx 1.25+, append `inherit` or explicitly re-declare the baseline security 
 ---
 
 ### 5.3 Port 443 SSL Configuration Discrepancy
-* **File Citation:** [`docker-compose.yml:34-36`](file:///home/verivi/Veras/Projects/ReconectaRecode/docker-compose.yml#L34-L36) vs [`nginx.conf:40-44`](file:///home/verivi/Veras/Projects/ReconectaRecode/infrastructure/nginx/nginx.conf#L40-L44)
+* **File Citation:** [`docker-compose.yml:34-36`](docker-compose.yml#L34-L36) vs [`nginx.conf:40-44`](infrastructure/nginx/nginx.conf#L40-L44)
 * **Compose:**
   ```yaml
   ports:
@@ -381,7 +381,7 @@ In Nginx 1.25+, append `inherit` or explicitly re-declare the baseline security 
 ---
 
 ### 5.4 Actuator Telemetry Information Disclosure
-* **File Citation:** [`backend/frontend-api/src/main/resources/application.yml:143-147`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/frontend-api/src/main/resources/application.yml#L143-L147)
+* **File Citation:** [`backend/frontend-api/src/main/resources/application.yml:143-147`](backend/frontend-api/src/main/resources/application.yml#L143-L147)
 * **Configuration:**
   ```yaml
   management:

@@ -16,7 +16,7 @@ ReconectaRecode/
 ├── infrastructure/     # Nginx reverse proxy, Prometheus APM, Grafana dashboards
 ├── docs/               # Architecture specs, OpenAPI 3.0, Newman Postman collections, BACKLOG.md
 ├── CHANGELOG.md        # Monorepo version history (Keep a Changelog standard)
-└── docker-compose.yml  # Complete 13-container perimeter orchestration
+└── docker-compose.yml  # Complete 14-container perimeter orchestration
 ```
 
 ### Tech Stack Standards:
@@ -34,13 +34,13 @@ ReconectaRecode/
 Always execute Maven tasks inside the Temurin 21 Docker container for build environment parity:
 ```bash
 # Run entire backend test suite
-docker run --rm -v /home/verivi/Veras/Projects/ReconectaRecode/backend:/app -w /app -v maven-repo:/root/.m2 maven:3.9-eclipse-temurin-21-alpine mvn test
+docker run --rm -v $(pwd)/backend:/app -w /app -v maven-repo:/root/.m2 maven:3.9-eclipse-temurin-21-alpine mvn test
 
 # Run a specific test suite or class
-docker run --rm -v /home/verivi/Veras/Projects/ReconectaRecode/backend:/app -w /app -v maven-repo:/root/.m2 maven:3.9-eclipse-temurin-21-alpine mvn test -Dtest=SocraticTutorServiceTest -Dsurefire.failIfNoSpecifiedTests=false
+docker run --rm -v $(pwd)/backend:/app -w /app -v maven-repo:/root/.m2 maven:3.9-eclipse-temurin-21-alpine mvn test -Dtest=SocraticTutorServiceTest -Dsurefire.failIfNoSpecifiedTests=false
 
 # Package backend microservices
-docker run --rm -v /home/verivi/Veras/Projects/ReconectaRecode/backend:/app -w /app -v maven-repo:/root/.m2 maven:3.9-eclipse-temurin-21-alpine mvn clean package -DskipTests
+docker run --rm -v $(pwd)/backend:/app -w /app -v maven-repo:/root/.m2 maven:3.9-eclipse-temurin-21-alpine mvn clean package -DskipTests
 ```
 
 ### 2.2. Frontend Commands (`frontend/`)
@@ -82,10 +82,10 @@ docker compose ps
 
 ### ALWAYS:
 1. **Docker-Enforced Maven Execution**: Always run backend Maven builds and tests inside the Temurin 21 container.
-2. **Strict Verification Before Concluding**: Always verify 100% green tests (`0 Failures, 0 Errors, 0 Skipped`) before completing any work item.
-3. **Changelog Update Before Commit**: Always update [`CHANGELOG.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/CHANGELOG.md) under the active version heading before staging and committing.
+2. **Context-Aware Verification Before Concluding**: Always verify 100% green tests (`0 Failures, 0 Errors, 0 Skipped`) whenever backend (`.java`, `.sql`, `pom.xml`) or frontend (`.ts`, `.tsx`, `package.json`, styles) code changes. For **pure documentation and metadata changes** (`.md` files, [`CHANGELOG.md`](CHANGELOG.md), [`docs/BACKLOG.md`](docs/BACKLOG.md), [`README.md`](README.md)), running test suites is explicitly skipped to optimize execution cycles.
+3. **Changelog Update Before Commit**: Always update [`CHANGELOG.md`](CHANGELOG.md) under the active version heading before staging and committing.
 4. **Conventional Commits**: Always format git commit messages with type, scope, and task ID: `<type>(<scope>): <summary> (<TASK-ID>)`.
-5. **Clickable File Links**: Always link to files and symbols in chat using the `file://` scheme with absolute paths.
+5. **Repository-Relative Paths (Privacy First)**: Never include absolute local machine paths (`/home/...`) or `file:///home/...` URLs in committed documentation, changelogs, scripts, or responses. Always use clean repository-relative paths (e.g., `backend/auth-service`, `frontend/src/App.tsx`) and `$(pwd)` for container volume mounts to prevent username and environment leakage in version control.
 6. **English Only in User Communication**: ALWAYS communicate with the user in English. Never reply in Portuguese.
 7. **Mermaid Diagrams in Markdown Documentation**: Always include structured Mermaid diagrams (`flowchart`, `sequenceDiagram`, `stateDiagram-v2`, `classDiagram`, `erDiagram`) inside `.md` documentation files (`docs/*.md`, architecture specs, design blueprints) to visually depict systems, state machines, and lifecycles.
 8. **Zero Uncommitted Changes on Turn Conclusion**: Always stage, commit, and push all modified, created, or deleted files to git before concluding work. Never leave uncommitted changes in the repository.
@@ -144,12 +144,25 @@ When encountering a build failure, test failure, Docker crash, or runtime except
 ## 5. Git & Commit Guidelines
 
 ### 5.1. Pre-Commit Checklist
-1. All relevant tests pass green (backend via Docker, frontend via npm/Vitest).
-2. [`CHANGELOG.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/CHANGELOG.md) updated following [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
-3. [`docs/BACKLOG.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/BACKLOG.md) updated (task marked `DONE ✅`, milestone % adjusted).
+1. All relevant tests pass green (backend via Docker, frontend via npm/Vitest) when code, configurations, or schemas were modified (skip test suites for pure `.md` documentation changes).
+2. [`CHANGELOG.md`](CHANGELOG.md) updated following the strict Keep a Changelog specification below.
+3. [`docs/BACKLOG.md`](docs/BACKLOG.md) updated (task marked `DONE ✅`, milestone % adjusted).
 4. All modified and created files staged cleanly.
 
-### 5.2. Commit Message Standard
+### 5.2. Keep a Changelog Specification
+Always maintain [`CHANGELOG.md`](CHANGELOG.md) following [Keep a Changelog v1.0.0](https://keepachangelog.com/en/1.0.0/) and [Semantic Versioning 2.0.0](https://semver.org/):
+- **Continuous Version Synchronization**: Increment version upon completing significant features or bug fixes (`MAJOR.MINOR.PATCH`), and keep [`frontend/package.json`](frontend/package.json) synchronized with the active version header.
+- **Strict Allowed Subheadings**: Under each `## [X.Y.Z] - YYYY-MM-DD` release heading, section subheadings must strictly be one of:
+  - `### Added` (for new features, new tests, build tooling additions)
+  - `### Changed` (for changes in existing functionality, refactoring, documentation updates)
+  - `### Deprecated` (for soon-to-be removed features)
+  - `### Removed` (for now removed features)
+  - `### Fixed` (for any bug fixes)
+  - `### Security` (in case of vulnerabilities, audit remediations, or hardening)
+- **Zero Emojis in Subheadings**: Category subheadings must NEVER contain emojis (e.g., use `### Added`, never `### 🚀 Added` or `### 🏢 Strategic...`).
+- **Standard Category Sequence**: Always order categories strictly: `Added` $\rightarrow$ `Changed` $\rightarrow$ `Deprecated` $\rightarrow$ `Removed` $\rightarrow$ `Fixed` $\rightarrow$ `Security`.
+
+### 5.3. Commit Message Standard
 Follow [Conventional Commits v1.0.0](https://www.conventionalcommits.org/):
 
 ```text
@@ -174,9 +187,9 @@ When making changes across the monorepo, update all related documentation recurs
 
 | Component Changed | Documentation Files to Update |
 | :--- | :--- |
-| **REST Endpoint / Route** | 1. [`docs/05-api-specification.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/05-api-specification.md)<br>2. Controller OpenAPI annotations (`@Operation`)<br>3. [`docs/postman/AprovaENEM.postman_collection.json`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/postman/AprovaENEM.postman_collection.json)<br>4. [`docs/BACKLOG.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/BACKLOG.md) |
-| **Database Schema / Entity** | 1. [`docs/04-data-modeling.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/04-data-modeling.md)<br>2. Flyway migration script (`V*.sql`)<br>3. JPA Entity & Domain Model |
-| **Domain Events / AMQP** | 1. Event record in `common-core`<br>2. [`docs/03-system-architecture.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/03-system-architecture.md)<br>3. Publisher & listener unit tests |
-| **Frontend UI / Components** | 1. [`docs/06-frontend-architecture.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/06-frontend-architecture.md)<br>2. Component unit test in Vitest<br>3. [`docs/BACKLOG.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/BACKLOG.md) |
-| **Accessibility / Legal / LGPD** | 1. [`README.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/README.md)<br>2. [`docs/BACKLOG.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/BACKLOG.md)<br>3. [`CHANGELOG.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/CHANGELOG.md) |
-| **Task / Sprint Progress** | 1. [`docs/BACKLOG.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/BACKLOG.md)<br>2. [`CHANGELOG.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/CHANGELOG.md) |
+| **REST Endpoint / Route** | 1. [`docs/specifications/05-api-specification.md`](docs/specifications/05-api-specification.md)<br>2. Controller OpenAPI annotations (`@Operation`)<br>3. [`docs/postman/AprovaENEM.postman_collection.json`](docs/postman/AprovaENEM.postman_collection.json)<br>4. [`docs/BACKLOG.md`](docs/BACKLOG.md) |
+| **Database Schema / Entity** | 1. [`docs/specifications/04-data-modeling.md`](docs/specifications/04-data-modeling.md)<br>2. Flyway migration script (`V*.sql`)<br>3. JPA Entity & Domain Model |
+| **Domain Events / AMQP** | 1. Event record in `common-core`<br>2. [`docs/specifications/03-system-architecture.md`](docs/specifications/03-system-architecture.md)<br>3. Publisher & listener unit tests |
+| **Frontend UI / Components** | 1. [`docs/specifications/06-frontend-architecture.md`](docs/specifications/06-frontend-architecture.md)<br>2. Component unit test in Vitest<br>3. [`docs/BACKLOG.md`](docs/BACKLOG.md) |
+| **Accessibility / Legal / LGPD** | 1. [`README.md`](README.md)<br>2. [`docs/BACKLOG.md`](docs/BACKLOG.md)<br>3. [`CHANGELOG.md`](CHANGELOG.md) |
+| **Task / Sprint Progress** | 1. [`docs/BACKLOG.md`](docs/BACKLOG.md)<br>2. [`CHANGELOG.md`](CHANGELOG.md) |

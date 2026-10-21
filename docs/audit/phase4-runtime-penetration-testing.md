@@ -79,7 +79,7 @@ tcp    LISTEN  0  4096       [::]:443       [::]:*    users:(("docker-proxy",pid
 
 #### Verification Analysis:
 1. **Single Entrypoint Enforcement in Production**:
-   In the baseline production stack defined by [`docker-compose.yml`](file:///home/verivi/Veras/Projects/ReconectaRecode/docker-compose.yml#L30-L52), only the `aprovaenem-nginx` reverse proxy binds to host interfaces (`0.0.0.0:80`, `0.0.0.0:443`).
+   In the baseline production stack defined by [`docker-compose.yml`](docker-compose.yml#L30-L52), only the `aprovaenem-nginx` reverse proxy binds to host interfaces (`0.0.0.0:80`, `0.0.0.0:443`).
 2. **Internal Bridge Network Isolation**:
    The internal services (`frontend-api:8080`, `auth-service:8081`, `exam-service:8082`, `notification-service:8083`, `postgres-auth:5432`, `postgres-exam:5432`, `postgres-notification:5432`, `redis:6379`, `rabbitmq:5672`, `prometheus:9090`, `grafana:3000`) utilize the `expose` directive rather than `ports`. Consequently, Docker does not instantiate `docker-proxy` listeners for these services on host network interfaces.
 
@@ -87,7 +87,7 @@ tcp    LISTEN  0  4096       [::]:443       [::]:*    users:(("docker-proxy",pid
 
 ### 2.2 Dev Override Network Exposure Vulnerability (`SEC-P4-05`)
 
-* **File Citation:** [`docker-compose.override.dev.yml`](file:///home/verivi/Veras/Projects/ReconectaRecode/docker-compose.override.dev.yml#L12-L62)
+* **File Citation:** [`docker-compose.override.dev.yml`](docker-compose.override.dev.yml#L12-L62)
 * **Configuration Snippet:**
   ```yaml
   services:
@@ -122,7 +122,7 @@ all internal microservices, PostgreSQL instances, Redis cache nodes, and RabbitM
 
 ### 2.3 Network Egress Blackhole via `internal: true` (`SEC-P4-06`)
 
-* **File Citation:** [`docker-compose.yml`](file:///home/verivi/Veras/Projects/ReconectaRecode/docker-compose.yml#L6-L9)
+* **File Citation:** [`docker-compose.yml`](docker-compose.yml#L6-L9)
 * **Configuration Snippet:**
   ```yaml
   networks:
@@ -145,7 +145,7 @@ docker exec aprovaenem-exam-service nc -zv 8.8.8.8 53
 The Docker bridge setting `internal: true` manipulates host iptables rules to drop all packets attempting to route outside the Docker daemon (preventing IP masquerading and outbound NAT). 
 
 While this establishes high internal containment, it creates a fatal conflict with application features requiring outbound egress:
-1. **Google Gemini LLM AI Tutor**: In [`docker-compose.yml:154-155`](file:///home/verivi/Veras/Projects/ReconectaRecode/docker-compose.yml#L154-L155), `exam-service` is provisioned with `GEMINI_API_KEY` and `GEMINI_MODEL=gemini-1.5-flash` to query `https://generativelanguage.googleapis.com`. Because egress routing is blocked, calls to the AI Tutor fail with network timeouts or `Network unreachable` errors.
+1. **Google Gemini LLM AI Tutor**: In [`docker-compose.yml:154-155`](docker-compose.yml#L154-L155), `exam-service` is provisioned with `GEMINI_API_KEY` and `GEMINI_MODEL=gemini-1.5-flash` to query `https://generativelanguage.googleapis.com`. Because egress routing is blocked, calls to the AI Tutor fail with network timeouts or `Network unreachable` errors.
 2. **Notification Service SMTP Dispatch**: `notification-service` is configured with `spring-boot-starter-mail` to deliver transactional verification emails. Outbound connections to external SMTP relays (e.g., SendGrid, AWS SES, or standard mail relays) are similarly dropped.
 
 ---
@@ -154,7 +154,7 @@ While this establishes high internal containment, it creates a fatal conflict wi
 
 ### 3.1 Nginx Ingress Architecture & Header Inheritance Bug (`SEC-P4-08`)
 
-* **File Citation:** [`infrastructure/nginx/nginx.conf`](file:///home/verivi/Veras/Projects/ReconectaRecode/infrastructure/nginx/nginx.conf#L40-L75)
+* **File Citation:** [`infrastructure/nginx/nginx.conf`](infrastructure/nginx/nginx.conf#L40-L75)
 
 #### Analysis & Observed Behavior:
 1. **Port 443 Discrepancy**:
@@ -195,7 +195,7 @@ While this establishes high internal containment, it creates a fatal conflict wi
 
 ### 3.2 Spring Cloud Gateway CORS Verification & Evaluation
 
-* **File Citation:** [`frontend-api/src/main/resources/application.yml`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/frontend-api/src/main/resources/application.yml#L14-L47)
+* **File Citation:** [`frontend-api/src/main/resources/application.yml`](backend/frontend-api/src/main/resources/application.yml#L14-L47)
 * **Configuration Snippet:**
   ```yaml
   spring:
@@ -252,11 +252,11 @@ While this establishes high internal containment, it creates a fatal conflict wi
    *Result*: **Passed**. The configuration avoids the critical CORS vulnerability of pairing `Access-Control-Allow-Origin: *` with `Access-Control-Allow-Credentials: true`.
 
 4. **Configuration Blind Spot (`SEC-P4-07`)**:
-   [`docker-compose.yml:69`](file:///home/verivi/Veras/Projects/ReconectaRecode/docker-compose.yml#L69) supplies:
+   [`docker-compose.yml:69`](docker-compose.yml#L69) supplies:
    ```yaml
    - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost,http://localhost:3000,http://localhost:5173}
    ```
-   However, `frontend-api`'s [`application.yml`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/frontend-api/src/main/resources/application.yml#L18-L23) never binds `${CORS_ALLOWED_ORIGINS}`. It uses a static YAML list. Runtime modifications to the environment variable have no effect on the running Gateway.
+   However, `frontend-api`'s [`application.yml`](backend/frontend-api/src/main/resources/application.yml#L18-L23) never binds `${CORS_ALLOWED_ORIGINS}`. It uses a static YAML list. Runtime modifications to the environment variable have no effect on the running Gateway.
 
 ---
 
@@ -290,7 +290,7 @@ sequenceDiagram
 ```
 
 #### Nginx Proxy Configuration:
-In [`infrastructure/nginx/nginx.conf`](file:///home/verivi/Veras/Projects/ReconectaRecode/infrastructure/nginx/nginx.conf#L78-L91), Nginx sets:
+In [`infrastructure/nginx/nginx.conf`](infrastructure/nginx/nginx.conf#L78-L91), Nginx sets:
 ```nginx
 proxy_set_header Host $host;
 proxy_set_header X-Real-IP $remote_addr;
@@ -300,7 +300,7 @@ proxy_set_header X-Forwarded-Proto $scheme;
 Nginx does **not** strip or sanitize client-supplied headers such as `X-User-Id`, `X-User-Roles`, or `X-Trace-Id`.
 
 #### Gateway Filter Configuration:
-In [`frontend-api/src/main/resources/application.yml`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/frontend-api/src/main/resources/application.yml#L48-L51):
+In [`frontend-api/src/main/resources/application.yml`](backend/frontend-api/src/main/resources/application.yml#L48-L51):
 ```yaml
 default-filters:
   - RemoveRequestHeader=X-User-Id
@@ -328,7 +328,7 @@ The Gateway successfully stripped `X-User-Id`. Because the client provided no `A
 Despite the Gateway's edge filter, downstream services implement an insecure identity resolution pattern: they blindly trust incoming `X-User-Id` headers without cryptographic signatures, HMAC validation, or mutual TLS.
 
 #### 1. Notification Service (`NotificationController.java`):
-* **File Citation:** [`NotificationController.java:82-96`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/notification-service/src/main/java/com/aprovaenem/notification/infrastructure/adapter/in/web/NotificationController.java#L82-L96)
+* **File Citation:** [`NotificationController.java:82-96`](backend/notification-service/src/main/java/com/aprovaenem/notification/infrastructure/adapter/in/web/NotificationController.java#L82-L96)
 ```java
 private UUID resolveUserId(String authHeader, String xUserId) {
     if (xUserId != null && !xUserId.isBlank()) {
@@ -360,7 +360,7 @@ private UUID resolveUserId(String authHeader, String xUserId) {
   The endpoint returned `HTTP 200 OK`, returning the user's notification feed without any cryptographic proof of identity.
 
 #### 2. Auth Service Gamification Controller (`GamificationController.java`):
-* **File Citation:** [`GamificationController.java:136-147`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/src/main/java/com/aprovaenem/auth/infrastructure/adapter/in/web/GamificationController.java#L136-L147)
+* **File Citation:** [`GamificationController.java:136-147`](backend/auth-service/src/main/java/com/aprovaenem/auth/infrastructure/adapter/in/web/GamificationController.java#L136-L147)
 ```java
 private UUID resolveUserId(UserDetails userDetails, String xUserId) {
     if (xUserId != null && !xUserId.isBlank()) {
@@ -378,7 +378,7 @@ private UUID resolveUserId(UserDetails userDetails, String xUserId) {
 * **Mechanics**: `xUserId` takes precedence over `userDetails.getUsername()`. If an authenticated student with role `ROLE_STUDENT` submits an `X-User-Id` header (or if accessed directly), the controller executes gamification actions (such as reading profile stats, claiming badges, or awarding XP) on behalf of the supplied `xUserId`, bypassing caller identity.
 
 #### 3. Practice Session Controller (`PracticeSessionController.java`):
-* **File Citation:** [`PracticeSessionController.java:48-63`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/in/web/PracticeSessionController.java#L48-L63)
+* **File Citation:** [`PracticeSessionController.java:48-63`](backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/in/web/PracticeSessionController.java#L48-L63)
 ```java
 StartSessionCommand command = new StartSessionCommand(
         request != null ? request.getUserId() : null,
@@ -392,7 +392,7 @@ StartSessionCommand command = new StartSessionCommand(
 
 ### 4.3 Gateway Rate Limiting Bypass via Header Spoofing (`SEC-P4-04`)
 
-* **File Citation:** [`frontend-api/src/main/java/com/aprovaenem/gateway/infrastructure/ratelimit/RateLimiterConfig.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/frontend-api/src/main/java/com/aprovaenem/gateway/infrastructure/ratelimit/RateLimiterConfig.java#L20-L48)
+* **File Citation:** [`frontend-api/src/main/java/com/aprovaenem/gateway/infrastructure/ratelimit/RateLimiterConfig.java`](backend/frontend-api/src/main/java/com/aprovaenem/gateway/infrastructure/ratelimit/RateLimiterConfig.java#L20-L48)
 * **Code Snippet:**
   ```java
   @Bean
@@ -433,8 +433,8 @@ StartSessionCommand command = new StartSessionCommand(
 ### 5.1 JJWT Parser & Algorithm Confusion Resistance
 
 * **File Citations:**
-  - Auth Service: [`JwtTokenProvider.java:73-84`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/src/main/java/com/aprovaenem/auth/infrastructure/adapter/out/security/JwtTokenProvider.java#L73-L84)
-  - Exam Service: [`JwtTokenValidator.java:31-42`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/security/JwtTokenValidator.java#L31-L42)
+  - Auth Service: [`JwtTokenProvider.java:73-84`](backend/auth-service/src/main/java/com/aprovaenem/auth/infrastructure/adapter/out/security/JwtTokenProvider.java#L73-L84)
+  - Exam Service: [`JwtTokenValidator.java:31-42`](backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/security/JwtTokenValidator.java#L31-L42)
   - Notification Service: `JwtTokenValidator.java`
 
 #### Cryptographic Architecture:
@@ -460,7 +460,7 @@ Jwts.parser()
 
 ### 5.2 Microservice Secret Key Divergence (`SEC-P4-02`)
 
-* **File Citation:** [`docker-compose.yml:141-155`](file:///home/verivi/Veras/Projects/ReconectaRecode/docker-compose.yml#L141-L155)
+* **File Citation:** [`docker-compose.yml:141-155`](docker-compose.yml#L141-L155)
 
 #### Observed Configuration in `docker-compose.yml`:
 - `frontend-api`:
@@ -490,7 +490,7 @@ docker exec aprovaenem-exam-service env | grep JWT
 ```
 
 #### Failure Mechanics:
-In [`exam-service/src/main/resources/application.yml`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/main/resources/application.yml#L51-L52):
+In [`exam-service/src/main/resources/application.yml`](backend/exam-service/src/main/resources/application.yml#L51-L52):
 ```yaml
 jwt:
   secret: ${JWT_SECRET:super_secret_jwt_key_for_aprovaenem_at_least_256_bits_long_2026!}
@@ -518,7 +518,7 @@ Because `JWT_SECRET` is omitted from `docker-compose.yml` under `exam-service`, 
 
 ### 6.1 Database Query Parameterization Audit
 
-* **File Citation:** [`SpringDataQuestionRepository.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/out/persistence/repository/SpringDataQuestionRepository.java#L18-L59)
+* **File Citation:** [`SpringDataQuestionRepository.java`](backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/out/persistence/repository/SpringDataQuestionRepository.java#L18-L59)
 
 #### Inspection of Native SQL Queries:
 ```java
@@ -561,7 +561,7 @@ Page<QuestionEntity> searchQuestions(...);
 
 ### 6.2 RAG Knowledge Base Adapter Parameterization
 
-* **File Citation:** [`RagKnowledgeAdapter.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/out/rag/RagKnowledgeAdapter.java#L28-L46)
+* **File Citation:** [`RagKnowledgeAdapter.java`](backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/out/rag/RagKnowledgeAdapter.java#L28-L46)
 * **Code Snippet:**
   ```java
   String sql = "SELECT id, content, 0.88 as similarity " +
@@ -583,7 +583,7 @@ Page<QuestionEntity> searchQuestions(...);
 
 ### 6.3 Missing Function-Level Access Control (BOLA) in Question Catalog (`SEC-P4-03`)
 
-* **File Citation:** [`QuestionCatalogController.java:74-83`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/in/web/QuestionCatalogController.java#L74-L83)
+* **File Citation:** [`QuestionCatalogController.java:74-83`](backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/in/web/QuestionCatalogController.java#L74-L83)
 * **Code Snippet:**
   ```java
   @PatchMapping("/{id}/status")
@@ -602,7 +602,7 @@ Page<QuestionEntity> searchQuestions(...);
 1. **Missing Authentication & Authorization**:
    `exam-service` does not include Spring Security, and `updateStatus` contains no token validation logic or role checks.
 2. **Public Gateway Ingress Exposure**:
-   [`frontend-api/src/main/resources/application.yml:68-70`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/frontend-api/src/main/resources/application.yml#L68-L70) routes all requests matching `/api/v1/questions/**` directly to `exam-service:8082`:
+   [`frontend-api/src/main/resources/application.yml:68-70`](backend/frontend-api/src/main/resources/application.yml#L68-L70) routes all requests matching `/api/v1/questions/**` directly to `exam-service:8082`:
    ```yaml
    - id: exam-service-routes
      uri: ${EXAM_SERVICE_URL:http://exam-service:8082}
@@ -626,7 +626,7 @@ Page<QuestionEntity> searchQuestions(...);
 ### 7.1 Tier 1 (Immediate / P0): Trust Boundaries & Secret Synchronization
 
 #### Remediation 1: Pass `JWT_SECRET` to `exam-service` in Docker Compose
-Update [`docker-compose.yml`](file:///home/verivi/Veras/Projects/ReconectaRecode/docker-compose.yml#L143-L156) to ensure secret parity:
+Update [`docker-compose.yml`](docker-compose.yml#L143-L156) to ensure secret parity:
 ```yaml
 exam-service:
   environment:
@@ -636,7 +636,7 @@ exam-service:
 ```
 
 #### Remediation 2: Remove Direct Trust of `X-User-Id` in Downstream Services
-Refactor [`NotificationController.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/notification-service/src/main/java/com/aprovaenem/notification/infrastructure/adapter/in/web/NotificationController.java#L82-L96) and [`GamificationController.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/auth-service/src/main/java/com/aprovaenem/auth/infrastructure/adapter/in/web/GamificationController.java#L136-L147) to require verified JWT Bearer tokens:
+Refactor [`NotificationController.java`](backend/notification-service/src/main/java/com/aprovaenem/notification/infrastructure/adapter/in/web/NotificationController.java#L82-L96) and [`GamificationController.java`](backend/auth-service/src/main/java/com/aprovaenem/auth/infrastructure/adapter/in/web/GamificationController.java#L136-L147) to require verified JWT Bearer tokens:
 ```java
 private UUID resolveUserId(String authHeader) {
     if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -671,7 +671,7 @@ public ResponseEntity<QuestionDetailResponse> updateStatus(
 ### 7.2 Tier 2 (High Priority / P1): Perimeter Hardening & Rate Limiting
 
 #### Remediation 4: Bind Dev Override Ports to Localhost Only
-Update [`docker-compose.override.dev.yml`](file:///home/verivi/Veras/Projects/ReconectaRecode/docker-compose.override.dev.yml#L14-L62):
+Update [`docker-compose.override.dev.yml`](docker-compose.override.dev.yml#L14-L62):
 ```yaml
 services:
   frontend-api:
@@ -693,7 +693,7 @@ services:
 ```
 
 #### Remediation 5: Fix Gateway Rate Limiter Key Resolution
-In [`RateLimiterConfig.java`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/frontend-api/src/main/java/com/aprovaenem/gateway/infrastructure/ratelimit/RateLimiterConfig.java#L20-L48):
+In [`RateLimiterConfig.java`](backend/frontend-api/src/main/java/com/aprovaenem/gateway/infrastructure/ratelimit/RateLimiterConfig.java#L20-L48):
 1. Only derive `user:` rate limit keys from tokens that have valid structure and signatures.
 2. Obtain client IP from the last entry in `X-Forwarded-For` (the one appended by the trusted Nginx proxy) or configure Spring Cloud Gateway's `ForwardedHeaderFilter` / `RemoteAddressResolver`.
 
@@ -705,13 +705,13 @@ In `docker-compose.yml`, attach `exam-service` and `notification-service` to bot
 ### 7.3 Tier 3 (Medium Priority / P2): Gateway & Nginx Polish
 
 #### Remediation 7: Fix Nginx Header Inheritance & Port 443
-In [`infrastructure/nginx/nginx.conf`](file:///home/verivi/Veras/Projects/ReconectaRecode/infrastructure/nginx/nginx.conf#L40-L75):
+In [`infrastructure/nginx/nginx.conf`](infrastructure/nginx/nginx.conf#L40-L75):
 1. Re-declare or include security headers inside `location /assets/questions/` so that parent headers are not dropped.
 2. Add `server_tokens off;` in the `http` block.
 3. Either configure TLS listeners with certificates on port 443 or remove `443:443` from `docker-compose.yml` until certificates are provisioned.
 
 #### Remediation 8: Bind `CORS_ALLOWED_ORIGINS` in Gateway Configuration
-Update `frontend-api` [`application.yml`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/frontend-api/src/main/resources/application.yml#L18-L23) to read from the environment:
+Update `frontend-api` [`application.yml`](backend/frontend-api/src/main/resources/application.yml#L18-L23) to read from the environment:
 ```yaml
 allowedOrigins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
 ```

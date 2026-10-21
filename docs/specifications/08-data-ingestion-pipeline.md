@@ -172,7 +172,7 @@ flowchart LR
 
 ## 6. Verification Quality Gates for Extracted Data
 
-Every ingested batch must pass an automated Python/JVM test suite ([`backend/ingestion-service/tests/`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/ingestion-service/tests)) before being committed to production Flyway seeds:
+Every ingested batch must pass an automated Python/JVM test suite ([`backend/ingestion-service/tests/`](backend/ingestion-service/tests)) before being committed to production Flyway seeds:
 
 1. **Option Cardinality Gate**: Exactly 5 options (`A`, `B`, `C`, `D`, `E`) per question, with exactly one marked `isCorrect: true`.
 2. **LaTeX Syntax Gate**: All `$ ... $` and `$$ ... $$` delimiters must be syntactically valid KaTeX/MathJax expressions.
