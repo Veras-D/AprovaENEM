@@ -128,7 +128,9 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
         ...(isCoordinator
           ? [{ id: 'institutional', label: 'Painel da Coordenação', icon: Building2, isAnchor: false }]
           : []),
-        { id: 'profile', label: 'Minha Conta', icon: User, isAnchor: false },
+        ...(isAuthenticated
+          ? [{ id: 'profile', label: 'Minha Conta', icon: User, isAnchor: false }]
+          : []),
       ];
 
   const handleItemClick = (item: (typeof navItems)[number]) => {

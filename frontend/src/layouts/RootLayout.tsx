@@ -117,7 +117,7 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
       {/* Footer */}
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-8 mb-14 md:mb-0 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex items-center justify-center md:justify-start gap-2 text-xs text-slate-500 dark:text-slate-400 text-center md:text-left">
             <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
             <span>
               Privacidade LGPD (Lei nº 13.709/2018) &bull;{' '}
@@ -142,7 +142,7 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
               )}
             </span>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
+          <p className="text-xs text-slate-500 dark:text-slate-400 text-center md:text-right">
             {currentTenant.name} &bull; Parceria com a Recode Pro &bull; ODS 4 (Educação de Qualidade) & ODS 10 (Redução das Desigualdades)
           </p>
         </div>

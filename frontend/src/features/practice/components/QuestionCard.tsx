@@ -268,7 +268,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
       {/* Card Action Footer */}
       <CardFooter className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-50/70 dark:bg-slate-900/60 p-4">
-        <div className="flex flex-col gap-1 text-center sm:text-left">
+        <div className="hidden md:flex flex-col gap-1 text-left">
           <span className="text-xs text-slate-500 dark:text-slate-400">
             {!selectedOption && 'Selecione uma alternativa (ou use as teclas A–E)'}
             {selectedOption && !isSubmitted && `Alternativa (${selectedOption}) selecionada`}
@@ -276,8 +276,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           </span>
 
           {/* Accessible Hotkey Guide */}
-          <div className="flex items-center justify-center sm:justify-start gap-1 text-[11px] font-mono text-slate-400 dark:text-slate-500">
-            <Keyboard className="h-3 w-3" aria-hidden="true" />
+          <div className="flex items-center justify-start gap-1 text-[11px] font-mono text-slate-400 dark:text-slate-500">
+            <Keyboard className="h-3 w-3 shrink-0" aria-hidden="true" />
             <span>[A–E] Escolher &bull; [Enter] Confirmar &bull; [← / →] Questões &bull; [Espaço] Tutor IA</span>
           </div>
         </div>

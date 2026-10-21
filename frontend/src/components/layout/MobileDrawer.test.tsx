@@ -47,11 +47,11 @@ describe('MobileDrawer component', () => {
     expect(screen.getByText('AprovaENEM Social')).toBeInTheDocument();
     expect(screen.getByText('Início')).toBeInTheDocument();
     expect(screen.getByText('Praticar Questões')).toBeInTheDocument();
-    expect(screen.getByText('Minha Conta')).toBeInTheDocument();
 
     // Personalized student items must NOT be rendered for guests
     expect(screen.queryByText('Ranking Semanal')).not.toBeInTheDocument();
     expect(screen.queryByText('Diagnóstico & Desempenho')).not.toBeInTheDocument();
+    expect(screen.queryByText('Minha Conta')).not.toBeInTheDocument();
   });
 
   it('should render personalized student items (Ranking, Diagnóstico) when authenticated', () => {
