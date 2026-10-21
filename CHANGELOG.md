@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - fix(practice): Resolved raw Markdown syntax leakage (`![](url)` raw image tags and `**bold**` asterisks) in question statements.
 - fix(practice): Added `shouldRenderHeaderFigure` guard in [`QuestionCard.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/QuestionCard.tsx) preventing duplicate figures when a question statement embeds images directly at author-intended paragraph positions.
+- fix(practice): Replaced raw Unicode symbol `π` with LaTeX math delimiter `$\pi$` in ENEM 2023 item 136 statement to ensure consistent math typesetting and unblock Playwright cross-browser test matrix.
 
 ### Security
 - sec(practice): Enforced strict URL protocol sanitization (`isSafeUrl`) allowing only `https://`, `http://`, `/`, `./`, and `data:image/` while neutralizing `javascript:` XSS vectors in Markdown links and images.
@@ -176,7 +177,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [0.4.0] - 2026-10-07
-### 🏢 Strategic & Architecture Evolution (White-Label Multi-Tenant B2B Engine)
+### Added
 - feat(docs): Transitioned frontend architecture and platform business strategy to a **White-Label B2B Multi-Tenant Engine** across all technical specifications, backlog, and root project documentation:
   - **`docs/specifications/01-business-and-market-strategy.md`**:
     - Expanded Business Model Canvas to incorporate B2B SaaS licensing for private school networks (*redes de ensino*), municipal and state education departments (*Secretarias de Educação*), and prep course franchises.
@@ -198,7 +199,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Added white-label dynamic token architecture to Frontend Tech Stack and updated Core API Routes summary with tenant branding endpoints.
 
 ## [0.3.21] - 2026-09-25
-### 🌐 Config & Perimeter (Domain Reference Cleanup)
+### Changed
 - chore(domain): Purged all premature production domain references (`https://aprovaenem.com.br`) across configurations, documentation, and error responses:
   - **`docker-compose.yml`**, **`.env`**, **`.env.example`**: Removed `https://aprovaenem.com.br` from default and active `CORS_ALLOWED_ORIGINS` whitelists.
   - **`backend/frontend-api`**: Updated `allowedOrigins` in [`application.yml`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/frontend-api/src/main/resources/application.yml) to restrict origins to local developer frontends (`http://localhost:3000`, `http://localhost:5173`, `http://localhost:80`, `http://localhost`).
@@ -206,7 +207,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Documentation & Specifications**: Cleaned up ingress diagrams, CORS specifications, and API examples in [`README.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/README.md), [`03-system-architecture.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/specifications/03-system-architecture.md), [`05-api-specification.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/specifications/05-api-specification.md), [`phase3-automated-security-scans.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/audit/phase3-automated-security-scans.md), and [`phase4-runtime-penetration-testing.md`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/audit/phase4-runtime-penetration-testing.md).
 
 ## [0.3.20] - 2026-09-23
-### 📚 Added & Enhanced (Historical Question Catalog Bulk Ingestion & Reconciliation 2019–2023)
+### Added
 - feat(exam): Bulk ingested, verified, and reconciled representative historical ENEM question catalog (TASK-S3-13):
   - **`backend/ingestion-service`**:
     - Aligned `SubjectAreaEnum` with database values (`MATHEMATICS`, `NATURAL_SCIENCES`, `HUMANITIES`, `LANGUAGES`).
@@ -224,6 +225,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Static analysis: **0 Checkstyle violations, 0 PMD violations** across all modules.
     - Automated pre-flight smoke suite: **7/7 probes passed** in 0.77s (total catalog active: 30 questions).
     - Automated Postman Newman contract suite: **42/42 requests, 75/75 assertions passed** with zero failures in 12.4s.
+### Changed
+- docs(backlog): Synchronized `docs/BACKLOG.md` marking `TASK-S3-13` as `DONE ✅`, updating the Mermaid Gantt roadmap (`S3-13` and `S3-16` marked done), and updating the `Milestone & Sprint Status Summary` to **18/18 completed (100% COMPLETED ✅)**.
+### Fixed
 - fix(ci): Calibrated Grafana k6 performance smoke verification, hardened Docker pull, and parallelized CI pipeline:
   - **`tests/stress/catalog-browse-load.js`**: Differentiated `IS_CI_FAST` stages (2 to 15 VUs over 25s) and calibrated smoke thresholds (`p(95) < 500ms`, `p(99) < 1000ms`, single question `p(95) < 300ms`) from full 1,000 VU production stress runs, eliminating false-positive threshold exits caused by CPU scheduling contention on shared 2-vCPU GitHub Actions runners. Verified 100% green pass locally in 25.4s (P95 latency: 35.84ms, 0 errors across 1,457 requests).
   - **`.github/workflows/ci.yml`**:
@@ -232,10 +236,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Accelerated Maven multi-module compilation and testing with multi-core `-T 1C` thread allocation.
     - Added automated retry loops to `docker compose pull` to defend against transient Docker Hub "connection reset by peer" drops.
     - Optimized Newman CLI installation with `--no-audit --no-fund`.
-- docs(backlog): Synchronized `docs/BACKLOG.md` marking `TASK-S3-13` as `DONE ✅`, updating the Mermaid Gantt roadmap (`S3-13` and `S3-16` marked done), and updating the `Milestone & Sprint Status Summary` to **18/18 completed (100% COMPLETED ✅)**.
 
 ## [0.3.19] - 2026-09-23
-### 🛡️ Hardened & Secured (Supply Chain, Ingress Perimeter & Resource Boundary Hardening)
+### Changed
+- docs(backlog): Updated `docs/BACKLOG.md` marking `TASK-S3-16` as `DONE ✅`, advancing Sprint 3 completion to 94.4% (17/18 tasks completed).
+### Security
 - fix(security): Implemented supply chain BOM alignment, ingress proxy hardening, and container resource limits (TASK-S3-16):
   - **`backend/pom.xml`**:
     - Upgraded parent Spring Boot version from `3.3.3` to `3.3.11`.
@@ -260,10 +265,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Static analysis verified: **0 Checkstyle violations, 0 PMD violations** across all 6 modules.
     - Automated pre-flight smoke suite verified: **7/7 probes passed** in 657ms.
     - Automated Postman Newman contract suite verified: **42/42 requests, 75/75 assertions passed** with zero failures in 14.0s.
-- docs(backlog): Updated `docs/BACKLOG.md` marking `TASK-S3-16` as `DONE ✅`, advancing Sprint 3 completion to 94.4% (17/18 tasks completed).
 
 ## [0.3.18] - 2026-09-23
-### 🔒 Fixed & Hardened (Backend Security Audit Critical P0 Remediation & Hardening)
+### Changed
+- docs(backlog): Updated `docs/BACKLOG.md` marking `TASK-S3-15` as `DONE ✅`, advancing Sprint 3 completion to 88.9% (16/18 tasks completed).
+### Security
 - fix(security): Remediated critical security vulnerabilities, architectural flaws, and test integrity gaps identified during the multi-stage security audit (TASK-S3-15):
   - **`common-core`**:
     - Created [`AccessDeniedException`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/common-core/src/main/java/com/aprovaenem/common/exception/AccessDeniedException.java) representing RFC 7807 403 Forbidden domain access denial; installed into local repository with unit test coverage.
@@ -288,10 +294,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Expanded [`AprovaENEM.postman_collection.json`](file:///home/verivi/Veras/Projects/ReconectaRecode/docs/postman/AprovaENEM.postman_collection.json) to 42 requests and 75 assertions (100% green pass rate) achieving 100% route coverage across all microservices and asserting critical negative and security scenarios:
       - Added missing endpoints: `POST /api/v1/auth/resend-verification` (200 OK), `POST /api/v1/auth/verify-email` (400 Bad Request on invalid/expired token), `GET /api/v1/questions?discipline=...` (200 OK catalog filter), and `PATCH /api/v1/notifications/{id}/read` (200 OK mark notification read).
       - Added automated security & negative assertions: BOLA access denial on practice sessions without ownership (403 Forbidden), BFLA access denial on question status updates when requested by student principal (403 Forbidden), bad login credentials (400 Bad Request), duplicate student registration (400 Bad Request), malformed registration payload (400 Bad Request), and daily Socratic AI consultation quota exhaustion (429 Too Many Requests).
-- docs(backlog): Updated `docs/BACKLOG.md` marking `TASK-S3-15` as `DONE ✅`, advancing Sprint 3 completion to 88.9% (16/18 tasks completed).
 
 ## [0.3.17] - 2026-09-23
-### 🔒 Added & Hardened (LGPD Art. 18 Data Portability & Irrevocable Account Erasure Backend APIs)
+### Added
 - feat(lgpd): Implemented comprehensive LGPD Art. 18 data portability and account erasure endpoints across backend microservices (TASK-S3-14):
   - **`common-core`**: Created [`UserDeletedEvent`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/common-core/src/main/java/com/aprovaenem/common/events/UserDeletedEvent.java) event contract (`userId`, `email`, `legalBasis`, `occurredAt`) installed into local `.m2` repository.
   - **`auth-service`**:
@@ -312,17 +317,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Pre-flight smoke test verified with 100% green pass rate (7/7 probes in 238ms).
     - Postman Newman contract suite verified with 100% pass rate (31 requests, 56 assertions, 0 failures).
     - End-to-end multi-service event dispatch verified live across Docker stack.
+### Changed
 - docs(backlog): Synchronized `docs/BACKLOG.md` marking `TASK-S3-14` as `DONE ✅`, advancing Sprint 3 completion to 83.3% (15/18 tasks completed).
 
 ## [0.3.16] - 2026-09-21
-### 🛡️ Audited, Synthesized & Reorganized (Backend Security Audit & JAM 2 Backend Scope Alignment)
-- sec(audit): Completed comprehensive multi-stage backend security, static analysis, and test authenticity audit across 6 independent subagent phases (TASK-S3-11):
-  - **Phase 1 (Static Analysis & Workarounds)**: Audited rapid changes in Checkstyle regex, relaxed PMD CC 15 threshold, SpotBugs absence, `QuestionDtoMapper` static extraction, brittle shell script JSON parsing in `preflight-smoke.sh`, Newman `--delay-request 100` rate limiter masking, and double-BCrypt performance cost during pepper verification. Generated `docs/audit/phase1-static-analysis-workarounds.md` (Score: 52.0% | Grade F).
-  - **Phase 2 (Threat Modeling & OWASP API Top 10)**: Identified 21 security findings (4 Critical, 6 High), including BOLA in `PracticeSessionController`, BFLA in unauthenticated `PATCH /api/v1/questions/{id}/status`, direct XP farming via `POST /api/v1/gamification/activity`, blind `X-User-Id` header trust, and unbounded pagination heap exhaustion. Generated `docs/audit/phase2-threat-modeling-owasp.md` (Score: 58.0% | Grade D+).
-  - **Phase 3 (Automated SAST, SCA & Container Hardening)**: Audited dependencies via Aquasec Trivy discovering 49 High/Critical CVEs in Spring Boot 3.3.3 transitives (10 Critical in Tomcat/Netty), verified clean 82-commit git history via Gitleaks while identifying blanket path allowlist blindspots, flagged root execution in `ingestion-service`, Docker socket mount in `autoheal`, and Nginx header inheritance bugs. Generated `docs/audit/phase3-automated-security-scans.md` (Score: 66.8% | Grade D+).
-  - **Phase 4 (Perimeter & Runtime Security)**: Validated network isolation in `docker-compose.yml` (`internal: true`), flagged `0.0.0.0` exposure in `docker-compose.override.dev.yml`, detected egress blackhole blocking Gemini LLM and SMTP, verified JJWT 0.12 signature enforcement, uncovered `JWT_SECRET` divergence bug in `exam-service`, and verified parameterized SQL queries. Generated `docs/audit/phase4-runtime-penetration-testing.md` (Score: 71.4% | Grade C-).
-  - **Phase 5 (Test Suite Authenticity & Mutation Testing)**: Evaluated 1,148 assertion points across 344 test executions; identified 2 zero-assert tests, detected security filter stripping in 4/5 WebMvc slice tests (`addFilters = false`), and conducted PITest 50-mutant simulation achieving an 80.0% kill rate while identifying surviving mutants in session persistence. Generated `docs/audit/phase5-test-authenticity-mutation.md` (Score: 78.2% | Grade B-).
-  - **Phase 6 (Master Synthesis & Formal Audit Report)**: Compiled unified weighted scorecard (Global Score: 65.58% | Grade D+), analyzed cross-cutting workaround risk cascades, generated Master Prioritized Remediation Backlog (10 Tier P0 Hotfixes), and published formal master audit report at `docs/audit/jam1-backend-security-audit.md` and `docs/audit/phase6-final-synthesis-remediation.md`.
+### Changed
 - docs(backlog): Reorganized project backlog in `docs/BACKLOG.md`:
   - Marked **`TASK-S3-11`** as **DONE ✅**.
   - Brought forward **`TASK-S3-13`** (**Historical Question Catalog Bulk Ingestion & Reconciliation 2019–2023**, 5 pts, P1) from JAM 2 Sprint 4 (`S4-00`) to the final of Sprint 3.
@@ -332,26 +331,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Re-scoped Sprint 4 to focus 100% on frontend architecture and design tokens (8 tasks starting with `S4-01`).
   - Re-scoped `S6-09` in Sprint 6 to the frontend **Student Privacy Portal, Terms of Use UI & LGPD Self-Service Dashboard**.
   - Synchronized the Mermaid Gantt chart and Milestone & Sprint Status Summary table (Sprint 3: 18 tasks total, 14 completed, 4 pending).
+### Security
+- sec(audit): Completed comprehensive multi-stage backend security, static analysis, and test authenticity audit across 6 independent subagent phases (TASK-S3-11):
+  - **Phase 1 (Static Analysis & Workarounds)**: Audited rapid changes in Checkstyle regex, relaxed PMD CC 15 threshold, SpotBugs absence, `QuestionDtoMapper` static extraction, brittle shell script JSON parsing in `preflight-smoke.sh`, Newman `--delay-request 100` rate limiter masking, and double-BCrypt performance cost during pepper verification. Generated `docs/audit/phase1-static-analysis-workarounds.md` (Score: 52.0% | Grade F).
+  - **Phase 2 (Threat Modeling & OWASP API Top 10)**: Identified 21 security findings (4 Critical, 6 High), including BOLA in `PracticeSessionController`, BFLA in unauthenticated `PATCH /api/v1/questions/{id}/status`, direct XP farming via `POST /api/v1/gamification/activity`, blind `X-User-Id` header trust, and unbounded pagination heap exhaustion. Generated `docs/audit/phase2-threat-modeling-owasp.md` (Score: 58.0% | Grade D+).
+  - **Phase 3 (Automated SAST, SCA & Container Hardening)**: Audited dependencies via Aquasec Trivy discovering 49 High/Critical CVEs in Spring Boot 3.3.3 transitives (10 Critical in Tomcat/Netty), verified clean 82-commit git history via Gitleaks while identifying blanket path allowlist blindspots, flagged root execution in `ingestion-service`, Docker socket mount in `autoheal`, and Nginx header inheritance bugs. Generated `docs/audit/phase3-automated-security-scans.md` (Score: 66.8% | Grade D+).
+  - **Phase 4 (Perimeter & Runtime Security)**: Validated network isolation in `docker-compose.yml` (`internal: true`), flagged `0.0.0.0` exposure in `docker-compose.override.dev.yml`, detected egress blackhole blocking Gemini LLM and SMTP, verified JJWT 0.12 signature enforcement, uncovered `JWT_SECRET` divergence bug in `exam-service`, and verified parameterized SQL queries. Generated `docs/audit/phase4-runtime-penetration-testing.md` (Score: 71.4% | Grade C-).
+  - **Phase 5 (Test Suite Authenticity & Mutation Testing)**: Evaluated 1,148 assertion points across 344 test executions; identified 2 zero-assert tests, detected security filter stripping in 4/5 WebMvc slice tests (`addFilters = false`), and conducted PITest 50-mutant simulation achieving an 80.0% kill rate while identifying surviving mutants in session persistence. Generated `docs/audit/phase5-test-authenticity-mutation.md` (Score: 78.2% | Grade B-).
+  - **Phase 6 (Master Synthesis & Formal Audit Report)**: Compiled unified weighted scorecard (Global Score: 65.58% | Grade D+), analyzed cross-cutting workaround risk cascades, generated Master Prioritized Remediation Backlog (10 Tier P0 Hotfixes), and published formal master audit report at `docs/audit/jam1-backend-security-audit.md` and `docs/audit/phase6-final-synthesis-remediation.md`.
 
 ## [0.3.15] - 2026-09-20
-### 🛡️ Added, Hardened & Documented (Governance, CI Execution & Backlog Investigation Scope)
+### Changed
 - docs(license): Adopted PolyForm Noncommercial License 1.0.0 in root `LICENSE` file and synchronized OpenAPI configs, strictly prohibiting commercial monetization and private prep-course exploitation while preserving 100% free educational access for students, public schools, and non-profits.
 - config(env): Added `AUTH_PASSWORD_PEPPER` configuration to `.env.example` under JWT & Password Security section, documenting HMAC-SHA256 secret pepper pre-hashing ($2^{10}$ BCrypt rounds).
-- ci(actions): Hardened GitHub Actions CI workflow in `.github/workflows/ci.yml`:
-  - Fixed YAML scanner syntax error by enclosing all stage names containing colons in double quotes (`"Stage X: ..."`).
-  - Configured `mvn clean install -B -DskipTests` in Stage 1 to install `common-core` into the runner's local repository, resolving multi-module dependencies during static analysis in Stage 2.
-  - Resolved `jacoco:check` missing rules failure on parent `aprovaenem-parent` POM by aligning Stage 5 test execution with Maven lifecycle bindings (`mvn test -B -Dspring.profiles.active=test`).
-  - Fixed global npm installation command in Job 2 (`npm install -g newman`, removing nonexistent `newman-reporter-junitxml` package as JUnit reporting is built into Newman core).
-  - Created `.gitleaks.toml` allowlist to ignore documentation Markdown files (`docs/`, `README.md`) containing sample mock JWT tokens and API contract payloads, preventing false-positive secret detections.
 - docs(backlog): Updated `docs/BACKLOG.md`:
   - Expanded **`TASK-S3-11`** scope to mandate a deep technical investigation and audit of all rapid changes and potential workarounds made without websearch (Checkstyle `MethodName` regex `^[a-z][a-zA-Z0-9]*(_[a-zA-Z0-9]+)*$` for Spring Data JPA repository traversals vs `@Query`, PMD ruleset configuration $\le 15$ cyclomatic complexity, `QuestionDtoMapper` extraction and domain encapsulation, shell script regex parsing in `preflight-smoke.sh` vs `jq`, Newman `--delay-request 100` rate limiter interactions, and HMAC-SHA256 password pepper backward compatibility).
   - Marked **`TASK-S3-12`** as **DONE ✅** reflecting that the JAM 1 backend platform deliverable has been officially submitted to the Reconecta Recode platform.
   - Formally clarified that visual showcase assets (`docs/images/` catalog) are scheduled for Month 4 (Sprint 6/7) during full-stack presentation preparation, not Sprint 3.
   - Updated Sprint 3 milestone progress to 93% (13/14 tasks completed).
 - docs(readme): Updated `README.md` and `docs/specifications/07-quality-gate-ci.md` to reference `.github/workflows/ci.yml`, document the 7-stage CI quality gate, and align PMD cyclomatic complexity ($\le 15$) and CPD token thresholds (100 tokens).
+### Fixed
+- ci(actions): Hardened GitHub Actions CI workflow in `.github/workflows/ci.yml`:
+  - Fixed YAML scanner syntax error by enclosing all stage names containing colons in double quotes (`"Stage X: ..."`).
+  - Configured `mvn clean install -B -DskipTests` in Stage 1 to install `common-core` into the runner's local repository, resolving multi-module dependencies during static analysis in Stage 2.
+  - Resolved `jacoco:check` missing rules failure on parent `aprovaenem-parent` POM by aligning Stage 5 test execution with Maven lifecycle bindings (`mvn test -B -Dspring.profiles.active=test`).
+  - Fixed global npm installation command in Job 2 (`npm install -g newman`, removing nonexistent `newman-reporter-junitxml` package as JUnit reporting is built into Newman core).
+  - Created `.gitleaks.toml` allowlist to ignore documentation Markdown files (`docs/`, `README.md`) containing sample mock JWT tokens and API contract payloads, preventing false-positive secret detections.
 
 ## [0.3.14] - 2026-09-20
-### 🚀 Added & Verified (7-Stage GitHub Actions CI Quality Gate & Pre-Flight Smoke Suite)
+### Added
 - ci(backend): Implement production-grade 7-stage GitHub Actions CI pipeline in `.github/workflows/ci.yml` (TASK-S3-10)
   - **Stage 1 (Strict Compilation)**: Configured strict Maven compilation enforcing Java 21 compiler flags (`-parameters`, `-Werror`) across all 6 backend modules (`common-core`, `frontend-api`, `auth-service`, `exam-service`, `notification-service`).
   - **Stage 2 (Static Analysis & Cyclomatic Complexity)**: Integrated `maven-checkstyle-plugin` (Google Java Style with Spring Data JPA extensions) and `maven-pmd-plugin` (ruleset bounding cyclomatic complexity $\le 15$ per method and $\le 80$ per class), achieving 0 violations across all 6 modules.
@@ -361,15 +369,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Stage 6 (Docker Compose Production Ecosystem & Pre-Flight Smoke Suite)**: Automated container ecosystem initialization and live health verification; created `tests/smoke/preflight-smoke.sh` executing 7 comprehensive probes (Edge Nginx `/health`, Gateway `/actuator/health`, distributed trace header propagation, question bank catalog browse, anonymous session creation, practice session start, and practice query verification) completing with 100% green pass rate in 147ms (well within the $< 15\text{s}$ SLA budget).
   - **Stage 7 (Automated Postman Newman API Contract Suite & k6 Smoke)**: Executed Postman collection `docs/postman/AprovaENEM.postman_collection.json` via Newman (31 requests, 56 assertions, 100% pass rate in 9.7s) and headless Grafana k6 smoke verification (`catalog-browse-load.js` in `CI_FAST` mode with 150 VUs, 0% errors, and sub-135ms P95 latency).
 - feat(nginx): Added `/actuator/health` proxy location to `infrastructure/nginx/nginx.conf` routing to `frontend-api` BFF for standardized perimeter health checks and Kubernetes/Prometheus probes.
+### Changed
+- docs(backlog): Synchronized `docs/BACKLOG.md` marking `TASK-S3-10` as `DONE ✅`, advancing Sprint 3 completion to 86% (12/14 tasks completed).
+### Fixed
 - fix(quality): Cleaned up static analysis findings across services:
   - Removed unused imports in `GlobalGatewayExceptionHandler`, `PracticeSessionEntity`, and `NotificationEventListener`.
   - Wrapped long lines exceeding 160 characters in `EmailVerificationService`, `OpenApiConfig`, `BCryptPasswordEncoderAdapter`, and `GeminiTutorClientAdapter`.
   - Added curly braces to single-line control flow statements in `GamificationService` and `RedisTutorQuotaAdapter`.
   - Added structured audit logging for tier promotion/relegation metrics during weekly league resets.
-- docs(backlog): Synchronized `docs/BACKLOG.md` marking `TASK-S3-10` as `DONE ✅`, advancing Sprint 3 completion to 86% (12/14 tasks completed).
 
 ## [0.3.13] - 2026-09-20
-### 🚀 Added & Verified (Containerized Grafana k6 Load & Stress Testing Suite)
+### Added
 - test(stress): Implement containerized Grafana k6 load, stress, and concurrency benchmarking suite (`tests/stress/`) across 3 high-risk operational scenarios (TASK-S3-06b)
   - `catalog-browse-load.js`: Simulates the Exam Rush scenario with 150 to 1,000 concurrent Virtual Users (VUs) querying the question catalog, difficulty filters, and single question lookups against Redis L2 cache and PostgreSQL:
     - Achieved **593.01 requests / second throughput** with **100.00% check pass rate** (51,390/51,390 checks) across 18,002 HTTP requests.
@@ -385,26 +395,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ci(stress): Added automated stress test execution tooling:
   - `tests/stress/run-k6-stress.sh`: Unified CLI runner supporting `catalog`, `socratic`, `leaderboard`, and `all` scenarios with configurable `BASE_URL` and `CI_FAST` flags.
   - `tests/stress/docker-compose.k6.yml`: Containerized k6 service definitions attached to `aprovaenem-internal` and `frontend-edge` Docker networks.
+### Changed
 - docs(benchmarks): Published comprehensive stress testing and saturation report in `docs/benchmarks/jam1-k6-stress-benchmarking.md` detailing architecture, test scenarios, percentile tables, bottleneck analysis, and SLA verification.
 - docs(backlog): Synchronized `docs/BACKLOG.md` marking `TASK-S3-06b` as `DONE ✅`, advancing Sprint 3 completion to 79% (11/14 tasks completed).
 
 ## [0.3.12] - 2026-09-20
-### 🔐 Added & Hardened (Password Storage Pepper Hardening via HMAC-SHA256 + BCrypt)
+### Added
+- test(auth): Added comprehensive unit and integration verification for peppered password hashing:
+  - `BCryptPasswordEncoderAdapterTest`: 7 unit tests verifying peppered hashing, dual-check legacy validation, rejection of invalid credentials, immunity to BCrypt 72-byte truncation collision, empty pepper fallback, null safety, and default port method behavior.
+  - `AuthServiceTest`: Added `shouldSeamlesslyUpgradeLegacyPasswordHashOnLogin` verifying automatic upgrade and persistence.
+  - `AuthRepositoryAndFlywayIT`: 4 Testcontainers integration tests passing against real PostgreSQL 16.
+  - Maintained high JaCoCo coverage in `auth-service`: 95.8% line coverage, 84.1% branch coverage (exceeding $\ge 80\%$ line and $\ge 75\%$ branch thresholds).
+### Changed
+- docs(backlog): Synchronized `docs/BACKLOG.md` marking `TASK-S3-07b` as `DONE ✅`, advancing Sprint 3 completion to 71% (10/14 tasks completed).
+### Security
 - sec(auth): Layer application-level secret pepper over BCrypt in `auth-service` via `BCryptPasswordEncoderAdapter` and `PasswordEncoderPort` (TASK-S3-07b)
   - Implemented HMAC-SHA256 pre-hashing using `javax.crypto.Mac` with Base64 encoding before standard BCrypt hashing ($2^{10}$ rounds).
   - Externalized secret pepper key to `AUTH_PASSWORD_PEPPER` environment variable (`auth.password-pepper` property in `application.yml` and `docker-compose.yml`) with secure fallback for local development.
   - Eliminated the known BCrypt 72-byte truncation collision attack vector, ensuring passwords of arbitrary length yield uniform 32-byte HMAC digests prior to BCrypt hashing.
   - Provided dual-check backward compatibility: `matches(rawPassword, encodedPassword)` evaluates HMAC-SHA256 + BCrypt first, and falls back to legacy raw BCrypt comparison.
   - Added seamless automatic hash migration on login: `AuthService.login()` detects legacy hashes via `isLegacyHash()` and transparently re-encodes with pepper and persists the updated hash to PostgreSQL within `@Transactional` boundary.
-- test(auth): Added comprehensive unit and integration verification for peppered password hashing:
-  - `BCryptPasswordEncoderAdapterTest`: 7 unit tests verifying peppered hashing, dual-check legacy validation, rejection of invalid credentials, immunity to BCrypt 72-byte truncation collision, empty pepper fallback, null safety, and default port method behavior.
-  - `AuthServiceTest`: Added `shouldSeamlesslyUpgradeLegacyPasswordHashOnLogin` verifying automatic upgrade and persistence.
-  - `AuthRepositoryAndFlywayIT`: 4 Testcontainers integration tests passing against real PostgreSQL 16.
-  - Maintained high JaCoCo coverage in `auth-service`: 95.8% line coverage, 84.1% branch coverage (exceeding $\ge 80\%$ line and $\ge 75\%$ branch thresholds).
-- docs(backlog): Synchronized `docs/BACKLOG.md` marking `TASK-S3-07b` as `DONE ✅`, advancing Sprint 3 completion to 71% (10/14 tasks completed).
 
 ## [0.3.11] - 2026-09-20
-### 🛡️ Added & Hardened (Resilience4j Chaos & Fault Injection Testing Suite)
+### Added
 - test(resilience): Implement Resilience4j Chaos and Circuit Breaker integration testing suite (`Resilience4jChaosAndCircuitBreakerIT`) across `exam-service` against real Testcontainers (`PostgreSQL 16 pgvector` + `Redis 7.2`) with embedded JDK HTTP fault injection server (TASK-S3-07)
   - Verified 6 fault injection and chaos scenarios:
     1. **Normal Operation (CLOSED state)**: Verified live Gemini API invocation (HTTP 200 OK) returning model output with `isFallback: false`, verifying Circuit Breaker remains in `CLOSED` state.
@@ -413,13 +426,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     4. **Sustained Chaos & Zero-Traffic Short-Circuiting**: Injected 3 consecutive HTTP 503 service failures, automatically tripping the Circuit Breaker from `CLOSED` to `OPEN` (breaching the 50% failure rate threshold over `minimum-number-of-calls: 3`). Verified that subsequent requests immediately short-circuit in memory without dispatching any network packets (`requestCounter` delta = 0).
     5. **Automated Recovery Cycle (`OPEN` -> `HALF_OPEN` -> `CLOSED`)**: Probed recovery transitions through `HALF_OPEN` state, verifying that 2 successful probe requests reset the breaker back to `CLOSED` and restore live LLM traffic.
     6. **End-to-End Service Orchestration**: Verified full flow through `SocraticTutorService.askTutor(...)`, confirming `TutorConsultationResult.isFallback()` propagation, fallback messaging containing curated INEP pedagogical concepts, and accurate thread history metadata recording (`modelUsed = "static-inep-fallback"` vs `"gemini-1.5-flash"`).
+- test(unit): Updated `GeminiTutorClientAdapterTest` and `SocraticTutorServiceTest` to validate `TutorAiResult` return contracts and fallback propagation.
+### Changed
 - refactor(tutor): Refined `TutorAiPort` domain contract and `GeminiTutorClientAdapter` to return `TutorAiResult(String responseText, boolean isFallback)` domain record instead of primitive `String`, properly encapsulating AI invocation provenance and fallback status.
 - config(network): Added `RestClientConfig` configuring `RestClient.Builder` with configurable connect and read timeouts (`gemini.timeout-seconds`, default 5s, 1s in test profile) via `SimpleClientHttpRequestFactory`.
-- test(unit): Updated `GeminiTutorClientAdapterTest` and `SocraticTutorServiceTest` to validate `TutorAiResult` return contracts and fallback propagation.
 - docs(backlog): Synchronize `docs/BACKLOG.md` marking `TASK-S3-07` as `DONE ✅`, advancing Sprint 3 completion to 64% (9/14 tasks completed), and schedule `TASK-S4-00` (Historical Question Catalog Bulk Ingestion & Reconciliation 2019–2023) as the kick-off task for Sprint 4.
 
 ## [0.3.10] - 2026-09-20
-### ⚡ Added & Optimized (Redis Caching, Lettuce Connection Pooling & Latency Benchmarking Suite)
+### Added
 - perf(cache): Implement Redis caching layers, connection pool tuning, and comprehensive latency benchmarking suite across `exam-service` and `auth-service` (TASK-S3-06)
   - `exam-service`:
     - Added `RedisCacheAndLatencyBenchmarkIT` (4 integration tests against real PostgreSQL 16 `pgvector` and Redis 7.2 containers):
@@ -431,12 +445,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `auth-service`:
     - Added concurrent load benchmark `shouldAchieveSubMillisecondRankingUnderConcurrentLoad` to `RedisLeaderboardIT`: Simulated 500 concurrent `ZADD`, `ZREVRANK`, and `ZREVRANGEBYSCORE` operations across 10 threads, completing in 619ms (**1.24ms wall-clock per op, 807 ops/sec throughput**).
   - build(redis): Added `org.apache.commons:commons-pool2` to `auth-service` and `exam-service`, configuring production Lettuce connection pooling (`max-active: 16`, `max-idle: 8`, `min-idle: 2`, `max-wait: 2000ms`, `timeout: 2000ms`).
+### Changed
 - docs(benchmarks): Published comprehensive latency benchmark report in `docs/benchmarks/jam1-redis-latency-benchmarking.md` detailing architecture, test scenarios, execution metrics, percentile distributions, and production recommendations.
 - docs(backlog): Synchronize `docs/BACKLOG.md` marking `TASK-S3-06` as `DONE ✅` and scheduling `TASK-S3-06b` (Backend Load & Stress Testing with Grafana k6).
 - docs(quality-gate): Formalize automated Pre-Flight Smoke Testing (< 15s) and containerized Grafana k6 Full-System Stress & Load Testing (`tests/stress/`) across `docs/specifications/07-quality-gate-ci.md`, `README.md`, and `docs/BACKLOG.md` (covering Exam Rush 1,000+ VU simulation, Socratic consultation bursts, and post-deployment smoke verification in `TASK-S6-05`).
 
 ## [0.3.9] - 2026-09-20
-### 📊 Added & Enforced (JaCoCo Unified Backend Coverage Quality Gate >= 80% Line, >= 75% Branch)
+### Added
 - test(coverage): Implement comprehensive adapter, security, and messaging unit tests across all backend microservices, bringing overall suite to 336 tests (100% green, 0 errors, 0 failures) and enforcing the automated JaCoCo coverage quality gate in Maven `verify` lifecycle (TASK-S3-05)
   - `auth-service` (132 unit tests passing): Attains **96.25% line coverage** (975/1013) and **82.69% branch coverage** (129/156)
     - Added `JwtAuthenticationFilterTest` (5 tests): Verifies valid Bearer token extraction, user details loading, security context authentication, missing header bypass, non-Bearer bypass, invalid token handling, and runtime exception tolerance
@@ -463,14 +478,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Added `io.projectreactor:reactor-test` test scope dependency
   - `common-core` (8 unit tests passing): Attains **100% line coverage** (8/8) and **100% branch coverage**
 - build(maven): Configure `jacoco-maven-plugin:0.8.12` with `<id>check</id>` execution bound to `<phase>verify</phase>` in root `pom.xml`, establishing a hard build quality gate requiring `<counter>LINE</counter> >= 0.80` and `<counter>BRANCH</counter> >= 0.75` across all packaging modules
+### Changed
 - docs(backlog): Synchronize `docs/BACKLOG.md` marking `TASK-S3-05` as `DONE ✅` and advancing Sprint 3 completion to 58% (7/12 tasks completed)
 - docs(audit): Expand both milestone audit specifications (`TASK-S3-11` in Sprint 3 for backend and `TASK-S6-06` in Sprint 6 for full-stack) across `docs/BACKLOG.md` and `docs/specifications/07-quality-gate-ci.md` to establish a 5-Stage Security & Test Suite Integrity Audit framework, incorporating a dedicated Test Quality & Legitimacy Audit stage (detecting test smells, vacuous/tautological assertions, over-mocking, swallowed exceptions, unhandled async promise rejections, and mutant fault injection verification)
 - docs(specs): Align `docs/specifications/04-data-modeling.md` (Question domain model attributes: `triParamA/B/C`, `figureUrl`, `figureAltText`, `contentLanguage`) and `docs/specifications/05-api-specification.md` (sequential section numbering for email resend verification) with current microservice implementations and Flyway DDL migrations
-- fix(database): Align `V1__init_exam_schema.sql`, `QuestionEntity`, and `QuestionRepositoryAdapter` with `04-data-modeling.md` by including `figure_url` and `figure_alt_text` columns for INEP charts and WCAG 1.1.1 screen-reader descriptions
 - docs(backlog): Add `TASK-S3-07b` (Password Storage Pepper Hardening via HMAC-SHA256 + BCrypt) to Sprint 3 backlog and roadmap to provide defense-in-depth against isolated database breaches
+### Fixed
+- fix(database): Align `V1__init_exam_schema.sql`, `QuestionEntity`, and `QuestionRepositoryAdapter` with `04-data-modeling.md` by including `figure_url` and `figure_alt_text` columns for INEP charts and WCAG 1.1.1 screen-reader descriptions
 
 ## [0.3.8] - 2026-09-20
-### 🧪 Added (Test Pyramid - Testcontainers PostgreSQL 16 pgvector & Redis Integration Tests)
+### Added
 - test(integration): Implement real container integration test suites across `auth-service`, `exam-service`, and `notification-service` verifying database migrations, JPA repositories, full-text search, and Redis caching with Testcontainers (5 test suites, 16 integration tests, 100% passing) (TASK-S3-04)
   - `AuthRepositoryAndFlywayIT` (4 tests): Verifies PostgreSQL 16 container executing Flyway migrations V1–V3 (`init_auth_schema`, `auth_indexes`, `gamification_and_sessions`), `UserRepositoryAdapter` CRUD, `GamificationRepositoryAdapter` profile persistence, XP accumulation, streaks, and `AnonymousSessionRepositoryAdapter` provisioning and post-registration claiming
   - `RedisLeaderboardIT` (2 tests): Verifies real Redis 7.2 container executing atomic ZSET operations (`ZADD`, `ZREVRANGE_WITHSCORES`), rank retrieval, score incrementation, and clean league reset eviction
@@ -478,10 +495,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `RedisTutorQuotaIT` (3 tests): Verifies real Redis 7.2 container enforcing Socratic AI daily quota tracking with TTL, quota exhaustion for standard students, unlimited access bypass for premium students, and cross-student key isolation
   - `NotificationRepositoryAndFlywayIT` (3 tests): Verifies PostgreSQL 16 container executing Flyway migrations V1–V2 (`init_notification_schema`, `notification_indexes`), `UserDeviceTokenRepository` token registration, querying by active status, and deactivation, and `NotificationLogRepository` persisting multi-channel notifications (in-app, email, push) with JSONB metadata and unread status counting
 - build(maven): Configure Maven Failsafe Plugin in root `backend/pom.xml` for integration test execution (`*IT.java`) with strict separation from Surefire fast unit tests (`*Test.java`), and Docker Java API version 1.44 negotiation properties for host Docker Engine 29+ compatibility
+### Changed
 - docs(backlog): Update `docs/BACKLOG.md` marking TASK-S3-04 as DONE, advancing Sprint 3 completion to 50% (6/12 tasks completed)
 
 ## [0.3.7] - 2026-09-20
-### 🛡️ Added (Test Pyramid - Spring Security & WebMvc MockMvc Tests)
+### Added
 - test(security): Implement comprehensive WebMvc MockMvc test suites across `auth-service`, `exam-service`, and `notification-service` verifying HTTP status codes, security boundaries, and validation rules (7 test suites, 48 tests, 100% passing, total backend tests reach 202 tests) (TASK-S3-03)
   - `AuthControllerWebMvcTest` (10 tests): Validates registration (201 Created / 400 Bad Request on duplicate/validation error), login (200 OK / 400 Bad Request on invalid credentials), authenticated user profile (200 OK / 401 Unauthorized), LGPD Art. 18 data portability export (200 OK), LGPD account erasure (204 No Content), email verification (200 OK), and resend verification (200 OK)
   - `GamificationControllerWebMvcTest` (7 tests): Validates authenticated profile retrieval (200 OK / 401 Unauthorized / 403 Forbidden without `ROLE_STUDENT`), daily study goal configuration (200 OK), weekly leaderboard rankings (200 OK), badge catalog (200 OK), and daily activity heatmap (200 OK)
@@ -490,10 +508,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `QuestionCatalogControllerWebMvcTest` (5 tests): Validates paginated question catalog retrieval with filter parameters and answer masking to prevent cheating (200 OK), single question detail retrieval (200 OK), question not found (404 Not Found), administrative status update (200 OK), and missing status validation (400 Bad Request)
   - `PracticeSessionControllerWebMvcTest` (8 tests): Validates starting practice session via `X-Session-Id` header (201 Created), starting session via request body (201 Created), missing session identifier validation (400 Bad Request), session retrieval (200 OK), answer submission with instant grading and explanation (201 Created), missing question ID validation (400 Bad Request), session completion (200 OK), and diagnostic report retrieval (200 OK)
   - `NotificationControllerWebMvcTest` (9 tests): Validates push token registration via `X-User-Id` header (201 Created), push token registration via Bearer JWT token (201 Created), unauthenticated token registration rejection (401 Unauthorized), invalid platform validation (400 Bad Request), notification feed retrieval (200 OK / 401 Unauthorized), marking notification as read (200 OK / 404 Not Found), and unread count query (200 OK)
+### Changed
 - docs(backlog): Update `docs/BACKLOG.md` marking TASK-S3-03 as DONE, advancing Sprint 3 completion to 42% (5/12 tasks completed), and embedding Mermaid Test Pyramid diagram
 
 ## [0.3.6] - 2026-09-20
-### 🧪 Added (Test Pyramid - Application Service Unit Tests)
+### Added
 - test(application): Implement comprehensive Mockito unit test suites for all Application Services and Use Cases across `exam-service`, `auth-service`, and `notification-service` (57 tests, 100% passing, total suite reaches 191 tests across backend) (TASK-S3-02)
   - `QuestionCatalogServiceTest` (6 tests): Validates paginated question catalog filtering by subject/difficulty, question detail retrieval, active status updates, and administrative suspension notes
   - `PracticeSessionServiceTest` (8 tests): Validates session initialization with question randomizer, answer submission with instant grading and duplicate submission rejection, diagnostic report generation with accuracy radar and pedagogical recommendations, and session abandonment
@@ -503,11 +522,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `AnonymousSessionServiceTest` (5 tests): Validates 30-day anonymous session provisioning with SHA-256 IP hashing, session UUID retrieval, and session claiming post-registration
   - `EmailVerificationServiceTest` (8 tests): Validates 24-hour token email verification, expired token rejection, silent anti-enumeration resend handling, and Outbox event dispatch
   - `NotificationServiceTest` (7 tests): Validates Android/iOS push token registration with device deduplication, paginated notification feed retrieval with unread status filtering, marking notifications as read, and unread counter queries
+### Changed
 - docs(backlog): Update `docs/BACKLOG.md` marking TASK-S3-02 as DONE and advancing Sprint 3 completion to 33% (4/12 tasks completed)
 - docs(agents): Create and expand `AGENTS.md` full-stack repository operating manual covering monorepo architecture (backend, frontend, infrastructure), English-only communication mandate, Mermaid diagram guidelines for Markdown documentation, zero uncommitted changes policy, Conventional Commits standard, pre-commit changelog updates, proactive web search with zero workarounds policy, error diagnosis protocol, and recursive documentation synchronization
 
 ## [0.3.5] - 2026-09-20
-### 🧪 Added (Test Pyramid - Domain Unit Tests)
+### Added
 - test(domain): Implement pure Java domain unit test suites with JUnit 5 & AssertJ across `exam-service`, `auth-service`, and `common-core` (134 tests, 0 failures, execution time $< 1\text{s}$) (TASK-S3-01)
   - `QuestionTest`: Status lifecycle transitions (`ACTIVE` $\rightarrow$ `SUSPENDED` $\rightarrow$ `NEEDS_REVIEW` $\rightarrow$ `ACTIVE`), option letter validation (A–E range), casing tolerance, and INEP 3-Parameter Logistic (3PL) Item Response Theory (TRI) probability formula verification ($P(\theta) = c + (1-c)/(1+e^{-1.7a(\theta-b)})$)
   - `PracticeSessionTest`: Session state machine (`IN_PROGRESS` $\rightarrow$ `COMPLETED` / `ABANDONED`), monotonic score calculations with `HALF_UP` 2-decimal rounding, and attempt acceptance guarding
@@ -519,18 +539,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `AnonymousSessionTest`: Expiration window detection and post-registration user ownership binding
   - `UserTest` & `WeeklyLeaderboardTest`: Role verification, school demographics, and weekly league rank / promotion zone tracking
   - `ApiResponseTest` & `ExceptionAndEventTest`: DTO builder encapsulation, RFC 7807 problem details, and RabbitMQ domain events
+### Changed
 - docs(backlog): Update `docs/BACKLOG.md` marking TASK-S3-01 as DONE, advancing Sprint 3 completion to 25%, and setting TASK-S3-02 (Application Service Unit Testing) as ACTIVE
 
 ## [0.3.4] - 2026-09-20
-### 🛡️ Added & Synchronized
+### Added
 - feat(lgpd): Implement Brazilian General Data Protection Law (LGPD - Lei nº 13.709/2018) data subject rights in `auth-service`: `GET /api/v1/auth/export` (Art. 18, V - Data Portability) and `DELETE /api/v1/auth/me` (Art. 18, VI - Irrevocable Account Erasure & Psychometric Anonymization)
 - test(contract): Recursively synchronize Postman contract test suite (`AprovaENEM.postman_collection.json`) with LGPD Art. 18 assertions, verified 100% green via Newman CLI (31 requests, 56 assertions passing)
+### Changed
 - docs(backlog): Add TASK-S4-08 (Student Registration Terms of Use & LGPD Consent Modal) and TASK-S6-09 (Legal Compliance, Terms of Use & LGPD Privacy Portal for JAM 3)
 - docs(specs): Document Section 10 LGPD Compliance & Privacy by Design in `05-api-specification.md` and account purge lifecycle in `04-data-modeling.md`
 - docs(readme): Add LGPD Compliance badge and Privacy by Design architectural highlights to `README.md`
 
 ## [0.3.3] - 2026-09-20
-### ♿ Added & Synchronized
+### Added
 - docs(accessibility): Specify comprehensive Universal Digital Accessibility baseline across architecture, backlog, and quality gates adhering to WCAG 2.1 Level AA, e-MAG, and Lei Brasileira de Inclusão (LBI - Lei nº 13.146/2015)
 - docs(backlog): Add TASK-S4-07 (Digital Accessibility Baseline & VLibras Integration), TASK-S5-07 (Accessible Question Reader, Hotkeys & INEP Accommodations), and update S6 with automated Axe-Core / Lighthouse accessibility quality gates ($\ge 95/100$)
 - docs(data): Add `figure_alt_text` and `time_mode` (`STANDARD`, `EXTENDED_INEP`, `UNTIMED`) to `questions` and `practice_sessions` tables in `04-data-modeling.md`
@@ -539,12 +561,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - docs(readme): Add WCAG 2.1 AA and VLibras badges, Universal Digital Accessibility feature highlights, and Accessibility tech stack to `README.md`
 
 ## [0.3.2] - 2026-09-20
-### 🚀 Added
+### Added
 - feat(api-docs): Implement interactive OpenAPI 3.0 specifications and Swagger UI (`/swagger-ui.html`) across `auth-service`, `exam-service`, and `notification-service`, with unified multi-spec gateway dropdown aggregation in `frontend-api` BFF and Nginx reverse proxy routing (TASK-S3-08)
 - test(contract): Implement automated Newman / Postman end-to-end API contract test suite (`docs/postman/AprovaENEM.postman_collection.json` and `docs/postman/AprovaENEM.postman_environment.json`) covering 8 modules, 29 requests, and 53 assertions verifying status codes, schemas, and SLA latency (TASK-S3-09)
 
 ## [0.3.1] - 2026-09-20
-### 🔄 Changed
+### Changed
 - refactor(docs): Rename foundational specifications directory from `docs/sprint-1/` to `docs/specifications/` to accurately reflect its permanent role as the platform architecture and technical baseline across all project phases
 - docs(links): Synchronize internal documentation links, project directory tree, and backlog artifact cross-references across `README.md`, `docs/BACKLOG.md`, and `docs/specifications/02-project-charter.md`
 - docs(specs): Synchronize API specification in `05-api-specification.md` with live controllers: added `GET /api/v1/auth/me`, `GET /api/v1/auth/session/{sessionUuid}`, `GET /api/v1/sessions/{id}/diagnostic`, `POST /api/v1/gamification/activity`, `POST /api/v1/gamification/reminders/trigger`, and `GET /api/v1/notifications/unread-count`; corrected question status route to `PATCH /api/v1/questions/{id}/status` and documented anti-cheating resolution encapsulation inside `AttemptResultResponse`
@@ -553,24 +575,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - docs(ingestion): Update extraction and reconciliation worker paths in `08-data-ingestion-pipeline.md` to point to the containerized `backend/ingestion-service/` modules and test suites
 
 ## [0.3.0] - 2026-09-20
-### 🚀 Added
+### Added
 - feat(gamification): Implement student gamification engine in `auth-service` with XP progression (+10 correct answer, +50 completed session, +20 daily goal bonus), 4-tier title levels (`Calouro Iniciante`, `Focado no SISU`, `Mestre dos Simulados`, `Nota 1000`), daily streak tracking in `America/Sao_Paulo` timezone, and emergency monthly streak freeze (TASK-S2-14)
 - feat(leaderboard): Implement real-time weekly reset leaderboards with Redis `ZSET` (`leaderboard:weekly:{year}:{week}:{tier}`), sub-5ms rank lookup, top 20% promotion zone calculations, and scheduled Sunday 23:59:59 BRT league reset worker (TASK-S2-15)
 - feat(scheduler): Implement daily 19:00 BRT study reminder scheduled worker in `auth-service` dispatching `DailyGoalReminderEvent` to RabbitMQ for students with pending daily goals (TASK-S2-16)
 - feat(notifications): Implement decoupled `notification-service` microservice consuming RabbitMQ events (`notification.reminders.queue`, `notification.auth.queue`), registering device push tokens (WEB_PUSH, ANDROID, IOS), and serving the in-app notification inbox with read state tracking (TASK-S2-17)
 - feat(ingestion): Implement on-demand data ingestion microservice (`ingestion-service`) with Docker Compose profile `ingestion`, IBM Docling layout parsing, KaTeX formula extraction, 300 DPI WebP diagram cropping, INEP ITENS_PROVA microdados reconciliation, and 5 automated quality gates (TASK-S2-02b)
+### Fixed
 - fix(infra): Optimize Nginx health check probe to use IPv4 loopback (`127.0.0.1/health`) and dual IPv4/IPv6 listen binding; disable unused `MailHealthIndicator` in Spring Boot Actuator to ensure 100% container health
 
 ## [0.2.1] - 2026-09-19
-### 🔄 Changed & Synchronized
+### Changed
 - docs(specs): Synchronize OpenAPI specifications in `05-api-specification.md` with dual `/chat` and `/ask` route mapping, `@JsonAlias({"studentQuery"})` request body backward compatibility, and 429 quota exhaustion headers
 - docs(architecture): Clarify internal container port mappings (`5432` standard) vs host developer overrides in `03-system-architecture.md`, and document BFF routing rules
 - docs(data): Document per-question multi-turn thread persistence model, outbox event status lifecycle, and Redis key namespaces in `04-data-modeling.md`
 - docs(readme): Update verified live operational endpoints, perimeter isolation architecture, and port matrix in `README.md`
+### Fixed
 - fix(compat): Add dual `/chat` and `/ask` route mapping and `@JsonAlias({"studentQuery"})` in `exam-service` for 100% backward compatibility
 
 ## [0.2.0] - 2026-09-18
-### 🚀 Added
+### Added
 - feat(gateway): Implement `frontend-api` BFF Edge Gateway with strict CORS origin whitelisting, perimeter security, Token Bucket Redis rate limiting, end-to-end distributed tracing (`X-Trace-Id`), and Prometheus scraping across all microservices (TASK-S2-12, TASK-S2-13)
 - feat(tutor): Implement Socratic AI Tutor (`gemini-1.5-flash`), per-question multi-turn thread engine (up to 6 turns), conversation reset (`DELETE /chat`), Resilience4j Circuit Breaker fallback, PostgreSQL `pgvector` HNSW RAG knowledge retrieval, and Redis daily quota rate limiter (1 free question/day for `ROLE_STUDENT`, unlimited for `ROLE_PREMIUM_STUDENT`) in `exam-service` (TASK-S2-10, TASK-S2-11, TASK-S2-11b)
 - feat(exam): Implement Examination & Assessment Engine (`exam-service`) with Hexagonal architecture, Portuguese GIN full-text search, Redis caching, practice sessions, instant grading, and diagnostic radar calculation (TASK-S2-06, TASK-S2-07, TASK-S2-08, TASK-S2-09, TASK-S2-02c)
@@ -580,32 +604,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(db): Implement Flyway migrations (V1 schemas, V2 performance indexes, V3 seed data) with PostgreSQL 16 + pgvector, GIN full-text search, composite B-Trees, and Transactional Outbox pattern across auth_db, exam_db, and notification_db (TASK-S2-02)
 
 ## [0.1.1] - 2026-09-18
-### 🔧 Changed
-- refactor(docs): Remove redundant 08-sprint-backlog.md and consolidate single source of truth in master BACKLOG.md, renumbering 08-data-ingestion-pipeline.md
+### Added
 - feat(tutor): Architect per-question multi-turn Socratic chat threads, daily quota unlock lifecycle, reset endpoint, and 90-day review retention across architecture, data modeling, and API specs
 - feat(auth): Architect User entity modeling, Transactional Outbox pattern (outbox_events table), and asynchronous email confirmation lifecycle across data modeling, architecture, and API specs
-- fix(docs): Escape and quote edge labels containing parentheses and resolve invalid flowchart link syntax across 03-system-architecture.md and 04-data-modeling.md
 - feat(auth): Require free registered account (ROLE_STUDENT) to access Socratic AI Tutor with 1 free consultation per day, eliminating cookie/session-clearing quota abuse while keeping core practice 100% free and anonymous with zero login required
-- refactor(branding): Standardize project name to AprovaENEM across all documentation, removing legacy OpenENEM references and updating Java root packages to com.aprovaenem.*
 - feat(mobile): Add TASK-M1-05 for AdMob Rewarded Video Ads with Brazil eCPM unit economics calibration and Server-Side Verification
-- docs(readme): Synchronize System Architecture diagram (shared assets volume, autoheal, tiered daily AI quota) and Project Structure tree (grafana provisioning, evals harness)
 - feat(tutor): Architect Redis-backed 1-per-day AI tutor rate limit for free tier with unlimited Pro plan, while preserving 100% free and unlimited core question training
-- fix(docs): Replace invalid mermaid 'card' blocks in personas with native GitHub alert cards in 01-business-and-market-strategy.md
 - feat(storage): Architect Docker persistent named volume strategy (driver: local), shared OCR static media pipeline, and 12-factor stateless microservice boundaries
 - feat(resilience): Architect self-healing Docker Compose topology with automated crash recovery (restart: unless-stopped), Spring Boot /actuator/health probes, boot sequencing (condition: service_healthy), and autoheal watchdog daemon
 - feat(security): Architect Multi-Stage AI-Assisted and Real-Time Security Audit Framework terminating both backend (JAM 1 / Sprint 3 - TASK-S3-11) and full-stack (JAM 2 / Sprint 6 - TASK-S6-06) delivery milestones
-- docs(backlog): Realign sprint backlog with Reconecta Recode program: JAM 1 (Sprints 1-3 Backend only, documented API deliverable), JAM 2 (Sprints 4-6 Frontend & Full-Stack Integration, deployed public URL deliverable), and Month 4 Career Placement
-- docs(structure): Synchronize master README project structure tree (mobile KMP roadmap, Nginx/Prometheus infrastructure config) and align Access Endpoints with perimeter isolation
-- docs(architecture): Synchronize master README system architecture diagram and project structure tree with frontend-api BFF, perimeter isolation, Redis 7+, RabbitMQ, and microservices
 - feat(cache): Architect Redis 7+ distributed caching grid (L2 entity cache, leaderboard ZSET, rate limiting) and comprehensive PostgreSQL indexing strategy (B-Tree, Partial, GIN Full-Text, HNSW Vector)
 - feat(security): Specify zero-trust perimeter isolation, dedicated frontend-api BFF microservice, strict CORS engine with origin whitelisting, and zero public exposure for internal domain microservices
-- docs(mobile): Pivot mobile application roadmap from React Native/Expo to Native Android (Kotlin / Java & Jetpack Compose) and Kotlin Multiplatform (KMP), unifying the stack under the modern JVM ecosystem with Room SQLite, CameraX, and WorkManager
 - feat(domain): Add question lifecycle status (ACTIVE, SUSPENDED, NEEDS_REVIEW, DRAFT, ANNULLED) with partial PostgreSQL indexes and admin management
 - feat(notifications): Architect decoupled notification-service microservice for transactional emails, Web Push, and native mobile push (FCM/APNs), alongside native mobile app roadmap
 - feat(gamification): Architect student game experience with XP progression, levels, daily goals, streak tracker, and weekly reset leaderboard leagues
+- feat(rag): Architect Retrieval-Augmented Generation (RAG) pipeline using PostgreSQL 16 `pgvector` with HNSW cosine indexing to eliminate AI tutor hallucinations and anchor responses in official INEP curriculum guidelines
+### Changed
+- refactor(docs): Remove redundant 08-sprint-backlog.md and consolidate single source of truth in master BACKLOG.md, renumbering 08-data-ingestion-pipeline.md
+- refactor(branding): Standardize project name to AprovaENEM across all documentation, removing legacy OpenENEM references and updating Java root packages to com.aprovaenem.*
+- docs(readme): Synchronize System Architecture diagram (shared assets volume, autoheal, tiered daily AI quota) and Project Structure tree (grafana provisioning, evals harness)
+- docs(backlog): Realign sprint backlog with Reconecta Recode program: JAM 1 (Sprints 1-3 Backend only, documented API deliverable), JAM 2 (Sprints 4-6 Frontend & Full-Stack Integration, deployed public URL deliverable), and Month 4 Career Placement
+- docs(structure): Synchronize master README project structure tree (mobile KMP roadmap, Nginx/Prometheus infrastructure config) and align Access Endpoints with perimeter isolation
+- docs(architecture): Synchronize master README system architecture diagram and project structure tree with frontend-api BFF, perimeter isolation, Redis 7+, RabbitMQ, and microservices
+- docs(mobile): Pivot mobile application roadmap from React Native/Expo to Native Android (Kotlin / Java & Jetpack Compose) and Kotlin Multiplatform (KMP), unifying the stack under the modern JVM ecosystem with Room SQLite, CameraX, and WorkManager
 - docs(ingestion): Architect on-demand ingestion-service container with IBM Docling, zero idle RAM footprint via Docker Compose profiles, and zero API costs
 - docs(data): Explicitly specify Flyway database migrations and Spring Data JPA / Hibernate 6 decoupled persistence within Hexagonal Architecture
-- feat(rag): Architect Retrieval-Augmented Generation (RAG) pipeline using PostgreSQL 16 `pgvector` with HNSW cosine indexing to eliminate AI tutor hallucinations and anchor responses in official INEP curriculum guidelines
 - docs(essay): Add Phase 2 architecture for AI Essay Evaluator with model evaluation (LLM Evals across candidate models) and INEP-aligned Dual-Evaluator + LLM-as-a-Judge arbitration
 - docs(security): Add Spring Security 6 architecture, SecurityFilterChain, stateless JWT filter, and enterprise RBAC matrix
 - docs(testing): Add Cypress E2E automated test suite and student journey specs in 07-quality-gate-ci.md
@@ -617,9 +640,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - docs(architecture): Refine Gemini API integration and rate limiter specifications across architecture and observability docs
 - docs(setup): Clarify Google Gemini Free Tier as local development onboarding option rather than production architectural constraint
 - docs(business): Align historical exam ingestion span to 2009-2025 across business model and system specs
+### Fixed
+- fix(docs): Escape and quote edge labels containing parentheses and resolve invalid flowchart link syntax across 03-system-architecture.md and 04-data-modeling.md
+- fix(docs): Replace invalid mermaid 'card' blocks in personas with native GitHub alert cards in 01-business-and-market-strategy.md
 
 ## [0.1.0] - 2026-09-17
-### 🚀 Added
+### Added
 - docs(business): Add Business Model Canvas, Value Proposition, and ICP Personas in 01-business-and-market-strategy.md
 - docs(charter): Add Project Charter and INEP open data ingestion scope in 02-project-charter.md
 - docs(architecture): Add System Architecture with Hexagonal layout and Gateway Token Bucket rate limiter in 03-system-architecture.md
