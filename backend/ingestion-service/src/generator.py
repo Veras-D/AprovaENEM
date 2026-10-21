@@ -97,6 +97,10 @@ BEGIN
     ) ON CONFLICT (exam_edition_id, item_number) DO UPDATE
         SET statement = EXCLUDED.statement,
             correct_option = EXCLUDED.correct_option,
+            topic_id = EXCLUDED.topic_id,
+            difficulty_level = EXCLUDED.difficulty_level,
+            figure_url = EXCLUDED.figure_url,
+            figure_alt_text = EXCLUDED.figure_alt_text,
             tri_param_a = EXCLUDED.tri_param_a,
             tri_param_b = EXCLUDED.tri_param_b,
             tri_param_c = EXCLUDED.tri_param_c
@@ -110,7 +114,7 @@ BEGIN
                 is_correct = "TRUE" if opt.isCorrect else "FALSE"
                 statements.append(f"""        INSERT INTO question_options (question_id, option_letter, option_text, is_correct)
         VALUES (v_question_id, '{opt.letter}', '{opt_escaped}', {is_correct})
-        ON CONFLICT (question_id, option_letter) DO UPDATE SET option_text = EXCLUDED.option_text;""")
+        ON CONFLICT (question_id, option_letter) DO UPDATE SET option_text = EXCLUDED.option_text, is_correct = EXCLUDED.is_correct;""")
 
             if q.resolution:
                 res_step = q.resolution.stepByStep.replace("'", "''")
@@ -129,7 +133,7 @@ BEGIN
                 statements.append(f"""
         INSERT INTO question_resolutions (question_id, base_explanation, key_concepts, author_attribution)
         VALUES (v_question_id, '{res_step}', {key_conc}, {author})
-        ON CONFLICT (question_id) DO UPDATE SET base_explanation = EXCLUDED.base_explanation;""")
+        ON CONFLICT (question_id) DO UPDATE SET base_explanation = EXCLUDED.base_explanation, key_concepts = EXCLUDED.key_concepts, author_attribution = EXCLUDED.author_attribution;""")
 
             statements.append("""    END IF;
 END $$;

@@ -38,9 +38,24 @@ function normalizeQuestionItem(item: Record<string, unknown>): QuestionItemDto {
   const difficulty: QuestionDifficulty =
     rawDifficulty === 'EASY' || rawDifficulty === 'HARD' ? rawDifficulty : 'MEDIUM';
 
+  const editionYearMap: Record<string, number> = {
+    '22222222-0000-0000-0000-000000002023': 2023,
+    '22222222-0000-0000-0000-000000002022': 2022,
+    '22222222-0000-0000-0000-000000002021': 2021,
+    '1e3ba5d3-a69d-4ed2-b56d-c6f103fbce44': 2020,
+    '59b75172-1877-4f44-987a-4f2c983a74c3': 2019,
+  };
+
+  const editionId = (item.examEditionId || '') as string;
+  const resolvedYear =
+    (item.year as number) ||
+    (item.examYear as number) ||
+    editionYearMap[editionId] ||
+    2023;
+
   const normalized: QuestionItemDto = {
     id: item.id as string,
-    year: (item.year as number) || 2023,
+    year: resolvedYear,
     subject,
     discipline,
     statement: (item.statement as string) || '',

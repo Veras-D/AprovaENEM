@@ -50,6 +50,7 @@ export interface QuestionResolutionDto {
   readonly questionId: string;
   readonly correctOption: QuestionOptionLetter;
   readonly baseExplanation: string;
+  readonly keyConcepts?: string;
   readonly distractorAnalysis?: Readonly<Record<QuestionOptionLetter, string>>;
   readonly attribution?: string;
 }

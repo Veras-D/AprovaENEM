@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSessionStore } from '@/stores/useSessionStore';
 import { useAccessibilityStore } from '@/stores/useAccessibilityStore';
 import { useQuestionsQuery, useSubmitAnswerMutation } from '@/api/hooks';
@@ -73,6 +73,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
   const [isAccommodationsOpen, setIsAccommodationsOpen] = useState<boolean>(false);
   const [isTimeUpModalOpen, setIsTimeUpModalOpen] = useState<boolean>(false);
   const [isSimulationModalOpen, setIsSimulationModalOpen] = useState<boolean>(false);
+  const hasUpgradedToLiveRef = useRef<boolean>(false);
 
   const questionsQuery = useQuestionsQuery({ size: 100 });
   const submitAnswerMutation = useSubmitAnswerMutation();
@@ -103,32 +104,32 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     }
   }, [questions.length, isDiagnosticCompleted, startSession, recordDiagnosticSeenQuestions, questionsPool]);
 
-  // Upgrade to live backend questions when available if student has not interacted yet
+  // Upgrade to live backend questions once when available if student has not interacted yet
   useEffect(() => {
     if (
+      !hasUpgradedToLiveRef.current &&
       questionsQuery.isSuccess &&
       questionsQuery.data?.content &&
       questionsQuery.data.content.length > 0 &&
       Object.keys(selectedAnswers).length === 0 &&
       Object.keys(attempts).length === 0 &&
-      !isDiagnosticCompleted
+      !isDiagnosticCompleted &&
+      questions.length > 0
     ) {
-      const isUsingFallback = questions.some((q) => MOCK_QUESTIONS.some((mq) => mq.id === q.id));
-      if (isUsingFallback) {
-        const liveDtos = selectDiagnosticQuestions(questionsQuery.data.content, [], 5);
-        const domainQuestions = liveDtos.map(mapDtoToDomainQuestion);
-        recordDiagnosticSeenQuestions(liveDtos.map((q) => q.id));
-        const liveSession: PracticeSession = {
-          id: `session-live-${Date.now()}`,
-          title: 'Simulado Rápido ENEM',
-          questionCount: domainQuestions.length,
-          status: 'IN_PROGRESS',
-          currentQuestionIndex: 0,
-          correctCount: 0,
-          createdAt: new Date().toISOString(),
-        };
-        startSession(liveSession, domainQuestions);
-      }
+      hasUpgradedToLiveRef.current = true;
+      const liveDtos = selectDiagnosticQuestions(questionsQuery.data.content, [], 5);
+      const domainQuestions = liveDtos.map(mapDtoToDomainQuestion);
+      recordDiagnosticSeenQuestions(liveDtos.map((q) => q.id));
+      const liveSession: PracticeSession = {
+        id: `session-live-${Date.now()}`,
+        title: 'Simulado Rápido ENEM',
+        questionCount: domainQuestions.length,
+        status: 'IN_PROGRESS',
+        currentQuestionIndex: 0,
+        correctCount: 0,
+        createdAt: new Date().toISOString(),
+      };
+      startSession(liveSession, domainQuestions);
     }
   }, [
     questionsQuery.isSuccess,
@@ -136,7 +137,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     selectedAnswers,
     attempts,
     isDiagnosticCompleted,
-    questions,
+    questions.length,
     recordDiagnosticSeenQuestions,
     startSession,
   ]);
@@ -306,7 +307,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
 
       startSession(customSession, domainQuestions);
     },
-    [setTimeMode, startSession, timeMode]
+    [setTimeMode, startSession, timeMode, questionsPool]
   );
 
   // Session summary calculations

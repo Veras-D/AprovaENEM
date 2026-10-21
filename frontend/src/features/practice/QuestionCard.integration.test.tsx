@@ -100,7 +100,7 @@ describe('QuestionCard & Practice Flow Integration Tests', () => {
     expect(screen.getByText(/Matemática e suas Tecnologias/i)).toBeInTheDocument();
     expect(screen.getAllByText(/ENEM 2023/i)[0]).toBeInTheDocument();
     expect(screen.getAllByText(/Média/i)[0]).toBeInTheDocument();
-    expect(screen.getByText(/Um estudante do ensino médio deseja calcular a economia/i)).toBeInTheDocument();
+    expect(screen.getByText(/Um artista plástico esculpe uma escultura a partir de um bloco de madeira/i)).toBeInTheDocument();
 
     expect(screen.getByRole('radio', { name: /^A / })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: /^B / })).toBeInTheDocument();

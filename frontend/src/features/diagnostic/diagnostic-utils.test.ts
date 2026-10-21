@@ -184,7 +184,7 @@ describe('diagnostic-utils', () => {
       const questions = selectDiagnosticQuestions();
       expect(questions).toHaveLength(5);
       expect(questions[0]?.subject).toBe('MT');
-      expect(questions[0]?.statement).toContain('Um estudante do ensino médio deseja calcular a economia');
+      expect(questions[0]?.statement).toContain('Um artista plástico esculpe uma escultura a partir de um bloco de madeira de lei');
     });
 
     it('returns 5 distinct questions excluding the previously answered questions', () => {

@@ -4,7 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.6.0] - 2026-10-18
+## [0.6.0] - 2026-10-21
+### 🏛️ Authentic Historical ENEM Question Catalog, Booklet Color Badge & Infinite Loop Elimination
+- fix(practice): Replaced synthetic questions with authentic INEP historical items, added Booklet Color badge, fixed edition year mapping, and eliminated infinite render loop (TASK-S6-30):
+  - **100% Authentic INEP Question Catalog ([`historical_questions_sample.json`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/ingestion-service/data/historical_questions_sample.json), [`sample_itens_prova_2019_2023.csv`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/ingestion-service/data/sample_itens_prova_2019_2023.csv), [`V8__authentic_historical_question_catalog.sql`](file:///home/verivi/Veras/Projects/ReconectaRecode/backend/exam-service/src/main/resources/db/migration/V8__authentic_historical_question_catalog.sql), [`mock-data.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/api/mocks/mock-data.ts))**:
+    - Purged all synthetic, placeholder, and truncated test questions across the database, ingestion pipeline, and frontend mock fallback.
+    - Sourced 25 complete, authentic INEP ENEM questions spanning 2019 to 2023 (*Caderno Azul*): full unabridged statements, figures, complete 5 alternatives (A to E), official INEP answer keys (gabaritos), official TRI parameters ($a$, $b$, $c$), and step-by-step pedagogical derivations with full distractor analysis.
+    - Successfully migrated PostgreSQL `exam_db` via Flyway migration `V8__authentic_historical_question_catalog.sql`.
+  - **Exam Booklet Color Badge ([`QuestionCard.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/components/QuestionCard.tsx))**:
+    - Added visible `Caderno Azul` badge (`border-sky-500/50 bg-sky-50/60 text-sky-700`) next to the exam edition badge to clarify question numbering context (since ENEM question numbers vary across booklet colors).
+    - Updated screen reader announcement in `QuestionCard.tsx` to include `Caderno Azul`.
+  - **Edition Year Normalization ([`exam.service.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/api/services/exam.service.ts))**:
+    - Added `editionYearMap` mapping backend `examEditionId` UUIDs directly to their official editions (2019, 2020, 2021, 2022, 2023), eliminating the bug where questions from prior years displayed as 2023.
+  - **Infinite Update Loop Elimination ([`PracticeHero.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.tsx))**:
+    - Fixed `Uncaught Error: Maximum update depth exceeded` caused when `MOCK_QUESTIONS` IDs were aligned with database IDs, keeping `isUsingFallback = true` indefinitely and causing `startSession` to fire repeatedly on every render.
+    - Guarded hydration with `hasUpgradedToLiveRef.current` and decoupled effect triggers from the mutable `questions` array reference to `questions.length`.
+  - **Verification & Test Coverage**:
+    - 74 Vitest test suites (520/520 tests passing, 0 failures, 0 skipped).
+    - 0 ESLint warnings (`--max-warnings 0`).
+    - Clean Vite production build.
+    - Ingestion pipeline unit tests passing (11/11 tests, 100% concordance).
+    - Backend Temurin 21 Maven test suite passing across all modules (`BUILD SUCCESS`).
+
 ### 🌐 Live Question Ingestion Integration & Currency LaTeX Delimiter Sanitization
 - feat(practice): Connected frontend practice simulator directly to live backend exam question ingestion catalog and sanitized Brazilian currency LaTeX delimiters (TASK-S6-29):
   - **Live Backend Ingestion Integration ([`exam.service.ts`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/api/services/exam.service.ts), [`PracticeHero.tsx`](file:///home/verivi/Veras/Projects/ReconectaRecode/frontend/src/features/practice/PracticeHero.tsx))**:

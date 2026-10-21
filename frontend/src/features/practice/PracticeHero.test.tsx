@@ -38,7 +38,7 @@ describe('PracticeHero Component', () => {
     expect(screen.getByText(/MT • Matemática/i)).toBeInTheDocument();
     expect(screen.getAllByText(/ENEM 2023/i)[0]).toBeInTheDocument();
     expect(
-      screen.getByText(/Um estudante do ensino médio deseja calcular a economia gerada/i)
+      screen.getByText(/Um artista plástico esculpe uma escultura a partir de um bloco de madeira de lei/i)
     ).toBeInTheDocument();
 
     // 5 questions in carousel
@@ -54,7 +54,7 @@ describe('PracticeHero Component', () => {
     expect(submitBtn).toBeDisabled();
 
     // Select option B
-    const optionB = screen.getByRole('radio', { name: /B.*1{,}50/i });
+    const optionB = screen.getByRole('radio', { name: /^B / });
     fireEvent.click(optionB);
 
     expect(submitBtn).not.toBeDisabled();
@@ -70,7 +70,7 @@ describe('PracticeHero Component', () => {
     renderWithProviders();
 
     // Select option A (incorrect; correct is B)
-    const optionA = screen.getByRole('radio', { name: /A.*0{,}50/i });
+    const optionA = screen.getByRole('radio', { name: /^A / });
     fireEvent.click(optionA);
 
     const submitBtn = screen.getByRole('button', { name: /confirmar resposta/i });
@@ -101,7 +101,7 @@ describe('PracticeHero Component', () => {
     // Question 2 (CN • Física) should now be displayed
     expect(screen.getByText(/CN • Física/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/Dois veículos partem simultaneamente de cidades separadas/i)
+      screen.getByText(/Informações digitais — dados — são gravadas em discos ópticos/i)
     ).toBeInTheDocument();
 
     // Navigate back via Previous button
@@ -129,7 +129,7 @@ describe('PracticeHero Component', () => {
     renderWithProviders();
 
     // Select and submit option
-    const optionB = screen.getByRole('radio', { name: /B.*1{,}50/i });
+    const optionB = screen.getByRole('radio', { name: /^B / });
     fireEvent.click(optionB);
     const submitBtn = screen.getByRole('button', { name: /confirmar resposta/i });
     fireEvent.click(submitBtn);
@@ -167,7 +167,7 @@ describe('PracticeHero Component', () => {
     });
 
     // Now submit answer and open from instant feedback banner
-    const optionB = screen.getByRole('radio', { name: /B.*1{,}50/i });
+    const optionB = screen.getByRole('radio', { name: /^B / });
     fireEvent.click(optionB);
     const submitBtn = screen.getByRole('button', { name: /confirmar resposta/i });
     fireEvent.click(submitBtn);
@@ -258,17 +258,17 @@ describe('PracticeHero Component', () => {
     fireEvent.keyDown(window, { key: 'ArrowRight' });
     expect(screen.getByText(/CN • Física/i)).toBeInTheDocument();
 
-    // Press PageDown to advance to Question 3 (CN • Química)
+    // Press PageDown to advance to Question 3 (CN • Biologia)
     fireEvent.keyDown(window, { key: 'PageDown' });
-    expect(screen.getByText(/CN • Química/i)).toBeInTheDocument();
+    expect(screen.getByText(/CN • Biologia/i)).toBeInTheDocument();
 
-    // Press ']' bracket shortcut to advance to Question 4 (CH • História)
+    // Press ']' bracket shortcut to advance to Question 4 (CH • Filosofia)
     fireEvent.keyDown(window, { key: ']' });
-    expect(screen.getByText(/CH • História/i)).toBeInTheDocument();
+    expect(screen.getByText(/CH • Filosofia/i)).toBeInTheDocument();
 
     // Press PageUp to go back to Question 3
     fireEvent.keyDown(window, { key: 'PageUp' });
-    expect(screen.getByText(/CN • Química/i)).toBeInTheDocument();
+    expect(screen.getByText(/CN • Biologia/i)).toBeInTheDocument();
 
     // Press '[' bracket shortcut to go back to Question 2
     fireEvent.keyDown(window, { key: '[' });
@@ -331,7 +331,7 @@ describe('PracticeHero Component', () => {
     renderWithProviders();
 
     // Verify initial Question 1 statement
-    const initialQuestion1Text = 'Um estudante do ensino médio deseja calcular a economia gerada';
+    const initialQuestion1Text = 'Um artista plástico esculpe uma escultura a partir de um bloco de madeira de lei';
     expect(screen.getByText(new RegExp(initialQuestion1Text, 'i'))).toBeInTheDocument();
 
     const initialQuestionIds = useSessionStore.getState().questions.map((q) => q.id);

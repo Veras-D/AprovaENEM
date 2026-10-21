@@ -94,7 +94,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   useEffect(() => {
     const areaName = AREA_LABELS[areaCode] || areaCode;
     setAriaAnnouncement(
-      `Questão ${itemNumber ? '#' + itemNumber : ''} carregada. Área de ${areaName}, ENEM ${year}. Dificuldade ${difficultyInfo.label}.`
+      `Questão ${itemNumber ? '#' + itemNumber : ''} carregada. Caderno Azul, área de ${areaName}, ENEM ${year}. Dificuldade ${difficultyInfo.label}.`
     );
   }, [question.id, areaCode, itemNumber, year, difficultyInfo.label]);
 
@@ -173,6 +173,14 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
           {/* Exam Edition */}
           <Badge variant="secondary">ENEM {year}</Badge>
+
+          {/* Booklet Color Badge */}
+          <Badge
+            variant="outline"
+            className="border-sky-500/50 text-sky-700 dark:text-sky-300 bg-sky-50/60 dark:bg-sky-950/40 font-medium"
+          >
+            Caderno Azul
+          </Badge>
 
           {/* Difficulty */}
           <Badge variant={difficultyInfo.variant}>{difficultyInfo.label}</Badge>
