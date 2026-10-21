@@ -78,7 +78,7 @@ gantt
     Full-Stack Security and Test Integrity Audit (S6-06) :done, s6_5, 2026-10-17, 1d
     JAM 2 Security Tier 1 Critical Hotfixes (S6-10)      :done, s6_10, 2026-10-17, 1d
     JAM 2 Security Tier 2 Quality Hardening (S6-11)      :done, s6_11, 2026-10-17, 1d
-    UX Guardrails: Pacing Alert and Hotkeys (S6-12)      :done, s6_12, after s6_11, 1d
+    UX Guardrails, Pacing Alert and Hotkeys (S6-12)      :done, s6_12, after s6_11, 1d
     Accessible Custom Select Primitive (S6-13)           :done, s6_13, after s6_12, 1d
     Brand Button Contrast and In-App LGPD Rights (S6-14) :done, s6_14, after s6_13, 1d
     Zero-Gradient Design Harmonization (S6-15)           :done, s6_15, after s6_14, 1d
