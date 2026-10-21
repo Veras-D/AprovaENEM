@@ -140,14 +140,6 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
                   </button>
                 </>
               )}
-              <span className="mx-1.5">&bull;</span>
-              <button
-                type="button"
-                onClick={() => handleNavigate('institutional')}
-                className="hover:text-indigo-600 dark:hover:text-indigo-400 underline transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded"
-              >
-                Acesso da Coordenação
-              </button>
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 text-center">

@@ -136,4 +136,14 @@ describe('RootLayout component', () => {
 
     expect(screen.getByRole('dialog', { name: /Eliminar Conta Definitivamente/i })).toBeInTheDocument();
   });
+
+  it('should NOT render Acesso da Coordenação in the public footer', () => {
+    renderWithProviders(
+      <RootLayout>
+        <div>Corpo</div>
+      </RootLayout>
+    );
+
+    expect(screen.queryByRole('button', { name: /Acesso da Coordenação/i })).not.toBeInTheDocument();
+  });
 });

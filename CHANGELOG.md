@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - docs(privacy): Purged all absolute machine paths and `file:///` URLs across documentation, changelogs, and configuration files, replacing them with repository-relative paths to prevent environment and username leakage.
 
 ### Fixed
+- fix(ui): Removed private coordinator access link ('Acesso da Coordenação') from the public student LGPD privacy footer in [`RootLayout.tsx`](frontend/src/layouts/RootLayout.tsx), restricting coordination portal access exclusively to authenticated coordinators via role-guarded header and drawer navigation.
 - fix(practice): Resolved raw Markdown syntax leakage (`![](url)` raw image tags and `**bold**` asterisks) in question statements.
 - fix(practice): Added `shouldRenderHeaderFigure` guard in [`QuestionCard.tsx`](frontend/src/features/practice/components/QuestionCard.tsx) preventing duplicate figures when a question statement embeds images directly at author-intended paragraph positions.
 - fix(practice): Replaced raw Unicode symbol `π` with LaTeX math delimiter `$\pi$` in ENEM 2023 item 136 statement to ensure consistent math typesetting and unblock Playwright cross-browser test matrix.
