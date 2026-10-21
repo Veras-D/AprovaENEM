@@ -76,6 +76,10 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   const discipline = 'discipline' in question ? question.discipline : undefined;
   const context = 'contextText' in question ? question.contextText : undefined;
 
+  // Render top-level figure only if statement does not already embed markdown images
+  const statementHasImage = /!\[.*?\]\(.*?\)/.test(question.statement || '');
+  const shouldRenderHeaderFigure = figure && !statementHasImage;
+
   // Normalize options list
   const normalizedOptions: OptionItem[] = question.options.map((opt) => ({
     letter: 'letter' in opt ? opt.letter : opt.optionLetter,
@@ -239,8 +243,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           </blockquote>
         )}
 
-        {/* Question Figure / Image (WebP with Lightbox Zoom) */}
-        {figure && <QuestionImage src={figure} alt={figureAlt} caption={figureAlt} />}
+        {/* Question Figure / Image (WebP with Lightbox Zoom - rendered only if not already embedded in statement) */}
+        {shouldRenderHeaderFigure && <QuestionImage src={figure} alt={figureAlt} caption={figureAlt} />}
 
         {/* Question Statement */}
         <div

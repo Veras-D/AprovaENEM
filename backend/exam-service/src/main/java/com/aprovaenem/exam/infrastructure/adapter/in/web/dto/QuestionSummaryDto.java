@@ -23,5 +23,7 @@ public class QuestionSummaryDto {
     private String statement;
     private String difficultyLevel;
     private String status;
+    private String figureUrl;
+    private String figureAltText;
     private List<QuestionOptionDto> options;
 }

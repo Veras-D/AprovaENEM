@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { parseLatexTokens } from './latex-parser';
+import { renderMarkdown } from './markdown-parser';
 import { InlineMath } from './InlineMath';
 import { BlockMath } from './BlockMath';
 
@@ -15,7 +16,8 @@ export interface MathRendererProps {
 /**
  * Universal Math and Markdown formula renderer for ENEM exam questions.
  * Accurately parses and renders inline ($...$, \(...\)) and block ($$...$$, \[...\])
- * LaTeX formulas while protecting Brazilian currency notation (e.g. R$ 50,00).
+ * LaTeX formulas, Markdown formatting (**bold**, *italic*, images ![alt](url), code, links),
+ * while protecting Brazilian currency notation (e.g. R$ 50,00).
  */
 export const MathRenderer: React.FC<MathRendererProps> = ({
   content,
@@ -54,22 +56,15 @@ export const MathRenderer: React.FC<MathRendererProps> = ({
           );
         }
 
-        // Text token
-        if (preserveNewlines && token.content.includes('\n')) {
-          const lines = token.content.split('\n');
-          return (
-            <span key={`text-${index}`}>
-              {lines.map((line, lineIdx) => (
-                <React.Fragment key={`line-${index}-${lineIdx}`}>
-                  {line}
-                  {lineIdx < lines.length - 1 && <br />}
-                </React.Fragment>
-              ))}
-            </span>
-          );
-        }
-
-        return <span key={`text-${index}`}>{token.content}</span>;
+        // Markdown-aware text token
+        return (
+          <React.Fragment key={`text-${index}`}>
+            {renderMarkdown(token.content, {
+              preserveNewlines,
+              keyPrefix: `text-${index}`,
+            })}
+          </React.Fragment>
+        );
       })}
     </Component>
   );

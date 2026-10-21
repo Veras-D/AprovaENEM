@@ -34,6 +34,8 @@ public final class QuestionDtoMapper {
                 .statement(q.getStatement())
                 .difficultyLevel(q.getDifficultyLevel().name())
                 .status(q.getStatus().name())
+                .figureUrl(q.getFigureUrl())
+                .figureAltText(q.getFigureAltText())
                 .options(options)
                 .build();
     }
