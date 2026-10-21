@@ -266,7 +266,7 @@ export const TermsAndPrivacyModal: React.FC<TermsAndPrivacyModalProps> = ({
               id="panel-terms"
               role="tabpanel"
               aria-labelledby="tab-terms"
-              className="space-y-5 animate-in fade-in duration-150"
+              className="space-y-5 animate-tab-from-left"
             >
               <section className="space-y-2">
                 <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -318,7 +318,7 @@ export const TermsAndPrivacyModal: React.FC<TermsAndPrivacyModalProps> = ({
               id="panel-privacy"
               role="tabpanel"
               aria-labelledby="tab-privacy"
-              className="space-y-5 animate-in fade-in duration-150"
+              className="space-y-5 animate-tab-from-right"
             >
               {/* Highlight Banner: Data Minimization */}
               <div className="p-3.5 sm:p-4 rounded-brand bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30 text-emerald-900 dark:text-emerald-100 flex items-start gap-3">

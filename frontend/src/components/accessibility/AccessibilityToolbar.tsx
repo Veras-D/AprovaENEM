@@ -52,7 +52,7 @@ export const AccessibilityToolbar: React.FC = () => {
       const timer = setTimeout(() => {
         setShouldRender(false);
         setIsClosing(false);
-      }, 180);
+      }, 240);
       return () => clearTimeout(timer);
     }
     return undefined;

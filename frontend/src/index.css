@@ -306,22 +306,22 @@ body {
 
 .animate-in.duration-100,
 .animate-out.duration-100 {
-  animation-duration: 120ms;
+  animation-duration: 180ms;
 }
 
 .animate-in.duration-150,
 .animate-out.duration-150 {
-  animation-duration: 150ms;
+  animation-duration: 220ms;
 }
 
 .animate-in.duration-200,
 .animate-out.duration-200 {
-  animation-duration: 220ms;
+  animation-duration: 280ms;
 }
 
 .animate-in.duration-300,
 .animate-out.duration-300 {
-  animation-duration: 300ms;
+  animation-duration: 360ms;
 }
 
 @keyframes card-swap-in {
@@ -336,7 +336,7 @@ body {
 }
 
 .animate-card-enter {
-  animation: card-swap-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: card-swap-in 260ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ============================================================================
@@ -366,10 +366,43 @@ body {
 
 .animate-a11y-open {
   transform-origin: calc(100% - 28px) calc(100% + 28px);
-  animation: a11y-popover-enter 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: a11y-popover-enter 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .animate-a11y-close {
   transform-origin: calc(100% - 28px) calc(100% + 28px);
-  animation: a11y-popover-exit 180ms cubic-bezier(0.32, 0, 0.67, 0) forwards;
+  animation: a11y-popover-exit 240ms cubic-bezier(0.32, 0, 0.67, 0) forwards;
+}
+
+/* ============================================================================
+   Directional Tab Switcher Content Transitions (Register <-> Login, Legal Tabs)
+   ============================================================================ */
+@keyframes tab-slide-from-left {
+  from {
+    opacity: 0;
+    transform: translate3d(-22px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes tab-slide-from-right {
+  from {
+    opacity: 0;
+    transform: translate3d(22px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-tab-from-left {
+  animation: tab-slide-from-left 460ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-tab-from-right {
+  animation: tab-slide-from-right 460ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }

@@ -57,18 +57,58 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   const [legalModalTab, setLegalModalTab] = useState<'terms' | 'privacy'>('terms');
 
   const modalRef = useRef<HTMLDivElement>(null);
+  const contentInnerRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
   const [shouldRender, setShouldRender] = useState<boolean>(isOpen);
   const [isClosing, setIsClosing] = useState<boolean>(false);
+  const [bodyHeight, setBodyHeight] = useState<number | undefined>(undefined);
+  const [hasSwitchedMode, setHasSwitchedMode] = useState<boolean>(false);
 
   const loginMutation = useLoginMutation();
   const registerMutation = useRegisterMutation();
+
+  const handleSwitchMode = (nextMode: 'register' | 'login') => {
+    if (nextMode === mode) return;
+    if (contentInnerRef.current && contentInnerRef.current.offsetHeight > 0) {
+      setBodyHeight(contentInnerRef.current.offsetHeight);
+    }
+    setHasSwitchedMode(true);
+    setMode(nextMode);
+    setFormError(null);
+  };
+
+  // Smooth FLIP height interpolation when switching between Register and Login tabs
+  useEffect(() => {
+    if (!shouldRender || !hasSwitchedMode || !contentInnerRef.current) return undefined;
+    const el = contentInnerRef.current;
+
+    let raf2 = 0;
+    const raf1 = window.requestAnimationFrame(() => {
+      raf2 = window.requestAnimationFrame(() => {
+        if (el.offsetHeight > 0) {
+          setBodyHeight(el.offsetHeight);
+        }
+      });
+    });
+
+    const settleTimer = window.setTimeout(() => {
+      setBodyHeight(undefined);
+    }, 520);
+
+    return () => {
+      window.cancelAnimationFrame(raf1);
+      window.cancelAnimationFrame(raf2);
+      window.clearTimeout(settleTimer);
+    };
+  }, [shouldRender, hasSwitchedMode, mode, formError, isSuccess]);
 
   // Reset form when opening or changing mode
   useEffect(() => {
     if (isOpen) {
       setShouldRender(true);
       setIsClosing(false);
+      setHasSwitchedMode(false);
+      setBodyHeight(undefined);
       setMode(initialMode);
       setFormError(null);
       setIsSuccess(false);
@@ -249,7 +289,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
         >
           {/* Header */}
           <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 shrink-0">
-            <div className="flex items-center gap-2.5">
+            <div key={mode} className="flex items-center gap-2.5 animate-in fade-in duration-200">
               <div className="p-2 rounded-brand bg-brand-primary/10 text-brand-primary">
                 {mode === 'register' ? (
                   <UserPlus className="h-5 w-5" aria-hidden="true" />
@@ -283,18 +323,21 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             </button>
           </div>
 
-          {/* Mode Switch Tabs */}
-          <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950/60 p-1.5 shrink-0 gap-1.5">
+          {/* Mode Switch Tabs with Sliding Active Pill */}
+          <div className="relative grid grid-cols-2 border-b border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950/60 p-1.5 shrink-0">
+            <div
+              aria-hidden="true"
+              className={`pointer-events-none absolute top-1.5 bottom-1.5 left-1.5 w-[calc(50%-0.375rem)] rounded-brand bg-white dark:bg-slate-800 shadow-sm border border-brand-primary/30 dark:border-brand-primary/40 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                mode === 'login' ? 'translate-x-full' : 'translate-x-0'
+              }`}
+            />
             <button
               type="button"
-              onClick={() => {
-                setMode('register');
-                setFormError(null);
-              }}
-              className={`flex-1 py-2.5 px-3 text-xs sm:text-sm font-bold rounded-brand transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              onClick={() => handleSwitchMode('register')}
+              className={`relative z-10 py-2.5 px-3 text-xs sm:text-sm font-bold rounded-brand transition-colors duration-300 flex items-center justify-center gap-2 cursor-pointer ${
                 mode === 'register'
-                  ? 'bg-white dark:bg-slate-800 text-brand-primary shadow-sm border border-brand-primary/30 dark:border-brand-primary/40'
-                  : 'border border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-900/50'
+                  ? 'text-brand-primary'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <UserPlus className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -302,14 +345,11 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => {
-                setMode('login');
-                setFormError(null);
-              }}
-              className={`flex-1 py-2.5 px-3 text-xs sm:text-sm font-bold rounded-brand transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              onClick={() => handleSwitchMode('login')}
+              className={`relative z-10 py-2.5 px-3 text-xs sm:text-sm font-bold rounded-brand transition-colors duration-300 flex items-center justify-center gap-2 cursor-pointer ${
                 mode === 'login'
-                  ? 'bg-white dark:bg-slate-800 text-brand-primary shadow-sm border border-brand-primary/30 dark:border-brand-primary/40'
-                  : 'border border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-900/50'
+                  ? 'text-brand-primary'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <LogIn className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -317,8 +357,13 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             </button>
           </div>
 
-          {/* Body Content */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
+          {/* Body Content with smooth non-flex height transition */}
+          <div className="overflow-y-auto overflow-x-hidden min-h-0">
+            <div
+              style={bodyHeight !== undefined ? { height: `${bodyHeight}px` } : undefined}
+              className="transition-[height] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] overflow-hidden"
+            >
+              <div ref={contentInnerRef} className="p-4 sm:p-6 space-y-5">
             {/* Success State Alert */}
             {isSuccess && (
               <div
@@ -348,7 +393,11 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 
             {/* REGISTER MODE FORM */}
             {mode === 'register' && !isSuccess && (
-              <form onSubmit={handleRegisterSubmit} className="space-y-4" noValidate>
+              <form
+                onSubmit={handleRegisterSubmit}
+                className={`space-y-4 ${hasSwitchedMode ? 'animate-tab-from-left' : ''}`}
+                noValidate
+              >
                 {/* Data Minimization Disclosure Callout */}
                 <div className="p-3.5 rounded-brand bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-500/20 text-slate-800 dark:text-slate-200 flex items-start gap-2.5">
                   <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" aria-hidden="true" />
@@ -533,7 +582,11 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 
             {/* LOGIN MODE FORM */}
             {mode === 'login' && !isSuccess && (
-              <form onSubmit={handleLoginSubmit} className="space-y-4" noValidate>
+              <form
+                onSubmit={handleLoginSubmit}
+                className={`space-y-4 ${hasSwitchedMode ? 'animate-tab-from-right' : ''}`}
+                noValidate
+              >
                 {/* Email */}
                 <div className="space-y-1">
                   <label
@@ -602,6 +655,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 </div>
               </form>
             )}
+              </div>
+            </div>
           </div>
 
           {/* Footer note */}
