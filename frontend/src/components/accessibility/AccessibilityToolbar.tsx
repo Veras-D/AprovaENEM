@@ -40,19 +40,30 @@ export const AccessibilityToolbar: React.FC = () => {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [shouldRender, setShouldRender] = React.useState<boolean>(isToolbarOpen);
   const [isClosing, setIsClosing] = React.useState<boolean>(false);
+  const [isVisible, setIsVisible] = React.useState<boolean>(isToolbarOpen);
 
   useEffect(() => {
     if (isToolbarOpen) {
       setShouldRender(true);
       setIsClosing(false);
-      return undefined;
+      let raf2 = 0;
+      const raf1 = window.requestAnimationFrame(() => {
+        raf2 = window.requestAnimationFrame(() => {
+          setIsVisible(true);
+        });
+      });
+      return () => {
+        window.cancelAnimationFrame(raf1);
+        window.cancelAnimationFrame(raf2);
+      };
     }
     if (shouldRender) {
       setIsClosing(true);
+      setIsVisible(false);
       const timer = setTimeout(() => {
         setShouldRender(false);
         setIsClosing(false);
-      }, 240);
+      }, 360);
       return () => clearTimeout(timer);
     }
     return undefined;
@@ -84,6 +95,11 @@ export const AccessibilityToolbar: React.FC = () => {
   }, [isToolbarOpen]);
 
   const fontScales: FontScale[] = [100, 125, 150, 175, 200];
+  const fontScaleIndex = Math.max(0, fontScales.indexOf(fontScale));
+  const fontFamilyOrder = ['standard', 'dyslexic', 'atkinson'] as const;
+  const fontFamilyIndex = Math.max(0, fontFamilyOrder.indexOf(fontFamily));
+  const contrastOrder = ['normal', 'high-contrast', 'inverted'] as const;
+  const contrastIndex = Math.max(0, contrastOrder.indexOf(contrastMode));
   const colorBlindnessOptions: { id: ColorBlindnessType; label: string }[] = [
     { id: 'none', label: 'Padrão' },
     { id: 'protanopia', label: 'Protanopia (Vermelho)' },
@@ -99,36 +115,41 @@ export const AccessibilityToolbar: React.FC = () => {
         ref={triggerRef}
         type="button"
         onClick={() => setToolbarOpen(!isToolbarOpen)}
-        className={`fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40 p-3.5 bg-brand-primary text-brand-primary-foreground rounded-full shadow-2xl hover:scale-105 active:scale-90 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-brand-accent flex items-center justify-center border-2 border-white/20 ${
-          isToolbarOpen && !isClosing ? 'scale-95 ring-4 ring-brand-primary/30' : ''
+        className={`fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40 p-3.5 bg-brand-primary text-brand-primary-foreground rounded-full shadow-2xl hover:scale-105 active:scale-90 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 flex items-center justify-center border border-white/25 ${
+          isToolbarOpen && !isClosing ? 'scale-95 bg-brand-primary-dark' : ''
         }`}
         aria-label="Menu de ferramentas de acessibilidade (Alt + A)"
         aria-expanded={isToolbarOpen}
         aria-controls="accessibility-panel"
       >
         <Accessibility
-          className={`h-6 w-6 stroke-[2.2] transition-transform duration-300 ${
+          className={`h-6 w-6 stroke-[2.2] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
             isToolbarOpen && !isClosing ? 'rotate-12 scale-110' : 'rotate-0 scale-100'
           }`}
           aria-hidden="true"
         />
       </button>
 
-      {/* Accessible Floating Modal Panel */}
+      {/* Accessible Floating Modal Panel with Speech Bubble Pointer */}
       {shouldRender && (
         <div
-          ref={panelRef}
-          id="accessibility-panel"
-          tabIndex={-1}
-          role="dialog"
-          aria-modal="true"
           aria-hidden={isClosing || undefined}
-          aria-labelledby="a11y-panel-title"
-          className={`fixed bottom-36 md:bottom-20 right-4 md:right-6 z-50 w-[92vw] max-w-sm bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-2xl shadow-2xl p-5 text-slate-800 dark:text-slate-100 max-h-[82vh] overflow-y-auto focus:outline-none ${
-            isClosing ? 'animate-a11y-close pointer-events-none' : 'animate-a11y-open'
+          className={`fixed bottom-[9.25rem] md:bottom-[5.25rem] right-4 md:right-6 z-50 w-[92vw] max-w-sm origin-[calc(100%-26px)_calc(100%+10px)] transition-[opacity,transform] duration-[360ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            isVisible && !isClosing
+              ? 'opacity-100 translate-y-0 scale-100'
+              : 'opacity-0 translate-y-2 scale-90 pointer-events-none'
           }`}
         >
-          {/* Header */}
+          <div
+            ref={panelRef}
+            id="accessibility-panel"
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="a11y-panel-title"
+            className="relative z-10 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl p-5 text-slate-800 dark:text-slate-100 max-h-[82vh] overflow-y-auto overflow-x-hidden focus:outline-none"
+          >
+            {/* Header */}
           <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
             <div className="flex items-center gap-2">
               <Accessibility className="h-5 w-5 text-brand-primary" aria-hidden="true" />
@@ -150,17 +171,22 @@ export const AccessibilityToolbar: React.FC = () => {
           </div>
 
           <div className="py-4 space-y-5 text-xs">
-            {/* 1. Font Size Scaling */}
+            {/* 1. Font Size Scaling with 500ms Sliding Active Pill */}
             <div className="space-y-2">
               <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                 <Type className="h-4 w-4 text-brand-primary" aria-hidden="true" />
                 Tamanho da Fonte (Zoom de Texto)
               </label>
               <div
-                className="grid grid-cols-5 gap-1.5"
+                className="relative grid grid-cols-5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700/70"
                 role="group"
                 aria-label="Escala de fonte"
               >
+                <div
+                  aria-hidden="true"
+                  style={{ transform: `translateX(${fontScaleIndex * 100}%)` }}
+                  className="pointer-events-none absolute top-1 bottom-1 left-1 w-[calc((100%-0.5rem)/5)] rounded-lg bg-brand-primary shadow-sm transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                />
                 {fontScales.map((scale) => {
                   const isSelected = fontScale === scale;
                   return (
@@ -168,10 +194,10 @@ export const AccessibilityToolbar: React.FC = () => {
                       key={scale}
                       type="button"
                       onClick={() => setFontScale(scale)}
-                      className={`py-2 rounded-lg font-bold transition-all border ${
+                      className={`relative z-10 py-2 rounded-lg font-bold transition-colors duration-300 cursor-pointer ${
                         isSelected
-                          ? 'bg-brand-primary text-brand-primary-foreground border-brand-primary shadow-sm'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-transparent hover:border-slate-300 dark:hover:border-slate-700'
+                          ? 'text-brand-primary-foreground'
+                          : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                       }`}
                       aria-pressed={isSelected}
                     >
@@ -182,19 +208,24 @@ export const AccessibilityToolbar: React.FC = () => {
               </div>
             </div>
 
-            {/* 2. Dyslexia Typography */}
+            {/* 2. Dyslexia Typography with 500ms Sliding Active Pill */}
             <div className="space-y-2">
               <span className="font-semibold text-slate-700 dark:text-slate-300 block">
                 Tipografia Acessível
               </span>
-              <div className="grid grid-cols-3 gap-1.5">
+              <div className="relative grid grid-cols-3 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700/70">
+                <div
+                  aria-hidden="true"
+                  style={{ transform: `translateX(${fontFamilyIndex * 100}%)` }}
+                  className="pointer-events-none absolute top-1 bottom-1 left-1 w-[calc((100%-0.5rem)/3)] rounded-lg bg-brand-primary shadow-sm transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                />
                 <button
                   type="button"
                   onClick={() => setFontFamily('standard')}
-                  className={`p-2 rounded-lg border font-medium transition-colors ${
+                  className={`relative z-10 p-2 rounded-lg transition-colors duration-300 cursor-pointer ${
                     fontFamily === 'standard'
-                      ? 'bg-brand-primary text-brand-primary-foreground border-brand-primary font-bold'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-transparent'
+                      ? 'text-brand-primary-foreground font-bold'
+                      : 'text-slate-700 dark:text-slate-300 font-medium hover:text-slate-900 dark:hover:text-white'
                   }`}
                   aria-pressed={fontFamily === 'standard'}
                 >
@@ -203,10 +234,10 @@ export const AccessibilityToolbar: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setFontFamily('dyslexic')}
-                  className={`p-2 rounded-lg border font-medium transition-colors ${
+                  className={`relative z-10 p-2 rounded-lg transition-colors duration-300 cursor-pointer ${
                     fontFamily === 'dyslexic'
-                      ? 'bg-brand-primary text-brand-primary-foreground border-brand-primary font-bold'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-transparent'
+                      ? 'text-brand-primary-foreground font-bold'
+                      : 'text-slate-700 dark:text-slate-300 font-medium hover:text-slate-900 dark:hover:text-white'
                   }`}
                   aria-pressed={fontFamily === 'dyslexic'}
                 >
@@ -215,10 +246,10 @@ export const AccessibilityToolbar: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setFontFamily('atkinson')}
-                  className={`p-2 rounded-lg border font-medium transition-colors ${
+                  className={`relative z-10 p-2 rounded-lg transition-colors duration-300 cursor-pointer ${
                     fontFamily === 'atkinson'
-                      ? 'bg-brand-primary text-brand-primary-foreground border-brand-primary font-bold'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-transparent'
+                      ? 'text-brand-primary-foreground font-bold'
+                      : 'text-slate-700 dark:text-slate-300 font-medium hover:text-slate-900 dark:hover:text-white'
                   }`}
                   aria-pressed={fontFamily === 'atkinson'}
                 >
@@ -227,20 +258,27 @@ export const AccessibilityToolbar: React.FC = () => {
               </div>
             </div>
 
-            {/* 3. Contrast Modes */}
+            {/* 3. Contrast Modes with 500ms Sliding Active Pill */}
             <div className="space-y-2">
               <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                 <Eye className="h-4 w-4 text-brand-primary" aria-hidden="true" />
                 Contraste & Esquema de Cores
               </label>
-              <div className="grid grid-cols-3 gap-1.5">
+              <div className="relative grid grid-cols-3 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700/70">
+                <div
+                  aria-hidden="true"
+                  style={{ transform: `translateX(${contrastIndex * 100}%)` }}
+                  className={`pointer-events-none absolute top-1 bottom-1 left-1 w-[calc((100%-0.5rem)/3)] rounded-lg shadow-sm transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                    contrastMode === 'high-contrast' ? 'bg-amber-400' : 'bg-brand-primary'
+                  }`}
+                />
                 <button
                   type="button"
                   onClick={() => setContrastMode('normal')}
-                  className={`p-2 rounded-lg border transition-colors ${
+                  className={`relative z-10 p-2 rounded-lg transition-colors duration-300 cursor-pointer ${
                     contrastMode === 'normal'
-                      ? 'bg-brand-primary text-brand-primary-foreground border-brand-primary font-bold'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-transparent'
+                      ? 'text-brand-primary-foreground font-bold'
+                      : 'text-slate-700 dark:text-slate-300 font-medium hover:text-slate-900 dark:hover:text-white'
                   }`}
                   aria-pressed={contrastMode === 'normal'}
                 >
@@ -249,10 +287,10 @@ export const AccessibilityToolbar: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setContrastMode('high-contrast')}
-                  className={`p-2 rounded-lg border transition-colors ${
+                  className={`relative z-10 p-2 rounded-lg transition-colors duration-300 cursor-pointer ${
                     contrastMode === 'high-contrast'
-                      ? 'bg-amber-400 text-black border-amber-500 font-extrabold'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-transparent'
+                      ? 'text-black font-extrabold'
+                      : 'text-slate-700 dark:text-slate-300 font-medium hover:text-slate-900 dark:hover:text-white'
                   }`}
                   aria-pressed={contrastMode === 'high-contrast'}
                 >
@@ -261,10 +299,10 @@ export const AccessibilityToolbar: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setContrastMode('inverted')}
-                  className={`p-2 rounded-lg border transition-colors ${
+                  className={`relative z-10 p-2 rounded-lg transition-colors duration-300 cursor-pointer ${
                     contrastMode === 'inverted'
-                      ? 'bg-brand-primary text-brand-primary-foreground border-brand-primary font-bold'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-transparent'
+                      ? 'text-brand-primary-foreground font-bold'
+                      : 'text-slate-700 dark:text-slate-300 font-medium hover:text-slate-900 dark:hover:text-white'
                   }`}
                   aria-pressed={contrastMode === 'inverted'}
                 >
@@ -364,6 +402,13 @@ export const AccessibilityToolbar: React.FC = () => {
               Atalho: <kbd className="bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded">Alt+A</kbd>
             </span>
           </div>
+          </div>
+
+          {/* Speech Bubble Pointer Arrow (centered at 26px from right to align with the 52px button) */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -bottom-[7px] right-[19px] z-20 h-3.5 w-3.5 rotate-45 rounded-br-[3px] border-b border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+          />
         </div>
       )}
     </>
