@@ -109,7 +109,7 @@ export const QuizTimer: React.FC<QuizTimerProps> = ({
 
   return (
     <div
-      className={`inline-flex items-center gap-2 px-2.5 py-1.5 rounded-brand border text-xs sm:text-sm font-mono font-bold shadow-sm select-none transition-colors ${timerStyles} ${className}`}
+      className={`inline-flex items-center gap-2 px-2.5 py-1.5 rounded-brand border text-xs sm:text-sm font-mono font-bold shadow-sm select-none transition-colors shrink-0 whitespace-nowrap ${timerStyles} ${className}`}
       role="timer"
       aria-label={ariaLabelText}
     >
@@ -137,12 +137,12 @@ export const QuizTimer: React.FC<QuizTimerProps> = ({
         <Timer className="h-4 w-4 text-brand-primary shrink-0" aria-hidden="true" />
       )}
 
-      <span>{formatTime(seconds)}</span>
+      <span className="shrink-0 whitespace-nowrap">{formatTime(seconds)}</span>
 
       {/* Accommodation Badge */}
       {timeMode === 'EXTENDED_INEP' && (
         <span
-          className="text-[10px] font-sans font-bold px-1 py-0.5 rounded bg-emerald-200/60 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 hidden sm:inline"
+          className="text-[10px] font-sans font-bold px-1 py-0.5 rounded bg-emerald-200/60 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 hidden sm:inline shrink-0 whitespace-nowrap"
           title="Atendimento Especializado INEP: +60 minutos"
         >
           +60m INEP
@@ -151,7 +151,7 @@ export const QuizTimer: React.FC<QuizTimerProps> = ({
 
       {timeMode === 'UNTIMED' && (
         <span
-          className="text-[10px] font-sans font-bold px-1 py-0.5 rounded bg-blue-200/60 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 hidden sm:inline"
+          className="text-[10px] font-sans font-bold px-1 py-0.5 rounded bg-blue-200/60 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 hidden sm:inline shrink-0 whitespace-nowrap"
           title="Modo Livre de Ansiedade (Sem contagem regressiva)"
         >
           Livre

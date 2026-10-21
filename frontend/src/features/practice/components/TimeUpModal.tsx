@@ -68,9 +68,13 @@ export const TimeUpModal: React.FC<TimeUpModalProps> = ({
       }
     };
 
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalOverflow;
       previouslyFocusedElement.current?.focus();
     };
   }, [isOpen, handleDismiss]);
@@ -79,15 +83,21 @@ export const TimeUpModal: React.FC<TimeUpModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 m-0"
       role="dialog"
       aria-modal="true"
       aria-labelledby="timeup-modal-title"
       aria-describedby="timeup-modal-description"
     >
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+        onClick={handleDismiss}
+        aria-hidden="true"
+      />
       <div
         ref={modalRef}
-        className="relative w-full max-w-md rounded-brand bg-white dark:bg-slate-900 border border-amber-500/40 dark:border-amber-500/30 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150"
+        className="relative z-10 w-full max-w-md rounded-brand bg-white dark:bg-slate-900 border border-amber-500/40 dark:border-amber-500/30 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
       >
         {/* Modal Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 bg-amber-50/60 dark:bg-amber-950/20">

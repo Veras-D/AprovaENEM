@@ -48,7 +48,7 @@ describe('App Root Integration Component', () => {
 
     // Practice view should now be rendered
     await waitFor(() => {
-      expect(screen.getByText(/Simulado Rápido ENEM/i)).toBeInTheDocument();
+      expect(screen.getByText(/Diagnóstico ENEM|Simulado Rápido ENEM/i)).toBeInTheDocument();
     });
 
     // Switch to Leaderboard / Gamification via Desktop Header "Ranking"
@@ -71,7 +71,7 @@ describe('App Root Integration Component', () => {
 
     // Should return to Practice mode
     await waitFor(() => {
-      expect(screen.getByText(/Simulado Rápido ENEM/i)).toBeInTheDocument();
+      expect(screen.getByText(/Diagnóstico ENEM|Simulado Rápido ENEM/i)).toBeInTheDocument();
     });
 
     // Return to LandingPage via "Início"

@@ -27,7 +27,7 @@ export const SkipToContent: React.FC<SkipToContentProps> = ({
     <a
       href={`#${targetId}`}
       onClick={handleClick}
-      className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2.5 focus:bg-brand-primary focus:text-brand-primary-foreground focus:font-bold focus:text-sm focus:rounded-brand focus:shadow-2xl focus:outline-none focus:ring-4 focus:ring-brand-accent transition-all"
+      className="sr-only absolute top-0 left-0 focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2.5 focus:bg-brand-primary focus:text-brand-primary-foreground focus:font-bold focus:text-sm focus:rounded-brand focus:shadow-2xl focus:outline-none focus:ring-4 focus:ring-brand-accent transition-all"
     >
       {label}
     </a>

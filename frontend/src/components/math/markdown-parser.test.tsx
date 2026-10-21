@@ -134,4 +134,25 @@ onde a **velocidade inicial** é dada por $v_0 = 20\\text{ m/s}$.`;
       expect(mathBlocks).toHaveLength(2); // block math and inline math
     });
   });
+
+  describe('Unescaping Markdown punctuation', () => {
+    it('unescapes backslash-escaped numerals in lists such as 1\\., 2\\., etc.', () => {
+      const content = '1\\. Nós queremos cantar o amor ao perigo.\n\n2\\. A coragem, a audácia.';
+      const { container } = render(<MathRenderer content={content} />);
+
+      expect(container.textContent).toContain('1. Nós queremos cantar o amor ao perigo.');
+      expect(container.textContent).toContain('2. A coragem, a audácia.');
+      expect(container.textContent).not.toContain('1\\.');
+      expect(container.textContent).not.toContain('2\\.');
+    });
+
+    it('unescapes escaped punctuation within formatting tags', () => {
+      const content = '**Item 1\\.** e *seção 2\\.* com aviso.';
+      const { container } = render(<MathRenderer content={content} />);
+
+      expect(screen.getByText('Item 1.')).toBeInTheDocument();
+      expect(screen.getByText('seção 2.')).toBeInTheDocument();
+      expect(container.textContent).not.toContain('\\.');
+    });
+  });
 });

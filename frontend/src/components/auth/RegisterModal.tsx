@@ -207,7 +207,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   return (
     <>
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6"
+        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 m-0"
         role="dialog"
         aria-modal="true"
         aria-labelledby="auth-modal-title"

@@ -14,9 +14,18 @@ import type {
   InstitutionalCohortDiagnosticResponse,
 } from '../types';
 import type { UserProfile } from '@/types';
-import { ENEM_2023_OFFICIAL_RESOLUTIONS, ENEM_2022_OFFICIAL_RESOLUTIONS } from './completed-exams';
+export {
+  ENEM_2023_OFFICIAL_RESOLUTIONS,
+  ENEM_2022_OFFICIAL_RESOLUTIONS,
+  ENEM_2023_OFFICIAL_QUESTIONS,
+} from './completed-exams';
+import {
+  ENEM_2023_OFFICIAL_RESOLUTIONS,
+  ENEM_2022_OFFICIAL_RESOLUTIONS,
+  ENEM_2023_OFFICIAL_QUESTIONS,
+} from './completed-exams';
 
-export const MOCK_QUESTIONS: readonly QuestionItemDto[] = [
+export const HISTORICAL_SAMPLE_QUESTIONS: readonly QuestionItemDto[] = [
   {
     id: '44444444-0000-0000-0000-000000000002',
     year: 2023,
@@ -197,7 +206,7 @@ export const MOCK_QUESTIONS: readonly QuestionItemDto[] = [
     statement: "![](https://enem.dev/2022/questions/32/fe5e06b1-daf2-46e0-9485-5b2f32e59641.jpg)\n\n**Disponível em: https://tab.uol.com.br/. Acesso em: 25 ago. 2017 (adaptado).**\n\nO texto sobre os chamados nativos digitais traz informações com a função de",
     figureUrl: "https://enem.dev/2022/questions/32/fe5e06b1-daf2-46e0-9485-5b2f32e59641.jpg",
     figureAltText: "Figura explicativa ENEM 2022 quest\u00e3o 32",
-    difficulty: 'EASY',
+    difficulty: 'MEDIUM',
     status: 'ACTIVE',
     options: [
       { optionLetter: 'A', text: "Propor ações específicas para cada etapa da infância." },
@@ -307,7 +316,7 @@ export const MOCK_QUESTIONS: readonly QuestionItemDto[] = [
     topic: 'Funções e Álgebra',
     itemNumber: 160,
     statement: "Um motociclista planeja realizar uma viagem cujo destino fica a 500 km de sua casa. Sua moto consome 5 litros de gasolina para cada 100 km rodados, e o tanque da moto tem capacidade para 22 litros. Pelo mapa, observou que no trajeto da viagem o último posto disponível para reabastecimento, chamado Estrela, fica a 80 km do seu destino. Ele pretende partir com o tanque da moto cheio e planeja fazer somente duas paradas para reabastecimento, uma na ida e outra na volta, ambas no posto Estrela. No reabastecimento para a viagem de ida, deve considerar também combustível suficiente para se deslocar por 200 km no seu destino.\n\nA quantidade mínima de combustível, em litro, que esse motociclista deve reabastecer no posto Estrela na viagem de ida, que seja suficiente para fazer o segundo reabastecimento, é",
-    difficulty: 'MEDIUM',
+    difficulty: 'HARD',
     status: 'ACTIVE',
     options: [
       { optionLetter: 'A', text: "13." },
@@ -455,7 +464,7 @@ export const MOCK_QUESTIONS: readonly QuestionItemDto[] = [
     topic: 'Brasil República',
     itemNumber: 80,
     statement: "A Revolta da Vacina (1904) mostrou claramente o aspecto defensivo, desorganizado, fragmentado da ação popular. Não se negava o Estado, não se reivindicava participação nas decisões políticas; defendiam-se valores e direitos considerados acima da intervenção do Estado.\n\n**CARVALHO, J. M. Os bestializados: o Rio de Janeiro e a República que não foi. São Paulo: Cia. das Letras, 1987 (adaptado).**\n\nA mobilização analisada representou um alerta, na medida em que a ação popular questionava:",
-    difficulty: 'MEDIUM',
+    difficulty: 'HARD',
     status: 'ACTIVE',
     options: [
       { optionLetter: 'A', text: "A alta de preços." },
@@ -472,8 +481,8 @@ export const MOCK_QUESTIONS: readonly QuestionItemDto[] = [
     discipline: 'Literatura',
     topic: 'Literatura Brasileira e Arte',
     itemNumber: 40,
-    statement: "1\\. Nós queremos cantar o amor ao perigo, o hábito da energia e da temeridade.\n\n2\\. A coragem, a audácia, a rebelião serão elementos essenciais de nossa poesia.\n\n3\\. A literatura exaltou até hoje a imobilidade pensativa, o êxtase, o sono. Nós queremos exaltar o movimento agressivo, a insônia febril, o passo de corrida, o salto mortal, o bofetão e o soco.\n\n4\\. Nós afirmamos que a magnificência do mundo enriqueceu-se de uma beleza nova: a beleza da velocidade. Um automóvel de corrida com seu cofre enfeitado com tubos grossos, semelhantes a serpentes de hálito explosivo… um automóvel rugidor, que parece correr sobre a metralha, é mais bonito que a Vitória de Samotrácia.\n\n5\\. Nós queremos entoar hinos ao homem que segura o volante, cuja haste ideal atravessa a Terra, lançada também numa corrida sobre o circuito da sua órbita.\n\n6\\. É preciso que o poeta prodigalize com ardor, fausto e munificiência, para aumentar o entusiástico fervor dos elementos primordiais.\n\n**MARINETTI, F. T**. Manifesto futurista. In: TELES, G. M. Vanguardas europeias e Modernismo brasileiro. Petrópolis: Vozes, 1985.\n\nO documento de Marinetti, de 1909, propõe os referenciais estéticos do Futurismo, que valorizam a",
-    difficulty: 'EASY',
+    statement: "1. Nós queremos cantar o amor ao perigo, o hábito da energia e da temeridade.\n\n2. A coragem, a audácia, a rebelião serão elementos essenciais de nossa poesia.\n\n3. A literatura exaltou até hoje a imobilidade pensativa, o êxtase, o sono. Nós queremos exaltar o movimento agressivo, a insônia febril, o passo de corrida, o salto mortal, o bofetão e o soco.\n\n4. Nós afirmamos que a magnificência do mundo enriqueceu-se de uma beleza nova: a beleza da velocidade. Um automóvel de corrida com seu cofre enfeitado com tubos grossos, semelhantes a serpentes de hálito explosivo… um automóvel rugidor, que parece correr sobre a metralha, é mais bonito que a Vitória de Samotrácia.\n\n5. Nós queremos entoar hinos ao homem que segura o volante, cuja haste ideal atravessa a Terra, lançada também numa corrida sobre o circuito da sua órbita.\n\n6. É preciso que o poeta prodigalize com ardor, fausto e munificiência, para aumentar o entusiástico fervor dos elementos primordiais.\n\n**MARINETTI, F. T**. Manifesto futurista. In: TELES, G. M. Vanguardas europeias e Modernismo brasileiro. Petrópolis: Vozes, 1985.\n\nO documento de Marinetti, de 1909, propõe os referenciais estéticos do Futurismo, que valorizam a",
+    difficulty: 'HARD',
     status: 'ACTIVE',
     options: [
       { optionLetter: 'A', text: "Composição estática." },
@@ -483,6 +492,11 @@ export const MOCK_QUESTIONS: readonly QuestionItemDto[] = [
       { optionLetter: 'E', text: "Manutenção das tradições." }
     ],
   }
+];
+
+export const MOCK_QUESTIONS: readonly QuestionItemDto[] = [
+  ...HISTORICAL_SAMPLE_QUESTIONS,
+  ...ENEM_2023_OFFICIAL_QUESTIONS,
 ];
 
 export const MOCK_PAGINATED_QUESTIONS: PaginatedResponse<QuestionItemDto> = {

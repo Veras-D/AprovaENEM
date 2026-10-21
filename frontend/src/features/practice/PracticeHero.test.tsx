@@ -4,6 +4,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PracticeHero } from './PracticeHero';
 import { useSessionStore } from '@/stores/useSessionStore';
+import { MOCK_RESOLUTIONS, ENEM_2023_OFFICIAL_RESOLUTIONS } from '@/api/mocks/mock-data';
 
 describe('PracticeHero Component', () => {
   let queryClient: QueryClient;
@@ -28,18 +29,18 @@ describe('PracticeHero Component', () => {
     renderWithProviders();
 
     // Quiz control bar
-    expect(screen.getByText(/Simulado Rápido ENEM/i)).toBeInTheDocument();
+    expect(screen.getByText(/Diagnóstico ENEM|Simulado Rápido ENEM/i)).toBeInTheDocument();
     expect(screen.getByText(/0 de 5 respondidas/i)).toBeInTheDocument();
 
     // Timer
     expect(screen.getByRole('timer')).toBeInTheDocument();
 
     // Question 1 metadata & statement
-    expect(screen.getByText(/MT • Matemática/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/ENEM 2023/i)[0]).toBeInTheDocument();
-    expect(
-      screen.getByText(/Um artista plástico esculpe uma escultura a partir de um bloco de madeira de lei/i)
-    ).toBeInTheDocument();
+    const qs = useSessionStore.getState().questions;
+    expect(qs).toHaveLength(5);
+    const q0 = qs[0]!;
+    expect(screen.getByText(new RegExp(`Questão #${q0.externalId}`))).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(q0.knowledgeArea, 'i'))).toBeInTheDocument();
 
     // 5 questions in carousel
     expect(screen.getByRole('button', { name: /Ir para a questão 1/i })).toBeInTheDocument();
@@ -53,9 +54,12 @@ describe('PracticeHero Component', () => {
     const submitBtn = screen.getByRole('button', { name: /confirmar resposta/i });
     expect(submitBtn).toBeDisabled();
 
-    // Select option B
-    const optionB = screen.getByRole('radio', { name: /^B / });
-    fireEvent.click(optionB);
+    // Select the correct option for Question 1
+    const q1 = useSessionStore.getState().questions[0]!;
+    const resolution = MOCK_RESOLUTIONS[q1.id] || ENEM_2023_OFFICIAL_RESOLUTIONS[q1.id];
+    const correctLetter = resolution?.correctOption || 'A';
+    const correctRadio = screen.getByRole('radio', { name: new RegExp(`^${correctLetter} `) });
+    fireEvent.click(correctRadio);
 
     expect(submitBtn).not.toBeDisabled();
     fireEvent.click(submitBtn);
@@ -69,9 +73,13 @@ describe('PracticeHero Component', () => {
   it('should visually mark carousel pill as incorrect when answer is wrong', () => {
     renderWithProviders();
 
-    // Select option A (incorrect; correct is B)
-    const optionA = screen.getByRole('radio', { name: /^A / });
-    fireEvent.click(optionA);
+    // Select incorrect option
+    const q1 = useSessionStore.getState().questions[0]!;
+    const resolution = MOCK_RESOLUTIONS[q1.id] || ENEM_2023_OFFICIAL_RESOLUTIONS[q1.id];
+    const correctLetter = resolution?.correctOption || 'A';
+    const wrongLetter = correctLetter === 'A' ? 'B' : 'A';
+    const wrongRadio = screen.getByRole('radio', { name: new RegExp(`^${wrongLetter} `) });
+    fireEvent.click(wrongRadio);
 
     const submitBtn = screen.getByRole('button', { name: /confirmar resposta/i });
     fireEvent.click(submitBtn);
@@ -91,24 +99,21 @@ describe('PracticeHero Component', () => {
   it('should navigate between questions using next button and carousel pills', () => {
     renderWithProviders();
 
-    // Question 1 is active
-    expect(screen.getByText(/MT • Matemática/i)).toBeInTheDocument();
+    const qs = useSessionStore.getState().questions;
+    expect(screen.getByText(new RegExp(`Questão #${qs[0]!.externalId}`))).toBeInTheDocument();
 
     // Navigate to question 2 via carousel
     const q2Btn = screen.getByRole('button', { name: /Ir para a questão 2/i });
     fireEvent.click(q2Btn);
 
-    // Question 2 (CN • Física) should now be displayed
-    expect(screen.getByText(/CN • Física/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/Informações digitais — dados — são gravadas em discos ópticos/i)
-    ).toBeInTheDocument();
+    // Question 2 should now be displayed
+    expect(screen.getByText(new RegExp(`Questão #${qs[1]!.externalId}`))).toBeInTheDocument();
 
     // Navigate back via Previous button
     const prevBtn = screen.getByRole('button', { name: /Questão anterior/i });
     fireEvent.click(prevBtn);
 
-    expect(screen.getByText(/MT • Matemática/i)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`Questão #${qs[0]!.externalId}`))).toBeInTheDocument();
   });
 
   it('should toggle question flag for review', () => {
@@ -247,42 +252,45 @@ describe('PracticeHero Component', () => {
   it('navigates to next and previous questions via keyboard shortcuts (ArrowRight/ArrowLeft, PageDown/PageUp, [/])', () => {
     renderWithProviders();
 
-    // Starts on Question 1 (MT • Matemática)
-    expect(screen.getByText(/MT • Matemática/i)).toBeInTheDocument();
+    const qs = useSessionStore.getState().questions;
+
+    // Starts on Question 1
+    expect(screen.getByText(new RegExp(`Questão #${qs[0]!.externalId}`))).toBeInTheDocument();
 
     // Press ArrowLeft on first question (boundary check - should stay on Q1)
     fireEvent.keyDown(window, { key: 'ArrowLeft' });
-    expect(screen.getByText(/MT • Matemática/i)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`Questão #${qs[0]!.externalId}`))).toBeInTheDocument();
 
-    // Press ArrowRight to advance to Question 2 (CN • Física)
+    // Press ArrowRight to advance to Question 2
     fireEvent.keyDown(window, { key: 'ArrowRight' });
-    expect(screen.getByText(/CN • Física/i)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`Questão #${qs[1]!.externalId}`))).toBeInTheDocument();
 
-    // Press PageDown to advance to Question 3 (CN • Biologia)
+    // Press PageDown to advance to Question 3
     fireEvent.keyDown(window, { key: 'PageDown' });
-    expect(screen.getByText(/CN • Biologia/i)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`Questão #${qs[2]!.externalId}`))).toBeInTheDocument();
 
-    // Press ']' bracket shortcut to advance to Question 4 (CH • Filosofia)
+    // Press ']' bracket shortcut to advance to Question 4
     fireEvent.keyDown(window, { key: ']' });
-    expect(screen.getByText(/CH • Filosofia/i)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`Questão #${qs[3]!.externalId}`))).toBeInTheDocument();
 
     // Press PageUp to go back to Question 3
     fireEvent.keyDown(window, { key: 'PageUp' });
-    expect(screen.getByText(/CN • Biologia/i)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`Questão #${qs[2]!.externalId}`))).toBeInTheDocument();
 
     // Press '[' bracket shortcut to go back to Question 2
     fireEvent.keyDown(window, { key: '[' });
-    expect(screen.getByText(/CN • Física/i)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`Questão #${qs[1]!.externalId}`))).toBeInTheDocument();
 
     // Press ArrowLeft to go back to Question 1
     fireEvent.keyDown(window, { key: 'ArrowLeft' });
-    expect(screen.getByText(/MT • Matemática/i)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`Questão #${qs[0]!.externalId}`))).toBeInTheDocument();
   });
 
   it('does not trigger question navigation when user is typing in an input or textarea', () => {
     renderWithProviders();
 
-    expect(screen.getByText(/MT • Matemática/i)).toBeInTheDocument();
+    const qs = useSessionStore.getState().questions;
+    expect(screen.getByText(new RegExp(`Questão #${qs[0]!.externalId}`))).toBeInTheDocument();
 
     // Create a mock input and focus it
     const input = document.createElement('input');
@@ -292,7 +300,7 @@ describe('PracticeHero Component', () => {
     fireEvent.keyDown(input, { key: 'ArrowRight' });
 
     // Should still be on Question 1
-    expect(screen.getByText(/MT • Matemática/i)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`Questão #${qs[0]!.externalId}`))).toBeInTheDocument();
 
     document.body.removeChild(input);
   });
@@ -367,11 +375,17 @@ describe('PracticeHero Component', () => {
   it('presents different, novel questions when clicking "Refazer Diagnóstico" after completing diagnostic', async () => {
     renderWithProviders();
 
-    // Verify initial Question 1 statement
-    const initialQuestion1Text = 'Um artista plástico esculpe uma escultura a partir de um bloco de madeira de lei';
-    expect(screen.getByText(new RegExp(initialQuestion1Text, 'i'))).toBeInTheDocument();
+    // Verify initial Question 1 statement and progressive difficulty (starts with EASY, ends with HARD)
+    const initialQuestions = useSessionStore.getState().questions;
+    expect(initialQuestions).toHaveLength(5);
+    expect(initialQuestions[0]?.difficulty).toBe('EASY');
+    expect(initialQuestions[4]?.difficulty).toBe('HARD');
 
-    const initialQuestionIds = useSessionStore.getState().questions.map((q) => q.id);
+    const sanitizeSnippet = (text: string) => text.replace(/[*_#`~[\]()]/g, '').trim().slice(0, 20);
+    const initialSnippet = sanitizeSnippet(initialQuestions[0]!.statement);
+    expect(screen.getByText((content) => content.includes(initialSnippet))).toBeInTheDocument();
+
+    const initialQuestionIds = initialQuestions.map((q) => q.id);
     expect(initialQuestionIds).toHaveLength(5);
 
     // Complete all 5 initial questions
@@ -407,11 +421,14 @@ describe('PracticeHero Component', () => {
     expect(screen.getByText(/0 de 5 respondidas/i)).toBeInTheDocument();
 
     // Verify new questions are loaded and distinct from the initial set
-    const recalQuestionIds = useSessionStore.getState().questions.map((q) => q.id);
+    const recalQuestions = useSessionStore.getState().questions;
+    const recalQuestionIds = recalQuestions.map((q) => q.id);
     expect(recalQuestionIds).toHaveLength(5);
+    expect(recalQuestions[0]?.difficulty).toBe('EASY');
+    expect(recalQuestions[4]?.difficulty).toBe('HARD');
 
     // Initial question 1 should NOT be in the active recalibration session
-    expect(screen.queryByText(new RegExp(initialQuestion1Text, 'i'))).not.toBeInTheDocument();
+    expect(screen.queryByText((content) => content.includes(initialSnippet))).not.toBeInTheDocument();
 
     // Every question ID in the recalibration session should be different from the initial question IDs
     initialQuestionIds.forEach((initialId) => {
@@ -419,9 +436,10 @@ describe('PracticeHero Component', () => {
     });
 
     // The new Question 1 should be rendered
-    const currentQ1 = useSessionStore.getState().questions[0];
+    const currentQ1 = recalQuestions[0];
     expect(currentQ1).toBeDefined();
-    expect(screen.getByText(new RegExp(currentQ1!.statement.slice(0, 30), 'i'))).toBeInTheDocument();
+    const currentSnippet = sanitizeSnippet(currentQ1!.statement);
+    expect(screen.getByText((content) => content.includes(currentSnippet))).toBeInTheDocument();
   });
 });
 

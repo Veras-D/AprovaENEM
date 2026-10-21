@@ -37,7 +37,14 @@ import { DiagnosticResultView } from '@/features/diagnostic/components/Diagnosti
 import {
   generateDiagnosticFromSession,
   selectDiagnosticQuestions,
+  getSessionVariantIndex,
 } from '@/features/diagnostic/diagnostic-utils';
+
+const ALL_FALLBACK_QUESTIONS: readonly QuestionItemDto[] = [
+  ...MOCK_QUESTIONS,
+  ...ENEM_2023_OFFICIAL_QUESTIONS,
+  ...ENEM_2022_OFFICIAL_QUESTIONS,
+];
 
 export interface PracticeHeroProps {
   readonly onOpenGamification?: () => void;
@@ -84,22 +91,28 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
   const questionsQuery = useQuestionsQuery({ size: 100 });
   const submitAnswerMutation = useSubmitAnswerMutation();
 
+  const anonymousSessionId = useSessionStore((state) => state.anonymousSessionId);
+  const starterVariant = useMemo(() => {
+    return getSessionVariantIndex(anonymousSessionId);
+  }, [anonymousSessionId]);
+
   const questionsPool = useMemo(() => {
     if (questionsQuery.data?.content && questionsQuery.data.content.length > 0) {
       return questionsQuery.data.content;
     }
-    return MOCK_QUESTIONS;
+    return ALL_FALLBACK_QUESTIONS;
   }, [questionsQuery.data?.content]);
 
   // Initialize session with live backend questions (or fallback pool) if empty and diagnostic not already completed
   useEffect(() => {
     if (questions.length === 0 && !isDiagnosticCompleted) {
-      const initialDtos = selectDiagnosticQuestions(questionsPool, [], 5);
+      const seenIds = useSessionStore.getState().seenDiagnosticQuestionIds;
+      const initialDtos = selectDiagnosticQuestions(questionsPool, seenIds, 5, starterVariant);
       const domainQuestions = initialDtos.map(mapDtoToDomainQuestion);
       recordDiagnosticSeenQuestions(initialDtos.map((q) => q.id));
       const initialSession: PracticeSession = {
         id: `session-enem-${Date.now()}`,
-        title: 'Simulado Rápido ENEM',
+        title: 'Diagnóstico ENEM',
         questionCount: domainQuestions.length,
         status: 'IN_PROGRESS',
         currentQuestionIndex: 0,
@@ -108,7 +121,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       };
       startSession(initialSession, domainQuestions);
     }
-  }, [questions.length, isDiagnosticCompleted, startSession, recordDiagnosticSeenQuestions, questionsPool]);
+  }, [questions.length, isDiagnosticCompleted, startSession, recordDiagnosticSeenQuestions, questionsPool, starterVariant]);
 
   // Upgrade to live backend questions once when available if student has not interacted yet
   useEffect(() => {
@@ -123,12 +136,13 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       questions.length > 0
     ) {
       hasUpgradedToLiveRef.current = true;
-      const liveDtos = selectDiagnosticQuestions(questionsQuery.data.content, [], 5);
+      const seenIds = useSessionStore.getState().seenDiagnosticQuestionIds;
+      const liveDtos = selectDiagnosticQuestions(questionsQuery.data.content, seenIds, 5, starterVariant);
       const domainQuestions = liveDtos.map(mapDtoToDomainQuestion);
       recordDiagnosticSeenQuestions(liveDtos.map((q) => q.id));
       const liveSession: PracticeSession = {
         id: `session-live-${Date.now()}`,
-        title: 'Simulado Rápido ENEM',
+        title: 'Diagnóstico ENEM',
         questionCount: domainQuestions.length,
         status: 'IN_PROGRESS',
         currentQuestionIndex: 0,
@@ -146,6 +160,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     questions.length,
     recordDiagnosticSeenQuestions,
     startSession,
+    starterVariant,
   ]);
 
   const currentQuestion = questions[currentQuestionIndex] || null;
@@ -226,13 +241,13 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     resetDiagnostic();
 
     // Select novel balanced questions across ENEM areas
-    const newDtos = selectDiagnosticQuestions(questionsPool, excludeIds, 5);
+    const newDtos = selectDiagnosticQuestions(questionsPool, excludeIds, 5, starterVariant);
     const domainQuestions = newDtos.map(mapDtoToDomainQuestion);
     recordDiagnosticSeenQuestions(newDtos.map((q) => q.id));
 
     const mockSession: PracticeSession = {
       id: `session-recal-${Date.now()}`,
-      title: 'Simulado Rápido ENEM',
+      title: 'Diagnóstico ENEM',
       questionCount: domainQuestions.length,
       status: 'IN_PROGRESS',
       currentQuestionIndex: 0,
@@ -240,7 +255,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       createdAt: new Date().toISOString(),
     };
     startSession(mockSession, domainQuestions);
-  }, [questions, resetDiagnostic, recordDiagnosticSeenQuestions, startSession, questionsPool]);
+  }, [questions, resetDiagnostic, recordDiagnosticSeenQuestions, startSession, questionsPool, starterVariant]);
 
   const handlePracticeWeakTopic = useCallback(
     (topic: string) => {
@@ -440,7 +455,8 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
   ]);
 
   return (
-    <div className="space-y-6">
+    <>
+      <div className="space-y-6">
       {/* Timed Quiz Control Bar / Calibrated Status Header */}
       {isCompleted ? (
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-brand border border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-xs">
@@ -511,13 +527,13 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
           </div>
         </div>
       ) : (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-brand bg-brand-primary/10 text-brand-primary">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+          <div className="flex items-center gap-3 shrink-0 min-w-0">
+            <div className="p-2 rounded-brand bg-brand-primary/10 text-brand-primary shrink-0">
               <BookOpen className="h-5 w-5" aria-hidden="true" />
             </div>
-            <div>
-              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 truncate">
                 {activeSession?.title || 'Simulado Rápido ENEM'}
               </h2>
               <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
@@ -534,7 +550,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end flex-wrap sm:flex-nowrap">
+          <div className="flex items-center gap-2 sm:gap-3 w-full md:w-auto justify-start md:justify-end flex-wrap">
             {/* Custom Exam Simulation Selector (Year and Day 1/2) */}
             <Button
               type="button"
@@ -543,7 +559,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
               onClick={() => setIsSimulationModalOpen(true)}
               aria-label="Simular Prova Oficial"
               title="Escolha o ano (2023, 2022...) e o caderno de aplicação (Dia 1 ou Dia 2)"
-              className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 text-xs sm:text-sm font-semibold"
+              className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 text-xs sm:text-sm font-semibold shrink-0 whitespace-nowrap"
             >
               <Layers className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />
               <span className="hidden sm:inline">Simular Prova Oficial</span>
@@ -558,7 +574,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
                 onClick={() => setIsTutorOpen(true)}
                 aria-label="Tirar Dúvida (IA)"
                 title="Tem dúvida nesta questão? Peça dicas e explicações passo a passo com Inteligência Artificial"
-                className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 text-xs sm:text-sm font-medium"
+                className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 text-xs sm:text-sm font-medium shrink-0 whitespace-nowrap"
               >
                 <Bot className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />
                 <span className="hidden sm:inline">Tirar Dúvida (IA)</span>
@@ -573,6 +589,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
               timeMode={timeMode}
               onOpenAccommodations={() => setIsAccommodationsOpen(true)}
               onTimeUp={() => setIsTimeUpModalOpen(true)}
+              className="shrink-0"
             />
 
             {/* Reset / Restart Quiz */}
@@ -583,6 +600,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
               onClick={handleRestart}
               aria-label="Reiniciar simulado"
               title="Reiniciar simulado"
+              className="shrink-0 whitespace-nowrap"
             >
               <RotateCcw className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />
               <span className="hidden sm:inline">Reiniciar</span>
@@ -662,9 +680,11 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
           )}
         </>
       )}
+    </div>
 
-      {/* Socratic AI Tutor Drawer bound to current question */}
-      {currentQuestion && (
+    {/* Modals and Drawers rendered outside space-y-6 to prevent margin-top injection */}
+    {/* Socratic AI Tutor Drawer bound to current question */}
+    {currentQuestion && (
         <SocraticTutorDrawer
           isOpen={isTutorOpen}
           onClose={() => setIsTutorOpen(false)}
@@ -712,6 +732,6 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
         onClose={() => setIsSimulationModalOpen(false)}
         onStartSimulation={handleStartCustomSimulation}
       />
-    </div>
+    </>
   );
 };

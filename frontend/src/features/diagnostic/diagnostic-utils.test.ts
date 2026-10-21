@@ -180,18 +180,60 @@ describe('diagnostic-utils', () => {
   });
 
   describe('selectDiagnosticQuestions', () => {
-    it('returns the initial canonical batch of 5 questions when excludeIds is empty', () => {
+    it('returns 5 starter questions with at least one from each knowledge area, ordered progressively by difficulty (1 easy, 3 medium, 1 hard)', () => {
       const questions = selectDiagnosticQuestions();
       expect(questions).toHaveLength(5);
-      expect(questions[0]?.subject).toBe('MT');
-      expect(questions[0]?.statement).toContain('Um artista plástico esculpe uma escultura a partir de um bloco de madeira de lei');
+
+      // Verify difficulties follow progressive order: start with easy, ends with hard
+      expect(questions[0]?.difficulty).toBe('EASY');
+      expect(questions[1]?.difficulty).toBe('MEDIUM');
+      expect(questions[2]?.difficulty).toBe('MEDIUM');
+      expect(questions[3]?.difficulty).toBe('MEDIUM');
+      expect(questions[4]?.difficulty).toBe('HARD');
+
+      // Verify all 4 ENEM knowledge areas are represented
+      const areas = questions.map((q) => q.subject);
+      expect(areas).toContain('MT');
+      expect(areas).toContain('CN');
+      expect(areas).toContain('CH');
+      expect(areas).toContain('LC');
+    });
+
+    it('returns different starter questions when using different offsets instead of always returning the exact same questions', () => {
+      const variant0 = selectDiagnosticQuestions(undefined, [], 5, 0);
+      const variant1 = selectDiagnosticQuestions(undefined, [], 5, 1);
+      const variant3 = selectDiagnosticQuestions(undefined, [], 5, 3);
+
+      const ids0 = variant0.map((q) => q.id);
+      const ids1 = variant1.map((q) => q.id);
+      const ids3 = variant3.map((q) => q.id);
+
+      // Variants should have different starter questions
+      expect(ids0).not.toEqual(ids1);
+      expect(ids0).not.toEqual(ids3);
+
+      // All should preserve the progressive difficulty rule
+      [variant0, variant1, variant3].forEach((v) => {
+        expect(v).toHaveLength(5);
+        expect(v[0]?.difficulty).toBe('EASY');
+        expect(v[1]?.difficulty).toBe('MEDIUM');
+        expect(v[2]?.difficulty).toBe('MEDIUM');
+        expect(v[3]?.difficulty).toBe('MEDIUM');
+        expect(v[4]?.difficulty).toBe('HARD');
+
+        const areas = v.map((q) => q.subject);
+        expect(areas).toContain('MT');
+        expect(areas).toContain('CN');
+        expect(areas).toContain('CH');
+        expect(areas).toContain('LC');
+      });
     });
 
     it('returns 5 distinct questions excluding the previously answered questions', () => {
       const initialQuestions = selectDiagnosticQuestions();
       const initialIds = initialQuestions.map((q) => q.id);
 
-      const nextQuestions = selectDiagnosticQuestions(undefined, initialIds);
+      const nextQuestions = selectDiagnosticQuestions(undefined, initialIds, 5, 0);
       expect(nextQuestions).toHaveLength(5);
 
       const nextIds = nextQuestions.map((q) => q.id);
@@ -206,35 +248,47 @@ describe('diagnostic-utils', () => {
       expect(areas).toContain('CN');
       expect(areas).toContain('CH');
       expect(areas).toContain('LC');
+
+      // Verify progression
+      expect(nextQuestions[0]?.difficulty).toBe('EASY');
+      expect(nextQuestions[4]?.difficulty).toBe('HARD');
     });
 
     it('supports multiple sequential recalibrations yielding novel question sets', () => {
       // Round 1
-      const round1 = selectDiagnosticQuestions();
+      const round1 = selectDiagnosticQuestions(undefined, [], 5, 0);
       const round1Ids = round1.map((q) => q.id);
 
       // Round 2
-      const round2 = selectDiagnosticQuestions(undefined, round1Ids);
+      const round2 = selectDiagnosticQuestions(undefined, round1Ids, 5, 0);
       const round2Ids = round2.map((q) => q.id);
       expect(round2Ids.some((id) => round1Ids.includes(id))).toBe(false);
 
       // Round 3
-      const round3 = selectDiagnosticQuestions(undefined, [...round1Ids, ...round2Ids]);
+      const round3 = selectDiagnosticQuestions(undefined, [...round1Ids, ...round2Ids], 5, 0);
       const round3Ids = round3.map((q) => q.id);
       expect(round3Ids.some((id) => round1Ids.includes(id))).toBe(false);
       expect(round3Ids.some((id) => round2Ids.includes(id))).toBe(false);
+
+      // All rounds maintain progressive difficulty
+      [round1, round2, round3].forEach((round) => {
+        expect(round).toHaveLength(5);
+        expect(round[0]?.difficulty).toBe('EASY');
+        expect(round[4]?.difficulty).toBe('HARD');
+      });
     });
 
     it('gracefully cycles when candidate pool is exhausted while avoiding the immediate previous set', () => {
-      // Exclude all questions in bank
-      const round1 = selectDiagnosticQuestions();
+      const round1 = selectDiagnosticQuestions(undefined, [], 5, 0);
       const round1Ids = round1.map((q) => q.id);
 
       // Pass large list of exclusions
-      const recycled = selectDiagnosticQuestions(undefined, round1Ids);
+      const recycled = selectDiagnosticQuestions(undefined, round1Ids, 5, 0);
       expect(recycled).toHaveLength(5);
       const recycledIds = recycled.map((q) => q.id);
       expect(recycledIds.some((id) => round1Ids.includes(id))).toBe(false);
+      expect(recycled[0]?.difficulty).toBe('EASY');
+      expect(recycled[4]?.difficulty).toBe('HARD');
     });
   });
 });

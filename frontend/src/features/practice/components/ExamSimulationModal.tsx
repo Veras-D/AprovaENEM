@@ -103,9 +103,13 @@ export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
       }
     };
 
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalOverflow;
       previouslyFocusedElement.current?.focus();
     };
   }, [isOpen, onClose]);
@@ -139,17 +143,21 @@ export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 m-0"
       role="dialog"
       aria-modal="true"
       aria-labelledby="simulation-modal-title"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
     >
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
       <div
         ref={modalRef}
-        className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-brand shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]"
+        className="relative z-10 w-full max-w-xl bg-white dark:bg-slate-900 rounded-brand shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800">

@@ -87,6 +87,7 @@ const STORAGE_KEY_ANON_SESSION = 'aprovaenem_anon_session_id';
 const STORAGE_KEY_MIGRATION = 'aprovaenem_migrated_progress';
 const STORAGE_KEY_DIAGNOSTIC_COMPLETED = 'aprovaenem_diagnostic_completed';
 const STORAGE_KEY_DIAGNOSTIC_REPORT = 'aprovaenem_diagnostic_report';
+const STORAGE_KEY_DIAGNOSTIC_SEEN = 'aprovaenem_diagnostic_seen_ids';
 
 function getOrCreateAnonymousSessionId(): string {
   if (typeof window === 'undefined') {
@@ -115,6 +116,16 @@ function getSavedDiagnosticReport(): DiagnosticReportDto | null {
   }
 }
 
+function getSavedSeenQuestionIds(): readonly string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_DIAGNOSTIC_SEEN);
+    return raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 export const useSessionStore = create<SessionState>((set, get) => ({
   phase: 'IDLE',
   activeSession: null,
@@ -130,7 +141,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   elapsedSeconds: 0,
   questionElapsedSeconds: 0,
   isMigratingProgress: false,
-  seenDiagnosticQuestionIds: [],
+  seenDiagnosticQuestionIds: getSavedSeenQuestionIds(),
 
   startSession: (session, questions = []) =>
     set({
@@ -341,6 +352,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       try {
         localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED);
         localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_REPORT);
+        localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_SEEN);
       } catch {
         // Storage quota
       }
@@ -366,6 +378,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   recordDiagnosticSeenQuestions: (ids) => {
     const { seenDiagnosticQuestionIds } = get();
     const updated = Array.from(new Set([...seenDiagnosticQuestionIds, ...ids]));
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(STORAGE_KEY_DIAGNOSTIC_SEEN, JSON.stringify(updated));
+      } catch {
+        // Storage quota
+      }
+    }
     set({ seenDiagnosticQuestionIds: updated });
   },
 

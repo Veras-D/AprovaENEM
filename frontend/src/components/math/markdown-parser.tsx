@@ -60,6 +60,15 @@ const STRIKE_REGEX = /~~([^~\n]+)~~/g;
 const BLOCK_IMAGE_REGEX = /^\s*!\[(.*?)\]\((https?:\/\/[^\s)]+|\/[^\s)]+|data:image\/[^\s)]+)\)\s*$/;
 
 /**
+ * Unescapes standard Markdown backslash-escaped punctuation characters (CommonMark § 2.4).
+ * Specifically converts escaped punctuation such as "1\." -> "1.", "\*" -> "*", "\[" -> "[", etc.
+ */
+export function unescapeMarkdown(text: string): string {
+  if (!text) return '';
+  return text.replace(/\\([!\"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~])/g, '$1');
+}
+
+/**
  * Parses inline markdown tokens (bold, italic, code, links, inline images) within a single line.
  */
 export function parseInlineMarkdown(text: string, keyPrefix: string): readonly React.ReactNode[] {
@@ -120,7 +129,7 @@ export function parseInlineMarkdown(text: string, keyPrefix: string): readonly R
   }));
 
   if (matches.length === 0) {
-    return [text];
+    return [unescapeMarkdown(text)];
   }
 
   // Sort matches by index
@@ -146,7 +155,7 @@ export function parseInlineMarkdown(text: string, keyPrefix: string): readonly R
 
     // Text prior to match
     if (match.index > currentIdx) {
-      nodes.push(text.slice(currentIdx, match.index));
+      nodes.push(unescapeMarkdown(text.slice(currentIdx, match.index)));
     }
 
     const key = `${keyPrefix}-m-${matchCounter}`;
@@ -158,13 +167,13 @@ export function parseInlineMarkdown(text: string, keyPrefix: string): readonly R
             <img
               key={key}
               src={match.url}
-              alt={match.alt || 'Figura de apoio da questão'}
+              alt={unescapeMarkdown(match.alt || 'Figura de apoio da questão')}
               className="inline-block max-h-7 sm:max-h-8 align-middle mx-1 object-contain rounded"
               loading="lazy"
             />
           );
         } else if (match.alt && !match.alt.toLowerCase().includes('broken')) {
-          nodes.push(match.alt);
+          nodes.push(unescapeMarkdown(match.alt));
         }
         break;
 
@@ -178,11 +187,11 @@ export function parseInlineMarkdown(text: string, keyPrefix: string): readonly R
               rel="noopener noreferrer"
               className="text-brand-primary underline hover:opacity-80 transition-opacity"
             >
-              {match.content}
+              {unescapeMarkdown(match.content)}
             </a>
           );
         } else {
-          nodes.push(match.content);
+          nodes.push(unescapeMarkdown(match.content));
         }
         break;
 
@@ -200,7 +209,7 @@ export function parseInlineMarkdown(text: string, keyPrefix: string): readonly R
       case 'bold-italic':
         nodes.push(
           <strong key={key} className="font-semibold text-slate-900 dark:text-slate-100">
-            <em>{match.content}</em>
+            <em>{unescapeMarkdown(match.content)}</em>
           </strong>
         );
         break;
@@ -208,7 +217,7 @@ export function parseInlineMarkdown(text: string, keyPrefix: string): readonly R
       case 'bold':
         nodes.push(
           <strong key={key} className="font-semibold text-slate-900 dark:text-slate-100">
-            {match.content}
+            {unescapeMarkdown(match.content)}
           </strong>
         );
         break;
@@ -216,7 +225,7 @@ export function parseInlineMarkdown(text: string, keyPrefix: string): readonly R
       case 'italic':
         nodes.push(
           <em key={key} className="italic text-slate-800 dark:text-slate-200">
-            {match.content}
+            {unescapeMarkdown(match.content)}
           </em>
         );
         break;
@@ -224,7 +233,7 @@ export function parseInlineMarkdown(text: string, keyPrefix: string): readonly R
       case 'strikethrough':
         nodes.push(
           <del key={key} className="line-through text-slate-500">
-            {match.content}
+            {unescapeMarkdown(match.content)}
           </del>
         );
         break;
@@ -235,7 +244,7 @@ export function parseInlineMarkdown(text: string, keyPrefix: string): readonly R
 
   // Trailing text
   if (currentIdx < text.length) {
-    nodes.push(text.slice(currentIdx));
+    nodes.push(unescapeMarkdown(text.slice(currentIdx)));
   }
 
   return nodes;

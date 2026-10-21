@@ -60,9 +60,20 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-brand">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-brand m-0 p-0">
       {/* Keyboard Accessibility: Skip link to bypass header blocks (WCAG 2.1 SC 2.4.1) */}
       <SkipToContent />
+
+      {/* Top Application Header */}
+      <Header
+        onOpenDrawer={() => setIsDrawerOpen(true)}
+        activeSection={activeSection}
+        onNavigate={handleNavigate}
+        onOpenAuthModal={() => openAuthModal('login')}
+      />
+
+      {/* Low-Bandwidth / 3G/4G Data Saver Optimization Banner */}
+      <BandwidthNotice />
 
       {/* Invisible Daltonism SVG Filters */}
       <ColorBlindFilters />
@@ -72,17 +83,6 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
 
       {/* VLibras 3D Avatar Brazilian Sign Language Translation */}
       <VLibras />
-
-      {/* Low-Bandwidth / 3G/4G Data Saver Optimization Banner */}
-      <BandwidthNotice />
-
-      {/* Top Application Header */}
-      <Header
-        onOpenDrawer={() => setIsDrawerOpen(true)}
-        activeSection={activeSection}
-        onNavigate={handleNavigate}
-        onOpenAuthModal={() => openAuthModal('login')}
-      />
 
       {/* Mobile Slide-Over Drawer Navigation */}
       <MobileDrawer

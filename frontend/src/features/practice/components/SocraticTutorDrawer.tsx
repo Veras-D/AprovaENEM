@@ -70,8 +70,8 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
 
   // Auto-scroll to latest message or typing indicator
   useEffect(() => {
-    if (isOpen && typeof messagesEndRef.current?.scrollIntoView === 'function') {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (isOpen && messages.length > 0 && typeof messagesEndRef.current?.scrollIntoView === 'function') {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }, [messages.length, askMutation.isPending, isOpen]);
 
@@ -85,7 +85,7 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
 
     // Focus input or close button
     const timer = setTimeout(() => {
-      textareaRef.current?.focus();
+      textareaRef.current?.focus({ preventScroll: true });
     }, 150);
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -174,25 +174,28 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
 
   return (
     <>
-      {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs transition-opacity"
-        onClick={onClose}
-        aria-hidden="true"
-        data-testid="socratic-drawer-backdrop"
-      />
-
-      {/* Slide-out Drawer */}
-      <section
-        ref={drawerRef}
-        data-testid="socratic-tutor-drawer"
-        className={`fixed inset-y-0 right-0 z-50 w-full sm:max-w-md md:max-w-lg lg:max-w-xl bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col focus:outline-hidden ${className}`}
+        className="fixed inset-0 z-50 flex justify-end m-0 p-0"
         role="dialog"
         aria-modal="true"
         aria-label="Tutor IA Socrático"
         aria-labelledby="tutor-drawer-title"
         aria-describedby="tutor-drawer-desc"
       >
+        {/* Backdrop */}
+        <div
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity m-0"
+          onClick={onClose}
+          aria-hidden="true"
+          data-testid="socratic-drawer-backdrop"
+        />
+
+        {/* Slide-out Drawer */}
+        <section
+          ref={drawerRef}
+          data-testid="socratic-tutor-drawer"
+          className={`relative z-10 w-full sm:max-w-md md:max-w-lg lg:max-w-xl bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col focus:outline-hidden m-0 h-full animate-in slide-in-from-right duration-200 ${className}`}
+        >
         {/* Drawer Header */}
         <header className="p-4 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-3">
@@ -524,13 +527,14 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
           )}
         </footer>
       </section>
+    </div>
 
-      {/* Register / Auth Modal Gate */}
-      <RegisterModal
-        isOpen={isRegisterModalOpen}
-        onClose={() => setIsRegisterModalOpen(false)}
-        initialMode="register"
-      />
-    </>
-  );
+    {/* Register / Auth Modal Gate */}
+    <RegisterModal
+      isOpen={isRegisterModalOpen}
+      onClose={() => setIsRegisterModalOpen(false)}
+      initialMode="register"
+    />
+  </>
+);
 };

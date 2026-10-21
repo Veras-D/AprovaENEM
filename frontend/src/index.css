@@ -16,8 +16,26 @@
   --brand-font: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
+html,
+body,
+#root {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0;
+}
+
+html {
+  background-color: #f8fafc;
+}
+
+html.dark {
+  background-color: #020617;
+}
+
 body {
   font-family: var(--brand-font);
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* Accessibility: respect user preference for reduced motion */

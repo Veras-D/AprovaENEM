@@ -54,9 +54,13 @@ export const TimeAccommodationModal: React.FC<TimeAccommodationModalProps> = ({
       }
     };
 
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalOverflow;
       previouslyFocusedElement.current?.focus();
     };
   }, [isOpen, onClose]);
@@ -69,11 +73,16 @@ export const TimeAccommodationModal: React.FC<TimeAccommodationModalProps> = ({
       aria-modal="true"
       aria-labelledby="accommodations-modal-title"
       aria-describedby="accommodations-modal-desc"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 m-0"
     >
       <div
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <div
         ref={modalRef}
-        className="w-full max-w-xl rounded-brand bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="relative z-10 w-full max-w-xl rounded-brand bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200"
       >
         {/* Modal Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80">

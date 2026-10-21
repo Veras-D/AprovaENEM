@@ -55,6 +55,10 @@ export const SUBJECT_AREA_TO_CODE: Record<string, string> = {
   NATURAL_SCIENCES: 'CN',
   HUMANITIES: 'CH',
   LANGUAGES: 'LC',
+  MATEMATICA: 'MT',
+  CIENCIAS_NATUREZA: 'CN',
+  CIENCIAS_HUMANAS: 'CH',
+  LINGUAGENS: 'LC',
   MT: 'MT',
   CN: 'CN',
   CH: 'CH',
@@ -291,34 +295,67 @@ export function generateDiagnosticFromSession(
   };
 }
 
+export interface DiagnosticAreaDifficultyBlueprint {
+  readonly easyArea: 'LC' | 'CH' | 'CN' | 'MT';
+  readonly mediumAreas: readonly ['LC' | 'CH' | 'CN' | 'MT', 'LC' | 'CH' | 'CN' | 'MT'];
+  readonly repeatMediumArea: 'LC' | 'CH' | 'CN' | 'MT';
+  readonly hardArea: 'LC' | 'CH' | 'CN' | 'MT';
+}
+
+export const DIAGNOSTIC_BLUEPRINTS: readonly DiagnosticAreaDifficultyBlueprint[] = [
+  { easyArea: 'LC', mediumAreas: ['CH', 'CN'], repeatMediumArea: 'MT', hardArea: 'MT' },
+  { easyArea: 'LC', mediumAreas: ['CH', 'MT'], repeatMediumArea: 'CN', hardArea: 'CN' },
+  { easyArea: 'LC', mediumAreas: ['CN', 'MT'], repeatMediumArea: 'CH', hardArea: 'CH' },
+  { easyArea: 'CH', mediumAreas: ['LC', 'CN'], repeatMediumArea: 'MT', hardArea: 'MT' },
+  { easyArea: 'CH', mediumAreas: ['LC', 'MT'], repeatMediumArea: 'CN', hardArea: 'CN' },
+  { easyArea: 'CH', mediumAreas: ['CN', 'MT'], repeatMediumArea: 'LC', hardArea: 'LC' },
+  { easyArea: 'CN', mediumAreas: ['LC', 'CH'], repeatMediumArea: 'MT', hardArea: 'MT' },
+  { easyArea: 'CN', mediumAreas: ['LC', 'MT'], repeatMediumArea: 'CH', hardArea: 'CH' },
+  { easyArea: 'CN', mediumAreas: ['CH', 'MT'], repeatMediumArea: 'LC', hardArea: 'LC' },
+  { easyArea: 'MT', mediumAreas: ['LC', 'CH'], repeatMediumArea: 'CN', hardArea: 'CN' },
+  { easyArea: 'MT', mediumAreas: ['LC', 'CN'], repeatMediumArea: 'CH', hardArea: 'CH' },
+  { easyArea: 'MT', mediumAreas: ['CH', 'CN'], repeatMediumArea: 'LC', hardArea: 'LC' },
+];
+
+export function difficultyRank(diff?: string): number {
+  if (diff === 'EASY') return 1;
+  if (diff === 'MEDIUM') return 2;
+  if (diff === 'HARD') return 3;
+  return 2;
+}
+
+export function getSessionVariantIndex(id: string): number {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  }
+  return hash;
+}
+
 /**
  * Selects a balanced set of diagnostic questions across the 4 ENEM knowledge areas
- * (MT, CN, CH, LC), prioritizing questions that have not yet been presented in previous rounds.
+ * (MT, CN, CH, LC), ordered progressively by difficulty (start with easy, ends with hard:
+ * 1 Easy, 3 Medium, 1 Hard for 5 questions), ensuring distinct starter questions across attempts.
  *
  * @param pool The full question catalog (defaults to MOCK_QUESTIONS)
  * @param excludeIds List of question IDs that were previously seen or answered
- * @param count Total number of questions to pick (default: 5 for ENEM diagnostic)
+ * @param count Total number of questions to pick (default: 5 for starter ENEM diagnostic)
+ * @param variantOffset Deterministic variant/session offset to rotate starter sets
  */
 export function selectDiagnosticQuestions(
   pool: readonly QuestionItemDto[] = MOCK_QUESTIONS,
   excludeIds: readonly string[] = [],
-  count: number = 5
+  count: number = 5,
+  variantOffset: number = 0
 ): readonly QuestionItemDto[] {
   if (pool.length <= count) {
-    return pool;
+    return [...pool].sort((a, b) => difficultyRank(a.difficulty) - difficultyRank(b.difficulty));
   }
-
-  // Canonical first-run behavior: if no questions need to be excluded, return canonical initial batch
-  if (excludeIds.length === 0) {
-    return pool.slice(0, count);
-  }
-
-  const areaCodes: readonly ('MT' | 'CN' | 'CH' | 'LC')[] = ['MT', 'CN', 'CH', 'LC'];
 
   // Identify unseen candidates outside excludeIds
   let candidatePool = pool.filter((q) => !excludeIds.includes(q.id));
 
-  // If candidate pool has fewer than count questions, reset history but still exclude the most recent count items
+  // If candidate pool has fewer than count questions, recycle history while excluding the most recent count items
   if (candidatePool.length < count) {
     const recentExclude = excludeIds.slice(-count);
     const fallback = pool.filter((q) => !recentExclude.includes(q.id));
@@ -328,39 +365,113 @@ export function selectDiagnosticQuestions(
   const selected: QuestionItemDto[] = [];
   const selectedIds = new Set<string>();
 
-  // 1. Pick 1 question from each of the 4 areas to ensure balanced ENEM representation
-  for (const code of areaCodes) {
-    if (selected.length >= count) break;
-    const areaCandidates = candidatePool.filter(
-      (q) => !selectedIds.has(q.id) && getAreaCode(q.subject || q.knowledgeArea || '') === code
+  // Determine blueprint index based on variant offset and exclude count
+  const blueprintIndex =
+    Math.abs(variantOffset + Math.floor(excludeIds.length / count)) % DIAGNOSTIC_BLUEPRINTS.length;
+  const blueprint = DIAGNOSTIC_BLUEPRINTS[blueprintIndex]!;
+
+  const slotSpecifications: Array<{
+    area: 'LC' | 'CH' | 'CN' | 'MT';
+    diff: 'EASY' | 'MEDIUM' | 'HARD';
+  }> = [
+    { area: blueprint.easyArea, diff: 'EASY' },
+    { area: blueprint.mediumAreas[0], diff: 'MEDIUM' },
+    { area: blueprint.mediumAreas[1], diff: 'MEDIUM' },
+    { area: blueprint.repeatMediumArea, diff: 'MEDIUM' },
+    { area: blueprint.hardArea, diff: 'HARD' },
+  ];
+
+  function pickQuestionForSlot(
+    area: 'LC' | 'CH' | 'CN' | 'MT',
+    targetDiff: 'EASY' | 'MEDIUM' | 'HARD'
+  ): QuestionItemDto | null {
+    // 1. Exact area + exact difficulty in candidatePool
+    const exactCandidates = candidatePool.filter(
+      (q) =>
+        !selectedIds.has(q.id) &&
+        getAreaCode(q.subject || q.knowledgeArea || '') === area &&
+        q.difficulty === targetDiff
     );
-    if (areaCandidates.length > 0) {
-      const picked = areaCandidates[0]!;
+    if (exactCandidates.length > 0) {
+      const idx = Math.abs(variantOffset) % exactCandidates.length;
+      return exactCandidates[idx]!;
+    }
+
+    // 2. Exact area + exact difficulty in entire pool (recycled if needed)
+    const exactInPool = pool.filter(
+      (q) =>
+        !selectedIds.has(q.id) &&
+        getAreaCode(q.subject || q.knowledgeArea || '') === area &&
+        q.difficulty === targetDiff
+    );
+    if (exactInPool.length > 0) {
+      const idx = Math.abs(variantOffset) % exactInPool.length;
+      return exactInPool[idx]!;
+    }
+
+    // 3. Exact area with closest difficulty in candidatePool
+    const diffPreference: ('EASY' | 'MEDIUM' | 'HARD')[] =
+      targetDiff === 'EASY'
+        ? ['MEDIUM', 'HARD']
+        : targetDiff === 'HARD'
+        ? ['MEDIUM', 'EASY']
+        : ['EASY', 'HARD'];
+
+    for (const altDiff of diffPreference) {
+      const altCandidates = candidatePool.filter(
+        (q) =>
+          !selectedIds.has(q.id) &&
+          getAreaCode(q.subject || q.knowledgeArea || '') === area &&
+          q.difficulty === altDiff
+      );
+      if (altCandidates.length > 0) {
+        return altCandidates[0]!;
+      }
+    }
+
+    // 4. Exact area in pool
+    for (const altDiff of diffPreference) {
+      const altInPool = pool.filter(
+        (q) =>
+          !selectedIds.has(q.id) &&
+          getAreaCode(q.subject || q.knowledgeArea || '') === area &&
+          q.difficulty === altDiff
+      );
+      if (altInPool.length > 0) {
+        return altInPool[0]!;
+      }
+    }
+
+    // 5. Any candidate in candidatePool
+    const fallbackCand = candidatePool.find((q) => !selectedIds.has(q.id));
+    if (fallbackCand) return fallbackCand;
+
+    // 6. Any candidate in pool
+    return pool.find((q) => !selectedIds.has(q.id)) || null;
+  }
+
+  // Populate slots from blueprint
+  for (const slot of slotSpecifications) {
+    if (selected.length >= count) break;
+    const picked = pickQuestionForSlot(slot.area, slot.diff);
+    if (picked) {
       selected.push(picked);
       selectedIds.add(picked.id);
-    } else {
-      // Fallback: pick any question in this area not yet selected
-      const fallbackArea = pool.filter(
-        (q) => !selectedIds.has(q.id) && getAreaCode(q.subject || q.knowledgeArea || '') === code
-      );
-      if (fallbackArea.length > 0) {
-        const picked = fallbackArea[0]!;
-        selected.push(picked);
-        selectedIds.add(picked.id);
+    }
+  }
+
+  // Fill remaining slots if count > 5
+  if (selected.length < count) {
+    for (const q of candidatePool) {
+      if (selected.length >= count) break;
+      if (!selectedIds.has(q.id)) {
+        selected.push(q);
+        selectedIds.add(q.id);
       }
     }
   }
 
-  // 2. Fill remaining slots up to count with candidate questions
-  for (const q of candidatePool) {
-    if (selected.length >= count) break;
-    if (!selectedIds.has(q.id)) {
-      selected.push(q);
-      selectedIds.add(q.id);
-    }
-  }
-
-  // 3. Final safety fallback to meet exact count
+  // Final fallback to pool
   if (selected.length < count) {
     for (const q of pool) {
       if (selected.length >= count) break;
@@ -370,6 +481,9 @@ export function selectDiagnosticQuestions(
       }
     }
   }
+
+  // Ensure strict progressive ordering: starts with EASY, ends with HARD
+  selected.sort((a, b) => difficultyRank(a.difficulty) - difficultyRank(b.difficulty));
 
   return selected;
 }
