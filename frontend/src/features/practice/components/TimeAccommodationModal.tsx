@@ -136,24 +136,25 @@ export const TimeAccommodationModal: React.FC<TimeAccommodationModalProps> = ({
                 }`}
                 aria-pressed={isSelected}
               >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100">
-                      {option.title}
-                    </span>
+                <div className="flex items-start justify-between gap-3">
+                  <span className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100 leading-snug">
+                    {option.title}
+                  </span>
+
+                  <div className="flex items-center gap-2 shrink-0">
                     {option.legalBadge && (
                       <Badge variant="secondary" className="text-[10px]">
                         {option.legalBadge}
                       </Badge>
                     )}
-                  </div>
 
-                  {isSelected && (
-                    <div className="flex items-center gap-1 text-xs font-bold text-brand-primary shrink-0">
-                      <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                      <span>Ativo</span>
-                    </div>
-                  )}
+                    {isSelected && (
+                      <div className="flex items-center gap-1 text-xs font-bold text-brand-primary shrink-0">
+                        <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                        <span>Ativo</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-1.5 text-xs font-mono font-medium text-brand-primary dark:text-brand-primary-light">
