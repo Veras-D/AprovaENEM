@@ -415,6 +415,23 @@ Each engineering milestone is sealed by a comprehensive security and test legiti
 
 ---
 
+## 🔗 External Datasets, Open-Source Projects & Third-Party Services
+
+AprovaENEM builds upon and integrates the following specialized open-source projects, public educational datasets, and third-party services:
+
+| Category | Project / Service | Role in AprovaENEM | Links |
+| :--- | :--- | :--- | :--- |
+| **ENEM Question API & Figures** | **ENEM API (`enem.dev`)** | Community open-source project by `@yunger7` providing structured ENEM question JSONs and hosted exam figure assets (`https://enem.dev/{year}/questions/...`) used to bootstrap and cross-validate our 2022–2023 question bank. | [enem.dev](https://enem.dev/) • [GitHub (`yunger7/enem-api`)](https://github.com/yunger7/enem-api) |
+| **Official Exam Data & TRI** | **INEP Microdados & Provas/Gabaritos** | Official Brazilian Ministry of Education (MEC/INEP) open datasets providing ground-truth answer keys (`TX_GABARITO`), Item Response Theory (TRI) parameters, and original exam booklets (2009–2025). | [INEP Microdados](https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/enem) • [Provas e Gabaritos](https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem/provas-e-gabaritos) |
+| **Libras 3D Avatar** | **VLibras** | Official Brazilian government (SGD/MGI & UFPB/LAVID) open-source 3D sign language translator widget (`vlibras-plugin.js`) embedded for deaf and hard-of-hearing students. | [Gov.br VLibras](https://www.gov.br/governodigital/pt-br/acessibilidade-e-usuario/vlibras) • [GitHub (`spbgovbr-vlibras`)](https://github.com/spbgovbr-vlibras/vlibras-portal) |
+| **Accessible Typography** | **OpenDyslexic & Atkinson Hyperlegible** | Specialized typefaces created by Abbie Gonzalez and the Braille Institute to improve character recognition for students with dyslexia and low vision. | [OpenDyslexic](https://opendyslexic.org/) • [Atkinson Hyperlegible](https://www.brailleinstitute.org/freefont/) |
+| **Socratic AI Tutor** | **Google Gemini API (`gemini-1.5-flash`)** | Generative AI service powering the Socratic study tutor with RAG grounding and pedagogical guardrails. | [Google AI for Developers](https://ai.google.dev/) • [Google AI Studio](https://aistudio.google.com/) |
+| **Document AI & PDF Parser** | **IBM Docling & DocLayNet** | Open-source neural document layout & LaTeX formula extraction engine used by `ingestion-service` to parse two-column ENEM exam PDFs. | [Docling (`DS4SD/docling`)](https://github.com/DS4SD/docling) • [DocLayNet](https://github.com/DS4SD/DocLayNet) |
+| **Transactional Email & Push** | **Resend / AWS SES & Firebase FCM** | Third-party notification delivery gateways used by `notification-service` for verification emails, Sunday diagnostic digests, and daily streak push alerts. | [Resend](https://resend.com/) • [AWS SES](https://aws.amazon.com/ses/) • [Firebase FCM](https://firebase.google.com/docs/cloud-messaging) |
+| **Container Self-Healing** | **Docker Autoheal** | Lightweight watchdog container (`willfarrell/autoheal`) monitoring Docker healthcheck probes to automatically restart deadlocked services. | [GitHub (`willfarrell/docker-autoheal`)](https://github.com/willfarrell/docker-autoheal) |
+
+---
+
 ## 🤝 Contributing
 
 Contributions from educators, engineers, and students are welcome!
