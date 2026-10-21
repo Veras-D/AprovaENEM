@@ -2,13 +2,45 @@ import type { UnifiedQuestion } from './components/QuestionCard';
 import type { OptionItem } from './components/OptionSelector';
 
 /**
- * Normalizes LaTeX and mathematical notation into readable natural Brazilian Portuguese text
- * for browser SpeechSynthesis / assistive text-to-speech engines.
+ * Normalizes LaTeX, mathematical notation, Markdown elements, and URLs into readable natural Brazilian Portuguese
+ * text for browser SpeechSynthesis / assistive text-to-speech engines.
  */
 export function cleanMathForSpeech(text: string): string {
   if (!text) return '';
 
   let speech = text;
+
+  // 0a. Markdown Images: ![alt](url) -> if alt exists, read "Figura: alt" or "alt", never speak raw URLs
+  speech = speech.replace(/!\[([^\]]*)\]\([^)]+\)/g, (_, alt: string) => {
+    const cleanAlt = alt.trim();
+    if (!cleanAlt) return ' ';
+    return cleanAlt.match(/^(figura|imagem|gráfico|tabela|diagrama|esquema)\b/i)
+      ? ` ${cleanAlt} `
+      : ` Figura: ${cleanAlt} `;
+  });
+
+  // 0b. Markdown Links: [text](url) -> keep visible text only, strip the URL
+  speech = speech.replace(/(?<!!)\[([^\]]+)\]\([^)]+\)/g, ' $1 ');
+
+  // 0c. Raw URLs: https://... or http://... -> strip so they aren't spelled out letter-by-letter
+  speech = speech.replace(/https?:\/\/[^\s)]+/g, '');
+
+  // 0d. Markdown formatting: bold, italic, strikethrough, inline code
+  speech = speech.replace(/\*\*\*([^*]+)\*\*\*/g, '$1');
+  speech = speech.replace(/\*\*([^*]+)\*\*/g, '$1');
+  speech = speech.replace(/__([^_]+)__/g, '$1');
+  speech = speech.replace(/\*([^*]+)\*/g, '$1');
+  speech = speech.replace(/(?<![a-zA-Z0-9])_([^_]+)_(?![a-zA-Z0-9])/g, '$1');
+  speech = speech.replace(/~~([^~]+)~~/g, '$1');
+  speech = speech.replace(/`([^`]+)`/g, '$1');
+
+  // 0e. HTML tags and common entities
+  speech = speech.replace(/<[^>]+>/g, ' ');
+  speech = speech.replace(/&nbsp;/g, ' ');
+  speech = speech.replace(/&bull;/g, ' ');
+  speech = speech.replace(/&amp;/g, ' e ');
+  speech = speech.replace(/&lt;/g, ' menor que ');
+  speech = speech.replace(/&gt;/g, ' maior que ');
 
   // 1. Fractions: \frac{a}{b} -> "a dividido por b"
   speech = speech.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1 dividido por $2');
@@ -18,12 +50,17 @@ export function cleanMathForSpeech(text: string): string {
   speech = speech.replace(/\\sqrt\{([^}]+)\}/g, 'raiz quadrada de $1');
 
   // 3. Units & Scientific dimensions
+  speech = speech.replace(/\\text\{\s*km\/s\s*\}|km\/s\b/g, ' quilômetros por segundo');
   speech = speech.replace(/\\text\{\s*km\/h\s*\}|km\/h\b/g, ' quilômetros por hora');
   speech = speech.replace(/\\text\{\s*m\/s\s*\}\^2|m\/s\^2\b/g, ' metros por segundo ao quadrado');
   speech = speech.replace(/\\text\{\s*m\/s\s*\}|m\/s\b/g, ' metros por segundo');
   speech = speech.replace(/\\text\{\s*kWh\s*\}|kWh\b/g, ' quilowatts-hora');
   speech = speech.replace(/\\text\{\s*W\s*\}|(?<=\d\s*)W\b/g, ' watts');
   speech = speech.replace(/\\text\{\s*kg\s*\}|kg\b/g, ' quilogramas');
+  speech = speech.replace(/\\text\{\s*cm\s*\}\^3|\\text\{\s*cm³\s*\}|cm\^3|cm³\b/g, ' centímetros cúbicos');
+  speech = speech.replace(/\\text\{\s*m\s*\}\^3|\\text\{\s*m³\s*\}|m\^3|m³\b/g, ' metros cúbicos');
+  speech = speech.replace(/\\text\{\s*cm\s*\}\^2|\\text\{\s*cm²\s*\}|cm\^2|cm²\b/g, ' centímetros quadrados');
+  speech = speech.replace(/\\text\{\s*m\s*\}\^2|\\text\{\s*m²\s*\}|m\^2|m²\b/g, ' metros quadrados');
   speech = speech.replace(/\\text\{\s*cm\s*\}|cm\b/g, ' centímetros');
   speech = speech.replace(/\\text\{\s*mm\s*\}|mm\b/g, ' milímetros');
   speech = speech.replace(/\\text\{\s*°C\s*\}|\^\\circ\s*C\b/g, ' graus Celsius');
@@ -61,9 +98,23 @@ export function cleanMathForSpeech(text: string): string {
   speech = speech.replace(/\\/g, '');
 
   // 8. Clean up spaces and punctuation
-  speech = speech.replace(/\s+/g, ' ').trim();
+  speech = speech
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([.,;:!?])/g, '$1')
+    .replace(/([.,;:!?])\s*([.,;:!?])+/g, '$1')
+    .replace(/([.?!])\./g, '$1')
+    .trim();
 
   return speech;
+}
+
+/**
+ * Appends terminal punctuation if not already present on clean speech text.
+ */
+function withTerminalPunctuation(text: string): string {
+  const clean = text.trim();
+  if (!clean) return '';
+  return clean.match(/[.?!;:]$/) ? clean : `${clean}.`;
 }
 
 /**
@@ -83,6 +134,15 @@ export function prepareQuestionSpeechText(
       ? question.externalId
       : '';
   const context = 'contextText' in question ? question.contextText : undefined;
+  const figure = 'imageUrl' in question ? question.imageUrl : question.figureUrl;
+  const figureAlt =
+    'figureAltText' in question && question.figureAltText
+      ? question.figureAltText
+      : undefined;
+
+  const hasEmbeddedMarkdownFigure =
+    typeof question.statement === 'string' &&
+    Boolean(question.statement.match(/!\[.*?\]\(.*?\)/));
 
   const areaNames: Record<string, string> = {
     MT: 'Matemática e suas Tecnologias',
@@ -103,13 +163,18 @@ export function prepareQuestionSpeechText(
 
   // 2. Context reference text
   if (context && context.trim().length > 0) {
-    parts.push(`Texto de apoio: ${cleanMathForSpeech(context)}.`);
+    parts.push(`Texto de apoio: ${withTerminalPunctuation(cleanMathForSpeech(context))}`);
   }
 
-  // 3. Question statement
-  parts.push(`Enunciado: ${cleanMathForSpeech(question.statement)}.`);
+  // 3. Standalone figure (if present and not embedded in statement)
+  if (figure && !hasEmbeddedMarkdownFigure && figureAlt) {
+    parts.push(`Figura da questão: ${withTerminalPunctuation(cleanMathForSpeech(figureAlt))}`);
+  }
 
-  // 4. Options
+  // 4. Question statement
+  parts.push(`Enunciado: ${withTerminalPunctuation(cleanMathForSpeech(question.statement))}`);
+
+  // 5. Options
   const resolvedOptions: OptionItem[] =
     options && options.length > 0
       ? [...options]
@@ -121,7 +186,11 @@ export function prepareQuestionSpeechText(
   if (resolvedOptions.length > 0) {
     parts.push('Alternativas:');
     for (const opt of resolvedOptions) {
-      parts.push(`Alternativa ${opt.letter}: ${cleanMathForSpeech(opt.text)}.`);
+      let cleanOpt = cleanMathForSpeech(opt.text);
+      if (!cleanOpt.trim()) {
+        cleanOpt = 'Figura da alternativa';
+      }
+      parts.push(`Alternativa ${opt.letter}: ${withTerminalPunctuation(cleanOpt)}`);
     }
   }
 
