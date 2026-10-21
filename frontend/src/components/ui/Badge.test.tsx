@@ -19,4 +19,11 @@ describe('Badge component', () => {
     const badge = screen.getByText('Correto');
     expect(badge.className).toContain('bg-emerald-100');
   });
+
+  it('should enforce whitespace-nowrap and shrink-0 to prevent multiline badge wrapping', () => {
+    render(<Badge>Edital INEP</Badge>);
+    const badge = screen.getByText('Edital INEP');
+    expect(badge.className).toContain('whitespace-nowrap');
+    expect(badge.className).toContain('shrink-0');
+  });
 });

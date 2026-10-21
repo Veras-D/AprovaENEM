@@ -29,6 +29,8 @@ describe('TimeAccommodationModal', () => {
     expect(screen.getByText('Tempo Padrão ENEM')).toBeInTheDocument();
     expect(screen.getByText('Atendimento Especializado INEP (+60 min)')).toBeInTheDocument();
     expect(screen.getByText('Modo Sem Limite de Tempo (Livre de Ansiedade)')).toBeInTheDocument();
+    expect(screen.getByText('Edital INEP')).toBeInTheDocument();
+    expect(screen.getByText('Acessibilidade')).toBeInTheDocument();
   });
 
   it('calls onSelectMode and onClose when an accommodation mode is clicked', () => {

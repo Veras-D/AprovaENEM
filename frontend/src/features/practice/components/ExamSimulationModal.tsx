@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   X,
   Calendar,
@@ -11,6 +11,10 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import {
+  OFFICIAL_EXAM_EDITIONS,
+  OfficialExamEdition,
+} from '@/api/mocks/completed-exams';
 
 export type SimulationDay = 'DAY_1' | 'DAY_2';
 export type SimulationTiming = 'TIMED' | 'UNTIMED';
@@ -25,21 +29,38 @@ export interface ExamSimulationModalProps {
   readonly isOpen: boolean;
   readonly onClose: () => void;
   readonly onStartSimulation: (config: ExamSimulationConfig) => void;
+  readonly availableEditions?: readonly OfficialExamEdition[];
 }
-
-const AVAILABLE_YEARS: readonly number[] = [2023, 2022, 2021, 2020, 2019];
 
 export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
   isOpen,
   onClose,
   onStartSimulation,
+  availableEditions,
 }) => {
-  const [selectedYear, setSelectedYear] = useState<number>(2023);
+  const completedEditions = useMemo(() => {
+    const source = availableEditions ?? OFFICIAL_EXAM_EDITIONS;
+    return source.filter((e) => e.isComplete);
+  }, [availableEditions]);
+
+  const [selectedYear, setSelectedYear] = useState<number>(() => {
+    return completedEditions[0]?.year ?? 2023;
+  });
   const [selectedDay, setSelectedDay] = useState<SimulationDay>('DAY_1');
   const [selectedTiming, setSelectedTiming] = useState<SimulationTiming>('TIMED');
 
   const modalRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+
+  // Keep selectedYear synced with available completed editions
+  useEffect(() => {
+    if (completedEditions.length > 0 && !completedEditions.some((e) => e.year === selectedYear)) {
+      const first = completedEditions[0];
+      if (first) {
+        setSelectedYear(first.year);
+      }
+    }
+  }, [completedEditions, selectedYear]);
 
   // Focus trap & Escape hotkey for WCAG compliance
   useEffect(() => {
@@ -80,9 +101,21 @@ export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
     };
   }, [isOpen, onClose]);
 
+  const currentEdition = useMemo(() => {
+    return completedEditions.find((e) => e.year === selectedYear) ?? completedEditions[0];
+  }, [completedEditions, selectedYear]);
+
+  const currentDayQuestionCount = useMemo(() => {
+    if (!currentEdition) return 0;
+    return selectedDay === 'DAY_1'
+      ? currentEdition.day1QuestionCount
+      : currentEdition.day2QuestionCount;
+  }, [currentEdition, selectedDay]);
+
   if (!isOpen) return null;
 
   const handleConfirm = () => {
+    if (completedEditions.length === 0) return;
     onStartSimulation({
       year: selectedYear,
       day: selectedDay,
@@ -141,31 +174,38 @@ export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
               <Calendar className="h-4 w-4 text-brand-primary" aria-hidden="true" />
               1. Ano da Prova (Edição do ENEM)
             </label>
-            <div
-              className="grid grid-cols-5 gap-2"
-              role="radiogroup"
-              aria-label="Ano da edição do ENEM"
-            >
-              {AVAILABLE_YEARS.map((yearOption) => {
-                const isSelected = selectedYear === yearOption;
-                return (
-                  <button
-                    key={yearOption}
-                    type="button"
-                    role="radio"
-                    aria-checked={isSelected}
-                    onClick={() => setSelectedYear(yearOption)}
-                    className={`py-2 px-2 rounded-lg text-xs font-semibold text-center transition-all border ${
-                      isSelected
-                        ? 'bg-brand-primary text-white border-brand-primary shadow-xs font-bold'
-                        : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    {yearOption}
-                  </button>
-                );
-              })}
-            </div>
+
+            {completedEditions.length === 0 ? (
+              <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 text-center text-xs text-slate-500 dark:text-slate-400">
+                Nenhuma edição completa disponível para simulação no momento.
+              </div>
+            ) : (
+              <div
+                className="flex flex-wrap gap-2"
+                role="radiogroup"
+                aria-label="Ano da edição do ENEM"
+              >
+                {completedEditions.map((edition) => {
+                  const isSelected = selectedYear === edition.year;
+                  return (
+                    <button
+                      key={edition.year}
+                      type="button"
+                      role="radio"
+                      aria-checked={isSelected}
+                      onClick={() => setSelectedYear(edition.year)}
+                      className={`py-2 px-4 rounded-lg text-xs font-bold text-center transition-all border ${
+                        isSelected
+                          ? 'bg-brand-primary text-white border-brand-primary shadow-xs'
+                          : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      {edition.year}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Section 2: Day / Subject Selection */}
@@ -197,7 +237,7 @@ export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
                         Dia 1 — Linguagens & Ciências Humanas
                       </span>
                       <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">
-                        1º Domingo
+                        {currentEdition ? `${currentEdition.day1QuestionCount} questões` : '1º Domingo'}
                       </span>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -232,7 +272,7 @@ export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
                         Dia 2 — Ciências da Natureza & Matemática
                       </span>
                       <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                        2º Domingo
+                        {currentEdition ? `${currentEdition.day2QuestionCount} questões` : '2º Domingo'}
                       </span>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -307,10 +347,13 @@ export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
             variant="primary"
             size="sm"
             onClick={handleConfirm}
+            disabled={completedEditions.length === 0}
             className="flex items-center gap-1.5"
           >
             <Sparkles className="h-4 w-4" aria-hidden="true" />
-            Iniciar Simulado
+            {currentDayQuestionCount > 0
+              ? `Iniciar Simulado Oficial (${currentDayQuestionCount} questões)`
+              : 'Iniciar Simulado'}
           </Button>
         </div>
       </div>

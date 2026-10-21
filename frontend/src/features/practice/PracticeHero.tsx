@@ -3,6 +3,10 @@ import { useSessionStore } from '@/stores/useSessionStore';
 import { useAccessibilityStore } from '@/stores/useAccessibilityStore';
 import { useQuestionsQuery, useSubmitAnswerMutation } from '@/api/hooks';
 import { MOCK_QUESTIONS, MOCK_RESOLUTIONS } from '@/api/mocks/mock-data';
+import {
+  ENEM_2023_OFFICIAL_QUESTIONS,
+  ENEM_2023_OFFICIAL_RESOLUTIONS,
+} from '@/api/mocks/completed-exams';
 import { Button } from '@/components/ui/Button';
 import {
   QuizTimer,
@@ -145,7 +149,9 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
   const currentQuestion = questions[currentQuestionIndex] || null;
   const currentAttempt = currentQuestion ? attempts[currentQuestion.id] : undefined;
   const currentSelectedOption = currentQuestion ? selectedAnswers[currentQuestion.id] || null : null;
-  const currentResolution = currentQuestion ? MOCK_RESOLUTIONS[currentQuestion.id] : undefined;
+  const currentResolution = currentQuestion
+    ? MOCK_RESOLUTIONS[currentQuestion.id] || ENEM_2023_OFFICIAL_RESOLUTIONS[currentQuestion.id]
+    : undefined;
 
   const isCurrentSubmitted = Boolean(currentAttempt);
   const correctOption = currentAttempt?.correctOption ?? currentResolution?.correctOption ?? null;
@@ -161,7 +167,9 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
 
   const handleConfirmAnswer = useCallback(() => {
     if (!currentQuestion || !currentSelectedOption) return;
-    const resolution = MOCK_RESOLUTIONS[currentQuestion.id];
+    const resolution =
+      MOCK_RESOLUTIONS[currentQuestion.id] ||
+      ENEM_2023_OFFICIAL_RESOLUTIONS[currentQuestion.id];
     const isCorrect = resolution ? currentSelectedOption === resolution.correctOption : false;
 
     // 1. Record attempt synchronously for instant UI grading and responsiveness
@@ -265,8 +273,15 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       setShowCelebration(false);
       setIsTimeUpModalOpen(false);
 
+      // Determine questions pool for official simulation:
+      // Use the complete authentic official question bank for full editions
+      let basePool = questionsPool;
+      if (config.year === 2023 && ENEM_2023_OFFICIAL_QUESTIONS.length > 0) {
+        basePool = ENEM_2023_OFFICIAL_QUESTIONS;
+      }
+
       // Filter by day/subject
-      let filteredDtos = questionsPool;
+      let filteredDtos = basePool;
       if (config.day === 'DAY_1') {
         filteredDtos = filteredDtos.filter((q) => q.subject === 'LC' || q.subject === 'CH');
       } else if (config.day === 'DAY_2') {
@@ -275,7 +290,6 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
 
       // Filter by year
       const yearFiltered = filteredDtos.filter((q) => q.year === config.year);
-      // Graceful fallback if specific year has limited items in bank
       if (yearFiltered.length > 0) {
         filteredDtos = yearFiltered;
       }

@@ -134,7 +134,12 @@ export function prepareQuestionSpeechText(
       ? question.externalId
       : '';
   const context = 'contextText' in question ? question.contextText : undefined;
-  const figure = 'imageUrl' in question ? question.imageUrl : question.figureUrl;
+  const figure =
+    'imageUrl' in question && question.imageUrl
+      ? question.imageUrl
+      : 'figureUrl' in question
+      ? question.figureUrl
+      : undefined;
   const figureAlt =
     'figureAltText' in question && question.figureAltText
       ? question.figureAltText

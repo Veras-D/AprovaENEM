@@ -23,8 +23,8 @@ export const TIME_ACCOMMODATION_OPTIONS: readonly TimeAccommodationOption[] = [
     shortTitle: 'Estendido (+60 min)',
     timeDescription: '5 minutos por questão (300s) — acréscimo de tempo regulamentar.',
     audience:
-      'Garantido a participantes com TDAH, Autismo (TEA), Dislexia, déficit de atenção, baixa visão ou mobilidade reduzida.',
-    legalBadge: 'Edital INEP • Lei nº 13.146/2015 (LBI)',
+      'Garantido a participantes com TDAH, Autismo (TEA), Dislexia, déficit de atenção, baixa visão ou mobilidade reduzida (Lei nº 13.146/2015).',
+    legalBadge: 'Edital INEP',
   },
   {
     mode: 'UNTIMED',
@@ -33,6 +33,6 @@ export const TIME_ACCOMMODATION_OPTIONS: readonly TimeAccommodationOption[] = [
     timeDescription: 'Cronômetro decorrido progressivo sem contagem regressiva.',
     audience:
       'Projetado para reduzir ansiedade de desempenho, permitir ritmo personalizado de estudo e atender a processamento cognitivo flexível.',
-    legalBadge: 'Inclusão & Bem-Estar',
+    legalBadge: 'Acessibilidade',
   },
 ];

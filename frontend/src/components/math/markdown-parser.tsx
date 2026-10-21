@@ -8,6 +8,12 @@ import { ZoomableImage } from '@/components/ui/ZoomableImage';
 export function isSafeUrl(url?: string): boolean {
   if (!url) return false;
   const trimmed = url.trim();
+
+  // Reject third-party broken image placeholders and PR ads (e.g. enem.dev/broken-image.svg)
+  if (trimmed.includes('broken-image') || trimmed.includes('broken_image')) {
+    return false;
+  }
+
   return (
     trimmed.startsWith('https://') ||
     trimmed.startsWith('http://') ||
@@ -157,8 +163,8 @@ export function parseInlineMarkdown(text: string, keyPrefix: string): readonly R
               loading="lazy"
             />
           );
-        } else {
-          nodes.push(match.content);
+        } else if (match.alt && !match.alt.toLowerCase().includes('broken')) {
+          nodes.push(match.alt);
         }
         break;
 

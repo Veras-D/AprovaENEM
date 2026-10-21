@@ -315,11 +315,11 @@ describe('PracticeHero Component', () => {
     if (day1Btn) fireEvent.click(day1Btn);
 
     // Select Year 2023
-    const year2023 = screen.getByRole('radio', { name: '2023' });
+    const year2023 = screen.getByRole('radio', { name: /2023/i });
     fireEvent.click(year2023);
 
-    // Click "Iniciar Simulado" (exact name to avoid matching Reiniciar)
-    const startBtn = screen.getByRole('button', { name: /^Iniciar Simulado$/i });
+    // Click "Iniciar Simulado Oficial"
+    const startBtn = screen.getByRole('button', { name: /Iniciar Simulado Oficial/i });
     fireEvent.click(startBtn);
 
     // Modal should close and session title should update

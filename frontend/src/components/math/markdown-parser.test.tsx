@@ -20,6 +20,11 @@ describe('Markdown & Image Parsing in MathRenderer', () => {
       expect(isSafeUrl('')).toBe(false);
       expect(isSafeUrl(undefined)).toBe(false);
     });
+
+    it('rejects broken-image placeholders and external PR advertisements', () => {
+      expect(isSafeUrl('https://enem.dev/broken-image.svg')).toBe(false);
+      expect(isSafeUrl('https://example.com/broken_image.png')).toBe(false);
+    });
   });
 
   describe('Markdown formatting rendering', () => {

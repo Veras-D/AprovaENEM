@@ -26,6 +26,13 @@ export const QuestionCarousel: React.FC<QuestionCarouselProps> = ({
   className = '',
 }) => {
   const activeBtnRef = useRef<HTMLButtonElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+
+  const handleWheel = (e: React.WheelEvent<HTMLElement>) => {
+    if (navRef.current && e.deltaY !== 0 && !e.deltaX) {
+      navRef.current.scrollLeft += e.deltaY;
+    }
+  };
 
   // Scroll active item into view when index changes
   useEffect(() => {
@@ -80,11 +87,14 @@ export const QuestionCarousel: React.FC<QuestionCarouselProps> = ({
       </div>
 
       {/* Carousel Scrollable Question Palette */}
-      <nav
-        className="flex items-center gap-1.5 overflow-x-auto max-w-full py-1 px-1 scrollbar-none"
-        aria-label="Paleta de questões"
-      >
-        {Array.from({ length: totalQuestions }, (_, i) => {
+      <div className="relative flex-1 min-w-0 max-w-full overflow-hidden">
+        <nav
+          ref={navRef}
+          onWheel={handleWheel}
+          className="flex items-center gap-1.5 overflow-x-auto max-w-full py-1 px-1 scrollbar-none"
+          aria-label="Paleta de questões"
+        >
+          {Array.from({ length: totalQuestions }, (_, i) => {
           const isActive = i === currentIndex;
           const answered = isAnswered(i);
           const correct = isCorrect(i);
@@ -168,7 +178,8 @@ export const QuestionCarousel: React.FC<QuestionCarouselProps> = ({
             </button>
           );
         })}
-      </nav>
+        </nav>
+      </div>
 
       {/* Desktop Next Button */}
       <div className="hidden sm:flex items-center">
