@@ -100,12 +100,14 @@ export const QuizTimer: React.FC<QuizTimerProps> = ({
       'bg-blue-50 dark:bg-blue-950/40 text-blue-950 dark:text-blue-200 border-blue-500/40';
   }
 
-  const ariaLabelText =
+  const baseLabelText =
     timeMode === 'UNTIMED'
       ? `Tempo decorrido: ${formatTime(seconds)} (Sem limite de tempo)`
       : timeMode === 'EXTENDED_INEP'
       ? `Tempo estendido INEP restante: ${formatTime(seconds)}`
       : `Tempo do simulado restante: ${formatTime(seconds)}`;
+
+  const ariaLabelText = isPaused ? `${baseLabelText} (Pausado)` : baseLabelText;
 
   return (
     <div
@@ -163,9 +165,9 @@ export const QuizTimer: React.FC<QuizTimerProps> = ({
         type="button"
         onClick={() => setInternalPaused(!internalPaused)}
         className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary"
-        aria-label={internalPaused ? 'Retomar cronômetro' : 'Pausar cronômetro'}
+        aria-label={isPaused ? 'Retomar cronômetro' : 'Pausar cronômetro'}
       >
-        {internalPaused ? (
+        {isPaused ? (
           <Play className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
         ) : (
           <Pause className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" aria-hidden="true" />

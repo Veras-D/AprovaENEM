@@ -4,7 +4,11 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PracticeHero } from './PracticeHero';
 import { useSessionStore } from '@/stores/useSessionStore';
-import { MOCK_RESOLUTIONS, ENEM_2023_OFFICIAL_RESOLUTIONS } from '@/api/mocks/mock-data';
+import {
+  MOCK_RESOLUTIONS,
+  ENEM_2023_OFFICIAL_RESOLUTIONS,
+  ENEM_2022_OFFICIAL_RESOLUTIONS,
+} from '@/api/mocks/mock-data';
 
 describe('PracticeHero Component', () => {
   let queryClient: QueryClient;
@@ -56,7 +60,10 @@ describe('PracticeHero Component', () => {
 
     // Select the correct option for Question 1
     const q1 = useSessionStore.getState().questions[0]!;
-    const resolution = MOCK_RESOLUTIONS[q1.id] || ENEM_2023_OFFICIAL_RESOLUTIONS[q1.id];
+    const resolution =
+      MOCK_RESOLUTIONS[q1.id] ||
+      ENEM_2023_OFFICIAL_RESOLUTIONS[q1.id] ||
+      ENEM_2022_OFFICIAL_RESOLUTIONS[q1.id];
     const correctLetter = resolution?.correctOption || 'A';
     const correctRadio = screen.getByRole('radio', { name: new RegExp(`^${correctLetter} `) });
     fireEvent.click(correctRadio);
@@ -75,7 +82,10 @@ describe('PracticeHero Component', () => {
 
     // Select incorrect option
     const q1 = useSessionStore.getState().questions[0]!;
-    const resolution = MOCK_RESOLUTIONS[q1.id] || ENEM_2023_OFFICIAL_RESOLUTIONS[q1.id];
+    const resolution =
+      MOCK_RESOLUTIONS[q1.id] ||
+      ENEM_2023_OFFICIAL_RESOLUTIONS[q1.id] ||
+      ENEM_2022_OFFICIAL_RESOLUTIONS[q1.id];
     const correctLetter = resolution?.correctOption || 'A';
     const wrongLetter = correctLetter === 'A' ? 'B' : 'A';
     const wrongRadio = screen.getByRole('radio', { name: new RegExp(`^${wrongLetter} `) });
@@ -439,6 +449,18 @@ describe('PracticeHero Component', () => {
     const currentQ1 = recalQuestions[0];
     expect(currentQ1).toBeDefined();
     expect(screen.getByText(new RegExp(`^Questão #${currentQ1!.externalId}$`))).toBeInTheDocument();
+  });
+
+  it('pauses the quiz timer when the Socratic AI Tutor drawer is opened', () => {
+    renderWithProviders();
+
+    const timer = screen.getByRole('timer');
+    expect(timer).toHaveAttribute('aria-label', expect.not.stringContaining('Pausado'));
+
+    const openTutorButtons = screen.getAllByRole('button', { name: /Tirar Dúvida/i });
+    fireEvent.click(openTutorButtons[0]!);
+
+    expect(timer).toHaveAttribute('aria-label', expect.stringContaining('Pausado'));
   });
 });
 

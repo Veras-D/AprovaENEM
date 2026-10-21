@@ -7,6 +7,7 @@ import {
   ENEM_2023_OFFICIAL_QUESTIONS,
   ENEM_2023_OFFICIAL_RESOLUTIONS,
   ENEM_2022_OFFICIAL_QUESTIONS,
+  ENEM_2022_OFFICIAL_RESOLUTIONS,
   getMixedExamQuestions,
 } from '@/api/mocks/completed-exams';
 import { Button } from '@/components/ui/Button';
@@ -167,7 +168,9 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
   const currentAttempt = currentQuestion ? attempts[currentQuestion.id] : undefined;
   const currentSelectedOption = currentQuestion ? selectedAnswers[currentQuestion.id] || null : null;
   const currentResolution = currentQuestion
-    ? MOCK_RESOLUTIONS[currentQuestion.id] || ENEM_2023_OFFICIAL_RESOLUTIONS[currentQuestion.id]
+    ? MOCK_RESOLUTIONS[currentQuestion.id] ||
+      ENEM_2023_OFFICIAL_RESOLUTIONS[currentQuestion.id] ||
+      ENEM_2022_OFFICIAL_RESOLUTIONS[currentQuestion.id]
     : undefined;
 
   const isCurrentSubmitted = Boolean(currentAttempt);
@@ -186,7 +189,8 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     if (!currentQuestion || !currentSelectedOption) return;
     const resolution =
       MOCK_RESOLUTIONS[currentQuestion.id] ||
-      ENEM_2023_OFFICIAL_RESOLUTIONS[currentQuestion.id];
+      ENEM_2023_OFFICIAL_RESOLUTIONS[currentQuestion.id] ||
+      ENEM_2022_OFFICIAL_RESOLUTIONS[currentQuestion.id];
     const isCorrect = resolution ? currentSelectedOption === resolution.correctOption : false;
 
     // 1. Record attempt synchronously for instant UI grading and responsiveness
@@ -586,6 +590,13 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
               key={currentQuestionIndex}
               initialSeconds={180}
               isCountdown={timeMode !== 'UNTIMED'}
+              isPaused={
+                isTutorOpen ||
+                isAccommodationsOpen ||
+                isSimulationModalOpen ||
+                isTimeUpModalOpen ||
+                isCurrentSubmitted
+              }
               timeMode={timeMode}
               onOpenAccommodations={() => setIsAccommodationsOpen(true)}
               onTimeUp={() => setIsTimeUpModalOpen(true)}
