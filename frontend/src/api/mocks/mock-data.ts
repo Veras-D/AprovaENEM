@@ -14,7 +14,7 @@ import type {
   InstitutionalCohortDiagnosticResponse,
 } from '../types';
 import type { UserProfile } from '@/types';
-import { ENEM_2023_OFFICIAL_RESOLUTIONS } from './completed-exams';
+import { ENEM_2023_OFFICIAL_RESOLUTIONS, ENEM_2022_OFFICIAL_RESOLUTIONS } from './completed-exams';
 
 export const MOCK_QUESTIONS: readonly QuestionItemDto[] = [
   {
@@ -509,6 +509,7 @@ export const MOCK_RESOLUTION: QuestionResolutionDto = {
 };
 
 export const MOCK_RESOLUTIONS: Record<string, QuestionResolutionDto> = {
+  ...ENEM_2022_OFFICIAL_RESOLUTIONS,
   ...ENEM_2023_OFFICIAL_RESOLUTIONS,
   '44444444-0000-0000-0000-000000000002': {
     questionId: '44444444-0000-0000-0000-000000000002',

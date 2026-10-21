@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.6.7] - 2026-10-21
 
 ### Added
+- feat(practice): Implemented Multi-Year Mixed Simulation ("Simulado Misto") in official exam simulator ([`ExamSimulationModal.tsx`](frontend/src/features/practice/components/ExamSimulationModal.tsx), [`completed-exams.ts`](frontend/src/api/mocks/completed-exams.ts), [`PracticeHero.tsx`](frontend/src/features/practice/PracticeHero.tsx)):
+  - Sourced complete authentic 180-question ENEM 2022 dataset with official INEP answer keys and resolutions in [`enem-2022-complete.json`](frontend/src/api/mocks/enem-2022-complete.json).
+  - Added dedicated 'Misto' selection option in [`ExamSimulationModal.tsx`](frontend/src/features/practice/components/ExamSimulationModal.tsx).
+  - Generates authentic 90-question test sessions blending questions across multiple exam editions (2022 and 2023) while strictly preserving INEP's canonical knowledge area question distribution (Day 1: 45 LC + 45 CH; Day 2: 45 CN + 45 MT).
+  - Added unit test suite in [`completed-exams.test.ts`](frontend/src/api/mocks/completed-exams.test.ts) and extended component test suites.
 - feat(practice): Safe, accessible Markdown formatting and responsive image rendering across question statements, resolutions, and AI tutor interactions ([`TASK-S6-31`](docs/BACKLOG.md#task-s6-31)):
   - **Universal Markdown & Math Parser ([`markdown-parser.tsx`](frontend/src/components/math/markdown-parser.tsx), [`MathRenderer.tsx`](frontend/src/components/math/MathRenderer.tsx))**: Added `renderMarkdown` and `parseInlineMarkdown` parsing bold (`**text**`, `__text__`), italic (`*text*`, `_text_`), combined bold-italic (`***text***`), inline code (` `code` `), external links (`[text](url)`), and images (`![alt](url)`).
   - **KaTeX Delimiter Isolation**: Preserved complete token isolation between KaTeX math formula tokenization (`$...$`, `$$...$$`) and Markdown parsing, ensuring equations like `$y = x \tan(\theta)$` and `$v_0 = 20\text{ m/s}$` render without asterisk or underscore collisions.
@@ -20,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - docs(privacy): Purged all absolute machine paths and `file:///` URLs across documentation, changelogs, and configuration files, replacing them with repository-relative paths to prevent environment and username leakage.
 
 ### Fixed
+- fix(practice): Fixed TypeScript type-only import for `OfficialExamEdition` in [`ExamSimulationModal.tsx`](frontend/src/features/practice/components/ExamSimulationModal.tsx) to satisfy `@typescript-eslint/consistent-type-imports` rule and resolve CI ESLint static analysis failure.
+- fix(practice): Rendered non-available exam years (2021, 2020, 2019) as disabled options in [`ExamSimulationModal.tsx`](frontend/src/features/practice/components/ExamSimulationModal.tsx), positioned the 'Misto' option as last, and cleaned badge design with single-line '90 questões' pills.
 - fix(ui): Added `whitespace-nowrap shrink-0` to [`Badge.tsx`](frontend/src/components/ui/Badge.tsx) and updated accommodation badge labels (`Edital INEP`, `Acessibilidade`) with responsive wrapping in [`TimeAccommodationModal.tsx`](frontend/src/features/practice/components/TimeAccommodationModal.tsx), preventing multi-line badge hyphenation and text wrapping.
 - fix(practice): Sanitized external third-party broken image placeholders (`https://enem.dev/broken-image.svg`) across question statements in [`enem-2023-complete.json`](frontend/src/api/mocks/enem-2023-complete.json) and added defensive URL rejection in [`markdown-parser.tsx`](frontend/src/components/math/markdown-parser.tsx) to prevent third-party GitHub PR placeholders or broken assets from rendering.
 - fix(ui): Added global `.scrollbar-none` CSS utility in [`index.css`](frontend/src/index.css) and updated [`QuestionCarousel.tsx`](frontend/src/features/practice/components/QuestionCarousel.tsx) with smooth wheel panning and overflow containment, eliminating the native browser horizontal scrollbar track underneath the question palette.

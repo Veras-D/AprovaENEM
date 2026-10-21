@@ -25,16 +25,24 @@ describe('ExamSimulationModal Component', () => {
     expect(screen.getByText(/2\. Dia de Prova & Áreas do Conhecimento/i)).toBeInTheDocument();
     expect(screen.getByText(/3\. Modo de Tempo & Cronômetro/i)).toBeInTheDocument();
 
-    // Verify only the completed edition (2023) is listed as an available radio button
+    // Verify completed editions (2023, 2022) and Misto are available
     const year2023Radio = screen.getByRole('radio', { name: '2023' });
+    const year2022Radio = screen.getByRole('radio', { name: '2022' });
+    const mistoRadio = screen.getByRole('radio', { name: /misto/i });
+
     expect(year2023Radio).toBeInTheDocument();
+    expect(year2022Radio).toBeInTheDocument();
+    expect(mistoRadio).toBeInTheDocument();
     expect(year2023Radio).toHaveAttribute('aria-checked', 'true');
 
-    // Verify incomplete editions (2022, 2021, 2020, 2019 with only 5 questions) are NOT selectable in radio group
-    expect(screen.queryByRole('radio', { name: '2022' })).not.toBeInTheDocument();
+    // Verify incomplete editions (2021, 2020, 2019) are rendered in the DOM as unselectable (disabled)
     expect(screen.queryByRole('radio', { name: '2021' })).not.toBeInTheDocument();
     expect(screen.queryByRole('radio', { name: '2020' })).not.toBeInTheDocument();
     expect(screen.queryByRole('radio', { name: '2019' })).not.toBeInTheDocument();
+
+    expect(screen.getByText('2021')).toBeDisabled();
+    expect(screen.getByText('2020')).toBeDisabled();
+    expect(screen.getByText('2019')).toBeDisabled();
 
     // Verify both Dia 1 and Dia 2 show the full 90-question count
     expect(screen.getByText(/Dia 1 — Linguagens & Ciências Humanas/i)).toBeInTheDocument();
@@ -80,6 +88,45 @@ describe('ExamSimulationModal Component', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('allows selecting Misto and starts mixed simulation session with 90 questions', () => {
+    const onStartSimulation = vi.fn();
+    const onClose = vi.fn();
+
+    render(
+      <ExamSimulationModal
+        {...defaultProps}
+        onStartSimulation={onStartSimulation}
+        onClose={onClose}
+      />
+    );
+
+    // Select "Misto"
+    const mistoRadio = screen.getByRole('radio', { name: /misto/i });
+    fireEvent.click(mistoRadio);
+    expect(mistoRadio).toHaveAttribute('aria-checked', 'true');
+
+    // Explanatory text should appear
+    expect(
+      screen.getByText(/O Simulado Misto mescla questões de múltiplos anos/i)
+    ).toBeInTheDocument();
+
+    // Verify button label
+    expect(
+      screen.getByRole('button', { name: /Iniciar Simulado Misto \(90 questões\)/i })
+    ).toBeInTheDocument();
+
+    // Click confirm
+    const startBtn = screen.getByRole('button', { name: /Iniciar Simulado Misto/i });
+    fireEvent.click(startBtn);
+
+    expect(onStartSimulation).toHaveBeenCalledWith({
+      year: 'MIXED',
+      day: 'DAY_1',
+      timing: 'TIMED',
+    });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it('handles custom availableEditions correctly', () => {
     const customEditions: readonly OfficialExamEdition[] = [
       {
@@ -114,8 +161,9 @@ describe('ExamSimulationModal Component', () => {
     // 2022 is complete -> must be in radio options
     expect(screen.getByRole('radio', { name: '2022' })).toBeInTheDocument();
 
-    // 2021 is incomplete -> must NOT be in radio options
+    // 2021 is incomplete -> must NOT be in radio options, but must be rendered as disabled
     expect(screen.queryByRole('radio', { name: '2021' })).not.toBeInTheDocument();
+    expect(screen.getByText('2021')).toBeDisabled();
   });
 
   it('displays empty state and disables start button when no editions are complete', () => {

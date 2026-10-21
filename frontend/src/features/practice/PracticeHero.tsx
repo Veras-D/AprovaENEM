@@ -6,6 +6,8 @@ import { MOCK_QUESTIONS, MOCK_RESOLUTIONS } from '@/api/mocks/mock-data';
 import {
   ENEM_2023_OFFICIAL_QUESTIONS,
   ENEM_2023_OFFICIAL_RESOLUTIONS,
+  ENEM_2022_OFFICIAL_QUESTIONS,
+  getMixedExamQuestions,
 } from '@/api/mocks/completed-exams';
 import { Button } from '@/components/ui/Button';
 import {
@@ -273,25 +275,41 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       setShowCelebration(false);
       setIsTimeUpModalOpen(false);
 
-      // Determine questions pool for official simulation:
-      // Use the complete authentic official question bank for full editions
-      let basePool = questionsPool;
-      if (config.year === 2023 && ENEM_2023_OFFICIAL_QUESTIONS.length > 0) {
-        basePool = ENEM_2023_OFFICIAL_QUESTIONS;
-      }
+      let filteredDtos: readonly QuestionItemDto[] = [];
+      let title = '';
+      const dayLabel =
+        config.day === 'DAY_1'
+          ? 'Dia 1 (Linguagens & Humanas)'
+          : 'Dia 2 (Natureza & Matemática)';
 
-      // Filter by day/subject
-      let filteredDtos = basePool;
-      if (config.day === 'DAY_1') {
-        filteredDtos = filteredDtos.filter((q) => q.subject === 'LC' || q.subject === 'CH');
-      } else if (config.day === 'DAY_2') {
-        filteredDtos = filteredDtos.filter((q) => q.subject === 'CN' || q.subject === 'MT');
-      }
+      if (config.year === 'MIXED') {
+        filteredDtos = getMixedExamQuestions(config.day);
+        title = `Simulado Oficial Misto — ${dayLabel}`;
+      } else {
+        // Determine questions pool for official simulation:
+        // Use the complete authentic official question bank for full editions
+        let basePool = questionsPool;
+        if (config.year === 2023 && ENEM_2023_OFFICIAL_QUESTIONS.length > 0) {
+          basePool = ENEM_2023_OFFICIAL_QUESTIONS;
+        } else if (config.year === 2022 && ENEM_2022_OFFICIAL_QUESTIONS.length > 0) {
+          basePool = ENEM_2022_OFFICIAL_QUESTIONS;
+        }
 
-      // Filter by year
-      const yearFiltered = filteredDtos.filter((q) => q.year === config.year);
-      if (yearFiltered.length > 0) {
-        filteredDtos = yearFiltered;
+        // Filter by day/subject
+        filteredDtos = basePool;
+        if (config.day === 'DAY_1') {
+          filteredDtos = filteredDtos.filter((q) => q.subject === 'LC' || q.subject === 'CH');
+        } else if (config.day === 'DAY_2') {
+          filteredDtos = filteredDtos.filter((q) => q.subject === 'CN' || q.subject === 'MT');
+        }
+
+        // Filter by year
+        const yearFiltered = filteredDtos.filter((q) => q.year === config.year);
+        if (yearFiltered.length > 0) {
+          filteredDtos = yearFiltered;
+        }
+
+        title = `Simulado Oficial ENEM ${config.year} — ${dayLabel}`;
       }
 
       // Update timing mode
@@ -302,12 +320,6 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       }
 
       const domainQuestions = filteredDtos.map(mapDtoToDomainQuestion);
-      const dayLabel =
-        config.day === 'DAY_1'
-          ? 'Dia 1 (Linguagens & Humanas)'
-          : 'Dia 2 (Natureza & Matemática)';
-
-      const title = `Simulado Oficial ENEM ${config.year} — ${dayLabel}`;
 
       const customSession: PracticeSession = {
         id: `session-sim-${Date.now()}`,

@@ -327,6 +327,43 @@ describe('PracticeHero Component', () => {
     expect(screen.getByText(/Simulado Oficial ENEM 2023 — Dia 1/i)).toBeInTheDocument();
   });
 
+  it('opens ExamSimulationModal, selects Misto, and launches a 90-question mixed official exam session', () => {
+    renderWithProviders();
+
+    // Click "Simular Prova Oficial" button
+    const openSimBtn = screen.getByRole('button', {
+      name: /Simular Prova Oficial/i,
+    });
+    fireEvent.click(openSimBtn);
+
+    // Select "Misto"
+    const mistoBtn = screen.getByRole('radio', { name: /misto/i });
+    fireEvent.click(mistoBtn);
+
+    // Click "Iniciar Simulado Misto (90 questões)"
+    const startBtn = screen.getByRole('button', { name: /Iniciar Simulado Misto/i });
+    fireEvent.click(startBtn);
+
+    // Modal closes and session title reflects Simulado Oficial Misto
+    expect(screen.queryByText('Simular Edição Oficial do ENEM')).not.toBeInTheDocument();
+    expect(screen.getByText(/Simulado Oficial Misto — Dia 1/i)).toBeInTheDocument();
+
+    // Verify exactly 90 questions loaded in session store
+    const sessionQuestions = useSessionStore.getState().questions;
+    expect(sessionQuestions).toHaveLength(90);
+
+    // Verify 45 LC and 45 CH
+    const lcCount = sessionQuestions.filter((q) => q.knowledgeArea === 'LC').length;
+    const chCount = sessionQuestions.filter((q) => q.knowledgeArea === 'CH').length;
+    expect(lcCount).toBe(45);
+    expect(chCount).toBe(45);
+
+    // Verify questions come from different years
+    const years = new Set(sessionQuestions.map((q) => q.examYear));
+    expect(years.has(2022)).toBe(true);
+    expect(years.has(2023)).toBe(true);
+  });
+
   it('presents different, novel questions when clicking "Refazer Diagnóstico" after completing diagnostic', async () => {
     renderWithProviders();
 

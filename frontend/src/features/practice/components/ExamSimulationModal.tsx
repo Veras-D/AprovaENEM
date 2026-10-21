@@ -13,14 +13,15 @@ import {
 import { Button } from '@/components/ui/Button';
 import {
   OFFICIAL_EXAM_EDITIONS,
-  OfficialExamEdition,
+  type OfficialExamEdition,
 } from '@/api/mocks/completed-exams';
 
 export type SimulationDay = 'DAY_1' | 'DAY_2';
 export type SimulationTiming = 'TIMED' | 'UNTIMED';
+export type SimulationYearOption = number | 'MIXED';
 
 export interface ExamSimulationConfig {
-  year: number;
+  year: SimulationYearOption;
   day: SimulationDay;
   timing: SimulationTiming;
 }
@@ -38,12 +39,19 @@ export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
   onStartSimulation,
   availableEditions,
 }) => {
-  const completedEditions = useMemo(() => {
-    const source = availableEditions ?? OFFICIAL_EXAM_EDITIONS;
-    return source.filter((e) => e.isComplete);
+  const allEditions = useMemo(() => {
+    return availableEditions ?? OFFICIAL_EXAM_EDITIONS;
   }, [availableEditions]);
 
-  const [selectedYear, setSelectedYear] = useState<number>(() => {
+  const completedEditions = useMemo(() => {
+    return allEditions.filter((e) => e.isComplete);
+  }, [allEditions]);
+
+  const incompleteEditions = useMemo(() => {
+    return allEditions.filter((e) => !e.isComplete);
+  }, [allEditions]);
+
+  const [selectedYear, setSelectedYear] = useState<SimulationYearOption>(() => {
     return completedEditions[0]?.year ?? 2023;
   });
   const [selectedDay, setSelectedDay] = useState<SimulationDay>('DAY_1');
@@ -54,6 +62,7 @@ export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
 
   // Keep selectedYear synced with available completed editions
   useEffect(() => {
+    if (selectedYear === 'MIXED') return;
     if (completedEditions.length > 0 && !completedEditions.some((e) => e.year === selectedYear)) {
       const first = completedEditions[0];
       if (first) {
@@ -101,16 +110,20 @@ export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
     };
   }, [isOpen, onClose]);
 
+  const isMixed = selectedYear === 'MIXED';
+
   const currentEdition = useMemo(() => {
+    if (isMixed) return null;
     return completedEditions.find((e) => e.year === selectedYear) ?? completedEditions[0];
-  }, [completedEditions, selectedYear]);
+  }, [completedEditions, selectedYear, isMixed]);
 
   const currentDayQuestionCount = useMemo(() => {
+    if (isMixed) return 90;
     if (!currentEdition) return 0;
     return selectedDay === 'DAY_1'
       ? currentEdition.day1QuestionCount
       : currentEdition.day2QuestionCount;
-  }, [currentEdition, selectedDay]);
+  }, [currentEdition, selectedDay, isMixed]);
 
   if (!isOpen) return null;
 
@@ -180,30 +193,69 @@ export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
                 Nenhuma edição completa disponível para simulação no momento.
               </div>
             ) : (
-              <div
-                className="flex flex-wrap gap-2"
-                role="radiogroup"
-                aria-label="Ano da edição do ENEM"
-              >
-                {completedEditions.map((edition) => {
-                  const isSelected = selectedYear === edition.year;
-                  return (
+              <div className="space-y-2">
+                <div
+                  className="flex flex-wrap gap-2"
+                  role="radiogroup"
+                  aria-label="Ano da edição do ENEM"
+                >
+                  {completedEditions.map((edition) => {
+                    const isSelected = selectedYear === edition.year;
+                    return (
+                      <button
+                        key={edition.year}
+                        type="button"
+                        role="radio"
+                        aria-checked={isSelected}
+                        onClick={() => setSelectedYear(edition.year)}
+                        className={`py-2 px-4 rounded-lg text-xs font-bold text-center transition-all border ${
+                          isSelected
+                            ? 'bg-brand-primary text-white border-brand-primary shadow-xs'
+                            : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        {edition.year}
+                      </button>
+                    );
+                  })}
+
+                  {/* Non-available editions shown as unselectable / disabled */}
+                  {incompleteEditions.map((edition) => (
                     <button
                       key={edition.year}
                       type="button"
-                      role="radio"
-                      aria-checked={isSelected}
-                      onClick={() => setSelectedYear(edition.year)}
-                      className={`py-2 px-4 rounded-lg text-xs font-bold text-center transition-all border ${
-                        isSelected
-                          ? 'bg-brand-primary text-white border-brand-primary shadow-xs'
-                          : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
+                      disabled
+                      aria-disabled="true"
+                      title={`ENEM ${edition.year} — Indisponível para simulação completa (amostra reduzida)`}
+                      aria-label={`ENEM ${edition.year} (Indisponível)`}
+                      className="py-2 px-4 rounded-lg text-xs font-bold text-center border border-slate-200 dark:border-slate-800 bg-slate-100/60 dark:bg-slate-850 text-slate-400 dark:text-slate-500 cursor-not-allowed select-none opacity-50"
                     >
                       {edition.year}
                     </button>
-                  );
-                })}
+                  ))}
+
+                  {/* Mixed edition option (last) */}
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={isMixed}
+                    onClick={() => setSelectedYear('MIXED')}
+                    className={`py-2 px-4 rounded-lg text-xs font-bold text-center transition-all border flex items-center gap-1.5 ${
+                      isMixed
+                        ? 'bg-brand-primary text-white border-brand-primary shadow-xs'
+                        : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>Misto</span>
+                  </button>
+                </div>
+
+                {isMixed && (
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    O Simulado Misto mescla questões de múltiplos anos mantendo a estrutura oficial: exatamente 90 questões por dia (45 por área do conhecimento).
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -236,8 +288,12 @@ export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
                       <span className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm">
                         Dia 1 — Linguagens & Ciências Humanas
                       </span>
-                      <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">
-                        {currentEdition ? `${currentEdition.day1QuestionCount} questões` : '1º Domingo'}
+                      <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 whitespace-nowrap shrink-0">
+                        {isMixed
+                          ? '90 questões'
+                          : currentEdition
+                          ? `${currentEdition.day1QuestionCount} questões`
+                          : '1º Domingo'}
                       </span>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -271,8 +327,12 @@ export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
                       <span className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm">
                         Dia 2 — Ciências da Natureza & Matemática
                       </span>
-                      <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                        {currentEdition ? `${currentEdition.day2QuestionCount} questões` : '2º Domingo'}
+                      <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 whitespace-nowrap shrink-0">
+                        {isMixed
+                          ? '90 questões'
+                          : currentEdition
+                          ? `${currentEdition.day2QuestionCount} questões`
+                          : '2º Domingo'}
                       </span>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -351,7 +411,9 @@ export const ExamSimulationModal: React.FC<ExamSimulationModalProps> = ({
             className="flex items-center gap-1.5"
           >
             <Sparkles className="h-4 w-4" aria-hidden="true" />
-            {currentDayQuestionCount > 0
+            {isMixed
+              ? `Iniciar Simulado Misto (${currentDayQuestionCount} questões)`
+              : currentDayQuestionCount > 0
               ? `Iniciar Simulado Oficial (${currentDayQuestionCount} questões)`
               : 'Iniciar Simulado'}
           </Button>
