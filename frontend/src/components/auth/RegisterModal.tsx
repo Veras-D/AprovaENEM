@@ -161,51 +161,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     };
   })();
 
-  const handleGenerateStrongPassword = () => {
-    const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-    const lower = 'abcdefghijkmnopqrstuvwxyz';
-    const digits = '23456789';
-    const specials = '!@#$%&*?_+-=';
-    const all = upper + lower + digits + specials;
-
-    const randomValues = new Uint32Array(14);
-    if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
-      window.crypto.getRandomValues(randomValues);
-    } else {
-      for (let i = 0; i < randomValues.length; i++) {
-        randomValues[i] = Math.floor(Math.random() * 0xffffffff);
-      }
-    }
-
-    const pick = (charset: string, idx: number): string =>
-      charset.charAt((randomValues[idx] ?? 0) % charset.length);
-
-    const chars: string[] = [
-      pick(upper, 0),
-      pick(lower, 1),
-      pick(digits, 2),
-      pick(specials, 3),
-    ];
-
-    for (let i = 4; i < 14; i++) {
-      chars.push(pick(all, i));
-    }
-
-    // Fisher-Yates shuffle using CSPRNG
-    for (let i = chars.length - 1; i > 0; i--) {
-      const j = (randomValues[i] ?? 0) % (i + 1);
-      const temp = chars[i] ?? '';
-      chars[i] = chars[j] ?? '';
-      chars[j] = temp;
-    }
-
-    const generated = chars.join('');
-    setPassword(generated);
-    setConfirmPassword(generated);
-    setShowPassword(true);
-    setShowConfirmPassword(true);
-    setFormError(null);
-  };
+  // Reset form when opening or changing mode
   useEffect(() => {
     if (isOpen) {
       setShouldRender(true);
@@ -575,23 +531,12 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 <div className="space-y-2.5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between gap-1">
-                        <label
-                          htmlFor="reg-password"
-                          className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
-                        >
-                          Senha Segura (mín. 8) <span className="text-rose-500">*</span>
-                        </label>
-                        <button
-                          type="button"
-                          onClick={handleGenerateStrongPassword}
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-brand-primary hover:underline focus:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary rounded cursor-pointer"
-                          title="Gerar e preencher automaticamente uma senha forte com todos os requisitos"
-                        >
-                          <Sparkles className="h-3 w-3 shrink-0" aria-hidden="true" />
-                          <span>Sugerir senha forte</span>
-                        </button>
-                      </div>
+                      <label
+                        htmlFor="reg-password"
+                        className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                      >
+                        Senha Segura (mín. 8) <span className="text-rose-500">*</span>
+                      </label>
                       <div className="relative">
                         <input
                           id="reg-password"

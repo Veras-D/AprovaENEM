@@ -179,11 +179,10 @@ describe('RegisterModal Component', () => {
     });
   });
 
-  it('should toggle password visibility when clicking eye button and generate strong password on click', () => {
+  it('should toggle password visibility when clicking eye button', () => {
     renderWithProviders(<RegisterModal isOpen={true} onClose={handleClose} initialMode="register" />);
 
-    const passwordInput = screen.getByLabelText(/Senha Segura/i) as HTMLInputElement;
-    const confirmInput = screen.getByLabelText(/Confirmar Senha/i) as HTMLInputElement;
+    const passwordInput = screen.getByLabelText(/Senha Segura/i);
     expect(passwordInput).toHaveAttribute('type', 'password');
 
     const toggleBtn = screen.getByRole('button', { name: 'Exibir senha' });
@@ -192,14 +191,6 @@ describe('RegisterModal Component', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Ocultar senha' }));
     expect(passwordInput).toHaveAttribute('type', 'password');
-
-    // Click "Sugerir senha forte" button
-    const suggestBtn = screen.getByRole('button', { name: /Sugerir senha forte/i });
-    fireEvent.click(suggestBtn);
-
-    expect(passwordInput.value.length).toBeGreaterThanOrEqual(8);
-    expect(passwordInput.value).toBe(confirmInput.value);
-    expect(screen.getByText('Forte e Segura')).toBeInTheDocument();
   });
 
   it('should close when Escape key is pressed', () => {
