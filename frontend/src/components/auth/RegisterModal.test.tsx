@@ -113,6 +113,22 @@ describe('RegisterModal Component', () => {
     fireEvent.change(screen.getByLabelText(/Senha Segura/i), { target: { value: '123' } });
     fireEvent.click(submitBtn);
     expect(screen.getByText(/A senha deve ter no mínimo 8 caracteres/i)).toBeInTheDocument();
+
+    // Fill 8+ char password missing uppercase and special char
+    fireEvent.change(screen.getByLabelText(/Senha Segura/i), { target: { value: 'password123' } });
+    fireEvent.click(submitBtn);
+    expect(
+      screen.getByText(/A senha deve conter pelo menos uma letra maiúscula, uma minúscula, um número e um caractere especial/i)
+    ).toBeInTheDocument();
+
+    // Fill strong password and verify strength bar updates to "Forte e Segura"
+    fireEvent.change(screen.getByLabelText(/Senha Segura/i), { target: { value: 'Password@123' } });
+    expect(screen.getByText('Forte e Segura')).toBeInTheDocument();
+
+    // Mismatched confirmation password
+    fireEvent.change(screen.getByLabelText(/Confirmar Senha/i), { target: { value: 'Different@123' } });
+    fireEvent.click(submitBtn);
+    expect(screen.getByText(/As senhas informadas não coincidem/i)).toBeInTheDocument();
   });
 
   it('should switch between Register and Login modes', () => {
@@ -137,7 +153,8 @@ describe('RegisterModal Component', () => {
 
     fireEvent.change(screen.getByLabelText(/Nome Completo ou Social/i), { target: { value: 'Lucas Silva' } });
     fireEvent.change(screen.getByLabelText(/E-mail do Estudante/i), { target: { value: 'lucas@escola.gov.br' } });
-    fireEvent.change(screen.getByLabelText(/Senha Segura/i), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByLabelText(/Senha Segura/i), { target: { value: 'Password@123' } });
+    fireEvent.change(screen.getByLabelText(/Confirmar Senha/i), { target: { value: 'Password@123' } });
     fireEvent.change(screen.getByLabelText(/Tipo de Escola/i), { target: { value: 'PUBLIC_SCHOOL' } });
     fireEvent.change(screen.getByLabelText(/Curso \/ Meta no SISU/i), { target: { value: 'Medicina' } });
 
@@ -156,16 +173,17 @@ describe('RegisterModal Component', () => {
     expect(authService.register).toHaveBeenCalledWith({
       fullName: 'Lucas Silva',
       email: 'lucas@escola.gov.br',
-      password: 'password123',
+      password: 'Password@123',
       schoolType: 'PUBLIC_SCHOOL',
       targetDegree: 'Medicina',
     });
   });
 
-  it('should toggle password visibility when clicking eye button', () => {
+  it('should toggle password visibility when clicking eye button and generate strong password on click', () => {
     renderWithProviders(<RegisterModal isOpen={true} onClose={handleClose} initialMode="register" />);
 
-    const passwordInput = screen.getByLabelText(/Senha Segura/i);
+    const passwordInput = screen.getByLabelText(/Senha Segura/i) as HTMLInputElement;
+    const confirmInput = screen.getByLabelText(/Confirmar Senha/i) as HTMLInputElement;
     expect(passwordInput).toHaveAttribute('type', 'password');
 
     const toggleBtn = screen.getByRole('button', { name: 'Exibir senha' });
@@ -174,6 +192,14 @@ describe('RegisterModal Component', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Ocultar senha' }));
     expect(passwordInput).toHaveAttribute('type', 'password');
+
+    // Click "Sugerir senha forte" button
+    const suggestBtn = screen.getByRole('button', { name: /Sugerir senha forte/i });
+    fireEvent.click(suggestBtn);
+
+    expect(passwordInput.value.length).toBeGreaterThanOrEqual(8);
+    expect(passwordInput.value).toBe(confirmInput.value);
+    expect(screen.getByText('Forte e Segura')).toBeInTheDocument();
   });
 
   it('should close when Escape key is pressed', () => {
@@ -234,7 +260,8 @@ describe('RegisterModal Component', () => {
 
     fireEvent.change(screen.getByLabelText(/Nome Completo ou Social/i), { target: { value: 'Beatriz Costa' } });
     fireEvent.change(screen.getByLabelText(/E-mail do Estudante/i), { target: { value: 'beatriz@escola.gov.br' } });
-    fireEvent.change(screen.getByLabelText(/Senha Segura/i), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByLabelText(/Senha Segura/i), { target: { value: 'Password@123' } });
+    fireEvent.change(screen.getByLabelText(/Confirmar Senha/i), { target: { value: 'Password@123' } });
 
     const consentCheckbox = screen.getByRole('checkbox', {
       name: /Declaro que li e concordo com os Termos de Uso e a Política de Privacidade/i,

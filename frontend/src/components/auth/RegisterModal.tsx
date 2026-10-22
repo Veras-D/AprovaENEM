@@ -36,11 +36,13 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 }) => {
   const [mode, setMode] = useState<'register' | 'login'>(initialMode);
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
 
   // Form Fields
   const [fullName, setFullName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [schoolType, setSchoolType] = useState<'PUBLIC_SCHOOL' | 'PRIVATE_SCHOLARSHIP' | 'PRIVATE_REGULAR'>('PUBLIC_SCHOOL');
   const [targetDegree, setTargetDegree] = useState<string>('');
 
@@ -102,7 +104,108 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     };
   }, [shouldRender, hasSwitchedMode, mode, formError, isSuccess]);
 
-  // Reset form when opening or changing mode
+  const hasMinLength = password.length >= 8;
+  const hasLowercase = /[a-z]/.test(password);
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  const hasSpecialChar = /[^A-Za-z0-9]/.test(password);
+
+  const criteriaScore =
+    (hasMinLength ? 1 : 0) +
+    (hasLowercase ? 1 : 0) +
+    (hasUppercase ? 1 : 0) +
+    (hasNumber ? 1 : 0) +
+    (hasSpecialChar ? 1 : 0);
+
+  const isPasswordStrongEnough =
+    hasMinLength && hasLowercase && hasUppercase && hasNumber && hasSpecialChar;
+
+  const strengthConfig = (() => {
+    if (password.length === 0) {
+      return {
+        label: 'Digite sua senha',
+        colorClass: 'bg-slate-300 dark:bg-slate-700',
+        textClass: 'text-slate-500 dark:text-slate-400',
+        activeBars: 0,
+      };
+    }
+    if (criteriaScore <= 2) {
+      return {
+        label: 'Fraca',
+        colorClass: 'bg-rose-500',
+        textClass: 'text-rose-600 dark:text-rose-400',
+        activeBars: 1,
+      };
+    }
+    if (criteriaScore === 3) {
+      return {
+        label: 'Razoável',
+        colorClass: 'bg-amber-500',
+        textClass: 'text-amber-600 dark:text-amber-400',
+        activeBars: 2,
+      };
+    }
+    if (criteriaScore === 4) {
+      return {
+        label: 'Boa (falta 1 requisito)',
+        colorClass: 'bg-sky-500',
+        textClass: 'text-sky-600 dark:text-sky-400',
+        activeBars: 3,
+      };
+    }
+    return {
+      label: 'Forte e Segura',
+      colorClass: 'bg-emerald-500',
+      textClass: 'text-emerald-600 dark:text-emerald-400',
+      activeBars: 4,
+    };
+  })();
+
+  const handleGenerateStrongPassword = () => {
+    const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    const lower = 'abcdefghijkmnopqrstuvwxyz';
+    const digits = '23456789';
+    const specials = '!@#$%&*?_+-=';
+    const all = upper + lower + digits + specials;
+
+    const randomValues = new Uint32Array(14);
+    if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
+      window.crypto.getRandomValues(randomValues);
+    } else {
+      for (let i = 0; i < randomValues.length; i++) {
+        randomValues[i] = Math.floor(Math.random() * 0xffffffff);
+      }
+    }
+
+    const pick = (charset: string, idx: number): string =>
+      charset.charAt((randomValues[idx] ?? 0) % charset.length);
+
+    const chars: string[] = [
+      pick(upper, 0),
+      pick(lower, 1),
+      pick(digits, 2),
+      pick(specials, 3),
+    ];
+
+    for (let i = 4; i < 14; i++) {
+      chars.push(pick(all, i));
+    }
+
+    // Fisher-Yates shuffle using CSPRNG
+    for (let i = chars.length - 1; i > 0; i--) {
+      const j = (randomValues[i] ?? 0) % (i + 1);
+      const temp = chars[i] ?? '';
+      chars[i] = chars[j] ?? '';
+      chars[j] = temp;
+    }
+
+    const generated = chars.join('');
+    setPassword(generated);
+    setConfirmPassword(generated);
+    setShowPassword(true);
+    setShowConfirmPassword(true);
+    setFormError(null);
+  };
   useEffect(() => {
     if (isOpen) {
       setShouldRender(true);
@@ -110,6 +213,9 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       setHasSwitchedMode(false);
       setBodyHeight(undefined);
       setMode(initialMode);
+      setShowPassword(false);
+      setShowConfirmPassword(false);
+      setConfirmPassword('');
       setFormError(null);
       setIsSuccess(false);
       return undefined;
@@ -195,6 +301,18 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 
     if (password.length < 8) {
       setFormError('A senha deve ter no mínimo 8 caracteres.');
+      return;
+    }
+
+    if (!isPasswordStrongEnough) {
+      setFormError(
+        'A senha deve conter pelo menos uma letra maiúscula, uma minúscula, um número e um caractere especial.'
+      );
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setFormError('As senhas informadas não coincidem. Verifique a confirmação de senha.');
       return;
     }
 
@@ -394,6 +512,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             {/* REGISTER MODE FORM */}
             {mode === 'register' && !isSuccess && (
               <form
+                action="/api/v1/auth/register"
+                method="post"
                 onSubmit={handleRegisterSubmit}
                 className={`space-y-4 ${hasSwitchedMode ? 'animate-tab-from-left' : ''}`}
                 noValidate
@@ -419,7 +539,9 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                   </label>
                   <input
                     id="reg-fullname"
+                    name="name"
                     type="text"
+                    autoComplete="name"
                     required
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
@@ -438,7 +560,9 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                   </label>
                   <input
                     id="reg-email"
+                    name="username"
                     type="email"
+                    autoComplete="username"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -447,36 +571,148 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                   />
                 </div>
 
-                {/* Password */}
-                <div className="space-y-1">
-                  <label
-                    htmlFor="reg-password"
-                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                {/* Password & Confirm Password */}
+                <div className="space-y-2.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between gap-1">
+                        <label
+                          htmlFor="reg-password"
+                          className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                        >
+                          Senha Segura (mín. 8) <span className="text-rose-500">*</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={handleGenerateStrongPassword}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-brand-primary hover:underline focus:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary rounded cursor-pointer"
+                          title="Gerar e preencher automaticamente uma senha forte com todos os requisitos"
+                        >
+                          <Sparkles className="h-3 w-3 shrink-0" aria-hidden="true" />
+                          <span>Sugerir senha forte</span>
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <input
+                          id="reg-password"
+                          name="password"
+                          type={showPassword ? 'text' : 'password'}
+                          autoComplete="new-password"
+                          required
+                          minLength={8}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="••••••••"
+                          className="w-full px-3.5 py-2.5 text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                          aria-label={showPassword ? 'Ocultar senha' : 'Exibir senha'}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" aria-hidden="true" />
+                          ) : (
+                            <Eye className="h-4 w-4" aria-hidden="true" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label
+                        htmlFor="reg-confirm-password"
+                        className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                      >
+                        Confirmar Senha <span className="text-rose-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          id="reg-confirm-password"
+                          name="confirmPassword"
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          autoComplete="new-password"
+                          required
+                          minLength={8}
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="••••••••"
+                          className="w-full px-3.5 py-2.5 text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                          aria-label={showConfirmPassword ? 'Ocultar confirmação de senha' : 'Exibir confirmação de senha'}
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="h-4 w-4" aria-hidden="true" />
+                          ) : (
+                            <Eye className="h-4 w-4" aria-hidden="true" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Password Strength Meter Bar & Live Requirement Checklist */}
+                  <div
+                    className="p-2.5 rounded-brand bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 space-y-2"
+                    aria-live="polite"
                   >
-                    Senha Segura (mínimo 8 caracteres) <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="reg-password"
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full px-3.5 py-2.5 text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                      aria-label={showPassword ? 'Ocultar senha' : 'Exibir senha'}
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-semibold text-slate-600 dark:text-slate-300">
+                        Força da senha:
+                      </span>
+                      <span className={`font-bold ${strengthConfig.textClass}`}>
+                        {strengthConfig.label}
+                      </span>
+                    </div>
+
+                    {/* 4-Segment Progress Bar */}
+                    <div
+                      className="grid grid-cols-4 gap-1.5 h-1.5"
+                      role="progressbar"
+                      aria-label="Indicador de força da senha"
+                      aria-valuenow={criteriaScore}
+                      aria-valuemin={0}
+                      aria-valuemax={5}
                     >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" aria-hidden="true" />
-                      ) : (
-                        <Eye className="h-4 w-4" aria-hidden="true" />
-                      )}
-                    </button>
+                      {[1, 2, 3, 4].map((step) => (
+                        <div
+                          key={step}
+                          className={`h-full rounded-full transition-colors duration-300 ${
+                            step <= strengthConfig.activeBars
+                              ? strengthConfig.colorClass
+                              : 'bg-slate-200 dark:bg-slate-700'
+                          }`}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Live Requirement Pills */}
+                    <div className="flex flex-wrap gap-1.5 pt-0.5 text-[10px]">
+                      {[
+                        { met: hasMinLength, text: '8+ caracteres' },
+                        { met: hasUppercase, text: '1 Maiúscula (A-Z)' },
+                        { met: hasLowercase, text: '1 Minúscula (a-z)' },
+                        { met: hasNumber, text: '1 Número (0-9)' },
+                        { met: hasSpecialChar, text: '1 Especial (!@#$)' },
+                      ].map((req) => (
+                        <span
+                          key={req.text}
+                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-medium transition-colors duration-200 ${
+                            req.met
+                              ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30'
+                              : 'bg-slate-200/70 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400'
+                          }`}
+                        >
+                          <span>{req.met ? '✓' : '•'}</span>
+                          <span>{req.text}</span>
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -597,7 +833,9 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                   </label>
                   <input
                     id="login-email"
+                    name="username"
                     type="email"
+                    autoComplete="username"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -617,7 +855,9 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                   <div className="relative">
                     <input
                       id="login-password"
+                      name="password"
                       type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
