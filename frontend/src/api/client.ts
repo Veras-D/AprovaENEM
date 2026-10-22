@@ -70,7 +70,8 @@ apiClient.interceptors.response.use(
       useAuthStore.getState().clearAuth();
     }
 
-    const message = data?.detail || data?.title || error.message || 'An unexpected error occurred.';
+    const message =
+      data?.detail || data?.message || data?.title || error.message || 'An unexpected error occurred.';
     return Promise.reject(new ApiError(status, message, data, retryAfterSeconds));
   }
 );

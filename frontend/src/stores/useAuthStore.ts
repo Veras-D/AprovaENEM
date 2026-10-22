@@ -43,7 +43,9 @@ export const useAuthStore = create<AuthState>((set) => {
     setAuth: (token: string, user: UserProfile) => {
       localStorage.setItem(STORAGE_KEY_TOKEN, token);
       localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
-      useSessionStore.getState().migrateAnonymousProgress(user.id);
+      if (user?.id) {
+        useSessionStore.getState().migrateAnonymousProgress(user.id);
+      }
       set({ token, user, isAuthenticated: true, isAuthModalOpen: false });
     },
     clearAuth: () => {

@@ -146,6 +146,7 @@ export interface ApiProblemDetails {
   readonly title: string;
   readonly status: number;
   readonly detail: string;
+  readonly message?: string;
   readonly instance?: string;
   readonly code?: string;
   readonly invalidParams?: readonly {

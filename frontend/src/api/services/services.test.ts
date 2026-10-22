@@ -200,6 +200,87 @@ describe('API Services', () => {
       expect(user).toEqual(mockAuthResponse.user);
       expect(exported).toEqual({ userId: 'usr-1', exported: true });
     });
+
+    it('should map frontend schoolType values to backend SchoolType enum on register', async () => {
+      const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValue({
+        data: { userId: 'u-1', email: 'a@b.co', fullName: 'Ana Souza', role: 'ROLE_STUDENT', token: 't' },
+      });
+
+      await authService.register({
+        email: 'a@b.co',
+        password: 'Password@123',
+        fullName: 'Ana Souza',
+        schoolType: 'PRIVATE_SCHOLARSHIP',
+      });
+      await authService.register({
+        email: 'a@b.co',
+        password: 'Password@123',
+        fullName: 'Ana Souza',
+        schoolType: 'PUBLIC_SCHOOL',
+      });
+
+      expect(postSpy).toHaveBeenNthCalledWith(
+        1,
+        '/auth/register',
+        expect.objectContaining({ schoolType: 'PRIVATE_SCHOOL' })
+      );
+      expect(postSpy).toHaveBeenNthCalledWith(
+        2,
+        '/auth/register',
+        expect.objectContaining({ schoolType: 'PUBLIC_SCHOOL' })
+      );
+    });
+
+    it('should normalize flat backend RegisterResponse, LoginResponse, and UserResponse payloads', async () => {
+      const flatBackendAuthPayload = {
+        userId: 'usr-flat-1',
+        email: 'beatriz@escola.gov.br',
+        fullName: 'Beatriz Silva',
+        role: 'ROLE_STUDENT',
+        emailVerified: false,
+        token: 'flat-jwt-token',
+        tokenType: 'Bearer',
+        expiresInSeconds: 86400,
+      };
+
+      const flatBackendMePayload = {
+        id: 'usr-flat-1',
+        email: 'beatriz@escola.gov.br',
+        fullName: 'Beatriz Silva',
+        schoolType: 'PUBLIC_SCHOOL',
+        targetDegree: 'Medicina',
+        role: 'ROLE_STUDENT',
+        emailVerified: true,
+        createdAt: '2026-10-22T00:00:00Z',
+      };
+
+      vi.spyOn(apiClient, 'post')
+        .mockResolvedValueOnce({ data: flatBackendAuthPayload })
+        .mockResolvedValueOnce({ data: flatBackendAuthPayload });
+      vi.spyOn(apiClient, 'get').mockResolvedValueOnce({ data: flatBackendMePayload });
+
+      const registerResult = await authService.register({
+        email: 'beatriz@escola.gov.br',
+        password: 'Password@123',
+        fullName: 'Beatriz Silva',
+      });
+      const loginResult = await authService.login({
+        email: 'beatriz@escola.gov.br',
+        password: 'Password@123',
+      });
+      const meResult = await authService.getCurrentUser();
+
+      expect(registerResult.token).toBe('flat-jwt-token');
+      expect(registerResult.user.id).toBe('usr-flat-1');
+      expect(registerResult.user.name).toBe('Beatriz Silva');
+      expect(registerResult.user.roles).toEqual(['ROLE_STUDENT']);
+      expect(registerResult.user.isEmailVerified).toBe(false);
+
+      expect(loginResult.user.id).toBe('usr-flat-1');
+      expect(meResult.id).toBe('usr-flat-1');
+      expect(meResult.name).toBe('Beatriz Silva');
+      expect(meResult.isEmailVerified).toBe(true);
+    });
   });
 
   describe('institutionalService', () => {
