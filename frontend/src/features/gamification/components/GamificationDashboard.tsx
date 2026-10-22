@@ -390,7 +390,13 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
         </div>
 
         {/* Badges Shelf */}
-        <BadgeShelf unlockedBadges={profile.unlockedBadges} />
+        <BadgeShelf
+          unlockedBadges={profile.unlockedBadges}
+          progressByBadge={{
+            ESCALADA_NIVEL: profile.level,
+            STREAK_DIAS: profile.longestStreakDays,
+          }}
+        />
       </div>
 
       {/* Tab Panel: Weekly League Leaderboard */}

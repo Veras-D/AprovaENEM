@@ -29,17 +29,16 @@ import {
   MASTERY_TARGET_THRESHOLD,
   transformRadarDataForChart,
 } from '../diagnostic-utils';
-import { MOCK_DIAGNOSTIC_REPORT } from '@/api/mocks/mock-data';
 import type { DiagnosticReportDto, DiagnosticRadarAreaDto, MasteryLevel } from '@/api/types';
 
 export interface StudentDiagnosticRadarProps {
-  readonly report?: DiagnosticReportDto;
+  readonly report: DiagnosticReportDto;
   readonly className?: string;
   readonly onPracticeTopic?: (topic: string) => void;
 }
 
 export const StudentDiagnosticRadar: React.FC<StudentDiagnosticRadarProps> = ({
-  report = MOCK_DIAGNOSTIC_REPORT,
+  report,
   className = '',
   onPracticeTopic,
 }) => {

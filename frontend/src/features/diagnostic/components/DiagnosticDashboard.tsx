@@ -193,6 +193,41 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = ({
     );
   }
 
+  // State 2: Authenticated but no diagnostic taken yet -> empty state (never show sample data)
+  if (!studentReport) {
+    return (
+      <div
+        className={`max-w-xl mx-auto my-8 p-6 sm:p-8 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-5 text-center ${className}`}
+        role="region"
+        aria-label="Diagnóstico de proficiência ENEM ainda não realizado"
+        data-testid="diagnostic-empty-state"
+      >
+        <div className="h-14 w-14 mx-auto rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20 shadow-xs">
+          <BarChart2 className="h-7 w-7" aria-hidden="true" />
+        </div>
+        <div className="space-y-1.5">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
+            Você ainda não tem um diagnóstico
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto">
+            Resolva o diagnóstico rápido para mapear sua proficiência nas 4 áreas do ENEM. Seu radar,
+            pontos fortes e tópicos de reforço aparecerão aqui com os seus dados reais.
+          </p>
+        </div>
+        {onPracticeTopic && (
+          <Button
+            type="button"
+            variant="primary"
+            className="justify-center text-sm py-2.5"
+            onClick={() => onPracticeTopic('')}
+          >
+            Fazer meu diagnóstico agora
+          </Button>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div
       className={`space-y-6 ${className}`}

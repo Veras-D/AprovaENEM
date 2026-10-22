@@ -37,6 +37,8 @@ import { Badge } from '@/components/ui/Badge';
 
 export interface BadgeShelfProps {
   readonly unlockedBadges: readonly string[];
+  /** Real per-badge progress values (badge id -> current value) for the signed-in student. */
+  readonly progressByBadge?: Readonly<Record<string, number>>;
   readonly className?: string;
 }
 
@@ -144,15 +146,23 @@ const TIER_PILL_STYLES: Record<string, string> = {
 
 export const BadgeShelf: React.FC<BadgeShelfProps> = ({
   unlockedBadges,
+  progressByBadge,
   className = '',
 }) => {
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'UNLOCKED' | 'LOCKED'>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<BadgeCategory>('ALL');
 
-  const visibleBadges = useMemo(
-    () => computeVisibleBadges(BADGE_CATALOG, unlockedBadges),
-    [unlockedBadges]
-  );
+  // The catalog ships illustrative placeholder progress values. Only metrics that the
+  // authenticated student actually has (supplied via `progressByBadge`) may be shown;
+  // everything else starts at zero so nobody sees data that is not theirs.
+  const visibleBadges = useMemo(() => {
+    const liveCatalog = BADGE_CATALOG.map((badge) =>
+      badge.progress
+        ? { ...badge, progress: { ...badge.progress, current: progressByBadge?.[badge.id] ?? 0 } }
+        : badge
+    );
+    return computeVisibleBadges(liveCatalog, unlockedBadges);
+  }, [unlockedBadges, progressByBadge]);
 
   const totalCount = visibleBadges.length;
   const unlockedCount = visibleBadges.filter((b) => b.isUnlocked).length;

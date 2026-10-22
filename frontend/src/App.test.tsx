@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { App } from './App';
 import { useSessionStore } from '@/stores/useSessionStore';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { MOCK_DIAGNOSTIC_REPORT } from '@/api/mocks/mock-data';
 
 describe('App Root Integration Component', () => {
   const mockStudent = {
@@ -88,10 +89,28 @@ describe('App Root Integration Component', () => {
     });
   });
 
-  it('switches to DiagnosticDashboard via navigation when authenticated', async () => {
+  it('shows the diagnostic empty state (no sample data) for an authenticated student without a diagnostic', async () => {
     localStorage.setItem('aprovaenem_auth_token', 'mock-student-token');
     localStorage.setItem('aprovaenem_auth_user', JSON.stringify(mockStudent));
     useAuthStore.getState().syncAuthFromStorage();
+
+    render(<App />);
+
+    const diagNavButtons = screen.getAllByRole('button', { name: /diagnóstico/i });
+    expect(diagNavButtons.length).toBeGreaterThan(0);
+    fireEvent.click(diagNavButtons[0]!);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('diagnostic-empty-state')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('Raio-X Diagnóstico de Habilidades')).not.toBeInTheDocument();
+  });
+
+  it('switches to DiagnosticDashboard via navigation when authenticated with a saved diagnostic report', async () => {
+    localStorage.setItem('aprovaenem_auth_token', 'mock-student-token');
+    localStorage.setItem('aprovaenem_auth_user', JSON.stringify(mockStudent));
+    useAuthStore.getState().syncAuthFromStorage();
+    useSessionStore.setState({ savedDiagnosticReport: MOCK_DIAGNOSTIC_REPORT });
 
     render(<App />);
 

@@ -51,7 +51,7 @@ import { StudentDiagnosticRadar } from '@/features/diagnostic/components/Student
 import { InstitutionalCohortView } from '@/features/diagnostic/components/InstitutionalCohortView';
 
 // Mocks
-import { MOCK_QUESTIONS, MOCK_RESOLUTIONS } from '@/api/mocks/mock-data';
+import { MOCK_DIAGNOSTIC_REPORT, MOCK_QUESTIONS, MOCK_RESOLUTIONS } from '@/api/mocks/mock-data';
 
 describe('Axe-Core WCAG 2.1 Level AA Accessibility Audit Suite', () => {
   let queryClient: QueryClient;
@@ -503,7 +503,7 @@ describe('Axe-Core WCAG 2.1 Level AA Accessibility Audit Suite', () => {
     it('has zero accessibility violations on StudentDiagnosticRadar and InstitutionalCohortView', async () => {
       const { container } = renderWithProviders(
         <div>
-          <StudentDiagnosticRadar />
+          <StudentDiagnosticRadar report={MOCK_DIAGNOSTIC_REPORT} />
           <InstitutionalCohortView cohortId="cohort-turma-3a-2026" />
         </div>
       );

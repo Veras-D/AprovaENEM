@@ -62,8 +62,22 @@ describe('BadgeShelf Component', () => {
     expect(screen.queryByText('Mestre da Matemática')).not.toBeInTheDocument();
   });
 
+  it('shows zero progress for every badge of a brand-new account (no placeholder data)', () => {
+    render(<BadgeShelf unlockedBadges={[]} />);
+
+    expect(screen.getByText('0/22 (0%)')).toBeInTheDocument();
+    expect(screen.queryByText('9/10 questões (90%)')).not.toBeInTheDocument();
+    expect(screen.queryByText('49/50 acertos (98%)')).not.toBeInTheDocument();
+    expect(screen.getByText('0/10 questões (0%)')).toBeInTheDocument();
+  });
+
   it('never displays 100% progress on locked badges', () => {
-    render(<BadgeShelf unlockedBadges={mockUnlocked} />);
+    render(
+      <BadgeShelf
+        unlockedBadges={mockUnlocked}
+        progressByBadge={{ STREAK_DIAS: 4, FIM_DE_SEMANA_ATIVO: 1, PRECISAO_CIRURGICA: 3 }}
+      />
+    );
 
     // Click "A Conquistar" to view only locked badges
     const lockedTab = screen.getByRole('tab', { name: /A Conquistar/i });
@@ -126,7 +140,9 @@ describe('BadgeShelf Component', () => {
       'MESTRE_MATEMATICA',
       'MESTRE_MATEMATICA_SILVER',
     ];
-    render(<BadgeShelf unlockedBadges={unlockedWithSilver} />);
+    render(
+      <BadgeShelf unlockedBadges={unlockedWithSilver} progressByBadge={{ MESTRE_MATEMATICA: 125 }} />
+    );
 
     // Filter by Áreas do ENEM
     const subjectBtn = screen.getByRole('button', { name: /Áreas do ENEM/i });

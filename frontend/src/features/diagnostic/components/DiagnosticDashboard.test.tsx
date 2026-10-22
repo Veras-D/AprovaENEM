@@ -70,6 +70,21 @@ describe('DiagnosticDashboard Component', () => {
     expect(screen.queryByText('Raio-X Diagnóstico de Habilidades')).not.toBeInTheDocument();
   });
 
+  it('shows an empty state instead of sample data when an authenticated student has no diagnostic yet', () => {
+    useAuthStore.setState({ token: 'jwt', isAuthenticated: true });
+    const onPracticeTopicMock = vi.fn();
+
+    renderWithProviders(<DiagnosticDashboard onPracticeTopic={onPracticeTopicMock} />);
+
+    expect(screen.getByTestId('diagnostic-empty-state')).toBeInTheDocument();
+    expect(screen.getByText('Você ainda não tem um diagnóstico')).toBeInTheDocument();
+    expect(screen.queryByText('Raio-X Diagnóstico de Habilidades')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Brasil Colônia/i)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Fazer meu diagnóstico agora/i }));
+    expect(onPracticeTopicMock).toHaveBeenCalledWith('');
+  });
+
   it('invokes onOpenAuthModal and onPracticeTopic from the Student Diagnostic Gate', () => {
     const onOpenAuthModalMock = vi.fn();
     const onPracticeTopicMock = vi.fn();
