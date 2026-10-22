@@ -129,4 +129,62 @@ describe('WeeklyLeagueLeaderboard Component', () => {
     expect(screen.getByText(/Sua posição nesta semana:/i)).toBeInTheDocument();
     expect(screen.getByText(/Você está na Zona de Classificação!/i)).toBeInTheDocument();
   });
+
+  it('shows an honest empty state, never sample students, when nobody has scored in the league yet', () => {
+    renderWithProviders(
+      <WeeklyLeagueLeaderboard
+        initialLeague="BRONZE"
+        leaderboardData={{
+          leagueTier: 'BRONZE',
+          resetsAt: '2026-10-25T23:59:59-03:00',
+          totalParticipants: 0,
+          leaderboard: [],
+        }}
+        currentUserId="usr-new"
+      />
+    );
+
+    expect(screen.getByTestId('leaderboard-empty-state')).toBeInTheDocument();
+    expect(screen.getByText(/Ninguém pontuou na Liga Bronze ainda esta semana/i)).toBeInTheDocument();
+    expect(screen.queryByText('Rodrigo Alencar')).not.toBeInTheDocument();
+  });
+
+  it('does not render sample students from mock data while the ranking has not loaded', () => {
+    renderWithProviders(<WeeklyLeagueLeaderboard initialLeague="BRONZE" currentUserId="usr-new" />);
+
+    expect(screen.getByTestId('leaderboard-empty-state')).toBeInTheDocument();
+    MOCK_LEAGUE_LEADERBOARDS.BRONZE?.entries?.forEach((entry) => {
+      if (entry.studentName) {
+        expect(screen.queryByText(entry.studentName)).not.toBeInTheDocument();
+      }
+    });
+  });
+
+  it('pins the signed-in student position when they rank outside the returned page', () => {
+    renderWithProviders(
+      <WeeklyLeagueLeaderboard
+        initialLeague="BRONZE"
+        leaderboardData={{
+          leagueTier: 'BRONZE',
+          resetsAt: '2026-10-25T23:59:59-03:00',
+          totalParticipants: 30,
+          leaderboard: [
+            { rank: 1, userId: 'usr-a', displayName: 'Ana Souza', weeklyXp: 120, isCurrentUser: false },
+          ],
+          currentUserRank: {
+            rank: 27,
+            userId: 'usr-me',
+            displayName: 'Vivi Veras',
+            weeklyXp: 10,
+            isCurrentUser: true,
+          },
+        }}
+        currentUserId="usr-me"
+      />
+    );
+
+    expect(screen.getByText('Ana Souza')).toBeInTheDocument();
+    expect(screen.getByText('Vivi Veras')).toBeInTheDocument();
+    expect(screen.getByText(/Sua posição nesta semana:/i)).toBeInTheDocument();
+  });
 });

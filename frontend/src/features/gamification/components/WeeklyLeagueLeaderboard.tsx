@@ -23,7 +23,6 @@ import {
   getNextSundayReset,
 } from '../leaderboard-utils';
 import { useLeaderboardQuery } from '@/api/hooks';
-import { MOCK_LEAGUE_LEADERBOARDS } from '@/api/mocks/mock-data';
 import type { LeaderboardResponseDto, LeaderboardUserEntryDto } from '@/api/types';
 
 export interface WeeklyLeagueLeaderboardProps {
@@ -142,15 +141,16 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
     ) {
       return leaderboardQuery.data;
     }
-    return MOCK_LEAGUE_LEADERBOARDS[userLeague] || MOCK_LEAGUE_LEADERBOARDS.GOLD;
-  }, [propData, leaderboardQuery.data, userLeague]);
+    // Never fall back to sample students: while loading (or on error) show an honest empty board.
+    return { resetsAt: defaultResetDate.toISOString(), entries: [] };
+  }, [propData, leaderboardQuery.data, userLeague, defaultResetDate]);
 
   // Normalize entries: compute rank & isCurrentUser
   const entries = useMemo(() => {
     const rawEntries: readonly LeaderboardUserEntryDto[] =
       activeDataset.entries || activeDataset.leaderboard || [];
 
-    return rawEntries.map((e, index) => {
+    const normalized = rawEntries.map((e, index) => {
       const rank = e.rank || index + 1;
       const isCurrentUser = Boolean(
         e.isCurrentUser || (currentUserId && e.userId === currentUserId)
@@ -163,6 +163,17 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
         studentName,
       };
     });
+
+    // Pin the signed-in student's own position when they rank outside the visible page.
+    const ownRank = activeDataset.currentUserRank;
+    if (ownRank && !normalized.some((e) => e.isCurrentUser)) {
+      normalized.push({
+        ...ownRank,
+        isCurrentUser: true,
+        studentName: ownRank.studentName || ownRank.displayName || 'Você',
+      });
+    }
+    return normalized;
   }, [activeDataset, currentUserId]);
 
   const totalParticipants = activeDataset.totalParticipants || entries.length;
@@ -357,6 +368,21 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                  {entries.length === 0 && (
+                    <tr data-testid="leaderboard-empty-state">
+                      <td colSpan={5} className="py-10 px-4 text-center">
+                        <div className="mx-auto max-w-md space-y-1.5">
+                          <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                            Ninguém pontuou na {currentConfig.name} ainda esta semana
+                          </p>
+                          <p className="text-xs text-slate-600 dark:text-slate-400">
+                            Resolva questões para ganhar XP e aparecer aqui. Quem pontuar primeiro
+                            lidera o ranking até o reinício de domingo.
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
                   {entries.map((entry) => {
                     const zone = getZoneStatus(entry.rank, totalParticipants, userLeague);
                     const isTop1 = entry.rank === 1;
