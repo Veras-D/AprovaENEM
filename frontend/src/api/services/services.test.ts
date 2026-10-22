@@ -139,6 +139,46 @@ describe('API Services', () => {
     });
   });
 
+  describe('gamificationService profile normalization', () => {
+    it('should map the backend profile of a brand-new account without NaN or undefined values', async () => {
+      vi.spyOn(apiClient, 'get').mockResolvedValueOnce({
+        data: {
+          userId: 'usr-new',
+          level: 1,
+          levelTitle: 'Calouro Iniciante',
+          currentXp: 0,
+          streakDays: 0,
+          streakFreezeAvailable: 1,
+          dailyGoal: { targetQuestions: 10, completedQuestions: 0 },
+          currentLeague: 'BRONZE',
+          weeklyXp: 0,
+          unlockedBadgesCount: 0,
+        },
+      });
+
+      const profile = await gamificationService.getGamificationProfile();
+
+      expect(profile.currentStreakDays).toBe(0);
+      expect(profile.longestStreakDays).toBe(0);
+      expect(profile.dailyGoalTarget).toBe(10);
+      expect(profile.dailyGoalProgress).toBe(0);
+      expect(profile.streakFreezeAvailable).toBe(true);
+      expect(profile.weeklyLeague).toBe('BRONZE');
+      expect(profile.unlockedBadges).toEqual([]);
+    });
+
+    it('should fall back to safe defaults when the backend omits fields', async () => {
+      vi.spyOn(apiClient, 'get').mockResolvedValueOnce({ data: { userId: 'usr-empty' } });
+
+      const profile = await gamificationService.getGamificationProfile();
+
+      expect(profile.level).toBe(1);
+      expect(profile.currentXp).toBe(0);
+      expect(profile.dailyGoalTarget).toBe(10);
+      expect(Number.isNaN(profile.dailyGoalProgress)).toBe(false);
+    });
+  });
+
   describe('tenantService', () => {
     it('should fetch tenant branding', async () => {
       const getSpy = vi.spyOn(apiClient, 'get').mockResolvedValueOnce({ data: MOCK_TENANT_BRANDING });
