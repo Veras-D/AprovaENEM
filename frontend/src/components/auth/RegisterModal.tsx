@@ -120,44 +120,78 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   const isPasswordStrongEnough =
     hasMinLength && hasLowercase && hasUppercase && hasNumber && hasSpecialChar;
 
+  const lengthTo8 = Math.min(8, password.length) / 8;
+  const extraLength = Math.min(8, Math.max(0, password.length - 8)) / 8;
+  const uniqueRatio = Math.min(1, new Set(password).size / 12);
+  const extraUpper = (password.match(/[A-Z]/g)?.length ?? 0) >= 2 ? 1 : 0;
+  const extraNumber = (password.match(/\d/g)?.length ?? 0) >= 2 ? 1 : 0;
+  const extraSpecial = (password.match(/[^A-Za-z0-9]/g)?.length ?? 0) >= 2 ? 1 : 0;
+
+  const fillPercent = (() => {
+    if (password.length === 0) return 0;
+    if (!isPasswordStrongEnough) {
+      return Math.round(
+        lengthTo8 * 14 +
+          extraLength * 6 +
+          (hasLowercase ? 6.5 : 0) +
+          (hasUppercase ? 6.5 : 0) +
+          (hasNumber ? 6.5 : 0) +
+          (hasSpecialChar ? 6.5 : 0)
+      );
+    }
+    return Math.min(
+      100,
+      Math.round(
+        50 +
+          extraLength * 32 +
+          uniqueRatio * 8 +
+          extraUpper * 3 +
+          extraNumber * 3 +
+          extraSpecial * 4
+      )
+    );
+  })();
+
   const strengthConfig = (() => {
     if (password.length === 0) {
       return {
         label: 'Digite sua senha',
-        colorClass: 'bg-slate-300 dark:bg-slate-700',
+        colorClass: 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.25)]',
         textClass: 'text-slate-500 dark:text-slate-400',
-        activeBars: 0,
       };
     }
-    if (criteriaScore <= 2) {
+    if (!isPasswordStrongEnough) {
+      if (criteriaScore <= 2) {
+        return {
+          label: 'Muito Fraca',
+          colorClass: 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.35)]',
+          textClass: 'text-rose-600 dark:text-rose-400',
+        };
+      }
       return {
-        label: 'Fraca',
-        colorClass: 'bg-rose-500',
-        textClass: 'text-rose-600 dark:text-rose-400',
-        activeBars: 1,
-      };
-    }
-    if (criteriaScore === 3) {
-      return {
-        label: 'Razoável',
-        colorClass: 'bg-amber-500',
+        label: criteriaScore === 4 ? 'Incompleta (falta 1 requisito)' : 'Fraca (faltam requisitos)',
+        colorClass: 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.35)]',
         textClass: 'text-amber-600 dark:text-amber-400',
-        activeBars: 2,
       };
     }
-    if (criteriaScore === 4) {
+    if (fillPercent < 66) {
       return {
-        label: 'Boa (falta 1 requisito)',
-        colorClass: 'bg-sky-500',
+        label: 'Razoável (Mínimo aceito)',
+        colorClass: 'bg-sky-500 shadow-[0_0_10px_rgba(14,165,233,0.35)]',
         textClass: 'text-sky-600 dark:text-sky-400',
-        activeBars: 3,
+      };
+    }
+    if (fillPercent < 86) {
+      return {
+        label: 'Boa',
+        colorClass: 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.35)]',
+        textClass: 'text-emerald-600 dark:text-emerald-400',
       };
     }
     return {
       label: 'Forte e Segura',
-      colorClass: 'bg-emerald-500',
+      colorClass: 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.45)]',
       textClass: 'text-emerald-600 dark:text-emerald-400',
-      activeBars: 4,
     };
   })();
 
@@ -601,62 +635,37 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Password Strength Meter Bar & Live Requirement Checklist */}
+                  {/* Password Strength Meter Bar */}
                   <div
-                    className="p-2.5 rounded-brand bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 space-y-2"
+                    className="space-y-1.5 pt-0.5"
                     aria-live="polite"
                   >
                     <div className="flex items-center justify-between text-[11px]">
                       <span className="font-semibold text-slate-600 dark:text-slate-300">
                         Força da senha:
                       </span>
-                      <span className={`font-bold ${strengthConfig.textClass}`}>
+                      <span
+                        className={`font-bold transition-colors duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${strengthConfig.textClass}`}
+                      >
                         {strengthConfig.label}
                       </span>
                     </div>
 
-                    {/* 4-Segment Progress Bar */}
+                    {/* Fluid Continuous Progress Bar */}
                     <div
-                      className="grid grid-cols-4 gap-1.5 h-1.5"
+                      className="relative h-2 w-full rounded-full bg-slate-200/85 dark:bg-slate-800 overflow-hidden"
                       role="progressbar"
                       aria-label="Indicador de força da senha"
-                      aria-valuenow={criteriaScore}
+                      aria-valuenow={fillPercent}
                       aria-valuemin={0}
-                      aria-valuemax={5}
+                      aria-valuemax={100}
                     >
-                      {[1, 2, 3, 4].map((step) => (
-                        <div
-                          key={step}
-                          className={`h-full rounded-full transition-colors duration-300 ${
-                            step <= strengthConfig.activeBars
-                              ? strengthConfig.colorClass
-                              : 'bg-slate-200 dark:bg-slate-700'
-                          }`}
-                        />
-                      ))}
-                    </div>
-
-                    {/* Live Requirement Pills */}
-                    <div className="flex flex-wrap gap-1.5 pt-0.5 text-[10px]">
-                      {[
-                        { met: hasMinLength, text: '8+ caracteres' },
-                        { met: hasUppercase, text: '1 Maiúscula (A-Z)' },
-                        { met: hasLowercase, text: '1 Minúscula (a-z)' },
-                        { met: hasNumber, text: '1 Número (0-9)' },
-                        { met: hasSpecialChar, text: '1 Especial (!@#$)' },
-                      ].map((req) => (
-                        <span
-                          key={req.text}
-                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-medium transition-colors duration-200 ${
-                            req.met
-                              ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30'
-                              : 'bg-slate-200/70 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400'
-                          }`}
-                        >
-                          <span>{req.met ? '✓' : '•'}</span>
-                          <span>{req.text}</span>
-                        </span>
-                      ))}
+                      <div
+                        style={{ width: `${fillPercent}%` }}
+                        className={`relative h-full rounded-full transition-[width,background-color,box-shadow,opacity] duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] after:absolute after:inset-0 after:rounded-full after:bg-gradient-to-b after:from-white/25 after:to-transparent ${
+                          strengthConfig.colorClass
+                        } ${fillPercent > 0 ? 'opacity-100' : 'opacity-0'}`}
+                      />
                     </div>
                   </div>
                 </div>

@@ -121,8 +121,12 @@ describe('RegisterModal Component', () => {
       screen.getByText(/A senha deve conter pelo menos uma letra maiúscula, uma minúscula, um número e um caractere especial/i)
     ).toBeInTheDocument();
 
-    // Fill strong password and verify strength bar updates to "Forte e Segura"
-    fireEvent.change(screen.getByLabelText(/Senha Segura/i), { target: { value: 'Password@123' } });
+    // Fill minimum acceptable 8-char password and verify strength bar is at "Razoável (Mínimo aceito)" (~55%)
+    fireEvent.change(screen.getByLabelText(/Senha Segura/i), { target: { value: 'Abcdef1@' } });
+    expect(screen.getByText('Razoável (Mínimo aceito)')).toBeInTheDocument();
+
+    // Fill high-entropy long password and verify strength bar reaches "Forte e Segura"
+    fireEvent.change(screen.getByLabelText(/Senha Segura/i), { target: { value: 'Estudante#Enem2026!' } });
     expect(screen.getByText('Forte e Segura')).toBeInTheDocument();
 
     // Mismatched confirmation password
