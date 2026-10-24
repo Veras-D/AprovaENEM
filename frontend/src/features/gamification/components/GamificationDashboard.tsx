@@ -230,12 +230,6 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
     onCelebrationClose?.();
   };
 
-  const handleBadgeClick = (badge: VisibleBadgeItem) => {
-    if (badge.isUnlocked) {
-      setCelebratingBadge(badge);
-    }
-  };
-
   // State 1: Unauthenticated -> Student Login & Access Gate
   if (!isAuthenticated && !propProfile) {
     return (
@@ -533,7 +527,6 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
         <BadgeShelf
           unlockedBadges={effectiveUnlockedBadges}
           progressByBadge={progressByBadge}
-          onBadgeClick={handleBadgeClick}
         />
       </div>
 

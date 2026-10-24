@@ -1,0 +1,129 @@
+import React from 'react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { NotificationBell } from './NotificationBell';
+import { useSessionStore } from '@/stores/useSessionStore';
+
+describe('NotificationBell Component', () => {
+  let queryClient: QueryClient;
+
+  beforeEach(() => {
+    localStorage.clear();
+    useSessionStore.setState({
+      isDiagnosticCompleted: false,
+      savedDiagnosticReport: null,
+      diagnosticReport: null,
+    });
+    vi.clearAllMocks();
+
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false, gcTime: 0 },
+      },
+    });
+  });
+
+  const renderWithProviders = (ui: React.ReactElement) => {
+    return render(
+      <QueryClientProvider client={queryClient}>
+        {ui}
+      </QueryClientProvider>
+    );
+  };
+
+  it('renders notification bell button with unread counter', () => {
+    renderWithProviders(<NotificationBell />);
+
+    const bellBtn = screen.getByRole('button', { name: /Notificações:/i });
+    expect(bellBtn).toBeInTheDocument();
+  });
+
+  it('opens notification popover when clicked and shows category tabs', () => {
+    renderWithProviders(<NotificationBell />);
+
+    const bellBtn = screen.getByRole('button', { name: /Notificações:/i });
+    fireEvent.click(bellBtn);
+
+    expect(screen.getByRole('dialog', { name: /Central de Notificações/i })).toBeInTheDocument();
+    expect(screen.getByText('Notificações & Lembretes')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /Todas/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /Conquistas/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /Lembretes/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /Avisos/i })).toBeInTheDocument();
+  });
+
+  it('displays completed diagnostic achievement when diagnostic was completed', () => {
+    useSessionStore.setState({
+      isDiagnosticCompleted: true,
+    });
+
+    renderWithProviders(<NotificationBell />);
+
+    const bellBtn = screen.getByRole('button', { name: /Notificações:/i });
+    fireEvent.click(bellBtn);
+
+    expect(screen.getByText(/Conquista: Raio-X Diagnóstico/i)).toBeInTheDocument();
+    expect(screen.getByText(/Você concluiu sua avaliação diagnóstica TRI/i)).toBeInTheDocument();
+  });
+
+  it('navigates to target section when clicking a notification item', () => {
+    useSessionStore.setState({
+      isDiagnosticCompleted: true,
+    });
+
+    const handleNavigate = vi.fn();
+    renderWithProviders(<NotificationBell onNavigate={handleNavigate} />);
+
+    const bellBtn = screen.getByRole('button', { name: /Notificações:/i });
+    fireEvent.click(bellBtn);
+
+    const diagNotification = screen.getByText(/Conquista: Raio-X Diagnóstico/i);
+    fireEvent.click(diagNotification);
+
+    expect(handleNavigate).toHaveBeenCalledWith('diagnostics');
+    // Popover should close
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('marks all notifications as read when clicking "Marcar lidas"', () => {
+    renderWithProviders(<NotificationBell />);
+
+    const bellBtn = screen.getByRole('button', { name: /Notificações:/i });
+    fireEvent.click(bellBtn);
+
+    const markReadBtn = screen.getByRole('button', { name: /Marcar todas como lidas/i });
+    expect(markReadBtn).toBeInTheDocument();
+    fireEvent.click(markReadBtn);
+
+    expect(screen.getByText('Tudo atualizado')).toBeInTheDocument();
+  });
+
+  it('filters notifications by category tab', () => {
+    useSessionStore.setState({
+      isDiagnosticCompleted: true,
+    });
+
+    renderWithProviders(<NotificationBell />);
+
+    const bellBtn = screen.getByRole('button', { name: /Notificações:/i });
+    fireEvent.click(bellBtn);
+
+    const reminderTab = screen.getByRole('tab', { name: /Lembretes/i });
+    fireEvent.click(reminderTab);
+
+    expect(screen.getByText(/Meta Diária de Estudos/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Conquista: Raio-X Diagnóstico/i)).not.toBeInTheDocument();
+  });
+
+  it('closes popover on Escape key press', () => {
+    renderWithProviders(<NotificationBell />);
+
+    const bellBtn = screen.getByRole('button', { name: /Notificações:/i });
+    fireEvent.click(bellBtn);
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});

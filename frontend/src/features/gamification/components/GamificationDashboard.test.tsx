@@ -191,11 +191,11 @@ describe('GamificationDashboard Component', () => {
     expect(screen.getByText('5/10')).toBeInTheDocument();
 
     // Raio-X Diagnóstico must be Conquistada
-    const rxCard = screen.getByRole('button', { name: /Raio-X Diagnóstico \(Conquistada\)/i });
-    expect(rxCard).toBeInTheDocument();
+    expect(screen.getByText('Raio-X Diagnóstico')).toBeInTheDocument();
+    expect(screen.getAllByText('Conquistada ✓').length).toBeGreaterThan(0);
   });
 
-  it('celebrates when an unlocked badge is clicked on the shelf', () => {
+  it('does not open celebration modal when clicking on badge shelf cards', () => {
     renderWithProviders(
       <GamificationDashboard
         profile={{
@@ -205,11 +205,11 @@ describe('GamificationDashboard Component', () => {
       />
     );
 
-    const firstQuestionCard = screen.getByRole('button', { name: /Primeiro Passo \(Conquistada\)/i });
+    const firstQuestionCard = screen.getByText('Primeiro Passo');
     fireEvent.click(firstQuestionCard);
 
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByText('Parabéns! Conquista Desbloqueada!')).toBeInTheDocument();
-    expect(screen.getAllByText(/Primeiro Passo/i).length).toBeGreaterThanOrEqual(2);
+    // No celebration dialog should pop up on manual click
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByText('Parabéns! Conquista Desbloqueada!')).not.toBeInTheDocument();
   });
 });

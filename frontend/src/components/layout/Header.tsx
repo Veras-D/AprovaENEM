@@ -23,6 +23,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { NotificationBell } from '../notifications/NotificationBell';
 
 interface NavLinkItem {
   readonly id: string;
@@ -256,6 +257,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* User Auth or Guest Anonymous Session Indicator */}
           {isAuthenticated && user ? (
             <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+              <NotificationBell onNavigate={onNavigate} />
               <div className="h-8 w-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-xs shadow-sm">
                 {user.name.charAt(0).toUpperCase()}
               </div>
