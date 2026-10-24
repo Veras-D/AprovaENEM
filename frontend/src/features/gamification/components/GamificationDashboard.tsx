@@ -45,7 +45,7 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
   onCelebrationClose,
   onOpenAuthModal,
 }) => {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const isDiagnosticCompleted = useSessionStore((state) => state.isDiagnosticCompleted);
   const savedDiagnosticReport = useSessionStore((state) => state.savedDiagnosticReport);
   const diagnosticReport = useSessionStore((state) => state.diagnosticReport);
@@ -539,7 +539,8 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
       >
         <WeeklyLeagueLeaderboard
           initialLeague={(profile.weeklyLeague as LeagueTier) || 'GOLD'}
-          currentUserId={profile.userId}
+          currentUserId={user?.id || profile.userId}
+          currentUserAvatarConfig={user?.avatarConfig}
         />
       </div>
 

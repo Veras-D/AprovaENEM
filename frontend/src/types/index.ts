@@ -172,6 +172,7 @@ export interface LeaderboardEntry {
   readonly studentName: string;
   readonly weeklyXp: number;
   readonly isCurrentUser: boolean;
+  readonly avatarConfig?: AvatarConfig;
 }
 
 export interface ApiProblemDetails {

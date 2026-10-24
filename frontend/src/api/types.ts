@@ -3,7 +3,7 @@
  * Strictly typed interfaces matching AprovaENEM backend microservices contracts
  */
 
-import type { QuestionDifficulty, QuestionOptionLetter, KnowledgeArea, TimeAccommodationMode } from '@/types';
+import type { QuestionDifficulty, QuestionOptionLetter, KnowledgeArea, TimeAccommodationMode, AvatarConfig } from '@/types';
 
 export interface PaginatedResponse<T> {
   readonly content: readonly T[];
@@ -235,6 +235,7 @@ export interface LeaderboardUserEntryDto {
   readonly streakDays?: number;
   readonly promotionZone?: boolean;
   readonly isCurrentUser: boolean;
+  readonly avatarConfig?: AvatarConfig;
 }
 
 export interface LeaderboardResponseDto {

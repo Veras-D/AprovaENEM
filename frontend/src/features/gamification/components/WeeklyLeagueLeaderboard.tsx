@@ -24,11 +24,15 @@ import {
 } from '../leaderboard-utils';
 import { useLeaderboardQuery } from '@/api/hooks';
 import type { LeaderboardResponseDto, LeaderboardUserEntryDto } from '@/api/types';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { AvatarRenderer } from '@/components/avatar/AvatarRenderer';
+import type { AvatarConfig } from '@/types';
 
 export interface WeeklyLeagueLeaderboardProps {
   readonly initialLeague?: LeagueTier;
   readonly leaderboardData?: LeaderboardResponseDto;
   readonly currentUserId?: string;
+  readonly currentUserAvatarConfig?: AvatarConfig;
   readonly className?: string;
 }
 
@@ -97,9 +101,14 @@ const ACTIVE_TIER_STYLES: Record<
 export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = ({
   initialLeague = 'GOLD',
   leaderboardData: propData,
-  currentUserId = 'usr-123',
+  currentUserId: propCurrentUserId,
+  currentUserAvatarConfig,
   className = '',
 }) => {
+  const authUser = useAuthStore((s) => s.user);
+  const currentUserId = propCurrentUserId ?? authUser?.id ?? 'usr-123';
+  const effectiveUserAvatar = currentUserAvatarConfig ?? authUser?.avatarConfig;
+
   // Determine user's active league
   const userLeague: LeagueTier = useMemo(() => {
     if (propData?.league && LEAGUE_CONFIGS[propData.league]) {
@@ -153,9 +162,13 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
     const normalized = rawEntries.map((e, index) => {
       const rank = e.rank || index + 1;
       const isCurrentUser = Boolean(
-        e.isCurrentUser || (currentUserId && e.userId === currentUserId)
+        e.isCurrentUser ||
+        (currentUserId && e.userId === currentUserId) ||
+        (authUser?.id && e.userId === authUser.id)
       );
-      const studentName = e.studentName || e.displayName || 'Estudante Anônimo';
+      const studentName = isCurrentUser
+        ? (authUser?.name || e.studentName || e.displayName || 'Você')
+        : (e.studentName || e.displayName || 'Estudante Anônimo');
       return {
         ...e,
         rank,
@@ -170,11 +183,11 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
       normalized.push({
         ...ownRank,
         isCurrentUser: true,
-        studentName: ownRank.studentName || ownRank.displayName || 'Você',
+        studentName: authUser?.name || ownRank.studentName || ownRank.displayName || 'Você',
       });
     }
     return normalized;
-  }, [activeDataset, currentUserId]);
+  }, [activeDataset, currentUserId, authUser]);
 
   const totalParticipants = activeDataset.totalParticipants || entries.length;
   const currentConfig = LEAGUE_CONFIGS[userLeague];
@@ -438,15 +451,31 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
                         {/* Student Identity */}
                         <td className="py-3 px-3 sm:px-4">
                           <div className="flex items-center gap-2.5">
-                            <div
-                              className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold uppercase shrink-0 ${
-                                entry.isCurrentUser
-                                  ? 'bg-brand-primary text-brand-primary-foreground shadow-xs'
-                                  : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
-                              }`}
-                            >
-                              {entry.studentName.charAt(0)}
-                            </div>
+                            {entry.isCurrentUser && effectiveUserAvatar ? (
+                              <AvatarRenderer
+                                config={effectiveUserAvatar}
+                                size={32}
+                                className="h-8 w-8 rounded-full shrink-0 shadow-xs ring-1 ring-slate-200 dark:ring-slate-700"
+                                ariaLabel={`Avatar de ${entry.studentName}`}
+                              />
+                            ) : entry.avatarConfig ? (
+                              <AvatarRenderer
+                                config={entry.avatarConfig}
+                                size={32}
+                                className="h-8 w-8 rounded-full shrink-0 shadow-xs ring-1 ring-slate-200 dark:ring-slate-700"
+                                ariaLabel={`Avatar de ${entry.studentName}`}
+                              />
+                            ) : (
+                              <div
+                                className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold uppercase shrink-0 ${
+                                  entry.isCurrentUser
+                                    ? 'bg-brand-primary text-brand-primary-foreground shadow-xs'
+                                    : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
+                                }`}
+                              >
+                                {entry.studentName.charAt(0)}
+                              </div>
+                            )}
                             <div className="min-w-0">
                               <span className="block truncate font-medium text-slate-900 dark:text-slate-100">
                                 {entry.studentName}

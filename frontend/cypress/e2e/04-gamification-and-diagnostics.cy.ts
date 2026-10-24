@@ -1,3 +1,56 @@
+const MOCK_DIAGNOSTIC_REPORT = {
+  id: 'report-mock-9999',
+  sessionId: 'session-mock-1234',
+  studentName: 'Mariana Souza',
+  scorePercentage: 78.5,
+  radar: [
+    {
+      knowledgeArea: 'MT',
+      areaName: 'Matemática e suas Tecnologias',
+      scorePercentage: 85.0,
+      totalQuestions: 20,
+      correctQuestions: 17,
+      masteryLevel: 'MASTERED',
+      topWeakTopic: 'Análise Combinatória',
+    },
+    {
+      knowledgeArea: 'CN',
+      areaName: 'Ciências da Natureza e suas Tecnologias',
+      scorePercentage: 70.0,
+      totalQuestions: 20,
+      correctQuestions: 14,
+      masteryLevel: 'MASTERED',
+      topWeakTopic: 'Circuitos e Eletrodinâmica',
+    },
+    {
+      knowledgeArea: 'CH',
+      areaName: 'Ciências Humanas e suas Tecnologias',
+      scorePercentage: 65.0,
+      totalQuestions: 20,
+      correctQuestions: 13,
+      masteryLevel: 'ATTENTION_NEEDED',
+      topWeakTopic: 'Brasil Colônia e Economia Açucareira',
+    },
+    {
+      knowledgeArea: 'LC',
+      areaName: 'Linguagens, Códigos e suas Tecnologias',
+      scorePercentage: 90.0,
+      totalQuestions: 20,
+      correctQuestions: 18,
+      masteryLevel: 'MASTERED',
+      topWeakTopic: 'Variação Linguística e Figuras de Linguagem',
+    },
+  ],
+  topicBreakdown: {
+    'Potência Elétrica': { accuracy: 100.0, total: 5, correct: 5, status: 'MASTERED' },
+    'Cinemática': { accuracy: 80.0, total: 5, correct: 4, status: 'MASTERED' },
+    'Cidadania e Direitos': { accuracy: 60.0, total: 5, correct: 3, status: 'ATTENTION_NEEDED' },
+    'Interpretação Textual': { accuracy: 90.0, total: 5, correct: 4, status: 'MASTERED' },
+  },
+  recommendedTopics: ['Brasil Colônia', 'Análise Combinatória', 'Circuitos e Eletrodinâmica'],
+  generatedAt: '2026-10-14T10:05:00Z',
+};
+
 describe('Gamification & Diagnostic Dashboard E2E', () => {
   beforeEach(() => {
     cy.clearLocalStorage();
@@ -52,6 +105,8 @@ describe('Gamification & Diagnostic Dashboard E2E', () => {
             createdAt: '2026-10-14T10:00:00Z',
           })
         );
+        win.localStorage.setItem('aprovaenem_diagnostic_completed', 'true');
+        win.localStorage.setItem('aprovaenem_diagnostic_report', JSON.stringify(MOCK_DIAGNOSTIC_REPORT));
       },
     });
 
@@ -86,6 +141,8 @@ describe('Gamification & Diagnostic Dashboard E2E', () => {
             createdAt: '2026-10-14T10:00:00Z',
           })
         );
+        win.localStorage.setItem('aprovaenem_diagnostic_completed', 'true');
+        win.localStorage.setItem('aprovaenem_diagnostic_report', JSON.stringify(MOCK_DIAGNOSTIC_REPORT));
       },
     });
 

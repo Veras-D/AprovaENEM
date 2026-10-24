@@ -9,6 +9,7 @@ import {
 import type { AvatarConfig } from '@/types';
 import { AvatarRenderer } from '@/components/avatar/AvatarRenderer';
 import { AvatarCreator } from '@/components/avatar/AvatarCreator';
+import { Select, type SelectOption } from '@/components/ui/Select';
 import {
   User,
   GraduationCap,
@@ -28,6 +29,19 @@ export interface ProfilePageProps {
   readonly onNavigate?: (section: string) => void;
   readonly onOpenErasureModal?: () => void;
 }
+
+const SCHOOL_TYPE_OPTIONS: readonly SelectOption<'PUBLIC_SCHOOL' | 'PRIVATE_SCHOOL'>[] = [
+  {
+    value: 'PUBLIC_SCHOOL',
+    label: 'Escola Pública (Estadual, Municipal ou Federal)',
+    description: 'Ensino médio cursado integralmente na rede pública',
+  },
+  {
+    value: 'PRIVATE_SCHOOL',
+    label: 'Escola Privada (Particular ou Bolsista)',
+    description: 'Ensino médio cursado em rede privada com ou sem bolsa',
+  },
+];
 
 export const ProfilePage: React.FC<ProfilePageProps> = ({
   onNavigate,
@@ -270,20 +284,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                   />
                 </div>
 
-                <div>
-                  <label htmlFor="profile-school" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Tipo de Escola
-                  </label>
-                  <select
-                    id="profile-school"
-                    value={schoolType}
-                    onChange={(e) => setSchoolType(e.target.value as 'PUBLIC_SCHOOL' | 'PRIVATE_SCHOOL')}
-                    className="w-full px-3.5 py-2.5 rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
-                  >
-                    <option value="PUBLIC_SCHOOL">Escola Pública (Estadual, Municipal ou Federal)</option>
-                    <option value="PRIVATE_SCHOOL">Escola Privada (Particular ou Bolsista)</option>
-                  </select>
-                </div>
+                <Select<'PUBLIC_SCHOOL' | 'PRIVATE_SCHOOL'>
+                  id="profile-school"
+                  label="Tipo de Escola"
+                  value={schoolType}
+                  onChange={(val) => setSchoolType(val)}
+                  options={SCHOOL_TYPE_OPTIONS}
+                />
 
                 <div>
                   <label htmlFor="profile-targetdegree" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">

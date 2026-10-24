@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RootLayout } from './RootLayout';
 import { useTenantStore } from '@/stores/useTenantStore';
@@ -101,17 +101,7 @@ describe('RootLayout component', () => {
     expect(screen.getByRole('dialog', { name: /Termos de Uso e Privacidade LGPD/i })).toBeInTheDocument();
   });
 
-  it('should not show account erasure link in footer when user is unauthenticated', () => {
-    renderWithProviders(
-      <RootLayout>
-        <div>Corpo</div>
-      </RootLayout>
-    );
-
-    expect(screen.queryByRole('button', { name: /Exclusão de Conta \(Art\. 18\)/i })).not.toBeInTheDocument();
-  });
-
-  it('should open Account Erasure modal when clicking footer erasure link as authenticated user', () => {
+  it('should not show account erasure link in footer whether user is authenticated or unauthenticated', () => {
     useAuthStore.setState({
       user: {
         id: 'usr-123',
@@ -131,8 +121,19 @@ describe('RootLayout component', () => {
       </RootLayout>
     );
 
-    const erasureBtn = screen.getByRole('button', { name: /Exclusão de Conta \(Art\. 18\)/i });
-    fireEvent.click(erasureBtn);
+    expect(screen.queryByRole('button', { name: /Exclusão de Conta \(Art\. 18\)/i })).not.toBeInTheDocument();
+  });
+
+  it('should open Account Erasure modal when receiving aprovaenem:open-erasure-modal event', () => {
+    renderWithProviders(
+      <RootLayout>
+        <div>Corpo</div>
+      </RootLayout>
+    );
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('aprovaenem:open-erasure-modal'));
+    });
 
     expect(screen.getByRole('dialog', { name: /Eliminar Conta Definitivamente/i })).toBeInTheDocument();
   });

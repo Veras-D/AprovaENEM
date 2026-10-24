@@ -4,6 +4,8 @@ import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WeeklyLeagueLeaderboard } from './WeeklyLeagueLeaderboard';
 import { MOCK_LEAGUE_LEADERBOARDS } from '@/api/mocks/mock-data';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { DEFAULT_AVATAR_CONFIG } from '@/types';
 
 describe('WeeklyLeagueLeaderboard Component', () => {
   let queryClient: QueryClient;
@@ -186,5 +188,42 @@ describe('WeeklyLeagueLeaderboard Component', () => {
     expect(screen.getByText('Ana Souza')).toBeInTheDocument();
     expect(screen.getByText('Vivi Veras')).toBeInTheDocument();
     expect(screen.getByText(/Sua posição nesta semana:/i)).toBeInTheDocument();
+  });
+
+  it('renders student custom avatar in leaderboard row when avatarConfig is present', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-me',
+        name: 'Vivi Veras',
+        email: 'vivi@example.com',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-01-01',
+        avatarConfig: {
+          ...DEFAULT_AVATAR_CONFIG,
+          skinColor: '#58cc02',
+          hairStyle: 'curly',
+          eyeExpression: 'glasses',
+          accessory: 'graduationCap',
+        },
+      },
+    });
+
+    renderWithProviders(
+      <WeeklyLeagueLeaderboard
+        initialLeague="BRONZE"
+        leaderboardData={{
+          leagueTier: 'BRONZE',
+          resetsAt: '2026-10-25T23:59:59-03:00',
+          totalParticipants: 10,
+          leaderboard: [
+            { rank: 1, userId: 'usr-me', displayName: 'Vivi Veras', weeklyXp: 200, isCurrentUser: true },
+          ],
+        }}
+        currentUserId="usr-me"
+      />
+    );
+
+    expect(screen.getByRole('img', { name: /Avatar de Vivi Veras/i })).toBeInTheDocument();
   });
 });

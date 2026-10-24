@@ -269,7 +269,7 @@ export const Header: React.FC<HeaderProps> = ({
                     ? 'bg-brand-primary/10 ring-2 ring-brand-primary'
                     : 'hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
-                aria-label="Abrir meu perfil de estudante"
+                aria-label={user.name}
                 title="Meu Perfil & Configurações"
               >
                 {user.avatarConfig ? (

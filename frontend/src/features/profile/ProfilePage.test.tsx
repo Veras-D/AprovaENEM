@@ -124,6 +124,14 @@ describe('ProfilePage Feature', () => {
     const nameInput = screen.getByLabelText(/nome completo/i);
     fireEvent.change(nameInput, { target: { value: 'Maria Clara Souza' } });
 
+    // Open school type custom Select dropdown
+    const schoolSelectTrigger = screen.getByRole('combobox');
+    fireEvent.click(schoolSelectTrigger);
+
+    // Select private school option from custom accessible listbox
+    const privateOption = screen.getByRole('option', { name: /escola privada/i });
+    fireEvent.click(privateOption);
+
     const submitBtn = screen.getByRole('button', { name: /salvar alterações/i });
     fireEvent.click(submitBtn);
 
@@ -131,6 +139,7 @@ describe('ProfilePage Feature', () => {
       expect(authService.updateProfile).toHaveBeenCalledWith(
         expect.objectContaining({
           fullName: 'Maria Clara Souza',
+          schoolType: 'PRIVATE_SCHOOL',
         })
       );
     });
