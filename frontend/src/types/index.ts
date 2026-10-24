@@ -110,6 +110,36 @@ export interface SocraticThread {
   readonly messages: readonly SocraticMessage[];
 }
 
+export type AvatarHairStyle = 'short' | 'curly' | 'wavy' | 'bun' | 'spiky' | 'bald';
+export type AvatarEyeExpression = 'cheerful' | 'focused' | 'glasses' | 'sunglasses';
+export type AvatarMouthExpression = 'smile' | 'openSmile' | 'grin' | 'smirk';
+export type AvatarClothingStyle = 'tshirt' | 'hoodie' | 'academic' | 'vest';
+export type AvatarAccessory = 'none' | 'headphones' | 'graduationCap' | 'pencil';
+
+export interface AvatarConfig {
+  readonly skinColor: string;
+  readonly hairStyle: AvatarHairStyle;
+  readonly hairColor: string;
+  readonly eyeExpression: AvatarEyeExpression;
+  readonly mouthExpression: AvatarMouthExpression;
+  readonly clothingStyle: AvatarClothingStyle;
+  readonly clothingColor: string;
+  readonly accessory: AvatarAccessory;
+  readonly backgroundColor: string;
+}
+
+export const DEFAULT_AVATAR_CONFIG: AvatarConfig = {
+  skinColor: '#fbd38d',
+  hairStyle: 'short',
+  hairColor: '#1e293b',
+  eyeExpression: 'cheerful',
+  mouthExpression: 'openSmile',
+  clothingStyle: 'tshirt',
+  clothingColor: '#0284c7',
+  accessory: 'headphones',
+  backgroundColor: '#e0f2fe',
+};
+
 export interface UserProfile {
   readonly id: string;
   readonly email: string;
@@ -119,6 +149,7 @@ export interface UserProfile {
   readonly createdAt: string;
   readonly schoolType?: 'PUBLIC_SCHOOL' | 'PRIVATE_SCHOOL';
   readonly targetDegree?: string;
+  readonly avatarConfig?: AvatarConfig;
 }
 
 export interface GamificationProfile {

@@ -6,6 +6,7 @@ import { GamificationDashboard } from '@/features/gamification';
 import { DiagnosticDashboard } from '@/features/diagnostic';
 import { InstitutionalDashboard } from '@/features/institutional';
 import { LandingPage } from '@/features/home';
+import { ProfilePage } from '@/features/profile';
 import { useTenantStore } from '@/stores/useTenantStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useSessionStore } from '@/stores/useSessionStore';
@@ -21,7 +22,7 @@ const queryClient = new QueryClient({
   },
 });
 
-const VALID_SECTIONS = ['home', 'practice', 'leaderboard', 'diagnostics', 'institutional'] as const;
+const VALID_SECTIONS = ['home', 'practice', 'leaderboard', 'diagnostics', 'institutional', 'profile'] as const;
 type SectionType = (typeof VALID_SECTIONS)[number];
 
 const getInitialSection = (): SectionType => {
@@ -106,6 +107,15 @@ export const App: React.FC = () => {
             <InstitutionalDashboard
               onNavigate={handleNavigate}
               onOpenAuthModal={() => useAuthStore.getState().openAuthModal('login')}
+            />
+          ) : activeSection === 'profile' ? (
+            <ProfilePage
+              onNavigate={handleNavigate}
+              onOpenErasureModal={() => {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('aprovaenem:open-erasure-modal'));
+                }
+              }}
             />
           ) : (
             <PracticeHero

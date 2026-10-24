@@ -55,6 +55,9 @@ export const useAuthStore = create<AuthState>((set) => {
         const updated: UserProfile = { ...state.user, ...updatedFields };
         if (typeof window !== 'undefined') {
           localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(updated));
+          if (updated.avatarConfig && updated.id) {
+            localStorage.setItem(`aprovaenem_avatar_${updated.id}`, JSON.stringify(updated.avatarConfig));
+          }
         }
         return { user: updated };
       });
@@ -78,6 +81,12 @@ export const useAuthStore = create<AuthState>((set) => {
         if (storedUser) {
           try {
             user = JSON.parse(storedUser) as UserProfile;
+            if (user && user.id && !user.avatarConfig) {
+              const savedAvatar = localStorage.getItem(`aprovaenem_avatar_${user.id}`);
+              if (savedAvatar) {
+                user = { ...user, avatarConfig: JSON.parse(savedAvatar) };
+              }
+            }
           } catch {
             localStorage.removeItem(STORAGE_KEY_USER);
           }

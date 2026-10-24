@@ -1,6 +1,6 @@
 import { apiClient } from '../client';
 import type { AuthLoginRequest, AuthLoginResponse, AuthRegisterRequest } from '../types';
-import type { UserProfile } from '@/types';
+import type { UserProfile, AvatarConfig } from '@/types';
 
 type UserRoleType = UserProfile['roles'][number];
 
@@ -19,7 +19,21 @@ interface RawBackendAuthPayload {
   readonly emailVerified?: boolean;
   readonly schoolType?: 'PUBLIC_SCHOOL' | 'PRIVATE_SCHOOL' | string;
   readonly targetDegree?: string;
+  readonly avatarConfig?: AvatarConfig;
   readonly createdAt?: string;
+}
+
+function getStoredAvatarConfig(userId: string): AvatarConfig | undefined {
+  if (typeof window === 'undefined' || !userId) return undefined;
+  try {
+    const stored = localStorage.getItem(`aprovaenem_avatar_${userId}`);
+    if (stored) {
+      return JSON.parse(stored) as AvatarConfig;
+    }
+  } catch {
+    // Graceful fallback
+  }
+  return undefined;
 }
 
 function normalizeUserRole(role?: string): UserRoleType {
@@ -41,8 +55,9 @@ function normalizeUserProfile(raw: RawBackendAuthPayload): UserProfile {
   if (raw.user) {
     return raw.user;
   }
+  const userId = raw.id ?? raw.userId ?? '';
   return {
-    id: raw.id ?? raw.userId ?? '',
+    id: userId,
     email: raw.email ?? '',
     name: raw.name ?? raw.fullName ?? '',
     roles: raw.roles && raw.roles.length > 0 ? raw.roles : [normalizeUserRole(raw.role)],
@@ -50,6 +65,7 @@ function normalizeUserProfile(raw: RawBackendAuthPayload): UserProfile {
     createdAt: raw.createdAt ?? new Date().toISOString(),
     schoolType: raw.schoolType === 'PRIVATE_SCHOOL' ? 'PRIVATE_SCHOOL' : 'PUBLIC_SCHOOL',
     targetDegree: raw.targetDegree ?? '',
+    avatarConfig: raw.avatarConfig ?? getStoredAvatarConfig(userId),
   };
 }
 

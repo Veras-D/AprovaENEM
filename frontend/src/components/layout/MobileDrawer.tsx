@@ -23,6 +23,7 @@ import {
   HelpCircle,
   GraduationCap,
 } from 'lucide-react';
+import { AvatarRenderer } from '../avatar/AvatarRenderer';
 
 export interface MobileDrawerProps {
   readonly isOpen: boolean;
@@ -238,9 +239,13 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
           {isAuthenticated && user ? (
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-base">
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
+                {user.avatarConfig ? (
+                  <AvatarRenderer config={user.avatarConfig} size={40} />
+                ) : (
+                  <div className="h-10 w-10 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-base">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <div className="overflow-hidden">
                   <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
                     {user.name}
@@ -260,7 +265,11 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
                   type="button"
                   onClick={() => {
                     onClose();
-                    onOpenProfileModal?.();
+                    if (onNavigate) {
+                      onNavigate('profile');
+                    } else {
+                      onOpenProfileModal?.();
+                    }
                   }}
                   className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-brand border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
                   aria-label="Meu Perfil"

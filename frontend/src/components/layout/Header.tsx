@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { NotificationBell } from '../notifications/NotificationBell';
+import { AvatarRenderer } from '../avatar/AvatarRenderer';
 
 interface NavLinkItem {
   readonly id: string;
@@ -262,14 +263,22 @@ export const Header: React.FC<HeaderProps> = ({
               <NotificationBell onNavigate={onNavigate} />
               <button
                 type="button"
-                onClick={onOpenProfileModal}
-                className="flex items-center gap-2 p-1 rounded-brand hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary text-left"
+                onClick={() => (onNavigate ? onNavigate('profile') : onOpenProfileModal?.())}
+                className={`flex items-center gap-2 p-1 rounded-brand transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary text-left ${
+                  activeSection === 'profile'
+                    ? 'bg-brand-primary/10 ring-2 ring-brand-primary'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
                 aria-label="Abrir meu perfil de estudante"
                 title="Meu Perfil & Configurações"
               >
-                <div className="h-8 w-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-xs shadow-sm">
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
+                {user.avatarConfig ? (
+                  <AvatarRenderer config={user.avatarConfig} size={32} />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <span className="hidden xl:inline font-medium text-xs sm:text-sm max-w-[120px] truncate text-slate-800 dark:text-slate-200 hover:text-brand-primary dark:hover:text-brand-primary">
                   {user.name}
                 </span>
