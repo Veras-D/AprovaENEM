@@ -388,7 +388,7 @@ public class GamificationService implements GamificationUseCase {
                 .streakDays(0)
                 .streakFreezeAvailable(1)
                 .lastActivityDate(null)
-                .dailyGoalQuestions(10)
+                .dailyGoalQuestions(5)
                 .dailyQuestionsCompleted(0)
                 .dailyGoalReachedAt(null)
                 .optInReminders(true)

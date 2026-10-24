@@ -205,7 +205,7 @@ test.describe('Mobile Device Responsive Viewports & Touch Emulation', () => {
     await diagBtn.click();
 
     // Verify diagnostic view is active in main content
-    const diagnosticRegion = page.locator('main [role="region"][aria-label*="diagnósticos" i]').first();
+    const diagnosticRegion = page.locator('main [role="region"][aria-label*="diagnóstico" i]').first();
     await expect(diagnosticRegion).toBeVisible();
 
     // Return to Practice view

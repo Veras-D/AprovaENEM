@@ -26,7 +26,7 @@ public class UserGamificationProfile {
     private int streakFreezeAvailable = 1;
     private LocalDate lastActivityDate;
     @Builder.Default
-    private int dailyGoalQuestions = 10;
+    private int dailyGoalQuestions = 5;
     @Builder.Default
     private int dailyQuestionsCompleted = 0;
     private Instant dailyGoalReachedAt;

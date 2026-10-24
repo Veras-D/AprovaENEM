@@ -180,15 +180,15 @@ describe('GamificationDashboard Component', () => {
         profile={{
           ...mockProfile,
           dailyGoalProgress: 5,
-          dailyGoalTarget: 10,
+          dailyGoalTarget: 5,
           unlockedBadges: [],
         }}
       />
     );
 
     // Daily goal must reflect real daily goal progress
-    expect(screen.getByText('5 de 10 questões resolvidas hoje (50%)')).toBeInTheDocument();
-    expect(screen.getByText('5/10')).toBeInTheDocument();
+    expect(screen.getByText('5 de 5 questões resolvidas hoje (100%)')).toBeInTheDocument();
+    expect(screen.getByText('5/5')).toBeInTheDocument();
 
     // Raio-X Diagnóstico must be Conquistada
     expect(screen.getByText('Raio-X Diagnóstico')).toBeInTheDocument();

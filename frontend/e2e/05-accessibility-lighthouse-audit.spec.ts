@@ -186,7 +186,7 @@ test.describe('Axe-Core Automated WCAG 2.1 Level AA & Lighthouse Accessibility A
     // Switch to Diagnostics section
     const diagBtn = page.getByRole('button', { name: /Diagnóstico/i }).first();
     await diagBtn.click();
-    await expect(page.locator('main [role="region"][aria-label*="diagnósticos" i]').first()).toBeVisible();
+    await expect(page.locator('main [role="region"][aria-label*="diagnóstico" i]').first()).toBeVisible();
 
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])

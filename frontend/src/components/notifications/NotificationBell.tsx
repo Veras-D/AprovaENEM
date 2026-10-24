@@ -130,7 +130,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
     }
 
     // 2. Study Reminders (Lembretes)
-    const goalTarget = profile?.dailyGoalTarget ?? 10;
+    const goalTarget = profile?.dailyGoalTarget ?? 5;
     if (dailyProgress < goalTarget) {
       const remaining = goalTarget - dailyProgress;
       list.push({

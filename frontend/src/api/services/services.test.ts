@@ -236,7 +236,7 @@ describe('API Services', () => {
 
       expect(profile.level).toBe(1);
       expect(profile.currentXp).toBe(0);
-      expect(profile.dailyGoalTarget).toBe(10);
+      expect(profile.dailyGoalTarget).toBe(5);
       expect(Number.isNaN(profile.dailyGoalProgress)).toBe(false);
     });
   });

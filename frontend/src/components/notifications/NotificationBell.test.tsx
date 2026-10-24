@@ -134,7 +134,7 @@ describe('NotificationBell Component', () => {
       streakDays: 1,
       streakFreezeAvailable: false,
       dailyGoalProgress: 0,
-      dailyGoalTarget: 10,
+      dailyGoalTarget: 5,
     });
 
     renderWithProviders(<NotificationBell />);

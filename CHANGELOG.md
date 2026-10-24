@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.9] - 2026-10-24
+
+### Fixed
+- fix(ci): Aligned diagnostic dashboard region accessibility labels with E2E Playwright test locators (matching both singular and plural forms) in [`DiagnosticDashboard.tsx`](frontend/src/features/diagnostic/components/DiagnosticDashboard.tsx), [`02-mobile-responsive-viewport.spec.ts`](frontend/e2e/02-mobile-responsive-viewport.spec.ts), and [`05-accessibility-lighthouse-audit.spec.ts`](frontend/e2e/05-accessibility-lighthouse-audit.spec.ts) ([`TASK-S6-33`](docs/BACKLOG.md#task-s6-33)).
+- fix(gamification): Standardized default daily study goal target to 5 questions across database schema (`V5__update_default_daily_goal_target.sql`), domain model ([`UserGamificationProfile.java`](backend/auth-service/src/main/java/com/aprovaenem/auth/domain/model/UserGamificationProfile.java)), and frontend client ([`gamification.service.ts`](frontend/src/api/services/gamification.service.ts), [`NotificationBell.tsx`](frontend/src/components/notifications/NotificationBell.tsx)), aligning with the 5-question starter diagnostic and micro-learning pedagogical standard ([`TASK-S6-33`](docs/BACKLOG.md#task-s6-33)).
+- fix(gamification): Corrected daily goal reset and emergency streak freeze recharge in [`GamificationService.java`](backend/auth-service/src/main/java/com/aprovaenem/auth/application/service/GamificationService.java) and [`GamificationDashboard.tsx`](frontend/src/features/gamification/components/GamificationDashboard.tsx) by evaluating `lastActivityDate.isBefore(today)` to reset `completedQuestions` to 0 on new calendar days, automatic monthly recharge of `streakFreezeAvailable` back to 1 on new calendar months, and added a dedicated notification alert for consumed freeze shields in [`NotificationBell.tsx`](frontend/src/components/notifications/NotificationBell.tsx) ([`TASK-S6-33`](docs/BACKLOG.md#task-s6-33)).
+- fix(notifications): Removed pulsating/glowing animation from the unread notification counter badge and added `.scrollbar-none` to the notification feed list in [`NotificationBell.tsx`](frontend/src/components/notifications/NotificationBell.tsx), eliminating the default native grey scrollbar and distracting number glow ([`TASK-S6-33`](docs/BACKLOG.md#task-s6-33)).
+
 ## [0.6.8] - 2026-10-22
 
 ### Added

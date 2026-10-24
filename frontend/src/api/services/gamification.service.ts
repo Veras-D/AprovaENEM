@@ -28,7 +28,7 @@ interface RawGamificationProfile {
   readonly unlockedBadges?: readonly string[];
 }
 
-const DEFAULT_DAILY_GOAL_TARGET = 10;
+const DEFAULT_DAILY_GOAL_TARGET = 5;
 
 let activityQueue: Promise<void> = Promise.resolve();
 

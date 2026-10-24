@@ -78,7 +78,7 @@ class GamificationServiceTest {
         assertThat(profile.getCurrentXp()).isZero();
         assertThat(profile.getStreakDays()).isZero();
         assertThat(profile.getStreakFreezeAvailable()).isEqualTo(1);
-        assertThat(profile.getDailyGoalQuestions()).isEqualTo(10);
+        assertThat(profile.getDailyGoalQuestions()).isEqualTo(5);
         assertThat(profile.isOptInReminders()).isTrue();
         verify(gamificationRepository).saveProfile(profile);
     }

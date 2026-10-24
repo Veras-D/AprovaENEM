@@ -48,7 +48,7 @@ public class UserGamificationProfileEntity {
 
     @Column(name = "daily_goal_questions", nullable = false)
     @Builder.Default
-    private int dailyGoalQuestions = 10;
+    private int dailyGoalQuestions = 5;
 
     @Column(name = "daily_questions_completed", nullable = false)
     @Builder.Default

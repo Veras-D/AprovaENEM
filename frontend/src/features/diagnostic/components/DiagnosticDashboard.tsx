@@ -75,7 +75,7 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = ({
       <div
         className={`max-w-xl mx-auto my-8 p-6 sm:p-8 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-6 ${className}`}
         role="region"
-        aria-label="Acesso exclusivo ao Diagnóstico de Proficiência ENEM"
+        aria-label="Acesso exclusivo aos diagnósticos de proficiência ENEM"
       >
         <div className="text-center space-y-3">
           <div className="h-14 w-14 mx-auto rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20 shadow-xs">
@@ -199,7 +199,7 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = ({
       <div
         className={`max-w-xl mx-auto my-8 p-6 sm:p-8 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-5 text-center ${className}`}
         role="region"
-        aria-label="Diagnóstico de proficiência ENEM ainda não realizado"
+        aria-label="Central de diagnósticos de proficiência ENEM ainda não realizado"
         data-testid="diagnostic-empty-state"
       >
         <div className="h-14 w-14 mx-auto rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20 shadow-xs">
