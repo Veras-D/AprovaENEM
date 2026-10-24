@@ -167,7 +167,7 @@ describe('GamificationDashboard Component', () => {
     expect(onStartPracticeMock).toHaveBeenCalledTimes(1);
   });
 
-  it('marks Raio-X Diagnóstico as conquered and updates daily goal when diagnostic was completed', () => {
+  it('marks Raio-X Diagnóstico as conquered and respects daily goal progress', () => {
     useSessionStore.setState({
       isDiagnosticCompleted: true,
       attempts: {
@@ -179,14 +179,14 @@ describe('GamificationDashboard Component', () => {
       <GamificationDashboard
         profile={{
           ...mockProfile,
-          dailyGoalProgress: 4,
+          dailyGoalProgress: 5,
           dailyGoalTarget: 10,
           unlockedBadges: [],
         }}
       />
     );
 
-    // Daily goal must count 5 questions from the completed diagnostic
+    // Daily goal must reflect real daily goal progress
     expect(screen.getByText('5 de 10 questões resolvidas hoje (50%)')).toBeInTheDocument();
     expect(screen.getByText('5/10')).toBeInTheDocument();
 

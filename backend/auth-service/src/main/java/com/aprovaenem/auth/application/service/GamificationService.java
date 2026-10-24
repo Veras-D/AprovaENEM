@@ -67,10 +67,24 @@ public class GamificationService implements GamificationUseCase {
         List<AchievementBadge> badges = gamificationRepository.findBadgesByUserId(userId);
         int unlockedCount = (int) badges.stream().filter(AchievementBadge::isUnlocked).count();
 
+        // 1. Daily Goal Evaluation: If last activity occurred on a previous calendar day, completed questions for today starts at 0
+        boolean isActivityFromPastDay = profile.getLastActivityDate() != null && profile.getLastActivityDate().isBefore(today);
+        int completedQuestionsToday = isActivityFromPastDay ? 0 : profile.getDailyQuestionsCompleted();
+        boolean isGoalCompletedToday = isActivityFromPastDay ? false : profile.isDailyGoalCompleted();
+
+        // 2. Monthly Freeze Recharge Evaluation: Recharges to 1 on a new calendar month
+        int streakFreeze = profile.getStreakFreezeAvailable();
+        LocalDate lastDate = profile.getLastActivityDate();
+        if (streakFreeze < 1 && lastDate != null) {
+            if (today.getYear() > lastDate.getYear() || today.getMonthValue() > lastDate.getMonthValue()) {
+                streakFreeze = 1;
+            }
+        }
+
         GamificationProfileResponse.DailyGoalDto dailyGoalDto = GamificationProfileResponse.DailyGoalDto.builder()
                 .targetQuestions(profile.getDailyGoalQuestions())
-                .completedQuestions(profile.getDailyQuestionsCompleted())
-                .isCompleted(profile.isDailyGoalCompleted())
+                .completedQuestions(completedQuestionsToday)
+                .isCompleted(isGoalCompletedToday)
                 .optInReminders(profile.isOptInReminders())
                 .build();
 
@@ -82,7 +96,7 @@ public class GamificationService implements GamificationUseCase {
                 .xpNextLevel(profile.getXpNextLevel())
                 .levelProgressPercentage(profile.getLevelProgressPercentage())
                 .streakDays(profile.getStreakDays())
-                .streakFreezeAvailable(profile.getStreakFreezeAvailable())
+                .streakFreezeAvailable(streakFreeze)
                 .dailyGoal(dailyGoalDto)
                 .currentLeague(currentLeague)
                 .weeklyXp(weeklyXp)
@@ -125,9 +139,14 @@ public class GamificationService implements GamificationUseCase {
             profile.setDailyQuestionsCompleted(questionsSolved);
             profile.setDailyGoalReachedAt(null);
         } else {
-            // Missed at least 1 calendar day
-            if (profile.getStreakFreezeAvailable() > 0) {
-                profile.setStreakFreezeAvailable(profile.getStreakFreezeAvailable() - 1);
+            // Missed at least 1 calendar day: evaluate emergency freeze and monthly recharge
+            int availableFreeze = profile.getStreakFreezeAvailable();
+            if (availableFreeze < 1 && lastDate != null && (today.getYear() > lastDate.getYear() || today.getMonthValue() > lastDate.getMonthValue())) {
+                availableFreeze = 1;
+            }
+
+            if (availableFreeze > 0) {
+                profile.setStreakFreezeAvailable(availableFreeze - 1);
                 log.info("Applied emergency monthly streak freeze for user [{}]", userId);
             } else {
                 profile.setStreakDays(1);

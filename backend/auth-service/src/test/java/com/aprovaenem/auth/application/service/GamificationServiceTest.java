@@ -119,6 +119,57 @@ class GamificationServiceTest {
     }
 
     @Test
+    @DisplayName("Should reset daily goal completed questions to 0 when profile is requested on a new calendar day")
+    void shouldResetDailyGoalCompletedQuestionsOnNewDay() {
+        UUID userId = UUID.randomUUID();
+        LocalDate today = LocalDate.now(BRT_ZONE);
+        LocalDate yesterday = today.minusDays(1);
+
+        UserGamificationProfile profile = UserGamificationProfile.builder()
+                .userId(userId)
+                .currentLevel(2)
+                .currentXp(310)
+                .streakDays(1)
+                .streakFreezeAvailable(0)
+                .dailyGoalQuestions(10)
+                .dailyQuestionsCompleted(10) // 10 completed yesterday
+                .lastActivityDate(yesterday)
+                .build();
+
+        when(gamificationRepository.findProfileByUserId(userId)).thenReturn(Optional.of(profile));
+        when(gamificationRepository.findWeeklyLeaderboard(eq(userId), anyInt(), anyInt())).thenReturn(Optional.empty());
+        when(gamificationRepository.findBadgesByUserId(userId)).thenReturn(List.of());
+
+        GamificationProfileResponse response = gamificationService.getProfileResponse(userId);
+
+        assertThat(response.getDailyGoal().getTargetQuestions()).isEqualTo(10);
+        assertThat(response.getDailyGoal().getCompletedQuestions()).isZero();
+        assertThat(response.getDailyGoal().isCompleted()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Should recharge emergency streak freeze back to 1 on a new calendar month")
+    void shouldRechargeStreakFreezeOnNewMonth() {
+        UUID userId = UUID.randomUUID();
+        LocalDate today = LocalDate.now(BRT_ZONE);
+        LocalDate lastMonth = today.minusMonths(1);
+
+        UserGamificationProfile profile = UserGamificationProfile.builder()
+                .userId(userId)
+                .streakFreezeAvailable(0) // used last month
+                .lastActivityDate(lastMonth)
+                .build();
+
+        when(gamificationRepository.findProfileByUserId(userId)).thenReturn(Optional.of(profile));
+        when(gamificationRepository.findWeeklyLeaderboard(eq(userId), anyInt(), anyInt())).thenReturn(Optional.empty());
+        when(gamificationRepository.findBadgesByUserId(userId)).thenReturn(List.of());
+
+        GamificationProfileResponse response = gamificationService.getProfileResponse(userId);
+
+        assertThat(response.getStreakFreezeAvailable()).isEqualTo(1);
+    }
+
+    @Test
     @DisplayName("Should update daily goal target questions and reminder preferences")
     void shouldUpdateDailyGoal() {
         UUID userId = UUID.randomUUID();

@@ -2,6 +2,7 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { queryKeys } from '@/api/query-keys';
 import { NotificationBell } from './NotificationBell';
 import { useSessionStore } from '@/stores/useSessionStore';
 
@@ -125,5 +126,23 @@ describe('NotificationBell Component', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('displays freeze shield consumed notification when streakFreezeAvailable is false', () => {
+    queryClient.setQueryData(queryKeys.gamification.profile, {
+      userId: 'user-1',
+      streakDays: 1,
+      streakFreezeAvailable: false,
+      dailyGoalProgress: 0,
+      dailyGoalTarget: 10,
+    });
+
+    renderWithProviders(<NotificationBell />);
+
+    const bellBtn = screen.getByRole('button', { name: /Notificações:/i });
+    fireEvent.click(bellBtn);
+
+    expect(screen.getByText(/Escudo de Congelamento Utilizado/i)).toBeInTheDocument();
+    expect(screen.getByText(/Seu escudo de emergência mensal salvou sua sequência/i)).toBeInTheDocument();
   });
 });

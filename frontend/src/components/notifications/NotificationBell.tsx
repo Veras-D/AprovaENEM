@@ -10,6 +10,7 @@ import {
   Sparkles,
   ChevronRight,
   X,
+  ShieldAlert,
 } from 'lucide-react';
 import { useGamificationProfileQuery } from '@/api/hooks';
 import { useSessionStore } from '@/stores/useSessionStore';
@@ -21,7 +22,7 @@ export interface StudentNotification {
   readonly category: 'ACHIEVEMENT' | 'REMINDER' | 'UPDATE';
   readonly title: string;
   readonly message: string;
-  readonly iconName: 'Trophy' | 'Flame' | 'Target' | 'Clock' | 'Activity' | 'Sparkles';
+  readonly iconName: 'Trophy' | 'Flame' | 'Target' | 'Clock' | 'Activity' | 'Sparkles' | 'ShieldAlert';
   readonly timestamp: string;
   readonly actionLabel?: string;
   readonly targetSection?: 'practice' | 'leaderboard' | 'diagnostics';
@@ -42,6 +43,7 @@ const NOTIFICATION_ICONS: Record<string, React.ElementType> = {
   Clock,
   Activity,
   Sparkles,
+  ShieldAlert,
 };
 
 export const NotificationBell: React.FC<NotificationBellProps> = ({
@@ -96,7 +98,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       });
     }
 
-    const dailyProgress = Math.max(profile?.dailyGoalProgress ?? 0, hasCompletedDiagnostic ? 5 : 0);
+    const dailyProgress = profile?.dailyGoalProgress ?? 0;
     const hasAnsweredAny = dailyProgress > 0 || (profile?.currentStreakDays ?? 0) > 0 || hasCompletedDiagnostic;
 
     if (hasAnsweredAny) {
@@ -194,6 +196,21 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       targetSection: 'practice',
       isRead: readIds.has('update-socratic-tutor'),
     });
+
+    // 4. Freeze Shield Consumed Notification (Aviso)
+    if (profile && !profile.streakFreezeAvailable) {
+      list.push({
+        id: 'update-streak-freeze-consumed',
+        category: 'UPDATE',
+        title: 'Escudo de Congelamento Utilizado 🛡️',
+        message: 'Seu escudo de emergência mensal salvou sua sequência de estudos! Ele recarregará no 1º dia do próximo mês.',
+        iconName: 'ShieldAlert',
+        timestamp: 'Aviso',
+        actionLabel: 'Ver Sequência & Ligas',
+        targetSection: 'leaderboard',
+        isRead: readIds.has('update-streak-freeze-consumed'),
+      });
+    }
 
     return list;
   }, [hasCompletedDiagnostic, profile, readIds]);
@@ -403,11 +420,13 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
                     {/* Category Icon */}
                     <div
                       className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 shadow-2xs ${
-                        item.category === 'ACHIEVEMENT'
-                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-                          : item.category === 'REMINDER'
-                            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                            : 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400'
+                        item.iconName === 'ShieldAlert'
+                          ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400'
+                          : item.category === 'ACHIEVEMENT'
+                            ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                            : item.category === 'REMINDER'
+                              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                              : 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400'
                       }`}
                     >
                       <IconComponent className="h-4 w-4" aria-hidden="true" />

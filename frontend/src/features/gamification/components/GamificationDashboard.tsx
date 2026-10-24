@@ -111,8 +111,7 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
 
   const questionsSolvedToday = Math.max(
     profile.dailyGoalProgress,
-    Object.keys(attempts).length,
-    hasCompletedDiagnostic ? 5 : 0
+    Object.keys(attempts).length
   );
 
   const isDailyGoalReached = questionsSolvedToday >= profile.dailyGoalTarget;
