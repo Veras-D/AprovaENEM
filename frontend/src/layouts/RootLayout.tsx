@@ -14,6 +14,7 @@ import {
 } from '@/components/accessibility';
 import { RegisterModal } from '@/components/auth';
 import { TermsAndPrivacyModal, AccountErasureModal } from '@/components/legal';
+import { UserProfileModal } from '@/components/profile/UserProfileModal';
 import { ShieldCheck } from 'lucide-react';
 
 export interface RootLayoutProps {
@@ -41,6 +42,7 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
   const [isLegalModalOpen, setIsLegalModalOpen] = useState<boolean>(false);
   const [legalModalTab, setLegalModalTab] = useState<'terms' | 'privacy'>('terms');
   const [isErasureModalOpen, setIsErasureModalOpen] = useState<boolean>(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
 
   const openLegalModal = (tab: 'terms' | 'privacy' = 'terms') => {
     setLegalModalTab(tab);
@@ -70,6 +72,7 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
         activeSection={activeSection}
         onNavigate={handleNavigate}
         onOpenAuthModal={() => openAuthModal('login')}
+        onOpenProfileModal={() => setIsProfileModalOpen(true)}
       />
 
       {/* Low-Bandwidth / 3G/4G Data Saver Optimization Banner */}
@@ -91,6 +94,7 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
         activeSection={activeSection}
         onNavigate={handleNavigate}
         onOpenAuthModal={() => openAuthModal('register')}
+        onOpenProfileModal={() => setIsProfileModalOpen(true)}
         onOpenLegalModal={() => openLegalModal('privacy')}
         onOpenErasureModal={openErasureModal}
       />
@@ -167,6 +171,13 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
       <AccountErasureModal
         isOpen={isErasureModalOpen}
         onClose={() => setIsErasureModalOpen(false)}
+      />
+
+      {/* Student Profile & Settings Modal */}
+      <UserProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        onOpenErasureModal={openErasureModal}
       />
     </div>
   );

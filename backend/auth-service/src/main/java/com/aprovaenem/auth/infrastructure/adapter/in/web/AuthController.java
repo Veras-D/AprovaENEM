@@ -9,6 +9,7 @@ import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.RegisterRequest;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.RegisterResponse;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.ResendVerificationRequest;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.ResendVerificationResponse;
+import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.UpdateProfileRequest;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.UserResponse;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.VerifyEmailRequest;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.VerifyEmailResponse;
@@ -21,6 +22,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -90,6 +92,38 @@ public class AuthController {
         }
         UUID userId = UUID.fromString(userDetails.getUsername());
         User user = authUseCase.getCurrentUser(userId);
+
+        UserResponse response = UserResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .schoolType(user.getSchoolType().name())
+                .targetDegree(user.getTargetDegree())
+                .role(user.getRole().name())
+                .isEmailVerified(user.isEmailVerified())
+                .createdAt(user.getCreatedAt())
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<UserResponse> updateProfile(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody UpdateProfileRequest request
+    ) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        UUID userId = UUID.fromString(userDetails.getUsername());
+        User user = authUseCase.updateProfile(
+                userId,
+                request.getFullName(),
+                request.getSchoolType(),
+                request.getTargetDegree(),
+                request.getCurrentPassword(),
+                request.getNewPassword()
+        );
 
         UserResponse response = UserResponse.builder()
                 .id(user.getId())

@@ -38,6 +38,7 @@ export interface HeaderProps {
   readonly activeSection?: string;
   readonly onNavigate?: (section: string) => void;
   readonly onOpenAuthModal?: () => void;
+  readonly onOpenProfileModal?: () => void;
   readonly onLogout?: () => void;
 }
 
@@ -51,6 +52,7 @@ export const Header: React.FC<HeaderProps> = ({
   activeSection = 'practice',
   onNavigate,
   onOpenAuthModal,
+  onOpenProfileModal,
   onLogout,
 }) => {
   const queryClient = useQueryClient();
@@ -258,12 +260,20 @@ export const Header: React.FC<HeaderProps> = ({
           {isAuthenticated && user ? (
             <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
               <NotificationBell onNavigate={onNavigate} />
-              <div className="h-8 w-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-xs shadow-sm">
-                {user.name.charAt(0).toUpperCase()}
-              </div>
-              <span className="hidden xl:inline font-medium text-xs sm:text-sm max-w-[120px] truncate">
-                {user.name}
-              </span>
+              <button
+                type="button"
+                onClick={onOpenProfileModal}
+                className="flex items-center gap-2 p-1 rounded-brand hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary text-left"
+                aria-label="Abrir meu perfil de estudante"
+                title="Meu Perfil & Configurações"
+              >
+                <div className="h-8 w-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+                <span className="hidden xl:inline font-medium text-xs sm:text-sm max-w-[120px] truncate text-slate-800 dark:text-slate-200 hover:text-brand-primary dark:hover:text-brand-primary">
+                  {user.name}
+                </span>
+              </button>
               <button
                 type="button"
                 onClick={handleLogout}

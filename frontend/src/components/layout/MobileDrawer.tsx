@@ -30,6 +30,7 @@ export interface MobileDrawerProps {
   readonly activeSection?: string;
   readonly onNavigate?: (section: string) => void;
   readonly onOpenAuthModal?: () => void;
+  readonly onOpenProfileModal?: () => void;
   readonly onOpenLegalModal?: () => void;
   readonly onOpenErasureModal?: () => void;
   readonly onLogout?: () => void;
@@ -41,6 +42,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
   activeSection = 'practice',
   onNavigate,
   onOpenAuthModal,
+  onOpenProfileModal,
   onOpenLegalModal,
   onOpenErasureModal,
   onLogout,
@@ -253,15 +255,29 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
                   )}
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-brand border border-slate-200 dark:border-slate-700 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
-                aria-label="Sair da conta"
-              >
-                <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
-                <span>Sair da Conta</span>
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenProfileModal?.();
+                  }}
+                  className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-brand border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+                  aria-label="Meu Perfil"
+                >
+                  <User className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>Meu Perfil</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-brand border border-slate-200 dark:border-slate-700 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                  aria-label="Sair da conta"
+                >
+                  <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>Sair</span>
+                </button>
+              </div>
             </div>
           ) : (
             <div className="space-y-2">

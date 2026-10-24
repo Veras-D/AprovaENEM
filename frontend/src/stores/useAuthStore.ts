@@ -9,6 +9,7 @@ interface AuthState {
   readonly isAuthModalOpen: boolean;
   readonly authModalMode: 'login' | 'register';
   readonly setAuth: (token: string, user: UserProfile) => void;
+  readonly updateUser: (updatedFields: Partial<UserProfile>) => void;
   readonly clearAuth: () => void;
   readonly syncAuthFromStorage: () => void;
   readonly openAuthModal: (mode?: 'login' | 'register') => void;
@@ -47,6 +48,16 @@ export const useAuthStore = create<AuthState>((set) => {
         useSessionStore.getState().migrateAnonymousProgress(user.id);
       }
       set({ token, user, isAuthenticated: true, isAuthModalOpen: false });
+    },
+    updateUser: (updatedFields: Partial<UserProfile>) => {
+      set((state) => {
+        if (!state.user) return state;
+        const updated: UserProfile = { ...state.user, ...updatedFields };
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(updated));
+        }
+        return { user: updated };
+      });
     },
     clearAuth: () => {
       localStorage.removeItem(STORAGE_KEY_TOKEN);

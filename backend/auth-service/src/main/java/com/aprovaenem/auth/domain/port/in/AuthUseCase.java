@@ -16,6 +16,8 @@ public interface AuthUseCase {
 
     User getCurrentUser(UUID userId);
 
+    User updateProfile(UUID userId, String fullName, SchoolType schoolType, String targetDegree, String currentPassword, String newPassword);
+
     UserDataExport exportUserData(UUID userId);
 
     void deleteAccount(UUID userId);

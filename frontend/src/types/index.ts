@@ -117,6 +117,8 @@ export interface UserProfile {
   readonly roles: readonly ('ROLE_STUDENT' | 'ROLE_PREMIUM_STUDENT' | 'ROLE_ADMIN' | 'ROLE_INSTITUTIONAL_ADMIN')[];
   readonly isEmailVerified: boolean;
   readonly createdAt: string;
+  readonly schoolType?: 'PUBLIC_SCHOOL' | 'PRIVATE_SCHOOL';
+  readonly targetDegree?: string;
 }
 
 export interface GamificationProfile {

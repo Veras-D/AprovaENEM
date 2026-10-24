@@ -5,7 +5,7 @@ import type { UserProfile } from '@/types';
 type UserRoleType = UserProfile['roles'][number];
 
 interface RawBackendAuthPayload {
-  readonly token: string;
+  readonly token?: string;
   readonly expiresInSeconds?: number;
   readonly user?: UserProfile;
   readonly userId?: string;
@@ -17,6 +17,8 @@ interface RawBackendAuthPayload {
   readonly roles?: readonly UserRoleType[];
   readonly isEmailVerified?: boolean;
   readonly emailVerified?: boolean;
+  readonly schoolType?: 'PUBLIC_SCHOOL' | 'PRIVATE_SCHOOL' | string;
+  readonly targetDegree?: string;
   readonly createdAt?: string;
 }
 
@@ -46,19 +48,21 @@ function normalizeUserProfile(raw: RawBackendAuthPayload): UserProfile {
     roles: raw.roles && raw.roles.length > 0 ? raw.roles : [normalizeUserRole(raw.role)],
     isEmailVerified: Boolean(raw.isEmailVerified ?? raw.emailVerified),
     createdAt: raw.createdAt ?? new Date().toISOString(),
+    schoolType: raw.schoolType === 'PRIVATE_SCHOOL' ? 'PRIVATE_SCHOOL' : 'PUBLIC_SCHOOL',
+    targetDegree: raw.targetDegree ?? '',
   };
 }
 
 function normalizeAuthResponse(raw: RawBackendAuthPayload): AuthLoginResponse {
   if (raw.user) {
     return {
-      token: raw.token,
+      token: raw.token ?? '',
       expiresInSeconds: raw.expiresInSeconds ?? 86400,
       user: raw.user,
     };
   }
   return {
-    token: raw.token,
+    token: raw.token ?? '',
     expiresInSeconds: raw.expiresInSeconds ?? 86400,
     user: normalizeUserProfile(raw),
   };
@@ -112,6 +116,21 @@ export const authService = {
     ) {
       return response.data as unknown as UserProfile;
     }
+    return normalizeUserProfile(response.data);
+  },
+
+  /**
+   * Update student personal profile details and/or password
+   * Target endpoint: PUT /api/v1/auth/me
+   */
+  async updateProfile(req: {
+    fullName?: string;
+    schoolType?: 'PUBLIC_SCHOOL' | 'PRIVATE_SCHOOL';
+    targetDegree?: string;
+    currentPassword?: string;
+    newPassword?: string;
+  }): Promise<UserProfile> {
+    const response = await apiClient.put<RawBackendAuthPayload>('/auth/me', req);
     return normalizeUserProfile(response.data);
   },
 

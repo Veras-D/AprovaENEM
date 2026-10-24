@@ -213,6 +213,36 @@ export function useExportUserDataMutation() {
   });
 }
 
+export function useUpdateProfileMutation() {
+  const queryClient = useQueryClient();
+  const updateUser = useAuthStore((s) => s.updateUser);
+
+  return useMutation({
+    mutationFn: (data: {
+      fullName?: string;
+      schoolType?: 'PUBLIC_SCHOOL' | 'PRIVATE_SCHOOL';
+      targetDegree?: string;
+      currentPassword?: string;
+      newPassword?: string;
+    }) => authService.updateProfile(data),
+    onSuccess: (updatedUser) => {
+      updateUser(updatedUser);
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
+    },
+  });
+}
+
+export function useUpdateDailyGoalMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (target: number) => gamificationService.updateDailyGoal(target),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.gamification.profile });
+    },
+  });
+}
+
 export function useDeleteAccountMutation() {
   const queryClient = useQueryClient();
   const clearAuth = useAuthStore((s) => s.clearAuth);

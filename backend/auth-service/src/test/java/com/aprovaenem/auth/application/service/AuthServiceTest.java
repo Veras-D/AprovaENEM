@@ -317,4 +317,89 @@ class AuthServiceTest {
 
         verify(userRepository).deleteById(userId);
     }
+
+    @Test
+    @DisplayName("Should update profile details without changing password")
+    void shouldUpdateProfileDetailsWithoutPassword() {
+        UUID userId = UUID.randomUUID();
+        User existingUser = User.builder()
+                .id(userId)
+                .email("student@escola.gov.br")
+                .fullName("Old Name")
+                .schoolType(SchoolType.PUBLIC_SCHOOL)
+                .targetDegree("História")
+                .passwordHash("hashed-pw")
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        User updated = authService.updateProfile(userId, "New Name", SchoolType.PRIVATE_SCHOOL, "Medicina", null, null);
+
+        assertThat(updated.getFullName()).isEqualTo("New Name");
+        assertThat(updated.getSchoolType()).isEqualTo(SchoolType.PRIVATE_SCHOOL);
+        assertThat(updated.getTargetDegree()).isEqualTo("Medicina");
+        assertThat(updated.getPasswordHash()).isEqualTo("hashed-pw");
+        verify(passwordEncoder, never()).verify(anyString(), anyString());
+        verify(userRepository).save(existingUser);
+    }
+
+    @Test
+    @DisplayName("Should update profile and password when current password matches")
+    void shouldUpdateProfileWithPasswordSuccessfully() {
+        UUID userId = UUID.randomUUID();
+        User existingUser = User.builder()
+                .id(userId)
+                .email("student@escola.gov.br")
+                .fullName("Student Name")
+                .passwordHash("old-hash")
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(passwordEncoder.verify("CurrentPassword@123", "old-hash"))
+                .thenReturn(new PasswordVerificationResult(true, false));
+        when(passwordEncoder.encode("NewStrongPassword@2026")).thenReturn("new-hash");
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        User updated = authService.updateProfile(userId, "Student Name", null, null, "CurrentPassword@123", "NewStrongPassword@2026");
+
+        assertThat(updated.getPasswordHash()).isEqualTo("new-hash");
+        verify(passwordEncoder).encode("NewStrongPassword@2026");
+    }
+
+    @Test
+    @DisplayName("Should throw exception when updating password with incorrect current password")
+    void shouldRejectPasswordUpdateWhenCurrentPasswordIncorrect() {
+        UUID userId = UUID.randomUUID();
+        User existingUser = User.builder()
+                .id(userId)
+                .email("student@escola.gov.br")
+                .passwordHash("old-hash")
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(passwordEncoder.verify("WrongPassword", "old-hash"))
+                .thenReturn(new PasswordVerificationResult(false, false));
+
+        assertThatThrownBy(() -> authService.updateProfile(userId, null, null, null, "WrongPassword", "NewPassword@123"))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("A senha atual informada está incorreta");
+    }
+
+    @Test
+    @DisplayName("Should throw exception when new password provided without current password")
+    void shouldRejectPasswordUpdateWhenCurrentPasswordMissing() {
+        UUID userId = UUID.randomUUID();
+        User existingUser = User.builder()
+                .id(userId)
+                .email("student@escola.gov.br")
+                .passwordHash("old-hash")
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+
+        assertThatThrownBy(() -> authService.updateProfile(userId, null, null, null, null, "NewPassword@123"))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("A senha atual é necessária");
+    }
 }

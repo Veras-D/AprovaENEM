@@ -143,6 +143,39 @@ public class AuthService implements AuthUseCase {
     }
 
     @Override
+    @Transactional
+    public User updateProfile(UUID userId, String fullName, SchoolType schoolType, String targetDegree, String currentPassword, String newPassword) {
+        User user = getCurrentUser(userId);
+
+        if (fullName != null && !fullName.isBlank()) {
+            user.setFullName(fullName.trim());
+        }
+        if (schoolType != null) {
+            user.setSchoolType(schoolType);
+        }
+        if (targetDegree != null) {
+            user.setTargetDegree(targetDegree.trim());
+        }
+
+        if (newPassword != null && !newPassword.isBlank()) {
+            if (currentPassword == null || currentPassword.isBlank()) {
+                throw new BusinessException("A senha atual é necessária para definir uma nova senha.");
+            }
+            PasswordVerificationResult verification = passwordEncoder.verify(currentPassword, user.getPasswordHash());
+            if (!verification.matches()) {
+                throw new BusinessException("A senha atual informada está incorreta.");
+            }
+            user.setPasswordHash(passwordEncoder.encode(newPassword));
+            log.info("Password updated successfully for user [{}]", userId);
+        }
+
+        user.setUpdatedAt(Instant.now());
+        User saved = userRepository.save(user);
+        log.info("Profile updated successfully for user [{}]", userId);
+        return saved;
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public UserDataExport exportUserData(UUID userId) {
         User user = getCurrentUser(userId);
