@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Trophy,
   Target,
@@ -19,6 +19,8 @@ import { CelebrationOverlay } from './CelebrationOverlay';
 import { WeeklyLeagueLeaderboard } from './WeeklyLeagueLeaderboard';
 import { useGamificationProfileQuery, useLoginMutation } from '@/api/hooks';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useSessionStore } from '@/stores/useSessionStore';
+import { BADGE_CATALOG, type VisibleBadgeItem } from '../gamification-utils';
 import { MOCK_GAMIFICATION_PROFILE } from '@/api/mocks/mock-data';
 import type { GamificationProfileDto } from '@/api/types';
 import type { ApiError } from '@/api/client';
@@ -44,8 +46,17 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
   onOpenAuthModal,
 }) => {
   const { isAuthenticated } = useAuthStore();
+  const isDiagnosticCompleted = useSessionStore((state) => state.isDiagnosticCompleted);
+  const savedDiagnosticReport = useSessionStore((state) => state.savedDiagnosticReport);
+  const diagnosticReport = useSessionStore((state) => state.diagnosticReport);
+  const attempts = useSessionStore((state) => state.attempts);
+
   const [activeTab, setActiveTab] = useState<'overview' | 'leaderboard'>(defaultTab);
   const [internalCelebrationOpen, setInternalCelebrationOpen] = useState<boolean>(false);
+  const [celebratingBadge, setCelebratingBadge] = useState<VisibleBadgeItem | null>(null);
+  const previouslySeenBadgesRef = useRef<Set<string>>(new Set());
+  const isInitialMountRef = useRef<boolean>(true);
+
   const isCelebrationOpen = showCelebration ?? internalCelebrationOpen;
   const profileQuery = useGamificationProfileQuery();
   const loginMutation = useLoginMutation();
@@ -87,6 +98,142 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
   const handleCelebrationClose = () => {
     setInternalCelebrationOpen(false);
     onCelebrationClose?.();
+  };
+
+  const profile = propProfile || profileQuery.data || MOCK_GAMIFICATION_PROFILE;
+
+  const hasCompletedDiagnostic =
+    isDiagnosticCompleted ||
+    Boolean(savedDiagnosticReport) ||
+    Boolean(diagnosticReport) ||
+    (typeof localStorage !== 'undefined' &&
+      localStorage.getItem('aprovaenem_diagnostic_completed') === 'true');
+
+  const questionsSolvedToday = Math.max(
+    profile.dailyGoalProgress,
+    Object.keys(attempts).length,
+    hasCompletedDiagnostic ? 5 : 0
+  );
+
+  const isDailyGoalReached = questionsSolvedToday >= profile.dailyGoalTarget;
+  const goalPercentage = Math.min(
+    100,
+    Math.round((questionsSolvedToday / Math.max(1, profile.dailyGoalTarget)) * 100)
+  );
+
+  const effectiveUnlockedBadges = useMemo(() => {
+    const set = new Set(profile.unlockedBadges ?? []);
+    if (hasCompletedDiagnostic) {
+      set.add('DIAGNOSTICO_COMPLETO');
+      set.add('ACESSIBILIDADE_TOTAL');
+    }
+    if (questionsSolvedToday > 0 || hasCompletedDiagnostic) {
+      set.add('PRIMEIRA_QUESTAO');
+    }
+    if (questionsSolvedToday >= 10) {
+      set.add('MARATONISTA_QUESTOES');
+      set.add('MARATONISTA_QUESTOES_BRONZE');
+    }
+    if (profile.level >= 3) set.add('ESCALADA_NIVEL_BRONZE');
+    if (profile.level >= 5) set.add('ESCALADA_NIVEL_SILVER');
+    if (profile.level >= 10) set.add('ESCALADA_NIVEL_GOLD');
+    if (profile.longestStreakDays >= 3) set.add('STREAK_DIAS_BRONZE');
+    if (profile.longestStreakDays >= 7) set.add('STREAK_DIAS_SILVER');
+    return Array.from(set);
+  }, [
+    profile.unlockedBadges,
+    hasCompletedDiagnostic,
+    questionsSolvedToday,
+    profile.level,
+    profile.longestStreakDays,
+  ]);
+
+  const progressByBadge = useMemo<Record<string, number>>(() => ({
+    ESCALADA_NIVEL: profile.level,
+    STREAK_DIAS: profile.longestStreakDays,
+    DIAGNOSTICO_COMPLETO: hasCompletedDiagnostic ? 1 : 0,
+    MARATONISTA_QUESTOES: questionsSolvedToday,
+    PRIMEIRA_QUESTAO: questionsSolvedToday > 0 || hasCompletedDiagnostic ? 1 : 0,
+    SIMULADOS_COMPLETOS: hasCompletedDiagnostic ? 1 : 0,
+    META_DIARIA_7: profile.currentStreakDays,
+  }), [
+    profile.level,
+    profile.longestStreakDays,
+    profile.currentStreakDays,
+    hasCompletedDiagnostic,
+    questionsSolvedToday,
+  ]);
+
+  // Check localStorage for seen badges and trigger celebration for newly unlocked ones
+  useEffect(() => {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      const raw = localStorage.getItem('aprovaenem_seen_badges');
+      const seen = new Set<string>(raw ? JSON.parse(raw) : []);
+
+      if (isInitialMountRef.current) {
+        isInitialMountRef.current = false;
+        for (const id of profile.unlockedBadges ?? []) {
+          seen.add(id);
+        }
+        previouslySeenBadgesRef.current = seen;
+        localStorage.setItem('aprovaenem_seen_badges', JSON.stringify(Array.from(seen)));
+        return;
+      }
+
+      previouslySeenBadgesRef.current = seen;
+
+      for (const badgeId of effectiveUnlockedBadges) {
+        if (!seen.has(badgeId)) {
+          const found = BADGE_CATALOG.find((b) => b.id === badgeId);
+          if (found) {
+            setCelebratingBadge({
+              id: found.id,
+              baseId: found.id,
+              name: found.name,
+              description: found.description,
+              iconName: found.iconName,
+              category: found.category,
+              categoryLabel: found.categoryLabel,
+              isUnlocked: true,
+              progress: found.progress
+                ? {
+                    current: found.progress.target,
+                    target: found.progress.target,
+                    unit: found.progress.unit,
+                    percentage: 100,
+                  }
+                : undefined,
+              remaining: 0,
+            });
+            break;
+          }
+        }
+      }
+    } catch {
+      // Storage unavailable
+    }
+  }, [effectiveUnlockedBadges, profile.unlockedBadges]);
+
+  const handleBadgeCelebrationClose = () => {
+    if (celebratingBadge && typeof localStorage !== 'undefined') {
+      try {
+        const seen = previouslySeenBadgesRef.current;
+        seen.add(celebratingBadge.baseId || celebratingBadge.id);
+        seen.add(celebratingBadge.id);
+        localStorage.setItem('aprovaenem_seen_badges', JSON.stringify(Array.from(seen)));
+      } catch {
+        // Storage sandbox
+      }
+    }
+    setCelebratingBadge(null);
+    onCelebrationClose?.();
+  };
+
+  const handleBadgeClick = (badge: VisibleBadgeItem) => {
+    if (badge.isUnlocked) {
+      setCelebratingBadge(badge);
+    }
   };
 
   // State 1: Unauthenticated -> Student Login & Access Gate
@@ -212,13 +359,6 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
       </div>
     );
   }
-
-  const profile = propProfile || profileQuery.data || MOCK_GAMIFICATION_PROFILE;
-  const isDailyGoalReached = profile.dailyGoalProgress >= profile.dailyGoalTarget;
-  const goalPercentage = Math.min(
-    100,
-    Math.round((profile.dailyGoalProgress / Math.max(1, profile.dailyGoalTarget)) * 100)
-  );
 
   return (
     <div
@@ -359,13 +499,13 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
                   )}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {profile.dailyGoalProgress} de {profile.dailyGoalTarget} questões resolvidas hoje ({goalPercentage}%)
+                  {questionsSolvedToday} de {profile.dailyGoalTarget} questões resolvidas hoje ({goalPercentage}%)
                 </p>
               </div>
             </div>
 
             <span className="font-mono text-sm font-bold text-slate-800 dark:text-slate-200">
-              {profile.dailyGoalProgress}/{profile.dailyGoalTarget}
+              {questionsSolvedToday}/{profile.dailyGoalTarget}
             </span>
           </div>
 
@@ -391,11 +531,9 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
 
         {/* Badges Shelf */}
         <BadgeShelf
-          unlockedBadges={profile.unlockedBadges}
-          progressByBadge={{
-            ESCALADA_NIVEL: profile.level,
-            STREAK_DIAS: profile.longestStreakDays,
-          }}
+          unlockedBadges={effectiveUnlockedBadges}
+          progressByBadge={progressByBadge}
+          onBadgeClick={handleBadgeClick}
         />
       </div>
 
@@ -413,9 +551,22 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
         />
       </div>
 
+      {/* Badge Unlock Celebration Modal Overlay */}
+      {celebratingBadge && (
+        <CelebrationOverlay
+          isOpen={true}
+          onClose={handleBadgeCelebrationClose}
+          title="Parabéns! Conquista Desbloqueada!"
+          badgeName={`${celebratingBadge.name} 🏆`}
+          subtitle={celebratingBadge.description}
+          awardedXp={50}
+          onContinuePractice={onStartPractice}
+        />
+      )}
+
       {/* Level-Up Celebration Modal Overlay */}
       <CelebrationOverlay
-        isOpen={isCelebrationOpen}
+        isOpen={!celebratingBadge && isCelebrationOpen}
         onClose={handleCelebrationClose}
         level={profile.level}
         levelTitle={profile.levelTitle}

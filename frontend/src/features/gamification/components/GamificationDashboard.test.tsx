@@ -4,6 +4,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GamificationDashboard } from './GamificationDashboard';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useSessionStore } from '@/stores/useSessionStore';
 import type { GamificationProfileDto } from '@/api/types';
 
 describe('GamificationDashboard Component', () => {
@@ -164,5 +165,51 @@ describe('GamificationDashboard Component', () => {
     const returnBtn = screen.getByText(/Voltar ao Simulado Rápido/i);
     fireEvent.click(returnBtn);
     expect(onStartPracticeMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('marks Raio-X Diagnóstico as conquered and updates daily goal when diagnostic was completed', () => {
+    useSessionStore.setState({
+      isDiagnosticCompleted: true,
+      attempts: {
+        'q-1': { questionId: 'q-1', selectedOption: 'A', timeSpentSeconds: 30, answeredAt: '2026-10-24' },
+      },
+    });
+
+    renderWithProviders(
+      <GamificationDashboard
+        profile={{
+          ...mockProfile,
+          dailyGoalProgress: 4,
+          dailyGoalTarget: 10,
+          unlockedBadges: [],
+        }}
+      />
+    );
+
+    // Daily goal must count 5 questions from the completed diagnostic
+    expect(screen.getByText('5 de 10 questões resolvidas hoje (50%)')).toBeInTheDocument();
+    expect(screen.getByText('5/10')).toBeInTheDocument();
+
+    // Raio-X Diagnóstico must be Conquistada
+    const rxCard = screen.getByRole('button', { name: /Raio-X Diagnóstico \(Conquistada\)/i });
+    expect(rxCard).toBeInTheDocument();
+  });
+
+  it('celebrates when an unlocked badge is clicked on the shelf', () => {
+    renderWithProviders(
+      <GamificationDashboard
+        profile={{
+          ...mockProfile,
+          unlockedBadges: ['PRIMEIRA_QUESTAO'],
+        }}
+      />
+    );
+
+    const firstQuestionCard = screen.getByRole('button', { name: /Primeiro Passo \(Conquistada\)/i });
+    fireEvent.click(firstQuestionCard);
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByText('Parabéns! Conquista Desbloqueada!')).toBeInTheDocument();
+    expect(screen.getAllByText(/Primeiro Passo/i).length).toBeGreaterThanOrEqual(2);
   });
 });

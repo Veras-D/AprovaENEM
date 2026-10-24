@@ -220,6 +220,12 @@ export interface GamificationProfileDto {
   readonly unlockedBadges: readonly string[];
 }
 
+export interface RecordActivityRequest {
+  readonly questionsSolved: number;
+  readonly correctCount: number;
+  readonly sessionCompleted: boolean;
+}
+
 export interface LeaderboardUserEntryDto {
   readonly rank: number;
   readonly userId: string;

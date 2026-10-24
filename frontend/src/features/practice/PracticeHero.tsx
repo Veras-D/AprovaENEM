@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSessionStore } from '@/stores/useSessionStore';
 import { useAccessibilityStore } from '@/stores/useAccessibilityStore';
-import { useQuestionsQuery, useSubmitAnswerMutation } from '@/api/hooks';
+import { useQuestionsQuery, useSubmitAnswerMutation, useRecordActivityMutation } from '@/api/hooks';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { MOCK_QUESTIONS, MOCK_RESOLUTIONS } from '@/api/mocks/mock-data';
 import {
   ENEM_2023_OFFICIAL_QUESTIONS,
@@ -91,6 +92,21 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
 
   const questionsQuery = useQuestionsQuery({ size: 100 });
   const submitAnswerMutation = useSubmitAnswerMutation();
+  const recordActivityMutation = useRecordActivityMutation();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const completionReportedForRef = useRef<string | null>(null);
+
+  // Report finished sessions once so the backend awards the completion bonus (XP, league, badges)
+  const reportSessionCompleted = useCallback(
+    (sessionId: string | undefined) => {
+      if (!isAuthenticated) return;
+      const key = sessionId ?? 'unknown-session';
+      if (completionReportedForRef.current === key) return;
+      completionReportedForRef.current = key;
+      recordActivityMutation.mutate({ questionsSolved: 0, correctCount: 0, sessionCompleted: true });
+    },
+    [isAuthenticated, recordActivityMutation]
+  );
 
   const anonymousSessionId = useSessionStore((state) => state.anonymousSessionId);
   const starterVariant = useMemo(() => {
@@ -203,7 +219,16 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       awardedXp: isCorrect ? 15 : 5,
     });
 
-    // 2. Submit to backend if active session is available
+    // 2. Report the answer so XP, streak, daily goal and the weekly league are counted
+    if (isAuthenticated) {
+      recordActivityMutation.mutate({
+        questionsSolved: 1,
+        correctCount: isCorrect ? 1 : 0,
+        sessionCompleted: false,
+      });
+    }
+
+    // 3. Submit to backend if active session is available
     const sessionId = activeSession?.id;
     if (sessionId && !sessionId.startsWith('session-demo')) {
       submitAnswerMutation.mutate(
@@ -231,7 +256,15 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
         }
       );
     }
-  }, [currentQuestion, currentSelectedOption, activeSession?.id, submitAnswerMutation, recordAttempt]);
+  }, [
+    currentQuestion,
+    currentSelectedOption,
+    activeSession?.id,
+    submitAnswerMutation,
+    recordAttempt,
+    isAuthenticated,
+    recordActivityMutation,
+  ]);
 
   const handleRestart = useCallback(() => {
     setShowCelebration(false);
@@ -389,9 +422,10 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     if (isAllAnswered && activeSession?.status !== 'COMPLETED' && phase !== 'DIAGNOSTIC') {
       const report = generateDiagnosticFromSession(questions, attempts, activeSession?.id);
       completeSession(report);
+      reportSessionCompleted(activeSession?.id);
       setShowCelebration(true);
     }
-  }, [isAllAnswered, activeSession, phase, questions, attempts, completeSession]);
+  }, [isAllAnswered, activeSession, phase, questions, attempts, completeSession, reportSessionCompleted]);
 
   // Keyboard navigation shortcuts: ArrowLeft / ArrowRight, PageUp / PageDown, [ / ]
   useEffect(() => {
@@ -684,6 +718,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
                   onFinishDiagnostic={() => {
                     const report = generateDiagnosticFromSession(questions, attempts, activeSession?.id);
                     completeSession(report);
+                    reportSessionCompleted(activeSession?.id);
                     setShowCelebration(true);
                   }}
                   onOpenSocraticTutor={() => setIsTutorOpen(true)}
@@ -710,7 +745,8 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
         isOpen={showCelebration}
         onClose={() => setShowCelebration(false)}
         title="Parabéns! Diagnóstico Concluído!"
-        subtitle={`Você respondeu a todas as ${totalQuestions} questões e calibrou sua nota TRI!`}
+        badgeName="Medalha Raio-X Diagnóstico Desbloqueada! 🎯"
+        subtitle={`Você respondeu a todas as ${totalQuestions} questões, calibrou sua nota TRI e desbloqueou uma nova conquista!`}
         xpAwarded={totalXp}
       />
 

@@ -140,6 +140,68 @@ describe('API Services', () => {
   });
 
   describe('gamificationService profile normalization', () => {
+    it('should post study activity and return the normalized updated profile', async () => {
+      const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValueOnce({
+        data: {
+          userId: 'usr-1',
+          level: 1,
+          currentXp: 10,
+          streakDays: 1,
+          dailyGoal: { targetQuestions: 10, completedQuestions: 1 },
+          currentLeague: 'BRONZE',
+        },
+      });
+
+      const profile = await gamificationService.recordActivity({
+        questionsSolved: 1,
+        correctCount: 1,
+        sessionCompleted: false,
+      });
+
+      expect(postSpy).toHaveBeenCalledWith('/gamification/activity', {
+        questionsSolved: 1,
+        correctCount: 1,
+        sessionCompleted: false,
+      });
+      expect(profile.currentXp).toBe(10);
+      expect(profile.currentStreakDays).toBe(1);
+      expect(profile.dailyGoalProgress).toBe(1);
+    });
+
+    it('should serialize concurrent activity reports so none is lost to a backend read-modify-write race', async () => {
+      let inFlight = 0;
+      let maxInFlight = 0;
+      const order: number[] = [];
+      vi.spyOn(apiClient, 'post').mockImplementation(async (_url, body) => {
+        inFlight += 1;
+        maxInFlight = Math.max(maxInFlight, inFlight);
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        order.push((body as { questionsSolved: number }).questionsSolved);
+        inFlight -= 1;
+        return { data: { userId: 'usr-1' } };
+      });
+
+      await Promise.all([
+        gamificationService.recordActivity({ questionsSolved: 1, correctCount: 1, sessionCompleted: false }),
+        gamificationService.recordActivity({ questionsSolved: 0, correctCount: 0, sessionCompleted: true }),
+        gamificationService.recordActivity({ questionsSolved: 2, correctCount: 0, sessionCompleted: false }),
+      ]);
+
+      expect(maxInFlight).toBe(1);
+      expect(order).toEqual([1, 0, 2]);
+    });
+
+    it('should mark the first-question badge as unlocked once real activity is recorded', async () => {
+      vi.spyOn(apiClient, 'get').mockResolvedValueOnce({
+        data: { userId: 'usr-1', streakDays: 1, dailyGoal: { targetQuestions: 10, completedQuestions: 5 } },
+      });
+
+      const profile = await gamificationService.getGamificationProfile();
+
+      expect(profile.unlockedBadges).toContain('PRIMEIRA_QUESTAO');
+      expect(profile.dailyGoalProgress).toBe(5);
+    });
+
     it('should map the backend profile of a brand-new account without NaN or undefined values', async () => {
       vi.spyOn(apiClient, 'get').mockResolvedValueOnce({
         data: {

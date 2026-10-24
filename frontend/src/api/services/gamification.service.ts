@@ -1,5 +1,5 @@
 import { apiClient } from '../client';
-import type { GamificationProfileDto, LeaderboardResponseDto } from '../types';
+import type { GamificationProfileDto, LeaderboardResponseDto, RecordActivityRequest } from '../types';
 
 type LeagueTier = GamificationProfileDto['weeklyLeague'];
 
@@ -30,6 +30,8 @@ interface RawGamificationProfile {
 
 const DEFAULT_DAILY_GOAL_TARGET = 10;
 
+let activityQueue: Promise<void> = Promise.resolve();
+
 function toNonNegativeInt(value: number | undefined, fallback = 0): number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0
     ? Math.floor(value)
@@ -51,6 +53,25 @@ function normalizeGamificationProfile(raw: RawGamificationProfile): Gamification
     DEFAULT_DAILY_GOAL_TARGET
   ) || DEFAULT_DAILY_GOAL_TARGET;
 
+  const dailyGoalProgress = toNonNegativeInt(
+    raw.dailyGoalProgress ?? raw.dailyGoal?.completedQuestions
+  );
+  // The backend only returns a badge count, so derive the badges that real activity proves:
+  const unlockedBadges = new Set(raw.unlockedBadges ?? []);
+  if (currentStreakDays > 0 || dailyGoalProgress > 0) {
+    unlockedBadges.add('PRIMEIRA_QUESTAO');
+  }
+  if (
+    typeof localStorage !== 'undefined' &&
+    localStorage.getItem('aprovaenem_diagnostic_completed') === 'true'
+  ) {
+    unlockedBadges.add('DIAGNOSTICO_COMPLETO');
+  }
+  if (dailyGoalProgress >= 10) {
+    unlockedBadges.add('MARATONISTA_QUESTOES');
+    unlockedBadges.add('MARATONISTA_QUESTOES_BRONZE');
+  }
+
   return {
     userId: raw.userId ?? '',
     currentXp: toNonNegativeInt(raw.currentXp),
@@ -63,9 +84,9 @@ function normalizeGamificationProfile(raw: RawGamificationProfile): Gamification
         ? raw.streakFreezeAvailable
         : toNonNegativeInt(raw.streakFreezeAvailable) > 0,
     dailyGoalTarget,
-    dailyGoalProgress: toNonNegativeInt(raw.dailyGoalProgress ?? raw.dailyGoal?.completedQuestions),
+    dailyGoalProgress,
     weeklyLeague: normalizeLeague(raw.weeklyLeague ?? raw.currentLeague),
-    unlockedBadges: raw.unlockedBadges ?? [],
+    unlockedBadges: [...unlockedBadges],
   };
 }
 
@@ -94,5 +115,24 @@ export const gamificationService = {
    */
   async updateDailyGoal(target: number): Promise<void> {
     await apiClient.put('/gamification/daily-goal', { target });
+  },
+
+  /**
+   * Report study activity so XP, streak, daily goal and the weekly league are updated
+   * Target endpoint: POST /api/v1/gamification/activity
+   */
+  async recordActivity(req: RecordActivityRequest): Promise<GamificationProfileDto> {
+    // The backend applies activity as read-modify-write on the student's profile, so concurrent
+    // requests overwrite each other (e.g. the last answer and the "session completed" report).
+    // Serialize them so every answer is counted exactly once.
+    const run = activityQueue.then(() =>
+      apiClient.post<RawGamificationProfile>('/gamification/activity', req)
+    );
+    activityQueue = run.then(
+      () => undefined,
+      () => undefined
+    );
+    const response = await run;
+    return normalizeGamificationProfile(response.data);
   },
 };

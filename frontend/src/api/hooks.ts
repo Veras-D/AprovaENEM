@@ -15,6 +15,7 @@ import type {
   SocraticChatRequest,
   AuthLoginRequest,
   AuthRegisterRequest,
+  RecordActivityRequest,
 } from './types';
 
 // ============================================================================
@@ -180,6 +181,17 @@ export function useRegisterMutation() {
       setAuth(data.token, data.user);
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
       queryClient.invalidateQueries({ queryKey: queryKeys.gamification.profile });
+    },
+  });
+}
+
+export function useRecordActivityMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (req: RecordActivityRequest) => gamificationService.recordActivity(req),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.gamification.profile });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gamification.leaderboard });
     },
   });
 }

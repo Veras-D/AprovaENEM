@@ -39,6 +39,8 @@ export interface BadgeShelfProps {
   readonly unlockedBadges: readonly string[];
   /** Real per-badge progress values (badge id -> current value) for the signed-in student. */
   readonly progressByBadge?: Readonly<Record<string, number>>;
+  /** Optional click handler to inspect or celebrate a badge */
+  readonly onBadgeClick?: (badge: VisibleBadgeItem) => void;
   readonly className?: string;
 }
 
@@ -147,6 +149,7 @@ const TIER_PILL_STYLES: Record<string, string> = {
 export const BadgeShelf: React.FC<BadgeShelfProps> = ({
   unlockedBadges,
   progressByBadge,
+  onBadgeClick,
   className = '',
 }) => {
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'UNLOCKED' | 'LOCKED'>('ALL');
@@ -305,7 +308,29 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
             return (
               <div
                 key={item.id}
+                role={onBadgeClick ? 'button' : undefined}
+                tabIndex={onBadgeClick ? 0 : undefined}
+                onClick={onBadgeClick ? () => onBadgeClick(item) : undefined}
+                onKeyDown={
+                  onBadgeClick
+                    ? (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          onBadgeClick(item);
+                        }
+                      }
+                    : undefined
+                }
+                aria-label={
+                  onBadgeClick
+                    ? `${item.name} (${item.isUnlocked ? 'Conquistada' : 'A Conquistar'})`
+                    : undefined
+                }
                 className={`p-3.5 rounded-brand border transition-all flex flex-col justify-between gap-2.5 ${
+                  onBadgeClick
+                    ? 'cursor-pointer hover:shadow-xs hover:border-brand-primary/50 focus:outline-hidden focus:ring-2 focus:ring-brand-primary/50'
+                    : ''
+                } ${
                   item.isUnlocked
                     ? tierTheme?.cardUnlocked ??
                       'bg-amber-50/40 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800/60 shadow-xs'

@@ -78,10 +78,11 @@ export function computeVisibleBadges(
 
   for (const badge of catalog) {
     if (!badge.isProgressive || !badge.tiers || badge.tiers.length === 0) {
-      const isUnlocked = unlockedSet.has(badge.id);
       const rawCurrent = badge.progress?.current ?? 0;
       const target = badge.progress?.target ?? 1;
       const unit = badge.progress?.unit ?? '';
+      const hasReachedTarget = badge.progress?.target !== undefined && rawCurrent >= target && target > 0;
+      const isUnlocked = unlockedSet.has(badge.id) || hasReachedTarget;
 
       const current = isUnlocked
         ? target
@@ -117,6 +118,11 @@ export function computeVisibleBadges(
     const isTierCompleted = (tierIdx: number): boolean => {
       const tier = tiers[tierIdx];
       if (!tier) return false;
+
+      // Unlocked if current progress reaches or exceeds the tier target
+      if (rawCurrent >= tier.target) {
+        return tierIdx === 0 || isTierCompleted(tierIdx - 1);
+      }
 
       // Explicit tier ID in unlockedSet (e.g. 'MESTRE_MATEMATICA_SILVER')
       if (unlockedSet.has(`${badge.id}_${tier.tier}`)) {
