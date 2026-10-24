@@ -285,7 +285,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
         <Bell className="h-4.5 w-4.5" aria-hidden="true" />
         {unreadCount > 0 && (
           <span
-            className="absolute top-1 right-1 flex items-center justify-center min-w-[17px] h-[17px] px-1 text-[10px] font-black text-white bg-rose-600 rounded-full border-2 border-white dark:border-slate-900 animate-pulse"
+            className="absolute top-1 right-1 flex items-center justify-center min-w-[17px] h-[17px] px-1 text-[10px] font-bold text-white bg-rose-600 rounded-full border-2 border-white dark:border-slate-900 shadow-2xs"
             aria-hidden="true"
           >
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -381,7 +381,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
           </div>
 
           {/* Notifications List */}
-          <div className="max-h-80 sm:max-h-96 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
+          <div className="max-h-80 sm:max-h-96 overflow-y-auto scrollbar-none divide-y divide-slate-100 dark:divide-slate-800">
             {filteredNotifications.length === 0 ? (
               <div className="py-8 text-center text-xs text-slate-500 dark:text-slate-400">
                 Nenhuma notificação encontrada nesta categoria.
