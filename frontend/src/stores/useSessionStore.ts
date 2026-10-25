@@ -324,11 +324,12 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       const userId = getCurrentUserId();
       if (typeof localStorage !== 'undefined') {
         try {
-          localStorage.setItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED, 'true');
-          localStorage.setItem(STORAGE_KEY_DIAGNOSTIC_REPORT, JSON.stringify(report));
           if (userId) {
             localStorage.setItem(STORAGE_KEY_USER_DIAG_COMPLETED_PREFIX + userId, 'true');
             localStorage.setItem(STORAGE_KEY_USER_DIAG_REPORT_PREFIX + userId, JSON.stringify(report));
+          } else {
+            localStorage.setItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED, 'true');
+            localStorage.setItem(STORAGE_KEY_DIAGNOSTIC_REPORT, JSON.stringify(report));
           }
         } catch {
           // LocalStorage quota or privacy sandbox
@@ -357,11 +358,12 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     const userId = getCurrentUserId();
     if (typeof localStorage !== 'undefined') {
       try {
-        localStorage.setItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED, 'true');
-        localStorage.setItem(STORAGE_KEY_DIAGNOSTIC_REPORT, JSON.stringify(report));
         if (userId) {
           localStorage.setItem(STORAGE_KEY_USER_DIAG_COMPLETED_PREFIX + userId, 'true');
           localStorage.setItem(STORAGE_KEY_USER_DIAG_REPORT_PREFIX + userId, JSON.stringify(report));
+        } else {
+          localStorage.setItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED, 'true');
+          localStorage.setItem(STORAGE_KEY_DIAGNOSTIC_REPORT, JSON.stringify(report));
         }
       } catch {
         // Storage quota
@@ -410,6 +412,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     if (typeof localStorage !== 'undefined') {
       try {
         localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_SEEN);
+        localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED);
+        localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_REPORT);
       } catch {
         // Storage quota
       }
@@ -522,6 +526,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     if (typeof localStorage !== 'undefined') {
       try {
         localStorage.setItem(STORAGE_KEY_MIGRATION, JSON.stringify(migrationResult));
+        const anonReport = localStorage.getItem(STORAGE_KEY_DIAGNOSTIC_REPORT);
+        if (anonReport) {
+          localStorage.setItem(STORAGE_KEY_USER_DIAG_REPORT_PREFIX + userId, anonReport);
+          localStorage.setItem(STORAGE_KEY_USER_DIAG_COMPLETED_PREFIX + userId, 'true');
+          localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_REPORT);
+          localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED);
+        }
       } catch {
         // LocalStorage quota or access error
       }

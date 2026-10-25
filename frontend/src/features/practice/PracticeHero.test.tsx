@@ -201,7 +201,19 @@ describe('PracticeHero Component', () => {
     });
   });
 
-  it('triggers celebration overlay upon answering all questions and calls onOpenGamification', async () => {
+  it('triggers celebration overlay upon answering all questions and calls onOpenGamification for authenticated students', async () => {
+    useAuthStore.setState({
+      isAuthenticated: true,
+      user: {
+        id: 'student-auth-123',
+        email: 'student@example.com',
+        name: 'Aluno ENEM',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-01-01',
+      },
+      token: 'jwt-token',
+    });
     const handleOpenGamification = vi.fn();
     renderWithProviders(<PracticeHero onOpenGamification={handleOpenGamification} />);
 
@@ -416,20 +428,17 @@ describe('PracticeHero Component', () => {
       });
     });
 
-    // Wait for celebratory overlay and close it
-    await waitFor(() => {
-      expect(screen.getByRole('dialog', { name: /Parabéns! Diagnóstico Concluído!/i })).toBeInTheDocument();
-    });
-    const closeCelebrationBtn = screen.getByRole('button', { name: /Continuar Estudando/i });
-    fireEvent.click(closeCelebrationBtn);
+    // For unauthenticated users, celebration modal and top control bar should NOT appear
+    expect(screen.queryByRole('dialog', { name: /Parabéns! Diagnóstico Concluído!/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Diagnóstico ENEM Calibrado')).not.toBeInTheDocument();
 
-    // Verify calibrated diagnostic view is displayed with "Refazer Diagnóstico" button
-    expect(screen.getByText('Diagnóstico ENEM Calibrado')).toBeInTheDocument();
-    const retakeButtons = screen.getAllByRole('button', { name: /Refazer Diagnóstico/i });
-    expect(retakeButtons.length).toBeGreaterThan(0);
+    // Verify diagnostic result view is displayed directly with "Refazer Diagnóstico" button
+    expect(screen.getByText('Seu Diagnóstico ENEM & Nível de Compreensão')).toBeInTheDocument();
+    const retakeButton = screen.getByRole('button', { name: /Refazer Diagnóstico/i });
+    expect(retakeButton).toBeInTheDocument();
 
     // Click "Refazer Diagnóstico"
-    fireEvent.click(retakeButtons[0]!);
+    fireEvent.click(retakeButton);
 
     // Session should be restarted in active mode with 0 answered
     expect(screen.getByText(/0 de 5 respondidas/i)).toBeInTheDocument();
@@ -633,6 +642,52 @@ describe('PracticeHero Component', () => {
     fireEvent.click(startDailyBtns[0]!);
     expect(screen.getByText('Questões Diárias do ENEM')).toBeInTheDocument();
     expect(useSessionStore.getState().activeSession?.title).toBe('Questões Diárias do ENEM');
+  });
+
+  it('does NOT display celebration modal or top action bar for unauthenticated guests, showing only diagnostic report with signup banner', async () => {
+    useAuthStore.setState({
+      isAuthenticated: false,
+      user: null,
+      token: null,
+    });
+    useSessionStore.setState({
+      isDiagnosticCompleted: false,
+      savedDiagnosticReport: null,
+      diagnosticReport: null,
+      questions: [],
+      activeSession: null,
+      phase: 'IDLE',
+    });
+
+    renderWithProviders();
+
+    // Complete all 5 diagnostic questions as an unauthenticated guest
+    act(() => {
+      const qs = useSessionStore.getState().questions;
+      qs.forEach((q) => {
+        useSessionStore.getState().recordAttempt({
+          questionId: q.id,
+          selectedOption: 'A',
+          correctOption: 'A',
+          isCorrect: true,
+          awardedXp: 15,
+        });
+      });
+    });
+
+    // Verify celebration achievement modal does NOT render
+    expect(screen.queryByRole('dialog', { name: /Parabéns! Diagnóstico Concluído!/i })).not.toBeInTheDocument();
+
+    // Verify top green control bar does NOT render
+    expect(screen.queryByText('Diagnóstico ENEM Calibrado')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Começar Treino Diário/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Iniciar Treino Diário/i })).not.toBeInTheDocument();
+
+    // Verify the diagnostic report and signup banner ARE rendered cleanly
+    expect(screen.getByText('Seu Diagnóstico ENEM & Nível de Compreensão')).toBeInTheDocument();
+    expect(screen.getByText('Deseja salvar sua nota TRI e acompanhar sua evolução semanal?')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Cadastre-se Gratuitamente/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Refazer Diagnóstico/i })).toBeInTheDocument();
   });
 
   it('renders DailyPracticeSummaryView upon completing Daily Practice questions and preserves diagnostic radar', async () => {

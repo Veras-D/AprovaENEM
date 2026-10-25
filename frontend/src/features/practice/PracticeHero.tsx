@@ -366,8 +366,8 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     setShowCelebration(false);
     setIsTimeUpModalOpen(false);
 
-    // If user is authenticated or already completed diagnostic, restart a new daily practice set
-    if (isDiagnosticCompleted || isAuthenticated) {
+    // If user is authenticated, restart a new daily practice set
+    if (isAuthenticated) {
       handleStartDailyPractice();
       return;
     }
@@ -395,7 +395,6 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     };
     startSession(mockSession, domainQuestions);
   }, [
-    isDiagnosticCompleted,
     isAuthenticated,
     handleStartDailyPractice,
     questions,
@@ -550,7 +549,9 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
         completeSession(report, 'COMPLETED');
       }
       reportSessionCompleted(activeSession?.id);
-      setShowCelebration(true);
+      if (isAuthenticated) {
+        setShowCelebration(true);
+      }
     }
   }, [
     isAllAnswered,
@@ -562,6 +563,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     completeSession,
     reportSessionCompleted,
     isDiagnosticSession,
+    isAuthenticated,
   ]);
 
   // Keyboard navigation shortcuts: ArrowLeft / ArrowRight, PageUp / PageDown, [ / ]
@@ -634,154 +636,143 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       <div className="space-y-6">
       {/* Timed Quiz Control Bar / Calibrated Status Header */}
       {isCompleted ? (
-        isDiagnosticCompletion ? (
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-brand border border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-xs">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-brand bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
-                <BarChart2 className="h-5 w-5" aria-hidden="true" />
+        isAuthenticated ? (
+          isDiagnosticCompletion ? (
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-brand border border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-brand bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                  <BarChart2 className="h-5 w-5" aria-hidden="true" />
+                </div>
+                <div>
+                  <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <span>Diagnóstico ENEM Calibrado</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-500/20">
+                      {correctCount}/{totalQuestions} ({activeReport.scorePercentage}% Acertos)
+                    </span>
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Sua proficiência inicial foi avaliada. Você pode iniciar suas questões diárias de treino ou simular provas completas.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                  <span>Diagnóstico ENEM Calibrado</span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-500/20">
-                    {correctCount}/{totalQuestions} ({activeReport.scorePercentage}% Acertos)
-                  </span>
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Sua proficiência inicial foi avaliada. Você pode iniciar suas questões diárias de treino ou simular provas completas.
-                </p>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-2 sm:gap-2.5 w-full lg:w-auto justify-start lg:justify-end flex-wrap">
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                onClick={handleStartDailyPractice}
-                className="h-9 px-3 text-xs sm:text-sm font-bold whitespace-nowrap inline-flex items-center justify-center shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white"
-              >
-                <Sparkles className="h-4 w-4 mr-1.5" aria-hidden="true" />
-                Começar Treino Diário
-              </Button>
-              {onOpenDiagnostics && (
+              <div className="flex items-center gap-2 sm:gap-2.5 w-full lg:w-auto justify-start lg:justify-end flex-wrap">
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={handleStartDailyPractice}
+                  className="h-9 px-3 text-xs sm:text-sm font-bold whitespace-nowrap inline-flex items-center justify-center shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  <Sparkles className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Começar Treino Diário
+                </Button>
+                {onOpenDiagnostics && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={onOpenDiagnostics}
+                    className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
+                    aria-label="Abrir central de diagnósticos"
+                  >
+                    <BarChart2 className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                    Painel Diagnóstico
+                  </Button>
+                )}
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={onOpenDiagnostics}
-                  className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
-                  aria-label="Abrir central de diagnósticos"
-                >
-                  <BarChart2 className="h-4 w-4 mr-1.5" aria-hidden="true" />
-                  Painel Diagnóstico
-                </Button>
-              )}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsSimulationModalOpen(true)}
-                className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
-              >
-                <Layers className="h-4 w-4 mr-1.5" aria-hidden="true" />
-                Simular Prova Oficial
-              </Button>
-              {onOpenGamification && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={onOpenGamification}
+                  onClick={() => setIsSimulationModalOpen(true)}
                   className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
                 >
-                  <Trophy className="h-4 w-4 mr-1.5" aria-hidden="true" />
-                  Ranking
+                  <Layers className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Simular Prova Oficial
                 </Button>
-              )}
-              {!isAuthenticated && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRestart}
-                  className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
-                  title="Refazer avaliação diagnóstica para recalibrar"
-                >
-                  <RotateCcw className="h-4 w-4 mr-1.5" aria-hidden="true" />
-                  Refazer Diagnóstico
-                </Button>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-brand border border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-xs">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-brand bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
-                <Sparkles className="h-5 w-5" aria-hidden="true" />
-              </div>
-              <div>
-                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                  <span>Treino Diário ENEM • Concluído</span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-500/20">
-                    {correctCount}/{totalQuestions} ({totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0}% Acertos)
-                  </span>
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Sua sessão de questões diárias foi finalizada com sucesso. Continue praticando para avançar na sua meta.
-                </p>
+                {onOpenGamification && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={onOpenGamification}
+                    className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
+                  >
+                    <Trophy className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                    Ranking
+                  </Button>
+                )}
               </div>
             </div>
+          ) : (
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-brand border border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-brand bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                  <Sparkles className="h-5 w-5" aria-hidden="true" />
+                </div>
+                <div>
+                  <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <span>Treino Diário ENEM • Concluído</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-500/20">
+                      {correctCount}/{totalQuestions} ({totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0}% Acertos)
+                    </span>
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Sua sessão de questões diárias foi finalizada com sucesso. Continue praticando para avançar na sua meta.
+                  </p>
+                </div>
+              </div>
 
-            <div className="flex items-center gap-2 sm:gap-2.5 w-full lg:w-auto justify-start lg:justify-end flex-wrap">
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                onClick={handleStartDailyPractice}
-                className="h-9 px-3 text-xs sm:text-sm font-bold whitespace-nowrap inline-flex items-center justify-center shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white"
-              >
-                <Sparkles className="h-4 w-4 mr-1.5" aria-hidden="true" />
-                Continuar Praticando
-              </Button>
-              {onOpenDiagnostics && (
+              <div className="flex items-center gap-2 sm:gap-2.5 w-full lg:w-auto justify-start lg:justify-end flex-wrap">
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={handleStartDailyPractice}
+                  className="h-9 px-3 text-xs sm:text-sm font-bold whitespace-nowrap inline-flex items-center justify-center shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  <Sparkles className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Continuar Praticando
+                </Button>
+                {onOpenDiagnostics && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={onOpenDiagnostics}
+                    className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
+                    aria-label="Abrir central de diagnósticos"
+                  >
+                    <BarChart2 className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                    Painel Diagnóstico
+                  </Button>
+                )}
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={onOpenDiagnostics}
-                  className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
-                  aria-label="Abrir central de diagnósticos"
-                >
-                  <BarChart2 className="h-4 w-4 mr-1.5" aria-hidden="true" />
-                  Painel Diagnóstico
-                </Button>
-              )}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsSimulationModalOpen(true)}
-                className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
-              >
-                <Layers className="h-4 w-4 mr-1.5" aria-hidden="true" />
-                Simular Prova Oficial
-              </Button>
-              {onOpenGamification && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={onOpenGamification}
+                  onClick={() => setIsSimulationModalOpen(true)}
                   className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
                 >
-                  <Trophy className="h-4 w-4 mr-1.5" aria-hidden="true" />
-                  Ranking
+                  <Layers className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Simular Prova Oficial
                 </Button>
-              )}
+                {onOpenGamification && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={onOpenGamification}
+                    className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
+                  >
+                    <Trophy className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                    Ranking
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
-        )
+          )
+        ) : null
       ) : (
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
           <div className="flex items-center gap-3 shrink-0 min-w-0">
@@ -883,7 +874,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
             flaggedCount={flaggedCount}
             onOpenAuthModal={onOpenAuthModal}
             onPracticeTopic={handlePracticeWeakTopic}
-            onStartDailyPractice={handleStartDailyPractice}
+            onStartDailyPractice={isAuthenticated ? handleStartDailyPractice : undefined}
             onStartOfficialSimulation={() => setIsSimulationModalOpen(true)}
             onRetakeDiagnostic={!isAuthenticated ? handleRestart : undefined}
           />
@@ -962,7 +953,9 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
                       completeSession(report, 'COMPLETED');
                     }
                     reportSessionCompleted(activeSession?.id);
-                    setShowCelebration(true);
+                    if (isAuthenticated) {
+                      setShowCelebration(true);
+                    }
                   }}
                   finishButtonLabel={isDiagnosticSession ? 'Ver Meu Diagnóstico' : 'Concluir Treino Diário'}
                   finishButtonAriaLabel={isDiagnosticSession ? 'Finalizar e ver meu diagnóstico de proficiência' : 'Finalizar treino diário'}
@@ -987,7 +980,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
 
       {/* Level-up & Exam Completion Celebration Modal Overlay */}
       <CelebrationOverlay
-        isOpen={showCelebration}
+        isOpen={showCelebration && isAuthenticated}
         onClose={() => setShowCelebration(false)}
         title={isDiagnosticSession ? 'Parabéns! Diagnóstico Concluído!' : 'Treino Diário Concluído! 🎉'}
         badgeName={isDiagnosticSession ? 'Medalha Raio-X Diagnóstico Desbloqueada! 🎯' : 'Treino Diário Realizado! ⚡'}

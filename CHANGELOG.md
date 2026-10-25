@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.17] - 2026-10-25
+
+### Changed
+- feat(practice): Restricted gamification celebration modal (`CelebrationOverlay`) and calibrated top control bar (`Diagnóstico ENEM Calibrado`) exclusively to authenticated students in [`PracticeHero.tsx`](frontend/src/features/practice/PracticeHero.tsx), ensuring that unauthenticated guest candidates completing the ENEM diagnostic assessment are not presented with premature achievement badge popups or student-only actions ("Começar Treino Diário", "Ranking") ([`TASK-S6-43`](docs/BACKLOG.md#task-s6-43)).
+- feat(diagnostic): Configured [`DiagnosticResultView.tsx`](frontend/src/features/diagnostic/components/DiagnosticResultView.tsx) to be presented directly to unauthenticated guests with calibrated TRI score, skill radar, and the prominent "Salve seu Diagnóstico e Histórico" registration prompt without blocking modal overlays ([`TASK-S6-43`](docs/BACKLOG.md#task-s6-43)).
+
+### Fixed
+- fix(session): Updated `clearSession()` in [`useSessionStore.ts`](frontend/src/stores/useSessionStore.ts) to clean up global/anonymous diagnostic storage keys upon logout while preserving user-scoped reports, preventing unauthenticated sessions from inheriting previous logged-in users' completed diagnostic radar state ([`TASK-S6-43`](docs/BACKLOG.md#task-s6-43)).
+- fix(test): Updated Cypress student quiz journey E2E spec ([`01-student-quiz-journey.cy.ts`](frontend/cypress/e2e/01-student-quiz-journey.cy.ts)) to verify that unauthenticated diagnostic completion cleanly transitions to the diagnostic result view with guest registration callout ([`TASK-S6-43`](docs/BACKLOG.md#task-s6-43)).
+
 ## [0.6.16] - 2026-10-25
 
 ### Added

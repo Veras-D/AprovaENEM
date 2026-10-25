@@ -64,7 +64,7 @@ describe('Student Practice Quiz Journey E2E', () => {
     cy.contains(/Questão 1|Questão/i).should('be.visible');
   });
 
-  it('allows completing quiz session and displays celebration overlay', () => {
+  it('allows completing quiz session and displays diagnostic report with guest signup prompt', () => {
     // Answer all available questions to reach completion
     for (let i = 0; i < 5; i++) {
       cy.get('input[type="radio"][value="B"], [role="radio"]').eq(1).click({ force: true });
@@ -74,7 +74,10 @@ describe('Student Practice Quiz Journey E2E', () => {
       }
     }
 
-    // Verify celebration overlay or completion view appears
-    cy.get('[role="dialog"], [aria-label*="Parabéns" i], [aria-label*="Conquista" i]').should('exist');
+    // Verify diagnostic report and unauthenticated guest signup prompt appear
+    cy.get('[data-testid="diagnostic-result-view"]').should('exist');
+    cy.contains(/Seu Diagnóstico ENEM & Nível de Compreensão/i).should('be.visible');
+    cy.contains(/Salve seu Diagnóstico e Histórico/i).should('be.visible');
+    cy.contains(/Cadastre-se Gratuitamente/i).should('be.visible');
   });
 });
