@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - chore(auth): Removed the redundant "Já possui um token de recuperação? Clique aqui" toggle button from [`RegisterModal.tsx`](frontend/src/components/auth/RegisterModal.tsx), streamlining the password recovery interface directly into email submission and presenting token inputs only when recovery instructions are dispatched.
+- fix(practice): Removed intrusive celebration overlay popup from routine daily practice completion in [`PracticeHero.tsx`](frontend/src/features/practice/PracticeHero.tsx), allowing candidates to transition directly to [`DailyPracticeSummaryView.tsx`](frontend/src/features/practice/components/DailyPracticeSummaryView.tsx) with their practice stats, accuracy, and XP without being interrupted by a blocking dialog claiming a routine 3-question session is a "CONQUISTA!".
 
 ### Fixed
 - fix(notifications): Stabilized dynamic notification IDs (`reminder-daily-goal`, `reminder-streak`, `update-weekly-league`) and scoped client-side caching per student user in [`NotificationBell.tsx`](frontend/src/components/notifications/NotificationBell.tsx), preventing daily progress and streak counter increments from generating mismatched notification keys that caused read items to revert to unread upon logging back in.

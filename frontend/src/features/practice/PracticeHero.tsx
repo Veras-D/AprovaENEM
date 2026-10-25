@@ -581,7 +581,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
         completeSession(report, 'COMPLETED');
       }
       reportSessionCompleted(activeSession?.id);
-      if (isAuthenticated) {
+      if (isDiagnosticSession && isAuthenticated) {
         setShowCelebration(true);
       }
     }
@@ -985,7 +985,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
                       completeSession(report, 'COMPLETED');
                     }
                     reportSessionCompleted(activeSession?.id);
-                    if (isAuthenticated) {
+                    if (isDiagnosticSession && isAuthenticated) {
                       setShowCelebration(true);
                     }
                   }}
@@ -1010,17 +1010,13 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
         />
       )}
 
-      {/* Level-up & Exam Completion Celebration Modal Overlay */}
+      {/* Diagnostic Milestone Celebration Modal Overlay (Reserved exclusively for initial diagnostic assessment completion) */}
       <CelebrationOverlay
-        isOpen={showCelebration && isAuthenticated}
+        isOpen={showCelebration && isAuthenticated && isDiagnosticSession}
         onClose={() => setShowCelebration(false)}
-        title={isDiagnosticSession ? 'Parabéns! Diagnóstico Concluído!' : 'Treino Diário Concluído! 🎉'}
-        badgeName={isDiagnosticSession ? 'Medalha Raio-X Diagnóstico Desbloqueada! 🎯' : 'Treino Diário Realizado! ⚡'}
-        subtitle={
-          isDiagnosticSession
-            ? `Você respondeu a todas as ${totalQuestions} questões, calibrou sua nota TRI e desbloqueou seu radar de proficiência!`
-            : `Você respondeu a todas as ${totalQuestions} questões da sua sessão diária e acumulou +${totalXp} XP para a sua liga!`
-        }
+        title="Parabéns! Diagnóstico Concluído!"
+        badgeName="Medalha Raio-X Diagnóstico Desbloqueada! 🎯"
+        subtitle={`Você respondeu a todas as ${totalQuestions} questões, calibrou sua nota TRI e desbloqueou seu radar de proficiência!`}
         xpAwarded={totalXp}
       />
 

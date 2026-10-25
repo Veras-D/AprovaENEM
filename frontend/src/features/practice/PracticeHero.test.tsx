@@ -741,11 +741,11 @@ describe('PracticeHero Component', () => {
       });
     });
 
-    // Dismiss celebration modal
+    // Verify DailyPracticeSummaryView is rendered directly without an intrusive celebration dialog
     await waitFor(() => {
-      expect(screen.getByRole('dialog', { name: /Treino Diário Concluído! 🎉/i })).toBeInTheDocument();
+      expect(screen.getByTestId('daily-practice-summary-view')).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByRole('button', { name: /Continuar Estudando/i }));
+    expect(screen.queryByRole('dialog', { name: /Treino Diário Concluído!/i })).not.toBeInTheDocument();
 
     // Verify DailyPracticeSummaryView is rendered
     expect(screen.getByTestId('daily-practice-summary-view')).toBeInTheDocument();
