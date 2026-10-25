@@ -183,7 +183,7 @@ export const DailyPracticeSummaryView: React.FC<DailyPracticeSummaryViewProps> =
                 Próximos Passos
               </span>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Continue praticando com mais 5 questões ou confira sua posição no ranking semanal.
+                Continue praticando com mais {dailyGoalTarget} questões ou confira sua posição no ranking semanal.
               </p>
             </div>
 
@@ -219,7 +219,7 @@ export const DailyPracticeSummaryView: React.FC<DailyPracticeSummaryViewProps> =
                 onClick={onContinuePractice}
                 className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
               >
-                <span>Praticar Mais 5 Questões</span>
+                <span>Praticar Mais {dailyGoalTarget} Questões</span>
                 <ArrowRight className="h-3.5 w-3.5 ml-1" aria-hidden="true" />
               </Button>
             </div>

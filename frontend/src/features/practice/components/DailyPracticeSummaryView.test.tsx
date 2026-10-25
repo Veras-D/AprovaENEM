@@ -77,4 +77,25 @@ describe('DailyPracticeSummaryView Component', () => {
     fireEvent.click(rankBtn);
     expect(handleGamification).toHaveBeenCalledTimes(1);
   });
+
+  it('dynamically adapts "Praticar Mais N Questões" button and next steps to customized daily goal (e.g. 3 questions)', () => {
+    const handleContinue = vi.fn();
+
+    render(
+      <DailyPracticeSummaryView
+        questionsCount={3}
+        correctCount={1}
+        awardedXp={25}
+        dailyGoalTarget={3}
+        dailyGoalProgress={3}
+        onContinuePractice={handleContinue}
+      />
+    );
+
+    expect(screen.getByText(/Continue praticando com mais 3 questões/i)).toBeInTheDocument();
+    const continueBtn = screen.getByRole('button', { name: /Praticar Mais 3 Questões/i });
+    expect(continueBtn).toBeInTheDocument();
+    fireEvent.click(continueBtn);
+    expect(handleContinue).toHaveBeenCalledTimes(1);
+  });
 });

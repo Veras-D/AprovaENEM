@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.14] - 2026-10-25
+
+### Changed
+- fix(practice): Bound the next steps prompt and continuation call-to-action button in the Daily Practice summary view to the student's dynamic daily study goal target (`dailyGoalTarget`) in [`DailyPracticeSummaryView.tsx`](frontend/src/features/practice/components/DailyPracticeSummaryView.tsx) and updated [`DailyPracticeSummaryView.test.tsx`](frontend/src/features/practice/components/DailyPracticeSummaryView.test.tsx), replacing hardcoded "5 questões" references so custom daily goals (such as 3, 10, or 15 questions) dynamically render "Continue praticando com mais {dailyGoalTarget} questões..." and "Praticar Mais {dailyGoalTarget} Questões" ([`TASK-S6-39`](docs/BACKLOG.md#task-s6-39)).
+
 ## [0.6.13] - 2026-10-25
 
 ### Changed
