@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - fix(auth): Cleaned credential fields (`email`, `password`, `confirmPassword`) upon modal close, tab switch, successful login, and logout in [`RegisterModal.tsx`](frontend/src/components/auth/RegisterModal.tsx), and added autofill suppression attributes (`autoComplete="new-password"`, non-standard identifier names, dummy inputs) to prevent browsers from automatically injecting previously saved credentials when the authentication dialog is reopened ([`TASK-S6-45`](docs/BACKLOG.md#task-s6-45)).
+- fix(auth): Repositioned "Esqueci minha senha" recovery link below the password input field in [`RegisterModal.tsx`](frontend/src/components/auth/RegisterModal.tsx) for improved visual hierarchy and natural top-to-bottom tab order ([`TASK-S6-45`](docs/BACKLOG.md#task-s6-45)).
 
 ## [0.6.17] - 2026-10-25
 

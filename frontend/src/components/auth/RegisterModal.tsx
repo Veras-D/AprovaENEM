@@ -1063,21 +1063,12 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 
                 {/* Password */}
                 <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <label
-                      htmlFor="login-password"
-                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
-                    >
-                      Senha <span className="text-rose-500">*</span>
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => handleSwitchMode('forgot-password')}
-                      className="text-xs font-semibold text-brand-primary hover:underline focus:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary rounded cursor-pointer"
-                    >
-                      Esqueci minha senha
-                    </button>
-                  </div>
+                  <label
+                    htmlFor="login-password"
+                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                  >
+                    Senha <span className="text-rose-500">*</span>
+                  </label>
                   <div className="relative">
                     <input
                       id="login-password"
@@ -1101,6 +1092,15 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                       ) : (
                         <Eye className="h-4 w-4" aria-hidden="true" />
                       )}
+                    </button>
+                  </div>
+                  <div className="flex justify-end pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleSwitchMode('forgot-password')}
+                      className="text-xs font-semibold text-brand-primary hover:underline focus:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary rounded cursor-pointer"
+                    >
+                      Esqueci minha senha
                     </button>
                   </div>
                 </div>
