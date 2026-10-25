@@ -5,6 +5,7 @@ import com.aprovaenem.exam.domain.model.AttemptResult;
 import com.aprovaenem.exam.domain.model.DiagnosticReport;
 import com.aprovaenem.exam.domain.model.PracticeSession;
 import com.aprovaenem.exam.domain.model.Question;
+import com.aprovaenem.exam.domain.model.SaveDiagnosticReportCommand;
 import com.aprovaenem.exam.domain.model.StartSessionCommand;
 import com.aprovaenem.exam.domain.model.SubmitAnswerCommand;
 import com.aprovaenem.exam.domain.port.in.PracticeSessionUseCase;
@@ -12,6 +13,7 @@ import com.aprovaenem.exam.infrastructure.adapter.in.web.dto.AttemptResultRespon
 import com.aprovaenem.exam.infrastructure.adapter.in.web.dto.DiagnosticReportResponse;
 import com.aprovaenem.exam.infrastructure.adapter.in.web.dto.PracticeSessionResponse;
 import com.aprovaenem.exam.infrastructure.adapter.in.web.dto.QuestionSummaryDto;
+import com.aprovaenem.exam.infrastructure.adapter.in.web.dto.SaveDiagnosticReportRequest;
 import com.aprovaenem.exam.infrastructure.adapter.in.web.dto.StartSessionRequest;
 import com.aprovaenem.exam.infrastructure.adapter.in.web.dto.SubmitAnswerRequest;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -168,6 +171,45 @@ public class PracticeSessionController {
 
         DiagnosticReport report = sessionUseCase.getDiagnosticReport(id);
         return ResponseEntity.ok(toDiagnosticResponse(report));
+    }
+
+    @GetMapping({"/diagnostic/latest", "/latest-diagnostic"})
+    public ResponseEntity<DiagnosticReportResponse> getLatestDiagnostic(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+            @RequestHeader(value = "X-Session-Id", required = false) String sessionHeader
+    ) {
+        UUID userId = resolveUserIdFromToken(authHeader);
+        Optional<DiagnosticReport> report = sessionUseCase.getLatestDiagnosticReport(userId, sessionHeader);
+        return report.map(r -> ResponseEntity.ok(toDiagnosticResponse(r)))
+                .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
+    @PostMapping({"/diagnostic", "/save-diagnostic"})
+    public ResponseEntity<DiagnosticReportResponse> saveDiagnostic(
+            @Valid @RequestBody SaveDiagnosticReportRequest request,
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+            @RequestHeader(value = "X-Session-Id", required = false) String sessionHeader
+    ) {
+        UUID resolvedUserId = resolveUserIdFromToken(authHeader);
+        String sessionId = null;
+        if (sessionHeader != null && !sessionHeader.isBlank()) {
+            sessionId = sessionHeader;
+        } else if (resolvedUserId != null) {
+            sessionId = resolvedUserId.toString();
+        } else {
+            sessionId = "anon-" + UUID.randomUUID();
+        }
+
+        SaveDiagnosticReportCommand command = new SaveDiagnosticReportCommand(
+                resolvedUserId,
+                sessionId,
+                request.getScorePercentage(),
+                request.getTopicBreakdown(),
+                request.getRecommendedTopics()
+        );
+
+        DiagnosticReport report = sessionUseCase.saveDiagnosticReport(command);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toDiagnosticResponse(report));
     }
 
     private void validateSessionOwnership(PracticeSession session, String authHeader, String sessionHeader) {

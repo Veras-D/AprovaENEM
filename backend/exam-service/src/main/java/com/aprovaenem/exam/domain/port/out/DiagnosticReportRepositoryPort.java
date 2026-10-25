@@ -10,4 +10,8 @@ public interface DiagnosticReportRepositoryPort {
     DiagnosticReport save(DiagnosticReport report);
 
     Optional<DiagnosticReport> findBySessionId(UUID sessionId);
+
+    Optional<DiagnosticReport> findLatestByUserId(UUID userId);
+
+    Optional<DiagnosticReport> findLatestByAnonymousSessionId(String anonymousSessionId);
 }

@@ -698,8 +698,11 @@ describe('PracticeHero Component', () => {
     expect(screen.queryByText('Diagnóstico ENEM Calibrado')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Refazer Diagnóstico/i })).not.toBeInTheDocument();
 
-    // Diagnostic report remains intact in store
-    expect(useSessionStore.getState().savedDiagnosticReport).toEqual(savedRadar);
+    // Diagnostic report is dynamically updated in store with cumulative daily practice progress
+    const updatedReport = useSessionStore.getState().savedDiagnosticReport;
+    expect(updatedReport).not.toBeNull();
+    expect(updatedReport?.radar?.length).toBe(4);
+    expect(updatedReport?.scorePercentage).toBeGreaterThanOrEqual(80);
 
     // Clicking "Continuar Praticando" starts another daily batch
     const continueButtons = screen.getAllByRole('button', { name: /Continuar Praticando/i });

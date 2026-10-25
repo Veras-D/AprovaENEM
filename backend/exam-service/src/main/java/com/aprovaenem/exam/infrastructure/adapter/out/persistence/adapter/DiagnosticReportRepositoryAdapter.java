@@ -42,6 +42,26 @@ public class DiagnosticReportRepositoryAdapter implements DiagnosticReportReposi
         return summaryRepository.findBySessionId(sessionId).map(this::toDomain);
     }
 
+    @Override
+    public Optional<DiagnosticReport> findLatestByUserId(UUID userId) {
+        if (userId == null) {
+            return Optional.empty();
+        }
+        return summaryRepository.findByUserIdOrderByGeneratedAtDesc(userId).stream()
+                .findFirst()
+                .map(this::toDomain);
+    }
+
+    @Override
+    public Optional<DiagnosticReport> findLatestByAnonymousSessionId(String anonymousSessionId) {
+        if (anonymousSessionId == null || anonymousSessionId.isBlank()) {
+            return Optional.empty();
+        }
+        return summaryRepository.findByAnonymousSessionIdOrderByGeneratedAtDesc(anonymousSessionId).stream()
+                .findFirst()
+                .map(this::toDomain);
+    }
+
     private DiagnosticReport toDomain(DiagnosticSummaryEntity entity) {
         if (entity == null) {
             return null;

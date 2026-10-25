@@ -1,6 +1,22 @@
 describe('Socratic AI Tutor Drawer & Quota Widget E2E', () => {
   beforeEach(() => {
     cy.clearLocalStorage();
+    cy.intercept('GET', '**/api/v1/gamification/profile', {
+      statusCode: 200,
+      body: {
+        userId: 'user-cypress-1',
+        currentXp: 350,
+        level: 2,
+        levelTitle: 'Estudante Ativo',
+        currentStreakDays: 3,
+        longestStreakDays: 7,
+        streakFreezeAvailable: true,
+        dailyGoalTarget: 5,
+        dailyGoalProgress: 2,
+        weeklyLeague: 'SILVER',
+        unlockedBadges: ['PRIMEIRA_QUESTAO'],
+      },
+    });
     cy.visit('/?section=practice', {
       onBeforeLoad(win) {
         win.localStorage.setItem('aprovaenem_auth_token', 'mock-cypress-jwt-token');

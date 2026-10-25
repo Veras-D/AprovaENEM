@@ -7,6 +7,7 @@ import {
   transformRadarDataForChart,
   evaluateDiagnosticLevel,
   generateDiagnosticFromSession,
+  mergeDiagnosticWithSession,
   selectDiagnosticQuestions,
   ENEM_AREAS,
   MASTERY_CONFIGS,
@@ -176,6 +177,103 @@ describe('diagnostic-utils', () => {
       expect(chArea?.masteryLevel).toBe('CRITICAL');
       expect(chArea?.topWeakTopic).toBe('Brasil Colônia');
       expect(report.recommendedTopics).toContain('Brasil Colônia');
+    });
+  });
+
+  describe('mergeDiagnosticWithSession', () => {
+    it('cumulatively updates existing diagnostic report with newly completed practice session questions and attempts', () => {
+      const existingReport = {
+        id: 'initial-report',
+        sessionId: 'initial-session',
+        scorePercentage: 80,
+        radar: [
+          {
+            knowledgeArea: 'MT',
+            areaName: 'Matemática e suas Tecnologias',
+            scorePercentage: 100,
+            totalQuestions: 1,
+            correctQuestions: 1,
+            masteryLevel: 'MASTERED' as const,
+          },
+          {
+            knowledgeArea: 'CN',
+            areaName: 'Ciências da Natureza e suas Tecnologias',
+            scorePercentage: 100,
+            totalQuestions: 1,
+            correctQuestions: 1,
+            masteryLevel: 'MASTERED' as const,
+          },
+          {
+            knowledgeArea: 'CH',
+            areaName: 'Ciências Humanas e suas Tecnologias',
+            scorePercentage: 0,
+            totalQuestions: 1,
+            correctQuestions: 0,
+            masteryLevel: 'CRITICAL' as const,
+            topWeakTopic: 'Filosofia',
+          },
+          {
+            knowledgeArea: 'LC',
+            areaName: 'Linguagens, Códigos e suas Tecnologias',
+            scorePercentage: 100,
+            totalQuestions: 2,
+            correctQuestions: 2,
+            masteryLevel: 'MASTERED' as const,
+          },
+        ],
+        recommendedTopics: ['Filosofia'],
+        generatedAt: '2026-10-25T00:00:00.000Z',
+      };
+
+      const dailyPracticeQuestions = [
+        { id: 'dp1', knowledgeArea: 'MT', topic: 'Trigonometria' },
+        { id: 'dp2', knowledgeArea: 'CN', topic: 'Ecologia' },
+        { id: 'dp3', knowledgeArea: 'CH', topic: 'Sociologia Contemporânea' },
+      ];
+
+      const dailyPracticeAttempts = {
+        dp1: { questionId: 'dp1', isCorrect: true },
+        dp2: { questionId: 'dp2', isCorrect: false },
+        dp3: { questionId: 'dp3', isCorrect: true },
+      };
+
+      const merged = mergeDiagnosticWithSession(
+        existingReport,
+        dailyPracticeQuestions,
+        dailyPracticeAttempts,
+        'daily-session-1'
+      );
+
+      expect(merged.sessionId).toBe('daily-session-1');
+      // MT: 1/1 + 1/1 = 2/2 (100%)
+      const mt = merged.radar?.find((r) => r.knowledgeArea === 'MT');
+      expect(mt?.totalQuestions).toBe(2);
+      expect(mt?.correctQuestions).toBe(2);
+      expect(mt?.scorePercentage).toBe(100);
+
+      // CN: 1/1 + 0/1 = 1/2 (50%)
+      const cn = merged.radar?.find((r) => r.knowledgeArea === 'CN');
+      expect(cn?.totalQuestions).toBe(2);
+      expect(cn?.correctQuestions).toBe(1);
+      expect(cn?.scorePercentage).toBe(50);
+      expect(cn?.topWeakTopic).toBe('Ecologia');
+
+      // CH: 0/1 + 1/1 = 1/2 (50%)
+      const ch = merged.radar?.find((r) => r.knowledgeArea === 'CH');
+      expect(ch?.totalQuestions).toBe(2);
+      expect(ch?.correctQuestions).toBe(1);
+      expect(ch?.scorePercentage).toBe(50);
+
+      // LC: unchanged 2/2 (100%)
+      const lc = merged.radar?.find((r) => r.knowledgeArea === 'LC');
+      expect(lc?.totalQuestions).toBe(2);
+      expect(lc?.correctQuestions).toBe(2);
+      expect(lc?.scorePercentage).toBe(100);
+
+      // Overall: (2 + 1 + 1 + 2) / (2 + 2 + 2 + 2) = 6/8 = 75%
+      expect(merged.scorePercentage).toBe(75);
+      expect(merged.recommendedTopics).toContain('Ecologia');
+      expect(merged.recommendedTopics).toContain('Filosofia');
     });
   });
 

@@ -45,6 +45,7 @@ import { CelebrationOverlay } from '@/features/gamification';
 import { DiagnosticResultView } from '@/features/diagnostic/components/DiagnosticResultView';
 import {
   generateDiagnosticFromSession,
+  mergeDiagnosticWithSession,
   selectDiagnosticQuestions,
   getSessionVariantIndex,
 } from '@/features/diagnostic/diagnostic-utils';
@@ -87,6 +88,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     completeSession,
     resetDiagnostic,
     recordDiagnosticSeenQuestions,
+    restoreUserDiagnostic,
   } = useSessionStore();
 
   const { timeMode, setTimeMode } = useAccessibilityStore();
@@ -101,8 +103,15 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
   const submitAnswerMutation = useSubmitAnswerMutation();
   const recordActivityMutation = useRecordActivityMutation();
   const gamificationQuery = useGamificationProfileQuery();
+  const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const completionReportedForRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (user?.id && !isDiagnosticCompleted) {
+      void restoreUserDiagnostic(user.id);
+    }
+  }, [user?.id, isDiagnosticCompleted, restoreUserDiagnostic]);
 
   // Report finished sessions once so the backend awards the completion bonus (XP, league, badges)
   const reportSessionCompleted = useCallback(
@@ -162,7 +171,6 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     recordDiagnosticSeenQuestions,
     questionsPool,
     starterVariant,
-    targetBatchSize,
   ]);
 
   // Resynchronize unattempted daily practice session when student's daily goal target changes
@@ -534,9 +542,12 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     if (isAllAnswered && activeSession?.status !== 'COMPLETED' && phase !== 'DIAGNOSTIC') {
       if (isDiagnosticSession) {
         const report = generateDiagnosticFromSession(questions, attempts, activeSession?.id);
-        completeSession(report);
+        completeSession(report, 'DIAGNOSTIC');
       } else {
-        completeSession();
+        const report = savedDiagnosticReport
+          ? mergeDiagnosticWithSession(savedDiagnosticReport, questions, attempts, activeSession?.id)
+          : generateDiagnosticFromSession(questions, attempts, activeSession?.id);
+        completeSession(report, 'COMPLETED');
       }
       reportSessionCompleted(activeSession?.id);
       setShowCelebration(true);
@@ -547,6 +558,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     phase,
     questions,
     attempts,
+    savedDiagnosticReport,
     completeSession,
     reportSessionCompleted,
     isDiagnosticSession,
@@ -882,6 +894,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
             awardedXp={totalXp}
             dailyGoalTarget={gamificationQuery.data?.dailyGoalTarget ?? 5}
             dailyGoalProgress={gamificationQuery.data?.dailyGoalProgress ?? 0}
+            streakDays={gamificationQuery.data?.currentStreakDays ?? 1}
             onContinuePractice={handleStartDailyPractice}
             onStartOfficialSimulation={() => setIsSimulationModalOpen(true)}
             onOpenDiagnostics={onOpenDiagnostics}
@@ -941,9 +954,12 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
                   onFinishDiagnostic={() => {
                     if (isDiagnosticSession) {
                       const report = generateDiagnosticFromSession(questions, attempts, activeSession?.id);
-                      completeSession(report);
+                      completeSession(report, 'DIAGNOSTIC');
                     } else {
-                      completeSession();
+                      const report = savedDiagnosticReport
+                        ? mergeDiagnosticWithSession(savedDiagnosticReport, questions, attempts, activeSession?.id)
+                        : generateDiagnosticFromSession(questions, attempts, activeSession?.id);
+                      completeSession(report, 'COMPLETED');
                     }
                     reportSessionCompleted(activeSession?.id);
                     setShowCelebration(true);

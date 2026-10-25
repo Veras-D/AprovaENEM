@@ -1,6 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useSessionStore } from './useSessionStore';
+import { examService } from '@/api/services/exam.service';
 import type { PracticeSession, Question, DiagnosticReport } from '@/types';
+import type { DiagnosticReportDto } from '@/api/types';
 
 const mockQuestions: readonly Question[] = [
   {
@@ -311,6 +313,71 @@ describe('useSessionStore — Student Session State Machine', () => {
       const log = localStorage.getItem('aprovaenem_migrated_progress');
       expect(log).not.toBeNull();
       expect(JSON.parse(log!).targetUserId).toBe('user-student-999');
+    });
+  });
+
+  describe('User-Scoped Diagnostic Persistence Across Login/Logout', () => {
+    it('should preserve user-scoped diagnostic when clearSession is invoked on logout and restore on login', async () => {
+      const testUserId = 'user-student-abc';
+      localStorage.setItem('aprovaenem_auth_user', JSON.stringify({ id: testUserId }));
+
+      const mockReport: DiagnosticReport = {
+        sessionId: 'sess-persist-1',
+        overallAccuracyPercentage: 90,
+        radar: [
+          {
+            knowledgeArea: 'MT',
+            scorePercentage: 90,
+            totalQuestions: 5,
+            correctQuestions: 5,
+            masteryLevel: 'MASTERED',
+          },
+        ],
+        recommendedStudyFocus: ['Análise Combinatória'],
+      };
+
+      // 1. Complete diagnostic while user is logged in
+      useSessionStore.getState().completeSession(mockReport);
+
+      expect(localStorage.getItem(`aprovaenem_diagnostic_report_${testUserId}`)).not.toBeNull();
+      expect(localStorage.getItem(`aprovaenem_diagnostic_completed_${testUserId}`)).toBe('true');
+
+      // 2. Student logs out (clearSession invoked)
+      useSessionStore.getState().clearSession();
+
+      const loggedOutState = useSessionStore.getState();
+      expect(loggedOutState.isDiagnosticCompleted).toBe(false);
+      expect(loggedOutState.savedDiagnosticReport).toBeNull();
+      // Crucial: user-scoped key in localStorage MUST NOT be destroyed
+      expect(localStorage.getItem(`aprovaenem_diagnostic_report_${testUserId}`)).not.toBeNull();
+
+      // 3. Student logs back in: restoreUserDiagnostic is called
+      const restored = await useSessionStore.getState().restoreUserDiagnostic(testUserId);
+
+      expect(restored).not.toBeNull();
+      const loggedInState = useSessionStore.getState();
+      expect(loggedInState.isDiagnosticCompleted).toBe(true);
+      expect(loggedInState.savedDiagnosticReport).toBeDefined();
+    });
+
+    it('should sync diagnostic from backend when local storage is empty', async () => {
+      const testUserId = 'user-backend-sync';
+      const mockBackendReport: DiagnosticReportDto = {
+        id: 'report-backend-1',
+        sessionId: 'sess-backend-1',
+        scorePercentage: 80,
+        recommendedTopics: ['Geometria Plana'],
+        generatedAt: new Date().toISOString(),
+      };
+
+      const spy = vi.spyOn(examService, 'getLatestDiagnosticReport').mockResolvedValueOnce(mockBackendReport);
+
+      const restored = await useSessionStore.getState().restoreUserDiagnostic(testUserId);
+
+      expect(spy).toHaveBeenCalled();
+      expect(restored).toEqual(mockBackendReport);
+      expect(useSessionStore.getState().isDiagnosticCompleted).toBe(true);
+      expect(localStorage.getItem(`aprovaenem_diagnostic_report_${testUserId}`)).not.toBeNull();
     });
   });
 });

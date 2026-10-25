@@ -12,7 +12,7 @@ import type {
   CompleteSessionResponse,
   DiagnosticReportDto,
 } from '../types';
-import type { QuestionDifficulty, QuestionOptionLetter } from '@/types';
+import type { QuestionDifficulty, QuestionOptionLetter, DiagnosticReport } from '@/types';
 
 /**
  * Normalizes raw question item from backend or mock source to standard QuestionItemDto
@@ -182,5 +182,59 @@ export const examService = {
   async getDiagnosticReport(sessionId: string): Promise<DiagnosticReportDto> {
     const response = await apiClient.get<DiagnosticReportDto>(`/sessions/${sessionId}/diagnostic`);
     return response.data;
+  },
+
+  /**
+   * Retrieve latest persistent diagnostic report for current user or anonymous session from database
+   * Target endpoint: GET /api/v1/sessions/diagnostic/latest
+   */
+  async getLatestDiagnosticReport(): Promise<DiagnosticReportDto | null> {
+    try {
+      const response = await apiClient.get<DiagnosticReportDto>('/sessions/diagnostic/latest');
+      if (response.status === 204 || !response.data || typeof response.data.scorePercentage !== 'number') {
+        return null;
+      }
+      return response.data;
+    } catch {
+      return null;
+    }
+  },
+
+  /**
+   * Persist structured diagnostic assessment report to backend database
+   * Target endpoint: POST /api/v1/sessions/diagnostic
+   */
+  async saveDiagnosticReport(
+    report: Partial<DiagnosticReportDto> | DiagnosticReport
+  ): Promise<DiagnosticReportDto | null> {
+    try {
+      const score =
+        'scorePercentage' in report && typeof report.scorePercentage === 'number'
+          ? report.scorePercentage
+          : 'overallAccuracyPercentage' in report && typeof report.overallAccuracyPercentage === 'number'
+            ? report.overallAccuracyPercentage
+            : 0;
+
+      const topics =
+        'recommendedTopics' in report && Array.isArray(report.recommendedTopics)
+          ? report.recommendedTopics
+          : 'recommendedStudyFocus' in report && Array.isArray(report.recommendedStudyFocus)
+            ? report.recommendedStudyFocus
+            : [];
+
+      const breakdown =
+        'topicBreakdown' in report && report.topicBreakdown
+          ? report.topicBreakdown
+          : {};
+
+      const response = await apiClient.post<DiagnosticReportDto>('/sessions/diagnostic', {
+        scorePercentage: score,
+        topicBreakdown: breakdown,
+        recommendedTopics: topics,
+      });
+      return response.data;
+    } catch {
+      return null;
+    }
   },
 };

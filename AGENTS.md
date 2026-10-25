@@ -76,6 +76,28 @@ newman run docs/postman/AprovaENEM.postman_collection.json -e docs/postman/Aprov
 docker compose ps
 ```
 
+### 2.4. CI Quality Gate & Diagnostic Inspector Commands (`scripts/ci.sh`)
+The monorepo provides a dedicated, zero-dependency CI diagnostic and monitoring tool ([`scripts/ci.sh`](scripts/ci.sh) / [`scripts/ci.py`](scripts/ci.py)) powered by GitHub CLI (`gh`):
+```bash
+# Check latest CI run and diagnose root cause of any failure (ESLint, Cypress, Axe, Maven, etc.)
+./scripts/ci.sh
+
+# Check a specific workflow run by ID
+./scripts/ci.sh check <RUN_ID>
+
+# Watch active CI run live until completion, automatically running failure diagnosis if failed
+./scripts/ci.sh watch
+
+# Watch a specific run ID live
+./scripts/ci.sh watch <RUN_ID>
+
+# List recent CI runs with status, conclusion, branch, commit, and duration
+./scripts/ci.sh list -n 10
+
+# Inspect raw or formatted logs for a specific failed job ID
+./scripts/ci.sh log <JOB_ID>
+```
+
 ---
 
 ## 3. Operational Boundaries
@@ -121,7 +143,15 @@ docker compose ps
 
 ## 4. Error Diagnosis & Research Protocol (Zero Workarounds Policy)
 
-When encountering a build failure, test failure, Docker crash, or runtime exception:
+### 4.1. CI Failure Diagnosis & Live Monitoring Workflow
+When a GitHub Actions pipeline run fails or CI status is red:
+1. **Instant Diagnosis with `./scripts/ci.sh`**:
+   Execute `./scripts/ci.sh` (or `./scripts/ci.sh check`) to immediately inspect the latest CI run. The tool automatically detects all failed jobs, pinpoints the exact failed steps, extracts cleaned error log snippets (stripping ISO timestamps), and presents the root cause (e.g. ESLint warnings, Cypress assertions, Axe-core violations, or Maven compiler errors).
+2. **Watch Pipeline Live**:
+   After pushing code or hotfixes, run `./scripts/ci.sh watch` to monitor pipeline progress live. Once finished, it automatically evaluates the final outcome and prints an immediate diagnostic summary if any step fails.
+
+### 4.2. Local Error Diagnosis Protocol
+When encountering a local build failure, test failure, Docker crash, or runtime exception:
 
 1. **Root Cause Analysis**:
    - Read the complete stack trace and trace the innermost cause (`Caused by:`).
@@ -136,6 +166,7 @@ When encountering a build failure, test failure, Docker crash, or runtime except
    - **Backend Mockito Strict Stubbings**: Only stub methods that are actually invoked. For multi-branch enums, use `inv -> ...` dynamic answers.
    - **Backend Reactor Multi-Module Dependencies**: Microservices depend on `common-core`. Run tests from the root reactor or include `-Dsurefire.failIfNoSpecifiedTests=false`.
    - **Frontend Accessibility Tree**: Always ensure DOM elements have proper ARIA attributes, semantic tags, and valid labels for screen readers.
+   - **Cypress Network 401 ClearAuth**: In Cypress E2E tests, mock dummy tokens will receive `401 Unauthorized` if backend endpoints (e.g. `/api/v1/gamification/profile`) are called without `cy.intercept`, causing `apiClient`'s 401 interceptor to call `clearAuth()` and reset the session. Always intercept backend API routes in `beforeEach` with realistic mock responses.
 4. **Verification**:
    - Re-run test suites to verify 100% green status before completing the task.
 

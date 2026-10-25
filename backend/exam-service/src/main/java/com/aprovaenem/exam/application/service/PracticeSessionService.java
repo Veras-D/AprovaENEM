@@ -8,6 +8,8 @@ import com.aprovaenem.exam.domain.model.MasteryLevel;
 import com.aprovaenem.exam.domain.model.PracticeSession;
 import com.aprovaenem.exam.domain.model.Question;
 import com.aprovaenem.exam.domain.model.QuestionResolution;
+import com.aprovaenem.exam.domain.model.SaveDiagnosticReportCommand;
+import com.aprovaenem.exam.domain.model.SessionType;
 import com.aprovaenem.exam.domain.model.StartSessionCommand;
 import com.aprovaenem.exam.domain.model.StudentAttempt;
 import com.aprovaenem.exam.domain.model.SubmitAnswerCommand;
@@ -25,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -195,5 +198,50 @@ public class PracticeSessionService implements PracticeSessionUseCase {
     public DiagnosticReport getDiagnosticReport(UUID sessionId) {
         return diagnosticReportRepository.findBySessionId(sessionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Diagnostic report for session", sessionId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<DiagnosticReport> getLatestDiagnosticReport(UUID userId, String anonymousSessionId) {
+        if (userId != null) {
+            Optional<DiagnosticReport> userReport = diagnosticReportRepository.findLatestByUserId(userId);
+            if (userReport.isPresent()) {
+                return userReport;
+            }
+        }
+        if (anonymousSessionId != null && !anonymousSessionId.isBlank()) {
+            return diagnosticReportRepository.findLatestByAnonymousSessionId(anonymousSessionId);
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    @Transactional
+    public DiagnosticReport saveDiagnosticReport(SaveDiagnosticReportCommand command) {
+        log.info("Saving persistent diagnostic report: userId={}, anonymousSessionId={}, score={}",
+                command.getUserId(), command.getAnonymousSessionId(), command.getScorePercentage());
+
+        String sessionIdentifier = command.getAnonymousSessionId() != null && !command.getAnonymousSessionId().isBlank()
+                ? command.getAnonymousSessionId()
+                : (command.getUserId() != null ? command.getUserId().toString() : "diagnostic-session");
+
+        PracticeSession session = new PracticeSession(
+                null,
+                command.getUserId(),
+                sessionIdentifier,
+                SessionType.DIAGNOSTIC_QUICK,
+                5
+        );
+        session.complete();
+        PracticeSession savedSession = sessionRepository.save(session);
+
+        DiagnosticReport report = new DiagnosticReport(
+                null,
+                savedSession.getId(),
+                command.getScorePercentage(),
+                command.getTopicBreakdown(),
+                command.getRecommendedTopics()
+        );
+        return diagnosticReportRepository.save(report);
     }
 }

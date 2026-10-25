@@ -88,6 +88,23 @@ describe('API Services', () => {
       expect(completeResult).toEqual(MOCK_COMPLETE_SESSION);
       expect(diagnosticResult).toEqual(MOCK_DIAGNOSTIC_REPORT);
     });
+
+    it('should retrieve latest diagnostic report and persist diagnostic report', async () => {
+      const getSpy = vi.spyOn(apiClient, 'get').mockResolvedValueOnce({ status: 200, data: MOCK_DIAGNOSTIC_REPORT });
+      const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValueOnce({ status: 201, data: MOCK_DIAGNOSTIC_REPORT });
+
+      const latest = await examService.getLatestDiagnosticReport();
+      const saved = await examService.saveDiagnosticReport(MOCK_DIAGNOSTIC_REPORT);
+
+      expect(getSpy).toHaveBeenCalledWith('/sessions/diagnostic/latest');
+      expect(postSpy).toHaveBeenCalledWith('/sessions/diagnostic', {
+        scorePercentage: MOCK_DIAGNOSTIC_REPORT.scorePercentage,
+        topicBreakdown: MOCK_DIAGNOSTIC_REPORT.topicBreakdown,
+        recommendedTopics: MOCK_DIAGNOSTIC_REPORT.recommendedTopics,
+      });
+      expect(latest).toEqual(MOCK_DIAGNOSTIC_REPORT);
+      expect(saved).toEqual(MOCK_DIAGNOSTIC_REPORT);
+    });
   });
 
   describe('tutorService', () => {

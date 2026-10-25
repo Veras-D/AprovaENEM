@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { DailyPracticeSummaryView } from './DailyPracticeSummaryView';
 
 describe('DailyPracticeSummaryView Component', () => {
-  it('renders summary heading, accuracy, score, and XP awarded correctly', () => {
+  it('renders summary heading, accuracy, score, XP awarded, and daily streak correctly', () => {
     const handleContinue = vi.fn();
 
     render(
@@ -13,18 +13,21 @@ describe('DailyPracticeSummaryView Component', () => {
         awardedXp={60}
         dailyGoalTarget={5}
         dailyGoalProgress={4}
+        streakDays={3}
         onContinuePractice={handleContinue}
       />
     );
 
     expect(screen.getByRole('heading', { level: 1, name: /Treino Diário Concluído! 🎉/i })).toBeInTheDocument();
-    expect(screen.getAllByText('4/5').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('4/5')).toBeInTheDocument();
     expect(screen.getByText(/80% de acertos/i)).toBeInTheDocument();
     expect(screen.getByText('+60 XP')).toBeInTheDocument();
-    expect(screen.getByText(/Faltam 1 questões para bater a meta/i)).toBeInTheDocument();
+    expect(screen.getByText(/Ofensiva Diária/i)).toBeInTheDocument();
+    expect(screen.getByText(/^3 Dias$/i)).toBeInTheDocument();
+    expect(screen.getByText(/3 dias seguidos de estudos!/i)).toBeInTheDocument();
   });
 
-  it('displays badge and congratulations when daily goal is reached', () => {
+  it('displays badge and streak status when daily goal is reached', () => {
     render(
       <DailyPracticeSummaryView
         questionsCount={5}
@@ -32,12 +35,14 @@ describe('DailyPracticeSummaryView Component', () => {
         awardedXp={75}
         dailyGoalTarget={5}
         dailyGoalProgress={5}
+        streakDays={1}
         onContinuePractice={vi.fn()}
       />
     );
 
     expect(screen.getByText(/Meta Diária Atingida!/i)).toBeInTheDocument();
-    expect(screen.getByText(/Parabéns! Meta do dia cumprida!/i)).toBeInTheDocument();
+    expect(screen.getByText(/^1 Dia$/i)).toBeInTheDocument();
+    expect(screen.getByText(/Chama de estudos mantida hoje!/i)).toBeInTheDocument();
   });
 
   it('invokes callbacks when clicking action buttons', () => {

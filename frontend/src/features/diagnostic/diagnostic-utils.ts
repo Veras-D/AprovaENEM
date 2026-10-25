@@ -216,6 +216,7 @@ export interface SessionQuestionLike {
   readonly id: string;
   readonly knowledgeArea?: string;
   readonly discipline?: string;
+  readonly subject?: string;
   readonly topic?: string;
 }
 
@@ -290,6 +291,102 @@ export function generateDiagnosticFromSession(
     recommendedTopics:
       recommendedTopics.length > 0
         ? recommendedTopics
+        : ['Interpretação Textual e Gráficos', 'Geometria e Proporcionalidade'],
+    generatedAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Merges a newly completed practice session into an existing DiagnosticReportDto,
+ * accumulating total questions, correct answers, updated proficiency percentages,
+ * and newly identified weak topics across all 4 ENEM knowledge areas.
+ */
+export function mergeDiagnosticWithSession(
+  existingReport: DiagnosticReportDto,
+  questions: readonly SessionQuestionLike[],
+  attempts: Readonly<Record<string, SessionAttemptLike>>,
+  sessionId?: string
+): DiagnosticReportDto {
+  const areaCodes: readonly ('MT' | 'CN' | 'CH' | 'LC')[] = ['MT', 'CN', 'CH', 'LC'];
+
+  let totalQuestionsCount = 0;
+  let totalCorrectCount = 0;
+  const newRecommendedTopics: string[] = [];
+
+  const updatedRadar: DiagnosticRadarAreaDto[] = areaCodes.map((code) => {
+    const existingArea = existingReport.radar?.find((r) => r.knowledgeArea === code);
+    const existingTotal = existingArea?.totalQuestions ?? 0;
+    const existingCorrect = existingArea?.correctQuestions ?? 0;
+
+    const areaQuestions = questions.filter(
+      (q) => getAreaCode(q.knowledgeArea || q.discipline || q.subject || '') === code
+    );
+
+    let newCorrect = 0;
+    let newWeakTopic = '';
+
+    areaQuestions.forEach((q) => {
+      const att = attempts[q.id];
+      if (att?.isCorrect) {
+        newCorrect++;
+      } else {
+        const topic = q.topic || q.discipline || q.subject || ENEM_AREAS[code]?.name || code;
+        if (!newWeakTopic) {
+          newWeakTopic = topic;
+        }
+        if (!newRecommendedTopics.includes(topic)) {
+          newRecommendedTopics.push(topic);
+        }
+      }
+    });
+
+    const combinedTotal = existingTotal + areaQuestions.length;
+    const combinedCorrect = existingCorrect + newCorrect;
+
+    totalQuestionsCount += combinedTotal;
+    totalCorrectCount += combinedCorrect;
+
+    const scorePct =
+      combinedTotal > 0
+        ? Math.round((combinedCorrect / combinedTotal) * 100)
+        : existingArea?.scorePercentage ?? 60;
+
+    const meta = getAreaMetadata(code);
+
+    return {
+      knowledgeArea: code,
+      areaName: meta.name,
+      scorePercentage: scorePct,
+      totalQuestions: combinedTotal > 0 ? combinedTotal : 5,
+      correctQuestions: combinedTotal > 0 ? combinedCorrect : 3,
+      masteryLevel: calculateMasteryLevel(scorePct),
+      topWeakTopic:
+        newWeakTopic ||
+        existingArea?.topWeakTopic ||
+        (scorePct < 70 ? 'Revisão Recomendada' : undefined),
+    };
+  });
+
+  const overallScorePercentage =
+    totalQuestionsCount > 0
+      ? Math.round((totalCorrectCount / totalQuestionsCount) * 100)
+      : existingReport.scorePercentage;
+
+  const combinedTopics = [...newRecommendedTopics];
+  (existingReport.recommendedTopics || []).forEach((topic) => {
+    if (!combinedTopics.includes(topic)) {
+      combinedTopics.push(topic);
+    }
+  });
+
+  return {
+    id: existingReport.id || `report-${Date.now()}`,
+    sessionId: sessionId || existingReport.sessionId,
+    scorePercentage: overallScorePercentage,
+    radar: updatedRadar,
+    recommendedTopics:
+      combinedTopics.length > 0
+        ? combinedTopics
         : ['Interpretação Textual e Gráficos', 'Geometria e Proporcionalidade'],
     generatedAt: new Date().toISOString(),
   };

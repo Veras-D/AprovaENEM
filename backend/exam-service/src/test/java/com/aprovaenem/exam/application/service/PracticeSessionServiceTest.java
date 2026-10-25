@@ -302,4 +302,66 @@ class PracticeSessionServiceTest {
         assertThat(report).isEqualTo(existingReport);
         verify(sessionRepository, never()).findAttemptsBySessionId(any());
     }
+
+    @Test
+    @DisplayName("Should return latest diagnostic report by userId or anonymousSessionId")
+    void shouldReturnLatestDiagnosticReport() {
+        UUID userId = UUID.randomUUID();
+        String anonId = "anon-test-123";
+        DiagnosticReport userReport = new DiagnosticReport();
+        userReport.setId(UUID.randomUUID());
+
+        when(diagnosticReportRepository.findLatestByUserId(userId)).thenReturn(Optional.of(userReport));
+
+        Optional<DiagnosticReport> found = practiceSessionService.getLatestDiagnosticReport(userId, anonId);
+
+        assertThat(found).isPresent().contains(userReport);
+        verify(diagnosticReportRepository).findLatestByUserId(userId);
+    }
+
+    @Test
+    @DisplayName("Should fall back to anonymousSessionId when user diagnostic report is not found")
+    void shouldFallbackToAnonymousDiagnosticReport() {
+        UUID userId = UUID.randomUUID();
+        String anonId = "anon-test-456";
+        DiagnosticReport anonReport = new DiagnosticReport();
+        anonReport.setId(UUID.randomUUID());
+
+        when(diagnosticReportRepository.findLatestByUserId(userId)).thenReturn(Optional.empty());
+        when(diagnosticReportRepository.findLatestByAnonymousSessionId(anonId)).thenReturn(Optional.of(anonReport));
+
+        Optional<DiagnosticReport> found = practiceSessionService.getLatestDiagnosticReport(userId, anonId);
+
+        assertThat(found).isPresent().contains(anonReport);
+        verify(diagnosticReportRepository).findLatestByAnonymousSessionId(anonId);
+    }
+
+    @Test
+    @DisplayName("Should successfully save and persist diagnostic report")
+    void shouldSaveDiagnosticReportSuccessfully() {
+        UUID userId = UUID.randomUUID();
+        com.aprovaenem.exam.domain.model.SaveDiagnosticReportCommand command =
+                new com.aprovaenem.exam.domain.model.SaveDiagnosticReportCommand(
+                        userId,
+                        "anon-save-1",
+                        java.math.BigDecimal.valueOf(80.0),
+                        java.util.Map.of(),
+                        java.util.List.of("Geometria")
+                );
+
+        PracticeSession savedSession = new PracticeSession();
+        savedSession.setId(UUID.randomUUID());
+
+        when(sessionRepository.save(any(PracticeSession.class))).thenReturn(savedSession);
+        when(diagnosticReportRepository.save(any(DiagnosticReport.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        DiagnosticReport saved = practiceSessionService.saveDiagnosticReport(command);
+
+        assertThat(saved).isNotNull();
+        assertThat(saved.getSessionId()).isEqualTo(savedSession.getId());
+        assertThat(saved.getScorePercentage()).isEqualByComparingTo("80.0");
+        assertThat(saved.getRecommendedTopics()).contains("Geometria");
+        verify(sessionRepository).save(any(PracticeSession.class));
+        verify(diagnosticReportRepository).save(any(DiagnosticReport.class));
+    }
 }

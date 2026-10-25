@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.16] - 2026-10-25
+
+### Added
+- feat(exam): Implemented persistent PostgreSQL diagnostic storage endpoints `GET /api/v1/sessions/diagnostic/latest` and `POST /api/v1/sessions/diagnostic` ([`PracticeSessionController.java`](backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/in/web/PracticeSessionController.java), [`PracticeSessionService.java`](backend/exam-service/src/main/java/com/aprovaenem/exam/application/service/PracticeSessionService.java), [`DiagnosticReportRepositoryAdapter.java`](backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/out/persistence/adapter/DiagnosticReportRepositoryAdapter.java)), enabling student diagnostic assessments and skill radar evaluations to be saved to and retrieved from the `diagnostic_summaries` table in PostgreSQL ([`TASK-S6-42`](docs/BACKLOG.md#task-s6-42)).
+- feat(frontend): Added `examService.getLatestDiagnosticReport` and `examService.saveDiagnosticReport` in [`exam.service.ts`](frontend/src/api/services/exam.service.ts) and wired automatic PostgreSQL synchronization upon completing diagnostic assessments and daily practice sessions ([`TASK-S6-42`](docs/BACKLOG.md#task-s6-42)).
+
+### Changed
+- feat(session): Scoped diagnostic assessment completion and skill radar state per student user (`aprovaenem_diagnostic_report_<userId>`, `aprovaenem_diagnostic_completed_<userId>`) in [`useSessionStore.ts`](frontend/src/stores/useSessionStore.ts), ensuring that taking a diagnostic as an authenticated student permanently preserves their diagnostic report across logout/login cycles ([`TASK-S6-42`](docs/BACKLOG.md#task-s6-42)).
+- feat(auth): Integrated `restoreUserDiagnostic` on student authentication login (`setAuth`) and page reload (`syncAuthFromStorage`) in [`useAuthStore.ts`](frontend/src/stores/useAuthStore.ts) and [`PracticeHero.tsx`](frontend/src/features/practice/PracticeHero.tsx), automatically rehydrating the student's completed diagnostic radar and advancing them directly to daily practice questions ("Questões Diárias do ENEM") without prompting them to redo the diagnostic ([`TASK-S6-42`](docs/BACKLOG.md#task-s6-42)).
+
+### Fixed
+- fix(session): Prevented `clearSession()` in [`useSessionStore.ts`](frontend/src/stores/useSessionStore.ts) from purging user-scoped diagnostic reports upon logout, resolving an issue where logging out and logging back in previously destroyed student diagnostic radar data and forced students to retake the diagnostic assessment ([`TASK-S6-42`](docs/BACKLOG.md#task-s6-42)).
+
+## [0.6.15] - 2026-10-25
+
+### Added
+- feat(ci): Created dedicated CI Quality Gate Inspector and Watcher CLI tool ([`ci.sh`](scripts/ci.sh), [`ci.py`](scripts/ci.py)) providing automated root cause failure extraction, cleaned log parsing without timestamps, live pipeline watching, job log inspection, and added operational usage documentation to [`AGENTS.md`](AGENTS.md) ([`TASK-S6-41`](docs/BACKLOG.md#task-s6-41)).
+
+### Changed
+- feat(diagnostic): Integrated cumulative diagnostic proficiency updates upon completing daily practice sessions ([`diagnostic-utils.ts`](frontend/src/features/diagnostic/diagnostic-utils.ts), [`diagnostic-utils.test.ts`](frontend/src/features/diagnostic/diagnostic-utils.test.ts), [`PracticeHero.tsx`](frontend/src/features/practice/PracticeHero.tsx), [`useSessionStore.ts`](frontend/src/stores/useSessionStore.ts)), ensuring that questions answered across Matemática, Natureza, Humanas, and Linguagens dynamically increment knowledge area question totals, update accuracy percentages, recalculate mastery levels, and refresh the Diagnostic Radar and area breakdown cards in real time ([`TASK-S6-41`](docs/BACKLOG.md#task-s6-41)).
+- feat(practice): Replaced the redundant "Meta Diária" progress bar card in the Daily Practice summary view ([`DailyPracticeSummaryView.tsx`](frontend/src/features/practice/components/DailyPracticeSummaryView.tsx), [`PracticeHero.tsx`](frontend/src/features/practice/PracticeHero.tsx)) with the student's daily study streak counter ("Ofensiva Diária" 🔥), showcasing consecutive study days and flame status ("Chama de estudos mantida hoje!") alongside accuracy and XP earned ([`TASK-S6-40`](docs/BACKLOG.md#task-s6-40)).
+
+### Fixed
+- fix(ci): Resolved duplicate hook dependency (`targetBatchSize`) in `PracticeHero.tsx` satisfying ESLint `--max-warnings 0` rule `react-hooks/exhaustive-deps` ([`TASK-S6-41`](docs/BACKLOG.md#task-s6-41)).
+- fix(test): Added mock intercept for `GET **/api/v1/gamification/profile` in Cypress Socratic AI Tutor spec ([`02-socratic-ai-tutor.cy.ts`](frontend/cypress/e2e/02-socratic-ai-tutor.cy.ts)), preventing unauthenticated 401 network responses from wiping student session authentication in `client.ts` during interactive chat execution ([`TASK-S6-41`](docs/BACKLOG.md#task-s6-41)).
+
 ## [0.6.14] - 2026-10-25
 
 ### Changed

@@ -3,7 +3,6 @@ import {
   Award,
   Sparkles,
   CheckCircle2,
-  Target,
   Layers,
   BarChart2,
   Trophy,
@@ -20,6 +19,8 @@ export interface DailyPracticeSummaryViewProps {
   readonly awardedXp: number;
   readonly dailyGoalTarget?: number;
   readonly dailyGoalProgress?: number;
+  readonly streakDays?: number;
+  readonly currentStreakDays?: number;
   readonly onContinuePractice: () => void;
   readonly onStartOfficialSimulation?: () => void;
   readonly onOpenDiagnostics?: () => void;
@@ -33,6 +34,8 @@ export const DailyPracticeSummaryView: React.FC<DailyPracticeSummaryViewProps> =
   awardedXp,
   dailyGoalTarget = 5,
   dailyGoalProgress = 0,
+  streakDays,
+  currentStreakDays,
   onContinuePractice,
   onStartOfficialSimulation,
   onOpenDiagnostics,
@@ -43,11 +46,7 @@ export const DailyPracticeSummaryView: React.FC<DailyPracticeSummaryViewProps> =
     ? Math.round((correctCount / questionsCount) * 100)
     : 0;
 
-  const goalProgressClamped = Math.min(dailyGoalProgress, dailyGoalTarget);
-  const goalPercentage = Math.min(
-    100,
-    Math.round((dailyGoalProgress / Math.max(1, dailyGoalTarget)) * 100)
-  );
+  const resolvedStreak = Math.max(1, streakDays ?? currentStreakDays ?? 1);
   const isGoalCompleted = dailyGoalProgress >= dailyGoalTarget;
 
   return (
@@ -144,34 +143,19 @@ export const DailyPracticeSummaryView: React.FC<DailyPracticeSummaryViewProps> =
               </span>
             </div>
 
-            {/* Daily Goal Status */}
-            <div className="p-4 rounded-brand bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center space-y-2">
-              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                <span className="flex items-center gap-1">
-                  <Target className="h-3.5 w-3.5 text-blue-500" aria-hidden="true" />
-                  Meta Diária
-                </span>
-                <span className="font-bold text-slate-700 dark:text-slate-300">
-                  {goalProgressClamped}/{dailyGoalTarget}
-                </span>
-              </div>
-              <div
-                className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden"
-                role="progressbar"
-                aria-valuenow={dailyGoalProgress}
-                aria-valuemin={0}
-                aria-valuemax={dailyGoalTarget}
-                aria-label={`Progresso da meta diária: ${dailyGoalProgress} de ${dailyGoalTarget} questões resolvidas`}
-              >
-                <div
-                  className="bg-emerald-500 h-2.5 rounded-full transition-all duration-500"
-                  style={{ width: `${goalPercentage}%` }}
-                />
-              </div>
-              <span className="block text-xs font-medium text-slate-500 dark:text-slate-400">
-                {isGoalCompleted
-                  ? 'Parabéns! Meta do dia cumprida!'
-                  : `Faltam ${Math.max(0, dailyGoalTarget - dailyGoalProgress)} questões para bater a meta`}
+            {/* Daily Streak Status */}
+            <div className="p-4 rounded-brand bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center space-y-1">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Ofensiva Diária
+              </span>
+              <span className="flex items-center justify-center gap-1.5 text-3xl font-black text-orange-500 dark:text-orange-400">
+                <Flame className="h-7 w-7 fill-orange-500 text-orange-500" aria-hidden="true" />
+                {resolvedStreak} {resolvedStreak === 1 ? 'Dia' : 'Dias'}
+              </span>
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                {resolvedStreak > 1
+                  ? `${resolvedStreak} dias seguidos de estudos!`
+                  : 'Chama de estudos mantida hoje!'}
               </span>
             </div>
           </div>

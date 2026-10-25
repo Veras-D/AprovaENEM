@@ -150,4 +150,28 @@ class DiagnosticReportRepositoryAdapterTest {
         assertThat(saved.getTopicBreakdown()).isEmpty();
         assertThat(saved.getRecommendedTopics()).isEmpty();
     }
+
+    @Test
+    @DisplayName("Should find latest diagnostic report by userId and anonymousSessionId")
+    void shouldFindLatestReports() {
+        UUID userId = UUID.randomUUID();
+        String anonId = "anon-xyz";
+
+        DiagnosticSummaryEntity entity = DiagnosticSummaryEntity.builder()
+                .id(UUID.randomUUID())
+                .scorePercentage(new BigDecimal("70.00"))
+                .generatedAt(Instant.now())
+                .build();
+
+        when(summaryRepository.findByUserIdOrderByGeneratedAtDesc(userId)).thenReturn(List.of(entity));
+        when(summaryRepository.findByAnonymousSessionIdOrderByGeneratedAtDesc(anonId)).thenReturn(List.of(entity));
+
+        Optional<DiagnosticReport> byUser = adapter.findLatestByUserId(userId);
+        Optional<DiagnosticReport> byAnon = adapter.findLatestByAnonymousSessionId(anonId);
+
+        assertThat(byUser).isPresent();
+        assertThat(byAnon).isPresent();
+        assertThat(adapter.findLatestByUserId(null)).isEmpty();
+        assertThat(adapter.findLatestByAnonymousSessionId(null)).isEmpty();
+    }
 }

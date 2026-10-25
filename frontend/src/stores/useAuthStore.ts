@@ -30,6 +30,9 @@ export const useAuthStore = create<AuthState>((set) => {
     if (storedUser) {
       try {
         initialUser = JSON.parse(storedUser) as UserProfile;
+        if (initialUser?.id) {
+          void useSessionStore.getState().restoreUserDiagnostic(initialUser.id);
+        }
       } catch {
         localStorage.removeItem(STORAGE_KEY_USER);
       }
@@ -47,6 +50,7 @@ export const useAuthStore = create<AuthState>((set) => {
       localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
       if (user?.id) {
         useSessionStore.getState().migrateAnonymousProgress(user.id);
+        void useSessionStore.getState().restoreUserDiagnostic(user.id);
       }
       set({ token, user, isAuthenticated: true, isAuthModalOpen: false });
     },
@@ -101,6 +105,9 @@ export const useAuthStore = create<AuthState>((set) => {
           } catch {
             localStorage.removeItem(STORAGE_KEY_USER);
           }
+        }
+        if (user?.id) {
+          void useSessionStore.getState().restoreUserDiagnostic(user.id);
         }
         set({ token, user, isAuthenticated: Boolean(token) });
       }

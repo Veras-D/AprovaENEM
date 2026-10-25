@@ -322,4 +322,56 @@ class PracticeSessionControllerWebMvcTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(sessionId.toString())));
     }
+
+    @Test
+    @DisplayName("GET /api/v1/practice/sessions/diagnostic/latest should return HTTP 200 when diagnostic exists")
+    void shouldReturnLatestDiagnosticReportWhenExists() throws Exception {
+        UUID reportId = UUID.randomUUID();
+        UUID sessionId = UUID.randomUUID();
+        DiagnosticReport report = new DiagnosticReport(reportId, sessionId, BigDecimal.valueOf(75.0), Map.of(), List.of("Tópico A"));
+
+        when(sessionUseCase.getLatestDiagnosticReport(any(), any())).thenReturn(java.util.Optional.of(report));
+
+        mockMvc.perform(get("/api/v1/practice/sessions/diagnostic/latest")
+                        .header("X-Session-Id", "anon-123"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(reportId.toString())))
+                .andExpect(jsonPath("$.sessionId", is(sessionId.toString())))
+                .andExpect(jsonPath("$.scorePercentage", is(75.0)));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/practice/sessions/diagnostic/latest should return HTTP 204 when no diagnostic exists")
+    void shouldReturnNoContentWhenNoDiagnosticExists() throws Exception {
+        when(sessionUseCase.getLatestDiagnosticReport(any(), any())).thenReturn(java.util.Optional.empty());
+
+        mockMvc.perform(get("/api/v1/practice/sessions/diagnostic/latest")
+                        .header("X-Session-Id", "anon-empty"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/practice/sessions/diagnostic should save and return HTTP 201")
+    void shouldSaveDiagnosticReportSuccessfully() throws Exception {
+        UUID reportId = UUID.randomUUID();
+        UUID sessionId = UUID.randomUUID();
+        DiagnosticReport report = new DiagnosticReport(reportId, sessionId, BigDecimal.valueOf(85.0), Map.of(), List.of("Tópico B"));
+
+        when(sessionUseCase.saveDiagnosticReport(any())).thenReturn(report);
+
+        com.aprovaenem.exam.infrastructure.adapter.in.web.dto.SaveDiagnosticReportRequest req =
+                new com.aprovaenem.exam.infrastructure.adapter.in.web.dto.SaveDiagnosticReportRequest(
+                        BigDecimal.valueOf(85.0),
+                        Map.of(),
+                        List.of("Tópico B")
+                );
+
+        mockMvc.perform(post("/api/v1/practice/sessions/diagnostic")
+                        .header("X-Session-Id", "anon-save-1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", is(reportId.toString())))
+                .andExpect(jsonPath("$.scorePercentage", is(85.0)));
+    }
 }

@@ -6,6 +6,7 @@ import type {
   DiagnosticReport,
 } from '@/types';
 import type { DiagnosticReportDto } from '@/api/types';
+import { examService } from '@/api/services/exam.service';
 
 export type SessionPhase =
   | 'IDLE'
@@ -75,12 +76,13 @@ export interface SessionState {
   readonly goToQuestion: (index: number) => boolean;
   readonly tickTimer: (deltaSeconds?: number) => void;
   readonly resetQuestionTimer: () => void;
-  readonly completeSession: (report?: DiagnosticReport | DiagnosticReportDto) => void;
+  readonly completeSession: (report?: DiagnosticReport | DiagnosticReportDto, targetPhase?: SessionPhase) => void;
   readonly setDiagnosticReport: (report: DiagnosticReport | DiagnosticReportDto) => void;
   readonly resetDiagnostic: () => void;
   readonly clearSession: () => void;
   readonly recordDiagnosticSeenQuestions: (ids: readonly string[]) => void;
   readonly migrateAnonymousProgress: (userId: string) => MigrationResult;
+  readonly restoreUserDiagnostic: (userId: string) => Promise<DiagnosticReportDto | null>;
 }
 
 const STORAGE_KEY_ANON_SESSION = 'aprovaenem_anon_session_id';
@@ -88,6 +90,23 @@ const STORAGE_KEY_MIGRATION = 'aprovaenem_migrated_progress';
 const STORAGE_KEY_DIAGNOSTIC_COMPLETED = 'aprovaenem_diagnostic_completed';
 const STORAGE_KEY_DIAGNOSTIC_REPORT = 'aprovaenem_diagnostic_report';
 const STORAGE_KEY_DIAGNOSTIC_SEEN = 'aprovaenem_diagnostic_seen_ids';
+
+export const STORAGE_KEY_USER_DIAG_REPORT_PREFIX = 'aprovaenem_diagnostic_report_';
+export const STORAGE_KEY_USER_DIAG_COMPLETED_PREFIX = 'aprovaenem_diagnostic_completed_';
+
+function getCurrentUserId(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const rawUser = localStorage.getItem('aprovaenem_auth_user');
+    if (rawUser) {
+      const user = JSON.parse(rawUser) as { id?: string };
+      return user?.id || null;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
 
 function getOrCreateAnonymousSessionId(): string {
   if (typeof window === 'undefined') {
@@ -103,6 +122,15 @@ function getOrCreateAnonymousSessionId(): string {
 
 function getSavedDiagnosticCompleted(): boolean {
   if (typeof window === 'undefined') return false;
+  const userId = getCurrentUserId();
+  if (userId) {
+    if (
+      localStorage.getItem(STORAGE_KEY_USER_DIAG_COMPLETED_PREFIX + userId) === 'true' ||
+      Boolean(localStorage.getItem(STORAGE_KEY_USER_DIAG_REPORT_PREFIX + userId))
+    ) {
+      return true;
+    }
+  }
   return (
     localStorage.getItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED) === 'true' ||
     Boolean(localStorage.getItem(STORAGE_KEY_DIAGNOSTIC_REPORT))
@@ -112,6 +140,13 @@ function getSavedDiagnosticCompleted(): boolean {
 function getSavedDiagnosticReport(): DiagnosticReportDto | null {
   if (typeof window === 'undefined') return null;
   try {
+    const userId = getCurrentUserId();
+    if (userId) {
+      const userReport = localStorage.getItem(STORAGE_KEY_USER_DIAG_REPORT_PREFIX + userId);
+      if (userReport) {
+        return JSON.parse(userReport) as DiagnosticReportDto;
+      }
+    }
     const raw = localStorage.getItem(STORAGE_KEY_DIAGNOSTIC_REPORT);
     return raw ? (JSON.parse(raw) as DiagnosticReportDto) : null;
   } catch {
@@ -273,8 +308,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
   resetQuestionTimer: () => set({ questionElapsedSeconds: 0 }),
 
-  completeSession: (report) => {
-    const { activeSession } = get();
+  completeSession: (report, targetPhase) => {
+    const { activeSession, isDiagnosticCompleted } = get();
     const completedSession: PracticeSession | null = activeSession
       ? {
           ...activeSession,
@@ -283,22 +318,32 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         }
       : null;
 
+    const resolvedPhase: SessionPhase = targetPhase ?? (report && !isDiagnosticCompleted ? 'DIAGNOSTIC' : 'COMPLETED');
+
     if (report) {
+      const userId = getCurrentUserId();
       if (typeof localStorage !== 'undefined') {
         try {
           localStorage.setItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED, 'true');
           localStorage.setItem(STORAGE_KEY_DIAGNOSTIC_REPORT, JSON.stringify(report));
+          if (userId) {
+            localStorage.setItem(STORAGE_KEY_USER_DIAG_COMPLETED_PREFIX + userId, 'true');
+            localStorage.setItem(STORAGE_KEY_USER_DIAG_REPORT_PREFIX + userId, JSON.stringify(report));
+          }
         } catch {
           // LocalStorage quota or privacy sandbox
         }
       }
+
+      // Persist diagnostic report to PostgreSQL database
+      void examService.saveDiagnosticReport(report);
 
       set({
         activeSession: completedSession,
         diagnosticReport: report,
         savedDiagnosticReport: (report as DiagnosticReportDto) ?? null,
         isDiagnosticCompleted: true,
-        phase: 'DIAGNOSTIC',
+        phase: resolvedPhase,
       });
     } else {
       set({
@@ -309,14 +354,20 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   },
 
   setDiagnosticReport: (report) => {
+    const userId = getCurrentUserId();
     if (typeof localStorage !== 'undefined') {
       try {
         localStorage.setItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED, 'true');
         localStorage.setItem(STORAGE_KEY_DIAGNOSTIC_REPORT, JSON.stringify(report));
+        if (userId) {
+          localStorage.setItem(STORAGE_KEY_USER_DIAG_COMPLETED_PREFIX + userId, 'true');
+          localStorage.setItem(STORAGE_KEY_USER_DIAG_REPORT_PREFIX + userId, JSON.stringify(report));
+        }
       } catch {
         // Storage quota
       }
     }
+    void examService.saveDiagnosticReport(report);
     set({
       diagnosticReport: report,
       savedDiagnosticReport: (report as DiagnosticReportDto) ?? null,
@@ -326,10 +377,15 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   },
 
   resetDiagnostic: () => {
+    const userId = getCurrentUserId();
     if (typeof localStorage !== 'undefined') {
       try {
         localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED);
         localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_REPORT);
+        if (userId) {
+          localStorage.removeItem(STORAGE_KEY_USER_DIAG_COMPLETED_PREFIX + userId);
+          localStorage.removeItem(STORAGE_KEY_USER_DIAG_REPORT_PREFIX + userId);
+        }
       } catch {
         // Storage quota
       }
@@ -353,8 +409,6 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   clearSession: () => {
     if (typeof localStorage !== 'undefined') {
       try {
-        localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED);
-        localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_REPORT);
         localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_SEEN);
       } catch {
         // Storage quota
@@ -376,6 +430,61 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       isMigratingProgress: false,
       seenDiagnosticQuestionIds: [],
     });
+  },
+
+  restoreUserDiagnostic: async (userId: string) => {
+    if (!userId) return null;
+    let resolvedReport: DiagnosticReportDto | null = null;
+
+    // 1. Check local user-scoped storage first for instant synchronous hydration
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const localUserReport = localStorage.getItem(STORAGE_KEY_USER_DIAG_REPORT_PREFIX + userId);
+        if (localUserReport) {
+          resolvedReport = JSON.parse(localUserReport) as DiagnosticReportDto;
+        }
+      } catch {
+        // Storage parse error
+      }
+    }
+
+    if (resolvedReport) {
+      set({
+        diagnosticReport: resolvedReport,
+        savedDiagnosticReport: resolvedReport,
+        isDiagnosticCompleted: true,
+      });
+    }
+
+    // 2. Query backend PostgreSQL for the user's latest persistent diagnostic report
+    try {
+      const backendReport = await examService.getLatestDiagnosticReport();
+      if (backendReport && typeof backendReport.scorePercentage === 'number') {
+        resolvedReport = backendReport;
+        if (typeof localStorage !== 'undefined') {
+          try {
+            localStorage.setItem(STORAGE_KEY_USER_DIAG_COMPLETED_PREFIX + userId, 'true');
+            localStorage.setItem(STORAGE_KEY_USER_DIAG_REPORT_PREFIX + userId, JSON.stringify(backendReport));
+            localStorage.setItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED, 'true');
+            localStorage.setItem(STORAGE_KEY_DIAGNOSTIC_REPORT, JSON.stringify(backendReport));
+          } catch {
+            // Storage quota
+          }
+        }
+        set({
+          diagnosticReport: backendReport,
+          savedDiagnosticReport: backendReport,
+          isDiagnosticCompleted: true,
+        });
+      } else if (resolvedReport) {
+        // If local user report exists but backend doesn't have it yet, sync local report to backend database
+        void examService.saveDiagnosticReport(resolvedReport);
+      }
+    } catch {
+      // Offline fallback
+    }
+
+    return resolvedReport;
   },
 
   recordDiagnosticSeenQuestions: (ids) => {
