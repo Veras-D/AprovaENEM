@@ -15,7 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - fix(auth): Refactored `GamificationService.java` to reduce cyclomatic complexity in `awardXpForActivity` (extracting private helpers `updateStreakAndDailyGoal`, `handleMissedDays`, `checkDailyGoalBonus`, `evaluateBadgeUnlocks`, `updateWeeklyLeaderboard`, and `isNewCalendarMonth`) and simplified ternary conditional check, satisfying PMD rules `CyclomaticComplexity` and `SimplifiedTernary` with zero violations ([`TASK-S6-35`](docs/BACKLOG.md#task-s6-35)).
+- fix(auth): Extracted `toUserResponse` helper method in `AuthController.java` to deduplicate response mapping between `getCurrentUser` and `updateProfile`, satisfying PMD CPD code duplication detection (< 3% / 100 tokens) with zero violations ([`TASK-S6-35`](docs/BACKLOG.md#task-s6-35)).
 - fix(test): Corrected `UserGamificationProfileTest.java` default daily goal assertion to 5 questions, aligning with the domain model standard and ensuring 100% green backend tests ([`TASK-S6-35`](docs/BACKLOG.md#task-s6-35)).
+- fix(test): Updated `Header.test.tsx` to assert student profile button presence via accessible name `/Maria Silva/i`, aligning with WCAG 2.1 AA vector avatar ([`TASK-S6-35`](docs/BACKLOG.md#task-s6-35)).
 - fix(a11y): Resolved Axe-Core WCAG 2.1 Success Criterion 2.5.3 (Label in Name) violation `label-content-name-mismatch` in Playwright and Cypress accessibility suites by setting `ariaHidden={true}` on `AvatarRenderer` and replacing raw initial text in fallback circle with accessible `<User />` vector icon in `Header.tsx` and `MobileDrawer.tsx`, ensuring perfect parity between visible text and accessible name across all viewports and browser engines ([`TASK-S6-35`](docs/BACKLOG.md#task-s6-35)).
 
 ## [0.6.9] - 2026-10-24

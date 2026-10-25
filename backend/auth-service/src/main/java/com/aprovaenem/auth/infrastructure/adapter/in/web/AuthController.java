@@ -96,19 +96,7 @@ public class AuthController {
         }
         UUID userId = UUID.fromString(userDetails.getUsername());
         User user = authUseCase.getCurrentUser(userId);
-
-        UserResponse response = UserResponse.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .fullName(user.getFullName())
-                .schoolType(user.getSchoolType().name())
-                .targetDegree(user.getTargetDegree())
-                .role(user.getRole().name())
-                .isEmailVerified(user.isEmailVerified())
-                .createdAt(user.getCreatedAt())
-                .build();
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(toUserResponse(user));
     }
 
     @PutMapping("/me")
@@ -128,8 +116,11 @@ public class AuthController {
                 request.getCurrentPassword(),
                 request.getNewPassword()
         );
+        return ResponseEntity.ok(toUserResponse(user));
+    }
 
-        UserResponse response = UserResponse.builder()
+    private UserResponse toUserResponse(User user) {
+        return UserResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
                 .fullName(user.getFullName())
@@ -139,8 +130,6 @@ public class AuthController {
                 .isEmailVerified(user.isEmailVerified())
                 .createdAt(user.getCreatedAt())
                 .build();
-
-        return ResponseEntity.ok(response);
     }
 
     @GetMapping({"/export", "/me/export"})

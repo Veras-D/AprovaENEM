@@ -138,7 +138,7 @@ describe('Header component', () => {
     renderWithClient(<Header onOpenDrawer={vi.fn()} />);
 
     expect(screen.getByText('Maria Silva')).toBeInTheDocument();
-    expect(screen.getByText('M')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Maria Silva/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Sair da conta/i })).toBeInTheDocument();
   });
 
