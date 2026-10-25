@@ -217,6 +217,7 @@ describe('TanStack Query Hooks', () => {
   });
 
   it('useGamificationProfileQuery and useLeaderboardQuery should fetch gamification data', async () => {
+    useAuthStore.setState({ isAuthenticated: true, token: 'mock-token', user: MOCK_USER_PROFILE });
     vi.spyOn(gamificationService, 'getGamificationProfile').mockResolvedValueOnce(MOCK_GAMIFICATION_PROFILE);
     vi.spyOn(gamificationService, 'getWeeklyLeaderboard').mockResolvedValueOnce(MOCK_LEADERBOARD);
 

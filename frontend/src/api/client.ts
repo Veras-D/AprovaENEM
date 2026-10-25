@@ -67,7 +67,10 @@ apiClient.interceptors.response.use(
 
     // Handle 401 Unauthorized
     if (status === 401) {
-      useAuthStore.getState().clearAuth();
+      const authState = useAuthStore.getState();
+      if (authState.token || authState.isAuthenticated) {
+        authState.clearAuth();
+      }
     }
 
     const message =

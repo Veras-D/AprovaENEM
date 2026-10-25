@@ -6,6 +6,7 @@ import type { UserProfile, PracticeSession } from '@/types';
 describe('useAuthStore', () => {
   beforeEach(() => {
     useAuthStore.getState().clearAuth();
+    useAuthStore.getState().closeAuthModal();
     useSessionStore.getState().clearSession();
     localStorage.clear();
   });
@@ -83,6 +84,15 @@ describe('useAuthStore', () => {
     expect(state.token).toBeNull();
     expect(state.user).toBeNull();
     expect(localStorage.getItem('aprovaenem_auth_token')).toBeNull();
+  });
+
+  it('should preserve isAuthModalOpen state during clearAuth', () => {
+    useAuthStore.getState().openAuthModal('login');
+    expect(useAuthStore.getState().isAuthModalOpen).toBe(true);
+
+    useAuthStore.getState().clearAuth();
+    expect(useAuthStore.getState().isAuthModalOpen).toBe(true);
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
   });
 
   it('should manage auth modal open/close and mode states', () => {

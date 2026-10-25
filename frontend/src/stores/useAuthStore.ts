@@ -80,7 +80,12 @@ export const useAuthStore = create<AuthState>((set) => {
     clearAuth: () => {
       localStorage.removeItem(STORAGE_KEY_TOKEN);
       localStorage.removeItem(STORAGE_KEY_USER);
-      set({ token: null, user: null, isAuthenticated: false, isAuthModalOpen: false });
+      set((state) => ({
+        token: null,
+        user: null,
+        isAuthenticated: false,
+        isAuthModalOpen: state.isAuthModalOpen,
+      }));
     },
     openAuthModal: (mode: 'login' | 'register' | 'forgot-password' | 'verify-email' = 'login') => {
       set({ isAuthModalOpen: true, authModalMode: mode });

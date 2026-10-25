@@ -130,17 +130,23 @@ export function useResetSocraticThreadMutation(questionId: string) {
 // ============================================================================
 
 export function useGamificationProfileQuery() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
   return useQuery({
     queryKey: queryKeys.gamification.profile,
     queryFn: () => gamificationService.getGamificationProfile(),
+    enabled: isAuthenticated,
     staleTime: 1000 * 60, // 1 minute
   });
 }
 
 export function useLeaderboardQuery() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
   return useQuery({
     queryKey: queryKeys.gamification.leaderboard,
     queryFn: () => gamificationService.getWeeklyLeaderboard(),
+    enabled: isAuthenticated,
     staleTime: 1000 * 30, // 30 seconds
   });
 }
