@@ -288,7 +288,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       correctOption: resolution?.correctOption,
       isCorrect,
       explanation: resolution?.baseExplanation,
-      awardedXp: isCorrect ? 15 : 5,
+      awardedXp: isAuthenticated ? (isCorrect ? 15 : 5) : 0,
     });
 
     // 2. Report the answer so XP, streak, daily goal and the weekly league are counted
@@ -322,7 +322,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
               explanation: result.baseExplanation,
               keyConcepts: result.keyConcepts,
               authorAttribution: 'Equipe Pedagógica AprovaENEM / INEP',
-              awardedXp: result.isCorrect ? 15 : 5,
+              awardedXp: isAuthenticated ? (result.isCorrect ? 15 : 5) : 0,
             });
           },
         }
@@ -506,8 +506,9 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
   const correctCount = activeSession?.correctCount ?? 0;
   const isAllAnswered = totalQuestions > 0 && totalAnswered === totalQuestions;
   const totalXp = useMemo(() => {
+    if (!isAuthenticated) return 0;
     return Object.values(attempts).reduce((acc, att) => acc + (att.awardedXp ?? 0), 0);
-  }, [attempts]);
+  }, [attempts, isAuthenticated]);
 
   const flaggedCount = useMemo(() => {
     return Object.values(flaggedQuestions).filter(Boolean).length;

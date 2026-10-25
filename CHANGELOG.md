@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.18] - 2026-10-25
+
+### Changed
+- feat(practice): Zeroed experience points (`awardedXp: 0`) and total session XP for unauthenticated guest sessions in [`PracticeHero.tsx`](frontend/src/features/practice/PracticeHero.tsx), ensuring guests do not accumulate or earn XP without a registered student account ([`TASK-S6-44`](docs/BACKLOG.md#task-s6-44)).
+- feat(diagnostic): Updated [`DiagnosticResultView.tsx`](frontend/src/features/diagnostic/components/DiagnosticResultView.tsx) to render a distinct "0 XP (Cadastre-se para pontuar)" card for unauthenticated guest candidates instead of granting XP ([`TASK-S6-44`](docs/BACKLOG.md#task-s6-44)).
+- feat(feedback): Suppressed the `+XP` badge in [`FeedbackBanner.tsx`](frontend/src/features/practice/components/FeedbackBanner.tsx) whenever `awardedXp <= 0`, preventing XP announcements from displaying to guest students on individual question submissions ([`TASK-S6-44`](docs/BACKLOG.md#task-s6-44)).
+
 ## [0.6.17] - 2026-10-25
 
 ### Changed

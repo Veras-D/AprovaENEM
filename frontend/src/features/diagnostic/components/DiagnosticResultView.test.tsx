@@ -56,7 +56,19 @@ describe('DiagnosticResultView Component', () => {
     });
   });
 
-  it('renders accomplishment title, estimated TRI score, overall accuracy, and XP', () => {
+  it('renders accomplishment title, estimated TRI score, overall accuracy, and XP for authenticated students', () => {
+    useAuthStore.setState({
+      isAuthenticated: true,
+      user: {
+        id: 'student-123',
+        email: 'student@example.com',
+        name: 'Aluno ENEM',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-01-01',
+      },
+      token: 'jwt-token',
+    });
     render(<DiagnosticResultView report={mockReport} awardedXp={65} />);
 
     expect(screen.getByText('Seu Diagnóstico ENEM & Nível de Compreensão')).toBeInTheDocument();
@@ -68,14 +80,18 @@ describe('DiagnosticResultView Component', () => {
     expect(screen.getByText('Parecer Pedagógico de Entrada')).toBeInTheDocument();
   });
 
-  it('renders unauthenticated guest registration prompt when not logged in', () => {
+  it('renders unauthenticated guest registration prompt with 0 XP notice when not logged in', () => {
     const onOpenAuthModal = vi.fn();
     render(
       <DiagnosticResultView
         report={mockReport}
+        awardedXp={65}
         onOpenAuthModal={onOpenAuthModal}
       />
     );
+
+    expect(screen.getByText('0 XP')).toBeInTheDocument();
+    expect(screen.getByText('Cadastre-se para pontuar')).toBeInTheDocument();
 
     expect(screen.getByText(/Deseja salvar sua nota TRI e acompanhar sua evolução semanal\?/i)).toBeInTheDocument();
     const registerBtn = screen.getByRole('button', { name: /Cadastre-se Gratuitamente/i });

@@ -153,17 +153,31 @@ export const DiagnosticResultView: React.FC<DiagnosticResultViewProps> = ({
               </span>
             </div>
 
-            <div className="p-4 rounded-brand bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center space-y-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                XP Conquistado
-              </span>
-              <span className="block text-3xl font-black text-amber-500">
-                +{awardedXp}
-              </span>
-              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                Pontos de experiência ganhos
-              </span>
-            </div>
+            {isAuthenticated ? (
+              <div className="p-4 rounded-brand bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center space-y-1">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  XP Conquistado
+                </span>
+                <span className="block text-3xl font-black text-amber-500">
+                  +{awardedXp}
+                </span>
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  Pontos de experiência ganhos
+                </span>
+              </div>
+            ) : (
+              <div className="p-4 rounded-brand bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center space-y-1">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  XP de Experiência
+                </span>
+                <span className="block text-2xl sm:text-3xl font-black text-slate-400 dark:text-slate-500">
+                  0 XP
+                </span>
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  Cadastre-se para pontuar
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Qualitative Pedagogical Analysis */}

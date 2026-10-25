@@ -21,7 +21,7 @@ export const FeedbackBanner: React.FC<FeedbackBannerProps> = ({
   isCorrect,
   selectedOption,
   correctOption,
-  awardedXp = isCorrect ? 15 : 5,
+  awardedXp = 0,
   onNextQuestion,
   hasNextQuestion = false,
   onFinishDiagnostic,
@@ -33,9 +33,10 @@ export const FeedbackBanner: React.FC<FeedbackBannerProps> = ({
     ? 'border-emerald-500/50 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-100'
     : 'border-rose-500/50 bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-100';
 
+  const xpAnnouncement = awardedXp > 0 ? ` Ganhou ${awardedXp} pontos de experiência.` : '';
   const srText = isCorrect
-    ? `Resposta correta! Você selecionou a alternativa ${selectedOption}. Ganhou ${awardedXp} pontos de experiência.`
-    : `Resposta incorreta. Você selecionou a alternativa ${selectedOption}. A alternativa correta é a letra ${correctOption}. Ganhou ${awardedXp} pontos pela tentativa.`;
+    ? `Resposta correta! Você selecionou a alternativa ${selectedOption}.${xpAnnouncement}`
+    : `Resposta incorreta. Você selecionou a alternativa ${selectedOption}. A alternativa correta é a letra ${correctOption}.${xpAnnouncement}`;
 
   return (
     <div
@@ -70,13 +71,15 @@ export const FeedbackBanner: React.FC<FeedbackBannerProps> = ({
                 {isCorrect ? 'Resposta Correta!' : 'Resposta Incorreta!'}
               </h3>
 
-              <Badge
-                variant={isCorrect ? 'primary' : 'warning'}
-                className="text-xs font-semibold inline-flex items-center gap-1"
-              >
-                <Award className="h-3 w-3" aria-hidden="true" />
-                +{awardedXp} XP {isCorrect ? 'Concedidos' : 'Por Esforço'}
-              </Badge>
+              {awardedXp > 0 && (
+                <Badge
+                  variant={isCorrect ? 'primary' : 'warning'}
+                  className="text-xs font-semibold inline-flex items-center gap-1"
+                >
+                  <Award className="h-3 w-3" aria-hidden="true" />
+                  +{awardedXp} XP {isCorrect ? 'Concedidos' : 'Por Esforço'}
+                </Badge>
+              )}
             </div>
 
             <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300">
