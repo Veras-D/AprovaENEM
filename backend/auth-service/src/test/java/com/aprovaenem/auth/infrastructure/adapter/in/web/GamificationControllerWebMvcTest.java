@@ -35,6 +35,7 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -145,6 +146,28 @@ class GamificationControllerWebMvcTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.targetQuestions", is(25)))
                 .andExpect(jsonPath("$.optInReminders", is(false)))
+                .andExpect(jsonPath("$.message", containsString("updated successfully")));
+    }
+
+    @Test
+    @WithMockUser(username = "11111111-1111-1111-1111-111111111111", roles = "STUDENT")
+    @DisplayName("PUT /api/v1/gamification/daily-goal should accept alias 'target' in payload")
+    void shouldAcceptTargetAliasInPayload() throws Exception {
+        UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
+        UserGamificationProfile profile = UserGamificationProfile.builder()
+                .userId(userId)
+                .dailyGoalQuestions(15)
+                .optInReminders(false)
+                .build();
+
+        when(gamificationUseCase.updateDailyGoal(eq(userId), eq(15), isNull())).thenReturn(profile);
+
+        mockMvc.perform(put("/api/v1/gamification/daily-goal")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"target\": 15}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.targetQuestions", is(15)))
                 .andExpect(jsonPath("$.message", containsString("updated successfully")));
     }
 

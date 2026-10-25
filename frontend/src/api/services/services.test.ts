@@ -133,7 +133,10 @@ describe('API Services', () => {
 
       expect(getSpy).toHaveBeenNthCalledWith(1, '/gamification/profile');
       expect(getSpy).toHaveBeenNthCalledWith(2, '/gamification/leaderboard/weekly');
-      expect(putSpy).toHaveBeenCalledWith('/gamification/daily-goal', { target: 10 });
+      expect(putSpy).toHaveBeenCalledWith('/gamification/daily-goal', {
+        targetQuestions: 10,
+        target: 10,
+      });
       expect(profile).toEqual(MOCK_GAMIFICATION_PROFILE);
       expect(leaderboard).toEqual(MOCK_LEADERBOARD);
     });

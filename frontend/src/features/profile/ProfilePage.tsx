@@ -65,6 +65,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const [profileSuccessMsg, setProfileSuccessMsg] = useState<string | null>(null);
   const [profileErrorMsg, setProfileErrorMsg] = useState<string | null>(null);
   const [goalSuccessMsg, setGoalSuccessMsg] = useState<string | null>(null);
+  const [goalErrorMsg, setGoalErrorMsg] = useState<string | null>(null);
 
   const updateProfileMutation = useUpdateProfileMutation();
   const updateDailyGoalMutation = useUpdateDailyGoalMutation();
@@ -140,15 +141,18 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     }
   };
 
-  const handleSaveDailyGoal = async (target: number) => {
+  const handleSaveDailyGoal = async (target?: number) => {
+    const goalToSave = target ?? dailyGoal;
     setGoalSuccessMsg(null);
+    setGoalErrorMsg(null);
     try {
-      await updateDailyGoalMutation.mutateAsync(target);
-      setDailyGoal(target);
-      setGoalSuccessMsg(`Meta diária definida para ${target} questões por dia!`);
+      await updateDailyGoalMutation.mutateAsync(goalToSave);
+      setDailyGoal(goalToSave);
+      setGoalSuccessMsg(`Meta diária definida para ${goalToSave} questões por dia!`);
       setTimeout(() => setGoalSuccessMsg(null), 4000);
     } catch {
-      // Handled by react-query
+      setGoalErrorMsg('Não foi possível salvar a meta diária. Verifique a conexão e tente novamente.');
+      setTimeout(() => setGoalErrorMsg(null), 4000);
     }
   };
 
@@ -393,6 +397,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 </div>
               )}
 
+              {goalErrorMsg && (
+                <div className="mb-4 p-3 rounded-brand bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>{goalErrorMsg}</span>
+                </div>
+              )}
+
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-4 leading-relaxed">
                 A preparação para o ENEM exige constância e ritmo diário. Definir uma meta atingível ajuda a formar o hábito de estudar todos os dias sem sobrecarga.
               </p>
@@ -408,8 +419,11 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                       <button
                         key={target}
                         type="button"
-                        onClick={() => handleSaveDailyGoal(target)}
-                        className={`py-3 px-2 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-1 ${
+                        onClick={() => {
+                          setDailyGoal(target);
+                          handleSaveDailyGoal(target);
+                        }}
+                        className={`py-3 px-2 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer ${
                           isSelected
                             ? 'border-amber-500 bg-amber-500/10 text-amber-700 dark:text-amber-400 font-bold ring-2 ring-amber-500/30'
                             : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -449,6 +463,17 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                   }}
                 />
               </div>
+            </div>
+
+            <div className="pt-5 border-t border-slate-100 dark:border-slate-800 mt-5">
+              <button
+                type="button"
+                onClick={() => handleSaveDailyGoal(dailyGoal)}
+                disabled={updateDailyGoalMutation.isPending}
+                className="w-full py-2.5 px-4 rounded-brand font-semibold text-xs sm:text-sm bg-brand-primary text-white hover:bg-brand-primary-hover transition-colors disabled:opacity-50 shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {updateDailyGoalMutation.isPending ? 'Salvando...' : 'Salvar Meta Diária'}
+              </button>
             </div>
           </div>
         </section>

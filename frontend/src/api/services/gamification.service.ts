@@ -114,7 +114,10 @@ export const gamificationService = {
    * Target endpoint: PUT /api/v1/gamification/daily-goal
    */
   async updateDailyGoal(target: number): Promise<void> {
-    await apiClient.put('/gamification/daily-goal', { target });
+    await apiClient.put('/gamification/daily-goal', {
+      targetQuestions: target,
+      target,
+    });
   },
 
   /**

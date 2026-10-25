@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.12] - 2026-10-25
+
+### Added
+- feat(profile): Added explicit "Salvar Meta Diária" action button and error feedback alerts in the Daily Study Goals section of the student Profile page ([`ProfilePage.tsx`](frontend/src/features/profile/ProfilePage.tsx), [`ProfilePage.test.tsx`](frontend/src/features/profile/ProfilePage.test.tsx)), aligning layout and interaction parity with the adjacent personal preferences card ([`TASK-S6-37`](docs/BACKLOG.md#task-s6-37)).
+
+### Changed
+- feat(profile): Updated daily study goal target options so clicking a target (3, 5, 10, or 15 questions) dynamically updates local goal selection and enables instant or explicit persistence via "Salvar Meta Diária" with loading indicators and auto-dismissing confirmation banners ([`TASK-S6-37`](docs/BACKLOG.md#task-s6-37)).
+
+### Fixed
+- fix(gamification): Aligned frontend daily study goal API client payload with backend DTO by sending both `targetQuestions` and `target` in [`gamification.service.ts`](frontend/src/api/services/gamification.service.ts), and added `@JsonAlias({"target", "dailyGoal"})` to [`UpdateDailyGoalRequest.java`](backend/auth-service/src/main/java/com/aprovaenem/auth/infrastructure/adapter/in/web/dto/UpdateDailyGoalRequest.java), resolving silent field deserialization mismatches that previously prevented daily goal target persistence in PostgreSQL ([`TASK-S6-37`](docs/BACKLOG.md#task-s6-37)).
+
 ## [0.6.11] - 2026-10-25
 
 ### Added

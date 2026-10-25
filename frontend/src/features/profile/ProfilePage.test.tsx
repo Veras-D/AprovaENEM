@@ -157,6 +157,18 @@ describe('ProfilePage Feature', () => {
     });
   });
 
+  it('updates daily study goal target when clicking explicit save daily goal button', async () => {
+    renderWithClient(<ProfilePage onNavigate={vi.fn()} />);
+
+    const saveGoalBtn = screen.getByRole('button', { name: /salvar meta diária/i });
+    expect(saveGoalBtn).toBeInTheDocument();
+    fireEvent.click(saveGoalBtn);
+
+    await waitFor(() => {
+      expect(gamificationService.updateDailyGoal).toHaveBeenCalledWith(5);
+    });
+  });
+
   it('triggers account erasure modal when clicking delete account button', () => {
     const onOpenErasureModal = vi.fn();
     renderWithClient(<ProfilePage onOpenErasureModal={onOpenErasureModal} />);
