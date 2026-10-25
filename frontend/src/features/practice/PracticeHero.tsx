@@ -128,15 +128,18 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     return ALL_FALLBACK_QUESTIONS;
   }, [questionsQuery.data?.content]);
 
+  const isDiagnostic = !isDiagnosticCompleted;
+  const dailyGoalTarget = gamificationQuery.data?.dailyGoalTarget ?? 5;
+  const targetBatchSize = isDiagnostic ? 5 : dailyGoalTarget;
+
   // Initialize session with live backend questions (or fallback pool) if empty
   useEffect(() => {
     if (questions.length === 0) {
       const seenIds = useSessionStore.getState().seenDiagnosticQuestionIds;
-      const initialDtos = selectDiagnosticQuestions(questionsPool, seenIds, 5, starterVariant);
+      const initialDtos = selectDiagnosticQuestions(questionsPool, seenIds, targetBatchSize, starterVariant);
       const domainQuestions = initialDtos.map(mapDtoToDomainQuestion);
       recordDiagnosticSeenQuestions(initialDtos.map((q) => q.id));
 
-      const isDiagnostic = !isDiagnosticCompleted;
       const title = isDiagnostic ? 'Diagnóstico ENEM' : 'Questões Diárias do ENEM';
 
       const initialSession: PracticeSession = {
@@ -150,7 +153,54 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       };
       startSession(initialSession, domainQuestions);
     }
-  }, [questions.length, isDiagnosticCompleted, startSession, recordDiagnosticSeenQuestions, questionsPool, starterVariant]);
+  }, [
+    questions.length,
+    isDiagnosticCompleted,
+    isDiagnostic,
+    targetBatchSize,
+    startSession,
+    recordDiagnosticSeenQuestions,
+    questionsPool,
+    starterVariant,
+    targetBatchSize,
+  ]);
+
+  // Resynchronize unattempted daily practice session when student's daily goal target changes
+  useEffect(() => {
+    if (
+      isDiagnosticCompleted &&
+      questions.length > 0 &&
+      questions.length !== targetBatchSize &&
+      Object.keys(selectedAnswers).length === 0 &&
+      Object.keys(attempts).length === 0
+    ) {
+      const seenIds = useSessionStore.getState().seenDiagnosticQuestionIds;
+      const syncedDtos = selectDiagnosticQuestions(questionsPool, seenIds, targetBatchSize, starterVariant);
+      const domainQuestions = syncedDtos.map(mapDtoToDomainQuestion);
+      recordDiagnosticSeenQuestions(syncedDtos.map((q) => q.id));
+
+      const syncedSession: PracticeSession = {
+        id: `session-daily-${Date.now()}`,
+        title: 'Questões Diárias do ENEM',
+        questionCount: domainQuestions.length,
+        status: 'IN_PROGRESS',
+        currentQuestionIndex: 0,
+        correctCount: 0,
+        createdAt: new Date().toISOString(),
+      };
+      startSession(syncedSession, domainQuestions);
+    }
+  }, [
+    isDiagnosticCompleted,
+    questions.length,
+    targetBatchSize,
+    selectedAnswers,
+    attempts,
+    questionsPool,
+    starterVariant,
+    recordDiagnosticSeenQuestions,
+    startSession,
+  ]);
 
   // Upgrade to live backend questions once when available if student has not interacted yet
   useEffect(() => {
@@ -164,10 +214,9 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       questions.length > 0
     ) {
       hasUpgradedToLiveRef.current = true;
-      const isDiagnostic = !isDiagnosticCompleted;
       const title = isDiagnostic ? 'Diagnóstico ENEM' : 'Questões Diárias do ENEM';
       const seenIds = useSessionStore.getState().seenDiagnosticQuestionIds;
-      const liveDtos = selectDiagnosticQuestions(questionsQuery.data.content, seenIds, 5, starterVariant);
+      const liveDtos = selectDiagnosticQuestions(questionsQuery.data.content, seenIds, targetBatchSize, starterVariant);
       const domainQuestions = liveDtos.map(mapDtoToDomainQuestion);
       recordDiagnosticSeenQuestions(liveDtos.map((q) => q.id));
       const liveSession: PracticeSession = {
@@ -187,6 +236,8 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     selectedAnswers,
     attempts,
     isDiagnosticCompleted,
+    isDiagnostic,
+    targetBatchSize,
     questions.length,
     recordDiagnosticSeenQuestions,
     startSession,
@@ -287,7 +338,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     const seenIds = useSessionStore.getState().seenDiagnosticQuestionIds;
     const excludeIds = Array.from(new Set([...seenIds, ...currentIds]));
 
-    const newDtos = selectDiagnosticQuestions(questionsPool, excludeIds, 5, starterVariant);
+    const newDtos = selectDiagnosticQuestions(questionsPool, excludeIds, targetBatchSize, starterVariant);
     const domainQuestions = newDtos.map(mapDtoToDomainQuestion);
     recordDiagnosticSeenQuestions(newDtos.map((q) => q.id));
 
@@ -301,7 +352,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       createdAt: new Date().toISOString(),
     };
     startSession(dailySession, domainQuestions);
-  }, [questions, questionsPool, recordDiagnosticSeenQuestions, startSession, starterVariant]);
+  }, [questions, questionsPool, recordDiagnosticSeenQuestions, startSession, starterVariant, targetBatchSize]);
 
   const handleRestart = useCallback(() => {
     setShowCelebration(false);
@@ -321,7 +372,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     resetDiagnostic();
 
     // Select novel balanced questions across ENEM areas
-    const newDtos = selectDiagnosticQuestions(questionsPool, excludeIds, 5, starterVariant);
+    const newDtos = selectDiagnosticQuestions(questionsPool, excludeIds, targetBatchSize, starterVariant);
     const domainQuestions = newDtos.map(mapDtoToDomainQuestion);
     recordDiagnosticSeenQuestions(newDtos.map((q) => q.id));
 
@@ -345,6 +396,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     startSession,
     questionsPool,
     starterVariant,
+    targetBatchSize,
   ]);
 
   const handlePracticeWeakTopic = useCallback(

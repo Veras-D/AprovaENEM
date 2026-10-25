@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PracticeHero } from './PracticeHero';
 import { useSessionStore } from '@/stores/useSessionStore';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { queryKeys } from '@/api/query-keys';
 import type { DiagnosticReportDto } from '@/api/types';
 import {
   MOCK_RESOLUTIONS,
@@ -508,6 +509,69 @@ describe('PracticeHero Component', () => {
     const questions = useSessionStore.getState().questions;
     expect(questions).toHaveLength(5);
     expect(useSessionStore.getState().activeSession?.title).toBe('Questões Diárias do ENEM');
+  });
+
+  it('initializes Daily Practice with question count matching student daily goal target (e.g. 15 questions)', () => {
+    useAuthStore.setState({
+      isAuthenticated: true,
+      user: {
+        id: 'student-123',
+        email: 'student@example.com',
+        name: 'Estudante ENEM',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-01-01',
+      },
+      token: 'jwt-token',
+    });
+    const mockReport: DiagnosticReportDto = {
+      id: 'diag-1',
+      sessionId: 'session-1',
+      scorePercentage: 70,
+      radar: [
+        { knowledgeArea: 'MT', areaName: 'Matemática', scorePercentage: 75, correctQuestions: 3, totalQuestions: 4, masteryLevel: 'MASTERED' },
+      ],
+      generatedAt: new Date().toISOString(),
+      recommendedTopics: ['Geometria'],
+    };
+    useSessionStore.setState({
+      isDiagnosticCompleted: true,
+      savedDiagnosticReport: mockReport,
+      questions: [],
+      activeSession: null,
+      phase: 'IDLE',
+    });
+
+    const customClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false, gcTime: 0 },
+        mutations: { retry: false },
+      },
+    });
+    customClient.setQueryData(queryKeys.gamification.profile, {
+      userId: 'student-123',
+      currentXp: 100,
+      level: 2,
+      levelTitle: 'Estudante Focado',
+      currentStreakDays: 3,
+      longestStreakDays: 5,
+      streakFreezeAvailable: true,
+      dailyGoalTarget: 15,
+      dailyGoalProgress: 5,
+      weeklyLeague: 'SILVER',
+      unlockedBadges: [],
+    });
+
+    render(
+      <QueryClientProvider client={customClient}>
+        <PracticeHero />
+      </QueryClientProvider>
+    );
+
+    expect(screen.getByText('Questões Diárias do ENEM')).toBeInTheDocument();
+    expect(screen.getByText(/0 de 15 respondidas/i)).toBeInTheDocument();
+    expect(useSessionStore.getState().questions).toHaveLength(15);
+    expect(screen.getByRole('button', { name: /Ir para a questão 15/i })).toBeInTheDocument();
   });
 
   it('hides "Refazer Diagnóstico" for authenticated students and provides "Começar Treino Diário"', async () => {

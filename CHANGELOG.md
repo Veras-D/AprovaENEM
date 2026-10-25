@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.13] - 2026-10-25
+
+### Changed
+- feat(practice): Synchronized Daily Practice questions ("Questões Diárias do ENEM") batch size with the student's configured daily study goal target ([`PracticeHero.tsx`](frontend/src/features/practice/PracticeHero.tsx), [`PracticeHero.test.tsx`](frontend/src/features/practice/PracticeHero.test.tsx)), allowing sessions to dynamically load 3, 5, 10, or 15 questions matching student rhythm preferences and automatically resynchronizing unattempted daily practice sets upon daily goal target updates ([`TASK-S6-38`](docs/BACKLOG.md#task-s6-38)).
+- feat(hooks): Added immediate optimistic cache update in `useUpdateDailyGoalMutation` ([`hooks.ts`](frontend/src/api/hooks.ts)) via `queryClient.setQueryData`, ensuring instant propagation of updated daily study goal targets across the entire platform ([`TASK-S6-38`](docs/BACKLOG.md#task-s6-38)).
+
 ## [0.6.12] - 2026-10-25
 
 ### Added

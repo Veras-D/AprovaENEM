@@ -17,6 +17,7 @@ import type {
   AuthRegisterRequest,
   RecordActivityRequest,
   ResetPasswordRequest,
+  GamificationProfileDto,
 } from './types';
 
 // ============================================================================
@@ -238,7 +239,11 @@ export function useUpdateDailyGoalMutation() {
 
   return useMutation({
     mutationFn: (target: number) => gamificationService.updateDailyGoal(target),
-    onSuccess: () => {
+    onSuccess: (_data, target) => {
+      queryClient.setQueryData<GamificationProfileDto | undefined>(
+        queryKeys.gamification.profile,
+        (old) => (old ? { ...old, dailyGoalTarget: target } : old)
+      );
       queryClient.invalidateQueries({ queryKey: queryKeys.gamification.profile });
     },
   });
