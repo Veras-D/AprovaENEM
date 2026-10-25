@@ -345,3 +345,39 @@ export interface ResendVerificationResponse {
   readonly message: string;
   readonly dispatched: boolean;
 }
+
+export interface NotificationItemDto {
+  readonly id: string;
+  readonly channel: string;
+  readonly templateCode: string;
+  readonly title: string;
+  readonly body: string;
+  readonly metadata?: string;
+  readonly status: 'PENDING' | 'SENT' | 'DELIVERED' | 'READ' | 'FAILED';
+  readonly sentAt?: string;
+  readonly readAt?: string;
+}
+
+export interface NotificationFeedResponse {
+  readonly unreadCount: number;
+  readonly notifications: readonly NotificationItemDto[];
+}
+
+export interface MarkNotificationReadResponse {
+  readonly id: string;
+  readonly status: string;
+  readonly readAt: string;
+}
+
+export interface MarkAllNotificationsReadResponse {
+  readonly markedCount: number;
+  readonly status: string;
+}
+
+export interface CreateInAppNotificationRequest {
+  readonly templateCode: string;
+  readonly title: string;
+  readonly body: string;
+  readonly metadata?: string;
+}
+

@@ -28,6 +28,7 @@ public class NotificationFeedResponse {
         private String templateCode;
         private String title;
         private String body;
+        private String metadata;
         private String status;
         private Instant sentAt;
         private Instant readAt;

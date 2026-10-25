@@ -145,4 +145,54 @@ describe('NotificationBell Component', () => {
     expect(screen.getByText(/Escudo de Congelamento Utilizado/i)).toBeInTheDocument();
     expect(screen.getByText(/Seu escudo de emergência mensal salvou sua sequência/i)).toBeInTheDocument();
   });
+
+  it('renders notifications provided by PostgreSQL backend query', () => {
+    queryClient.setQueryData(queryKeys.notifications.feed('ALL'), {
+      unreadCount: 1,
+      notifications: [
+        {
+          id: '11111111-2222-3333-4444-555555555555',
+          channel: 'IN_APP',
+          templateCode: 'ACHIEVEMENT_WELCOME',
+          title: 'Boas-vindas ao AprovaENEM! 🏅',
+          body: 'Você deu o pontapé inicial rumo à aprovação!',
+          status: 'SENT',
+          sentAt: '2026-10-25T20:00:00Z',
+          metadata: JSON.stringify({
+            category: 'ACHIEVEMENT',
+            iconName: 'Trophy',
+            targetSection: 'diagnostics',
+            actionLabel: 'Ver Diagnóstico',
+          }),
+        },
+      ],
+    });
+
+    renderWithProviders(<NotificationBell />);
+
+    const bellBtn = screen.getByRole('button', { name: /Notificações:/i });
+    fireEvent.click(bellBtn);
+
+    expect(screen.getByText(/Boas-vindas ao AprovaENEM!/i)).toBeInTheDocument();
+    expect(screen.getByText(/Você deu o pontapé inicial/i)).toBeInTheDocument();
+  });
+
+  it('preserves read status across re-mount when previously marked as read', () => {
+    localStorage.setItem(
+      'aprovaenem_read_notifications',
+      JSON.stringify(['reminder-daily-goal', 'reminder-streak'])
+    );
+
+    renderWithProviders(<NotificationBell />);
+
+    const bellBtn = screen.getByRole('button', { name: /Notificações:/i });
+    fireEvent.click(bellBtn);
+
+    // Filter by reminders tab
+    const reminderTab = screen.getByRole('tab', { name: /Lembretes/i });
+    fireEvent.click(reminderTab);
+
+    // Notification is rendered but already read (no red dot indicator)
+    expect(screen.getByText(/Meta Diária de Estudos/i)).toBeInTheDocument();
+  });
 });

@@ -110,6 +110,7 @@ class NotificationServiceTest {
     @DisplayName("Should return notification feed filtered by unread status")
     void shouldGetUnreadFeed() {
         UUID userId = UUID.randomUUID();
+        when(notificationLogRepository.countByUserId(userId)).thenReturn(1L);
         NotificationLogEntity item = NotificationLogEntity.builder()
                 .id(UUID.randomUUID())
                 .userId(userId)
@@ -138,6 +139,7 @@ class NotificationServiceTest {
     @DisplayName("Should return all notifications feed when statusFilter is not UNREAD")
     void shouldGetAllFeed() {
         UUID userId = UUID.randomUUID();
+        when(notificationLogRepository.countByUserId(userId)).thenReturn(1L);
         NotificationLogEntity item1 = NotificationLogEntity.builder()
                 .id(UUID.randomUUID())
                 .userId(userId)
@@ -211,5 +213,62 @@ class NotificationServiceTest {
 
         assertThat(count).isEqualTo(3L);
         verify(notificationLogRepository).countByUserIdAndStatus(userId, "SENT");
+    }
+
+    @Test
+    @DisplayName("Should mark all unread notifications as READ for user")
+    void shouldMarkAllNotificationsAsRead() {
+        UUID userId = UUID.randomUUID();
+        when(notificationLogRepository.markAllAsReadForUser(eq(userId), any(Instant.class))).thenReturn(5);
+
+        var response = notificationService.markAllAsRead(userId);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getMarkedCount()).isEqualTo(5);
+        assertThat(response.getStatus()).isEqualTo("ALL_READ");
+        verify(notificationLogRepository).markAllAsReadForUser(eq(userId), any(Instant.class));
+    }
+
+    @Test
+    @DisplayName("Should seed default in-app notifications when user has zero notifications")
+    void shouldSeedDefaultInAppNotificationsWhenZeroNotifications() {
+        UUID userId = UUID.randomUUID();
+        when(notificationLogRepository.countByUserId(userId)).thenReturn(0L);
+        when(notificationLogRepository.findByUserIdOrderByCreatedAtDesc(eq(userId), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of()));
+        when(notificationLogRepository.countByUserIdAndStatus(userId, "SENT")).thenReturn(5L);
+
+        NotificationFeedResponse response = notificationService.getFeed(userId, "ALL", 0, 10);
+
+        assertThat(response).isNotNull();
+        verify(notificationLogRepository).saveAll(any());
+    }
+
+    @Test
+    @DisplayName("Should create in-app notification when it does not already exist")
+    void shouldCreateInAppNotification() {
+        UUID userId = UUID.randomUUID();
+        var request = com.aprovaenem.notification.infrastructure.adapter.in.web.dto.CreateInAppNotificationRequest.builder()
+                .templateCode("ACHIEVEMENT_DIAGNOSTIC")
+                .title("Conquista: Raio-X Diagnóstico 🎯")
+                .body("Você concluiu sua avaliação diagnóstica TRI!")
+                .metadata("{\"category\":\"ACHIEVEMENT\"}")
+                .build();
+
+        when(notificationLogRepository.existsByUserIdAndTemplateCode(userId, "ACHIEVEMENT_DIAGNOSTIC")).thenReturn(false);
+        when(notificationLogRepository.save(any(NotificationLogEntity.class)))
+                .thenAnswer(inv -> {
+                    NotificationLogEntity entity = inv.getArgument(0);
+                    entity.setId(UUID.randomUUID());
+                    return entity;
+                });
+
+        var created = notificationService.createInAppNotification(userId, request);
+
+        assertThat(created).isNotNull();
+        assertThat(created.getId()).isNotNull();
+        assertThat(created.getTemplateCode()).isEqualTo("ACHIEVEMENT_DIAGNOSTIC");
+        assertThat(created.getTitle()).isEqualTo("Conquista: Raio-X Diagnóstico 🎯");
+        verify(notificationLogRepository).save(any(NotificationLogEntity.class));
     }
 }

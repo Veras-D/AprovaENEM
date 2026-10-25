@@ -213,4 +213,63 @@ class NotificationControllerWebMvcTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.unreadCount", is(7)));
     }
+
+    @Test
+    @DisplayName("PATCH /api/v1/notifications/read-all should mark all notifications read and return HTTP 200")
+    void shouldMarkAllNotificationsAsReadSuccessfully() throws Exception {
+        UUID userId = UUID.randomUUID();
+        String token = "valid.jwt.token";
+        when(jwtTokenValidator.validateToken(token)).thenReturn(true);
+        when(jwtTokenValidator.extractUserId(token)).thenReturn(userId);
+
+        var response = com.aprovaenem.notification.infrastructure.adapter.in.web.dto.MarkAllNotificationsReadResponse.builder()
+                .markedCount(5)
+                .status("ALL_READ")
+                .build();
+
+        when(notificationService.markAllAsRead(userId)).thenReturn(response);
+
+        mockMvc.perform(patch("/api/v1/notifications/read-all")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.markedCount", is(5)))
+                .andExpect(jsonPath("$.status", is("ALL_READ")));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/notifications should create in-app notification and return HTTP 201")
+    void shouldCreateInAppNotificationSuccessfully() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UUID notifId = UUID.randomUUID();
+        String token = "valid.jwt.token";
+        when(jwtTokenValidator.validateToken(token)).thenReturn(true);
+        when(jwtTokenValidator.extractUserId(token)).thenReturn(userId);
+
+        var request = com.aprovaenem.notification.infrastructure.adapter.in.web.dto.CreateInAppNotificationRequest.builder()
+                .templateCode("ACHIEVEMENT_DIAGNOSTIC")
+                .title("Conquista: Raio-X Diagnóstico 🎯")
+                .body("Você concluiu sua avaliação!")
+                .metadata("{\"category\":\"ACHIEVEMENT\"}")
+                .build();
+
+        var item = NotificationFeedResponse.NotificationItemDto.builder()
+                .id(notifId)
+                .channel("IN_APP")
+                .templateCode("ACHIEVEMENT_DIAGNOSTIC")
+                .title("Conquista: Raio-X Diagnóstico 🎯")
+                .body("Você concluiu sua avaliação!")
+                .status("SENT")
+                .sentAt(Instant.now())
+                .build();
+
+        when(notificationService.createInAppNotification(eq(userId), any())).thenReturn(item);
+
+        mockMvc.perform(post("/api/v1/notifications")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", is(notifId.toString())))
+                .andExpect(jsonPath("$.templateCode", is("ACHIEVEMENT_DIAGNOSTIC")));
+    }
 }

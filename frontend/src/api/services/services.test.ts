@@ -6,6 +6,7 @@ import { gamificationService } from './gamification.service';
 import { tenantService } from './tenant.service';
 import { authService } from './auth.service';
 import { institutionalService } from './institutional.service';
+import { notificationService } from './notification.service';
 import {
   MOCK_PAGINATED_QUESTIONS,
   MOCK_QUESTIONS,
@@ -472,6 +473,86 @@ describe('API Services', () => {
       expect(result).toEqual(MOCK_COHORT_DIAGNOSTICS);
       expect(result.participationRate).toBe(92.8);
       expect(result.areasBreakdown).toHaveLength(4);
+    });
+  });
+
+  describe('notificationService', () => {
+    it('should fetch notification feed', async () => {
+      const mockFeed = {
+        unreadCount: 1,
+        notifications: [
+          {
+            id: 'notif-1',
+            channel: 'IN_APP',
+            templateCode: 'DAILY_GOAL_REMINDER',
+            title: 'Meta Diária',
+            body: 'Resolva questões hoje!',
+            status: 'SENT' as const,
+          },
+        ],
+      };
+      const getSpy = vi.spyOn(apiClient, 'get').mockResolvedValueOnce({ data: mockFeed });
+
+      const result = await notificationService.getFeed('ALL', 0, 20);
+
+      expect(getSpy).toHaveBeenCalledWith('/api/v1/notifications', {
+        params: { status: 'ALL', page: 0, size: 20 },
+      });
+      expect(result).toEqual(mockFeed);
+    });
+
+    it('should fetch unread count', async () => {
+      const getSpy = vi.spyOn(apiClient, 'get').mockResolvedValueOnce({ data: { unreadCount: 3 } });
+
+      const result = await notificationService.getUnreadCount();
+
+      expect(getSpy).toHaveBeenCalledWith('/api/v1/notifications/unread-count');
+      expect(result.unreadCount).toBe(3);
+    });
+
+    it('should mark single notification as read', async () => {
+      const mockRes = { id: 'notif-1', status: 'READ', readAt: '2026-10-25T21:00:00Z' };
+      const patchSpy = vi.spyOn(apiClient, 'patch').mockResolvedValueOnce({ data: mockRes });
+
+      const result = await notificationService.markAsRead('notif-1');
+
+      expect(patchSpy).toHaveBeenCalledWith('/api/v1/notifications/notif-1/read');
+      expect(result).toEqual(mockRes);
+    });
+
+    it('should mark all notifications as read', async () => {
+      const mockRes = { markedCount: 5, status: 'ALL_READ' };
+      const patchSpy = vi.spyOn(apiClient, 'patch').mockResolvedValueOnce({ data: mockRes });
+
+      const result = await notificationService.markAllAsRead();
+
+      expect(patchSpy).toHaveBeenCalledWith('/api/v1/notifications/read-all');
+      expect(result).toEqual(mockRes);
+    });
+
+    it('should create in-app notification', async () => {
+      const mockCreated = {
+        id: 'notif-diag',
+        channel: 'IN_APP',
+        templateCode: 'ACHIEVEMENT_DIAGNOSTIC',
+        title: 'Conquista: Raio-X Diagnóstico 🎯',
+        body: 'Você concluiu o diagnóstico!',
+        status: 'SENT' as const,
+      };
+      const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValueOnce({ data: mockCreated });
+
+      const result = await notificationService.createInAppNotification({
+        templateCode: 'ACHIEVEMENT_DIAGNOSTIC',
+        title: 'Conquista: Raio-X Diagnóstico 🎯',
+        body: 'Você concluiu o diagnóstico!',
+      });
+
+      expect(postSpy).toHaveBeenCalledWith('/api/v1/notifications', {
+        templateCode: 'ACHIEVEMENT_DIAGNOSTIC',
+        title: 'Conquista: Raio-X Diagnóstico 🎯',
+        body: 'Você concluiu o diagnóstico!',
+      });
+      expect(result).toEqual(mockCreated);
     });
   });
 });

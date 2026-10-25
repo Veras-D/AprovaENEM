@@ -12,8 +12,15 @@ import {
   X,
   ShieldAlert,
 } from 'lucide-react';
-import { useGamificationProfileQuery } from '@/api/hooks';
+import {
+  useGamificationProfileQuery,
+  useNotificationsQuery,
+  useMarkNotificationReadMutation,
+  useMarkAllNotificationsReadMutation,
+  useCreateInAppNotificationMutation,
+} from '@/api/hooks';
 import { useSessionStore } from '@/stores/useSessionStore';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 export type NotificationCategory = 'ALL' | 'ACHIEVEMENT' | 'REMINDER' | 'UPDATE';
 
@@ -50,17 +57,58 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   onNavigate,
   className = '',
 }) => {
+  const user = useAuthStore((state) => state.user);
+  const storageKey = user?.id ? `${STORAGE_KEY_READ_NOTIFICATIONS}_${user.id}` : STORAGE_KEY_READ_NOTIFICATIONS;
+
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<NotificationCategory>('ALL');
-  const [readIds, setReadIds] = useState<Set<string>>(() => {
+
+  // Backend PostgreSQL notifications queries & mutations
+  const feedQuery = useNotificationsQuery('ALL');
+  const markReadMutation = useMarkNotificationReadMutation();
+  const markAllReadMutation = useMarkAllNotificationsReadMutation();
+  const createInAppMutation = useCreateInAppNotificationMutation();
+
+  const [localReadIds, setLocalReadIds] = useState<Set<string>>(() => {
     if (typeof localStorage === 'undefined') return new Set();
     try {
-      const raw = localStorage.getItem(STORAGE_KEY_READ_NOTIFICATIONS);
+      const raw = localStorage.getItem(storageKey);
       return new Set<string>(raw ? JSON.parse(raw) : []);
     } catch {
       return new Set();
     }
   });
+
+  // Re-sync localReadIds whenever storageKey (user) changes
+  useEffect(() => {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        setLocalReadIds(new Set<string>(JSON.parse(raw)));
+      } else {
+        setLocalReadIds(new Set());
+      }
+    } catch {
+      // Storage sandbox
+    }
+  }, [storageKey]);
+
+  // Combined read IDs from PostgreSQL database records and local storage cache
+  const readIds = useMemo(() => {
+    const ids = new Set<string>(localReadIds);
+    if (feedQuery.data?.notifications) {
+      for (const item of feedQuery.data.notifications) {
+        if (item.status === 'READ') {
+          ids.add(item.id);
+          if (item.templateCode) {
+            ids.add(item.templateCode);
+          }
+        }
+      }
+    }
+    return ids;
+  }, [localReadIds, feedQuery.data]);
 
   const popoverRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -79,8 +127,79 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
     (typeof localStorage !== 'undefined' &&
       localStorage.getItem('aprovaenem_diagnostic_completed') === 'true');
 
-  // Build the live notifications list reflecting the authenticated student's state
+  // Seed diagnostic achievement in backend PostgreSQL database if completed
+  useEffect(() => {
+    if (hasCompletedDiagnostic && user?.id && feedQuery.data?.notifications) {
+      const alreadyLogged = feedQuery.data.notifications.some(
+        (n) => n.templateCode === 'ACHIEVEMENT_DIAGNOSTIC'
+      );
+      if (!alreadyLogged && !createInAppMutation.isPending) {
+        createInAppMutation.mutate({
+          templateCode: 'ACHIEVEMENT_DIAGNOSTIC',
+          title: 'Conquista: Raio-X Diagnóstico 🎯',
+          body: 'Você concluiu sua avaliação diagnóstica TRI! Seu mapa de proficiências e radar pedagógico estão calibrados.',
+          metadata: JSON.stringify({
+            category: 'ACHIEVEMENT',
+            iconName: 'Activity',
+            targetSection: 'diagnostics',
+            actionLabel: 'Ver Diagnóstico',
+          }),
+        });
+      }
+    }
+  }, [hasCompletedDiagnostic, user?.id, feedQuery.data?.notifications, createInAppMutation]);
+
+  // Build the live notifications list reflecting the authenticated student's state & PostgreSQL records
   const notifications: StudentNotification[] = useMemo(() => {
+    // If backend database returned notification feed items, render them
+    if (feedQuery.data?.notifications && feedQuery.data.notifications.length > 0) {
+      return feedQuery.data.notifications.map((n) => {
+        let category: 'ACHIEVEMENT' | 'REMINDER' | 'UPDATE' = 'UPDATE';
+        let iconName: 'Trophy' | 'Flame' | 'Target' | 'Clock' | 'Activity' | 'Sparkles' | 'ShieldAlert' = 'Clock';
+        let targetSection: 'practice' | 'leaderboard' | 'diagnostics' | undefined = undefined;
+        let actionLabel = 'Ver Detalhes';
+
+        if (n.metadata) {
+          try {
+            const meta = JSON.parse(n.metadata);
+            if (meta.category) category = meta.category;
+            if (meta.iconName) iconName = meta.iconName;
+            if (meta.targetSection) targetSection = meta.targetSection;
+            if (meta.actionLabel) actionLabel = meta.actionLabel;
+          } catch {
+            // Keep defaults
+          }
+        }
+
+        if (!n.metadata) {
+          if (n.templateCode.includes('ACHIEV') || n.templateCode.includes('WELCOME')) {
+            category = 'ACHIEVEMENT';
+            iconName = n.templateCode.includes('DIAG') ? 'Activity' : 'Trophy';
+            targetSection = n.templateCode.includes('DIAG') ? 'diagnostics' : 'leaderboard';
+            actionLabel = n.templateCode.includes('DIAG') ? 'Ver Diagnóstico' : 'Ver Conquistas';
+          } else if (n.templateCode.includes('GOAL') || n.templateCode.includes('STREAK')) {
+            category = 'REMINDER';
+            iconName = n.templateCode.includes('STREAK') ? 'Flame' : 'Target';
+            targetSection = 'practice';
+            actionLabel = 'Praticar Agora';
+          }
+        }
+
+        return {
+          id: n.id,
+          category,
+          title: n.title,
+          message: n.body,
+          iconName,
+          timestamp: n.sentAt ? 'Hoje' : 'Semanal',
+          actionLabel,
+          targetSection,
+          isRead: n.status === 'READ' || readIds.has(n.id) || readIds.has(n.templateCode),
+        };
+      });
+    }
+
+    // Client-side fallback before database query resolves or in offline sandbox
     const list: StudentNotification[] = [];
 
     // 1. Achievements (Conquistas)
@@ -129,12 +248,12 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       });
     }
 
-    // 2. Study Reminders (Lembretes)
+    // 2. Study Reminders (Lembretes) - STABLE IDs
     const goalTarget = profile?.dailyGoalTarget ?? 5;
     if (dailyProgress < goalTarget) {
       const remaining = goalTarget - dailyProgress;
       list.push({
-        id: `reminder-daily-goal-${remaining}`,
+        id: 'reminder-daily-goal',
         category: 'REMINDER',
         title: 'Meta Diária de Estudos 🎯',
         message: `Faltam ${remaining} ${remaining === 1 ? 'questão' : 'questões'} para você bater sua meta hoje (${dailyProgress}/${goalTarget} resolvidas).`,
@@ -142,11 +261,11 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
         timestamp: 'Hoje',
         actionLabel: 'Praticar Agora',
         targetSection: 'practice',
-        isRead: readIds.has(`reminder-daily-goal-${remaining}`),
+        isRead: readIds.has('reminder-daily-goal'),
       });
     } else if (dailyProgress >= goalTarget && goalTarget > 0) {
       list.push({
-        id: 'reminder-daily-goal-done',
+        id: 'reminder-daily-goal',
         category: 'REMINDER',
         title: 'Meta Diária Cumprida! 🎉',
         message: `Excelente disciplina! Você atingiu 100% da sua meta com ${dailyProgress}/${goalTarget} questões hoje.`,
@@ -154,13 +273,13 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
         timestamp: 'Hoje',
         actionLabel: 'Ver Pontuação',
         targetSection: 'leaderboard',
-        isRead: readIds.has('reminder-daily-goal-done'),
+        isRead: readIds.has('reminder-daily-goal'),
       });
     }
 
     const streak = profile?.currentStreakDays ?? 1;
     list.push({
-      id: `reminder-streak-${streak}`,
+      id: 'reminder-streak',
       category: 'REMINDER',
       title: 'Ofensiva Diária Ativa 🔥',
       message: `Você está com uma sequência de ${streak} ${streak === 1 ? 'dia' : 'dias'} de estudos! Pratique para não quebrar sua rotina.`,
@@ -168,13 +287,13 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       timestamp: 'Hoje',
       actionLabel: 'Continuar Treino',
       targetSection: 'practice',
-      isRead: readIds.has(`reminder-streak-${streak}`),
+      isRead: readIds.has('reminder-streak'),
     });
 
-    // 3. Platform & League Updates (Avisos Importantes)
+    // 3. Platform & League Updates (Avisos Importantes) - STABLE IDs
     const league = profile?.weeklyLeague ?? 'BRONZE';
     list.push({
-      id: `update-weekly-league-${league}`,
+      id: 'update-weekly-league',
       category: 'UPDATE',
       title: `Disputa Semanal da Liga ${league} ⚡`,
       message: 'A pontuação da rodada semanal reinicia domingo às 23:59 BRT. Resolva simulados para subir de liga!',
@@ -182,7 +301,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       timestamp: 'Semanal',
       actionLabel: 'Ver Classificação',
       targetSection: 'leaderboard',
-      isRead: readIds.has(`update-weekly-league-${league}`),
+      isRead: readIds.has('update-weekly-league'),
     });
 
     list.push({
@@ -213,7 +332,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
     }
 
     return list;
-  }, [hasCompletedDiagnostic, profile, readIds]);
+  }, [feedQuery.data, hasCompletedDiagnostic, profile, readIds]);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -258,26 +377,34 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
     for (const n of notifications) {
       allIds.add(n.id);
     }
-    setReadIds(allIds);
+    setLocalReadIds(allIds);
     if (typeof localStorage !== 'undefined') {
       try {
-        localStorage.setItem(STORAGE_KEY_READ_NOTIFICATIONS, JSON.stringify(Array.from(allIds)));
+        localStorage.setItem(storageKey, JSON.stringify(Array.from(allIds)));
       } catch {
         // Storage sandbox
       }
     }
+    // Persist mark all as read to PostgreSQL database
+    markAllReadMutation.mutate();
   };
 
   const handleNotificationClick = (item: StudentNotification) => {
     const next = new Set(readIds);
     next.add(item.id);
-    setReadIds(next);
+    setLocalReadIds(next);
     if (typeof localStorage !== 'undefined') {
       try {
-        localStorage.setItem(STORAGE_KEY_READ_NOTIFICATIONS, JSON.stringify(Array.from(next)));
+        localStorage.setItem(storageKey, JSON.stringify(Array.from(next)));
       } catch {
         // Storage sandbox
       }
+    }
+
+    // If ID matches UUID format, persist to PostgreSQL database
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.id);
+    if (isUuid) {
+      markReadMutation.mutate(item.id);
     }
 
     if (item.targetSection) {

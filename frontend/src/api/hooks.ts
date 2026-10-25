@@ -6,6 +6,7 @@ import { gamificationService } from './services/gamification.service';
 import { tenantService } from './services/tenant.service';
 import { authService } from './services/auth.service';
 import { institutionalService } from './services/institutional.service';
+import { notificationService } from './services/notification.service';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useSessionStore } from '@/stores/useSessionStore';
 import type {
@@ -18,6 +19,7 @@ import type {
   RecordActivityRequest,
   ResetPasswordRequest,
   GamificationProfileDto,
+  CreateInAppNotificationRequest,
 } from './types';
 
 // ============================================================================
@@ -306,4 +308,64 @@ export function useCohortDiagnosticsQuery(cohortId?: string) {
     staleTime: 1000 * 60 * 5, // 5 minutes cache
   });
 }
+
+// ============================================================================
+// 7. Multi-Channel Notification Hooks
+// ============================================================================
+
+export function useNotificationsQuery(status: 'ALL' | 'UNREAD' = 'ALL') {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  return useQuery({
+    queryKey: queryKeys.notifications.feed(status),
+    queryFn: () => notificationService.getFeed(status),
+    enabled: isAuthenticated,
+    staleTime: 1000 * 30, // 30 seconds fresh
+  });
+}
+
+export function useNotificationUnreadCountQuery() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  return useQuery({
+    queryKey: queryKeys.notifications.unreadCount,
+    queryFn: () => notificationService.getUnreadCount(),
+    enabled: isAuthenticated,
+    staleTime: 1000 * 30,
+  });
+}
+
+export function useMarkNotificationReadMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (notificationId: string) => notificationService.markAsRead(notificationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
+    },
+  });
+}
+
+export function useMarkAllNotificationsReadMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => notificationService.markAllAsRead(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
+    },
+  });
+}
+
+export function useCreateInAppNotificationMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (req: CreateInAppNotificationRequest) => notificationService.createInAppNotification(req),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
+    },
+  });
+}
+
 

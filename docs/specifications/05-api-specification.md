@@ -1195,6 +1195,54 @@ Used by frontend clients (e.g., Socratic AI chat drawer badge) to display remain
 
 ---
 
+### 8.5 Mark All Notifications as Read
+* **Method**: `PATCH`
+* **Path**: `/api/v1/notifications/read-all`
+* **Headers**: `Authorization: Bearer <token>`
+* **Description**: Atomically marks all unread in-app notifications for the authenticated student as READ and persists timestamp in PostgreSQL database.
+
+#### Response `200 OK`
+```json
+{
+  "markedCount": 5,
+  "status": "ALL_READ"
+}
+```
+
+---
+
+### 8.6 Create In-App Notification
+* **Method**: `POST`
+* **Path**: `/api/v1/notifications`
+* **Headers**: `Authorization: Bearer <token>`, `Content-Type: application/json`
+* **Description**: Persists an in-app achievement or pedagogical notification for the authenticated student in PostgreSQL database idempotently.
+
+#### Request Body
+```json
+{
+  "templateCode": "ACHIEVEMENT_DIAGNOSTIC",
+  "title": "Conquista: Raio-X Diagnóstico 🎯",
+  "body": "Você concluiu sua avaliação diagnóstica TRI! Seu mapa de proficiências e radar pedagógico estão calibrados.",
+  "metadata": "{\"category\":\"ACHIEVEMENT\",\"iconName\":\"Activity\",\"targetSection\":\"diagnostics\",\"actionLabel\":\"Ver Diagnóstico\"}"
+}
+```
+
+#### Response `201 Created`
+```json
+{
+  "id": "11111111-2222-3333-4444-555555555555",
+  "channel": "IN_APP",
+  "templateCode": "ACHIEVEMENT_DIAGNOSTIC",
+  "title": "Conquista: Raio-X Diagnóstico 🎯",
+  "body": "Você concluiu sua avaliação diagnóstica TRI! Seu mapa de proficiências e radar pedagógico estão calibrados.",
+  "status": "SENT",
+  "sentAt": "2026-10-25T20:00:00Z",
+  "readAt": null
+}
+```
+
+---
+
 ## 9. Universal Accessibility & Inclusion Specifications (WCAG 2.1 AA & INEP Standards)
 
 The platform enforces digital accessibility across all API payloads and client rendering contracts in strict accordance with the **Lei Brasileira de Inclusão (LBI - Lei nº 13.146/2015)**, **e-MAG**, and **WCAG 2.1 Level AA**:

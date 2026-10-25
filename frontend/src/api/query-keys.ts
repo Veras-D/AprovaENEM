@@ -29,4 +29,9 @@ export const queryKeys = {
   auth: {
     me: ['auth', 'me'] as const,
   },
+  notifications: {
+    all: ['notifications'] as const,
+    feed: (status?: string) => ['notifications', 'feed', status] as const,
+    unreadCount: ['notifications', 'unreadCount'] as const,
+  },
 } as const;

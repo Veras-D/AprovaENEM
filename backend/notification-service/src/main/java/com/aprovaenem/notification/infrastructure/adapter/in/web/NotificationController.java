@@ -1,6 +1,8 @@
 package com.aprovaenem.notification.infrastructure.adapter.in.web;
 
 import com.aprovaenem.notification.application.service.NotificationService;
+import com.aprovaenem.notification.infrastructure.adapter.in.web.dto.CreateInAppNotificationRequest;
+import com.aprovaenem.notification.infrastructure.adapter.in.web.dto.MarkAllNotificationsReadResponse;
 import com.aprovaenem.notification.infrastructure.adapter.in.web.dto.MarkNotificationReadResponse;
 import com.aprovaenem.notification.infrastructure.adapter.in.web.dto.NotificationFeedResponse;
 import com.aprovaenem.notification.infrastructure.adapter.in.web.dto.RegisterDeviceTokenRequest;
@@ -43,6 +45,15 @@ public class NotificationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PostMapping
+    public ResponseEntity<NotificationFeedResponse.NotificationItemDto> createInAppNotification(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @Valid @RequestBody CreateInAppNotificationRequest request) {
+        UUID userId = resolveUserId(authHeader);
+        NotificationFeedResponse.NotificationItemDto response = notificationService.createInAppNotification(userId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @GetMapping
     public ResponseEntity<NotificationFeedResponse> getNotifications(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
@@ -51,6 +62,14 @@ public class NotificationController {
             @RequestParam(value = "size", defaultValue = "20") int size) {
         UUID userId = resolveUserId(authHeader);
         NotificationFeedResponse response = notificationService.getFeed(userId, status, page, size);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/read-all")
+    public ResponseEntity<MarkAllNotificationsReadResponse> markAllAsRead(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        UUID userId = resolveUserId(authHeader);
+        MarkAllNotificationsReadResponse response = notificationService.markAllAsRead(userId);
         return ResponseEntity.ok(response);
     }
 
@@ -85,3 +104,4 @@ public class NotificationController {
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Valid Bearer JWT token is required.");
     }
 }
+

@@ -144,5 +144,10 @@ class NotificationRepositoryAndFlywayIT {
                 userId, "PENDING", PageRequest.of(0, 10)
         );
         assertThat(pendingFeed.getTotalElements()).isZero();
+
+        // Test markAllAsReadForUser
+        int updated = notificationLogRepository.markAllAsReadForUser(userId, Instant.now());
+        assertThat(updated).isEqualTo(1); // log2 was DELIVERED, now marked READ
+        assertThat(notificationLogRepository.countByUserId(userId)).isEqualTo(2);
     }
 }
