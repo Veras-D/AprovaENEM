@@ -273,10 +273,13 @@ export const Header: React.FC<HeaderProps> = ({
                 title="Meu Perfil & Configurações"
               >
                 {user.avatarConfig ? (
-                  <AvatarRenderer config={user.avatarConfig} size={32} />
+                  <AvatarRenderer config={user.avatarConfig} size={32} ariaHidden />
                 ) : (
-                  <div className="h-8 w-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-xs shadow-sm">
-                    {user.name.charAt(0).toUpperCase()}
+                  <div
+                    aria-hidden="true"
+                    className="h-8 w-8 rounded-full bg-brand-primary text-white flex items-center justify-center shadow-sm"
+                  >
+                    <User className="h-4 w-4 text-white" aria-hidden="true" />
                   </div>
                 )}
                 <span className="hidden xl:inline font-medium text-xs sm:text-sm max-w-[120px] truncate text-slate-800 dark:text-slate-200 hover:text-brand-primary dark:hover:text-brand-primary">

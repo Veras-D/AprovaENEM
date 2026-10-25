@@ -383,6 +383,61 @@ describe('API Services', () => {
       expect(meResult.name).toBe('Beatriz Silva');
       expect(meResult.isEmailVerified).toBe(true);
     });
+
+    it('should request forgot password instructions and reset password with token', async () => {
+      const postSpy = vi
+        .spyOn(apiClient, 'post')
+        .mockResolvedValueOnce({ data: { message: 'Instructions dispatched', dispatched: true } })
+        .mockResolvedValueOnce({ data: { message: 'Password reset successful', success: true } });
+
+      const forgotRes = await authService.forgotPassword('student@escola.gov.br');
+      const resetRes = await authService.resetPassword({
+        token: 'token-reset-123',
+        newPassword: 'NewSecurePassword@2026',
+      });
+
+      expect(postSpy).toHaveBeenNthCalledWith(1, '/auth/forgot-password', {
+        email: 'student@escola.gov.br',
+      });
+      expect(forgotRes.dispatched).toBe(true);
+
+      expect(postSpy).toHaveBeenNthCalledWith(2, '/auth/reset-password', {
+        token: 'token-reset-123',
+        newPassword: 'NewSecurePassword@2026',
+      });
+      expect(resetRes.success).toBe(true);
+    });
+
+    it('should verify email and resend verification email', async () => {
+      const postSpy = vi
+        .spyOn(apiClient, 'post')
+        .mockResolvedValueOnce({
+          data: {
+            message: 'Email address successfully verified.',
+            isEmailVerified: true,
+            verifiedAt: '2026-10-25T01:00:00Z',
+          },
+        })
+        .mockResolvedValueOnce({
+          data: {
+            message: 'Confirmation link dispatched.',
+            dispatched: true,
+          },
+        });
+
+      const verifyRes = await authService.verifyEmail('token-verify-123');
+      const resendRes = await authService.resendVerification('student@escola.gov.br');
+
+      expect(postSpy).toHaveBeenNthCalledWith(1, '/auth/verify-email', {
+        token: 'token-verify-123',
+      });
+      expect(verifyRes.isEmailVerified).toBe(true);
+
+      expect(postSpy).toHaveBeenNthCalledWith(2, '/auth/resend-verification', {
+        email: 'student@escola.gov.br',
+      });
+      expect(resendRes.dispatched).toBe(true);
+    });
   });
 
   describe('institutionalService', () => {

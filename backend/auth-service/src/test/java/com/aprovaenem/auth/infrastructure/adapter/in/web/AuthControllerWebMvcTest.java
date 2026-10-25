@@ -5,8 +5,10 @@ import com.aprovaenem.auth.domain.model.User;
 import com.aprovaenem.auth.domain.model.UserRole;
 import com.aprovaenem.auth.domain.port.in.AuthUseCase;
 import com.aprovaenem.auth.domain.port.in.EmailVerificationUseCase;
+import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.ForgotPasswordRequest;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.LoginRequest;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.RegisterRequest;
+import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.ResetPasswordRequest;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.ResendVerificationRequest;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.VerifyEmailRequest;
 import com.aprovaenem.auth.infrastructure.adapter.out.security.CustomUserDetailsService;
@@ -302,5 +304,51 @@ class AuthControllerWebMvcTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.dispatched", is(true)))
                 .andExpect(jsonPath("$.message", containsString("If an account with this email exists")));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/forgot-password should return HTTP 200 OK")
+    void shouldDispatchForgotPasswordSuccessfully() throws Exception {
+        ForgotPasswordRequest request = new ForgotPasswordRequest();
+        request.setEmail("student@escola.gov.br");
+
+        when(authUseCase.forgotPassword(request.getEmail())).thenReturn(true);
+
+        mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.dispatched", is(true)))
+                .andExpect(jsonPath("$.message", containsString("password reset instructions have been dispatched")));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/reset-password should return HTTP 200 OK when token and password are valid")
+    void shouldResetPasswordSuccessfully() throws Exception {
+        ResetPasswordRequest request = new ResetPasswordRequest();
+        request.setToken("valid-reset-token-12345");
+        request.setNewPassword("NewSecurePassword@2026");
+
+        when(authUseCase.resetPassword(request.getToken(), request.getNewPassword())).thenReturn(true);
+
+        mockMvc.perform(post("/api/v1/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success", is(true)))
+                .andExpect(jsonPath("$.message", containsString("Password has been reset successfully")));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/reset-password should return HTTP 400 Bad Request when password is under 8 characters")
+    void shouldRejectResetPasswordWhenPasswordTooShort() throws Exception {
+        ResetPasswordRequest request = new ResetPasswordRequest();
+        request.setToken("valid-token");
+        request.setNewPassword("short");
+
+        mockMvc.perform(post("/api/v1/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 }

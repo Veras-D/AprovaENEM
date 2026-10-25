@@ -25,7 +25,7 @@ class UserGamificationProfileTest {
         assertThat(profile.getCurrentXp()).isZero();
         assertThat(profile.getStreakDays()).isZero();
         assertThat(profile.getStreakFreezeAvailable()).isEqualTo(1);
-        assertThat(profile.getDailyGoalQuestions()).isEqualTo(10);
+        assertThat(profile.getDailyGoalQuestions()).isEqualTo(5);
         assertThat(profile.getDailyQuestionsCompleted()).isZero();
         assertThat(profile.isOptInReminders()).isTrue();
     }

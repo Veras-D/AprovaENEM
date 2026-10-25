@@ -18,6 +18,10 @@ import {
   useTenantBrandingQuery,
   useLoginMutation,
   useRegisterMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
+  useVerifyEmailMutation,
+  useResendVerificationMutation,
   useCurrentUserQuery,
   useCohortDiagnosticsQuery,
 } from './hooks';
@@ -259,6 +263,56 @@ describe('TanStack Query Hooks', () => {
       password: 'password123',
     });
     await waitFor(() => expect(registerResult.current.isSuccess).toBe(true));
+  });
+
+  it('useForgotPasswordMutation and useResetPasswordMutation should trigger authService methods', async () => {
+    vi.spyOn(authService, 'forgotPassword').mockResolvedValueOnce({
+      message: 'Instructions dispatched',
+      dispatched: true,
+    });
+    vi.spyOn(authService, 'resetPassword').mockResolvedValueOnce({
+      message: 'Password reset',
+      success: true,
+    });
+
+    const wrapper = createWrapper();
+
+    const { result: forgotResult } = renderHook(() => useForgotPasswordMutation(), { wrapper });
+    forgotResult.current.mutate('student@escola.gov.br');
+    await waitFor(() => expect(forgotResult.current.isSuccess).toBe(true));
+    expect(authService.forgotPassword).toHaveBeenCalledWith('student@escola.gov.br');
+
+    const { result: resetResult } = renderHook(() => useResetPasswordMutation(), { wrapper });
+    resetResult.current.mutate({ token: 'tok-123', newPassword: 'NewPassword@2026' });
+    await waitFor(() => expect(resetResult.current.isSuccess).toBe(true));
+    expect(authService.resetPassword).toHaveBeenCalledWith({
+      token: 'tok-123',
+      newPassword: 'NewPassword@2026',
+    });
+  });
+
+  it('useVerifyEmailMutation and useResendVerificationMutation should call authService', async () => {
+    vi.spyOn(authService, 'verifyEmail').mockResolvedValueOnce({
+      message: 'Verified',
+      isEmailVerified: true,
+      verifiedAt: '2026-10-25T01:00:00Z',
+    });
+    vi.spyOn(authService, 'resendVerification').mockResolvedValueOnce({
+      message: 'Sent',
+      dispatched: true,
+    });
+
+    const wrapper = createWrapper();
+
+    const { result: verifyResult } = renderHook(() => useVerifyEmailMutation(), { wrapper });
+    verifyResult.current.mutate('token-abc-123');
+    await waitFor(() => expect(verifyResult.current.isSuccess).toBe(true));
+    expect(authService.verifyEmail).toHaveBeenCalledWith('token-abc-123');
+
+    const { result: resendResult } = renderHook(() => useResendVerificationMutation(), { wrapper });
+    resendResult.current.mutate('student@escola.gov.br');
+    await waitFor(() => expect(resendResult.current.isSuccess).toBe(true));
+    expect(authService.resendVerification).toHaveBeenCalledWith('student@escola.gov.br');
   });
 
   it('useCurrentUserQuery should fetch profile when authenticated', async () => {

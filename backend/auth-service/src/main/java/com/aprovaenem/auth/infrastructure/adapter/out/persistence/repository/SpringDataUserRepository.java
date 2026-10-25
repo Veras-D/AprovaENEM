@@ -14,5 +14,7 @@ public interface SpringDataUserRepository extends JpaRepository<UserEntity, UUID
 
     Optional<UserEntity> findByEmailVerificationToken(String emailVerificationToken);
 
+    Optional<UserEntity> findByPasswordResetToken(String passwordResetToken);
+
     boolean existsByEmail(String email);
 }

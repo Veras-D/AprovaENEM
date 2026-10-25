@@ -15,6 +15,8 @@ public interface UserRepositoryPort {
 
     Optional<User> findByEmailVerificationToken(String token);
 
+    Optional<User> findByPasswordResetToken(String token);
+
     boolean existsByEmail(String email);
 
     void deleteById(UUID id);

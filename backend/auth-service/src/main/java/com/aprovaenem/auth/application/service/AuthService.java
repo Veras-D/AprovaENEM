@@ -256,6 +256,61 @@ public class AuthService implements AuthUseCase {
         log.info("LGPD Art. 18 Purge: User [{}] account and personal identifiers permanently deleted", userId);
     }
 
+    @Override
+    @Transactional
+    public boolean forgotPassword(String email) {
+        if (email == null || email.isBlank()) {
+            return false;
+        }
+
+        Optional<User> userOpt = userRepository.findByEmail(email.trim().toLowerCase());
+        if (userOpt.isEmpty()) {
+            // Return true silently to prevent account enumeration
+            return true;
+        }
+
+        User user = userOpt.get();
+        String resetToken = UUID.randomUUID().toString().replace("-", "");
+        Instant now = Instant.now();
+        Instant expiresAt = now.plus(24, ChronoUnit.HOURS);
+
+        user.setPasswordResetToken(resetToken);
+        user.setPasswordResetExpiresAt(expiresAt);
+        user.setUpdatedAt(now);
+
+        userRepository.save(user);
+        log.info("Password reset token generated for user [{}]", user.getId());
+        return true;
+    }
+
+    @Override
+    @Transactional
+    public boolean resetPassword(String token, String newPassword) {
+        if (token == null || token.isBlank()) {
+            throw new BusinessException("O token de recuperação de senha é obrigatório.");
+        }
+        if (newPassword == null || newPassword.length() < 8) {
+            throw new BusinessException("A nova senha deve ter no mínimo 8 caracteres.");
+        }
+
+        User user = userRepository.findByPasswordResetToken(token.trim())
+                .orElseThrow(() -> new BusinessException(
+                        "O token de recuperação é inválido ou expirou (validade de 24h). Solicite um novo link de recuperação."));
+
+        if (user.getPasswordResetExpiresAt() != null && Instant.now().isAfter(user.getPasswordResetExpiresAt())) {
+            throw new BusinessException("O token de recuperação é inválido ou expirou (validade de 24h). Solicite um novo link de recuperação.");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setPasswordResetToken(null);
+        user.setPasswordResetExpiresAt(null);
+        user.setUpdatedAt(Instant.now());
+
+        userRepository.save(user);
+        log.info("Password successfully reset for user [{}]", user.getId());
+        return true;
+    }
+
     private void publishOutboxEvent(String aggregateType, UUID aggregateId, String eventType, Object payloadObject) {
         try {
             String jsonPayload = objectMapper.writeValueAsString(payloadObject);

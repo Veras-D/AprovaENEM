@@ -70,15 +70,13 @@ public class GamificationService implements GamificationUseCase {
         // 1. Daily Goal Evaluation: If last activity occurred on a previous calendar day, completed questions for today starts at 0
         boolean isActivityFromPastDay = profile.getLastActivityDate() != null && profile.getLastActivityDate().isBefore(today);
         int completedQuestionsToday = isActivityFromPastDay ? 0 : profile.getDailyQuestionsCompleted();
-        boolean isGoalCompletedToday = isActivityFromPastDay ? false : profile.isDailyGoalCompleted();
+        boolean isGoalCompletedToday = !isActivityFromPastDay && profile.isDailyGoalCompleted();
 
         // 2. Monthly Freeze Recharge Evaluation: Recharges to 1 on a new calendar month
         int streakFreeze = profile.getStreakFreezeAvailable();
         LocalDate lastDate = profile.getLastActivityDate();
-        if (streakFreeze < 1 && lastDate != null) {
-            if (today.getYear() > lastDate.getYear() || today.getMonthValue() > lastDate.getMonthValue()) {
-                streakFreeze = 1;
-            }
+        if (streakFreeze < 1 && isNewCalendarMonth(today, lastDate)) {
+            streakFreeze = 1;
         }
 
         GamificationProfileResponse.DailyGoalDto dailyGoalDto = GamificationProfileResponse.DailyGoalDto.builder()
@@ -128,6 +126,29 @@ public class GamificationService implements GamificationUseCase {
         int xpToAdd = (correctCount * 10) + (sessionCompleted ? 50 : 0);
 
         // 2. Streak & Daily Goal Tracking
+        updateStreakAndDailyGoal(profile, today, questionsSolved, userId);
+        xpToAdd += checkDailyGoalBonus(profile, userId, now);
+
+        profile.setLastActivityDate(today);
+        profile.setCurrentXp(profile.getCurrentXp() + xpToAdd);
+        int newLevel = (profile.getCurrentXp() / 200) + 1;
+        profile.setCurrentLevel(newLevel);
+
+        UserGamificationProfile savedProfile = gamificationRepository.saveProfile(profile);
+
+        // 3. Badge Unlocks
+        evaluateBadgeUnlocks(userId, sessionCompleted, savedProfile);
+
+        // 4. Update Weekly Leaderboard (Postgres & Redis ZSET)
+        updateWeeklyLeaderboard(userId, today, xpToAdd, questionsSolved);
+
+        log.info("Awarded [{}] XP to user [{}]. Level: [{}], Total XP: [{}], Streak: [{}] days",
+                xpToAdd, userId, savedProfile.getCurrentLevel(), savedProfile.getCurrentXp(), savedProfile.getStreakDays());
+
+        return savedProfile;
+    }
+
+    private void updateStreakAndDailyGoal(UserGamificationProfile profile, LocalDate today, int questionsSolved, UUID userId) {
         LocalDate lastDate = profile.getLastActivityDate();
         if (lastDate == null) {
             profile.setStreakDays(1);
@@ -139,48 +160,52 @@ public class GamificationService implements GamificationUseCase {
             profile.setDailyQuestionsCompleted(questionsSolved);
             profile.setDailyGoalReachedAt(null);
         } else {
-            // Missed at least 1 calendar day: evaluate emergency freeze and monthly recharge
-            int availableFreeze = profile.getStreakFreezeAvailable();
-            if (availableFreeze < 1 && lastDate != null && (today.getYear() > lastDate.getYear() || today.getMonthValue() > lastDate.getMonthValue())) {
-                availableFreeze = 1;
-            }
+            handleMissedDays(profile, today, lastDate, questionsSolved, userId);
+        }
+    }
 
-            if (availableFreeze > 0) {
-                profile.setStreakFreezeAvailable(availableFreeze - 1);
-                log.info("Applied emergency monthly streak freeze for user [{}]", userId);
-            } else {
-                profile.setStreakDays(1);
-            }
-            profile.setDailyQuestionsCompleted(questionsSolved);
-            profile.setDailyGoalReachedAt(null);
+    private void handleMissedDays(UserGamificationProfile profile, LocalDate today, LocalDate lastDate, int questionsSolved, UUID userId) {
+        int availableFreeze = profile.getStreakFreezeAvailable();
+        if (availableFreeze < 1 && isNewCalendarMonth(today, lastDate)) {
+            availableFreeze = 1;
         }
 
-        // Daily Goal completion check (+20 XP bonus)
+        if (availableFreeze > 0) {
+            profile.setStreakFreezeAvailable(availableFreeze - 1);
+            log.info("Applied emergency monthly streak freeze for user [{}]", userId);
+        } else {
+            profile.setStreakDays(1);
+        }
+        profile.setDailyQuestionsCompleted(questionsSolved);
+        profile.setDailyGoalReachedAt(null);
+    }
+
+    private boolean isNewCalendarMonth(LocalDate today, LocalDate lastDate) {
+        return lastDate != null && (today.getYear() > lastDate.getYear() || today.getMonthValue() > lastDate.getMonthValue());
+    }
+
+    private int checkDailyGoalBonus(UserGamificationProfile profile, UUID userId, Instant now) {
         if (profile.getDailyQuestionsCompleted() >= profile.getDailyGoalQuestions() && profile.getDailyGoalReachedAt() == null) {
             profile.setDailyGoalReachedAt(now);
-            xpToAdd += 20;
             log.info("Student [{}] hit daily goal of [{}] questions (+20 bonus XP)", userId, profile.getDailyGoalQuestions());
+            return 20;
         }
+        return 0;
+    }
 
-        profile.setLastActivityDate(today);
-        profile.setCurrentXp(profile.getCurrentXp() + xpToAdd);
-        int newLevel = (profile.getCurrentXp() / 200) + 1;
-        profile.setCurrentLevel(newLevel);
-
-        UserGamificationProfile savedProfile = gamificationRepository.saveProfile(profile);
-
-        // 3. Badge Unlocks
+    private void evaluateBadgeUnlocks(UUID userId, boolean sessionCompleted, UserGamificationProfile profile) {
         if (sessionCompleted) {
             gamificationRepository.unlockBadge(userId, "FIRST_SIMULADO");
         }
-        if (savedProfile.getStreakDays() >= 7) {
+        if (profile.getStreakDays() >= 7) {
             gamificationRepository.unlockBadge(userId, "STREAK_7_DAYS");
         }
-        if (savedProfile.getCurrentLevel() >= 10) {
+        if (profile.getCurrentLevel() >= 10) {
             gamificationRepository.unlockBadge(userId, "LEVEL_10");
         }
+    }
 
-        // 4. Update Weekly Leaderboard (Postgres & Redis ZSET)
+    private void updateWeeklyLeaderboard(UUID userId, LocalDate today, int xpToAdd, int questionsSolved) {
         int weekNumber = today.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
         int year = today.get(IsoFields.WEEK_BASED_YEAR);
 
@@ -199,11 +224,6 @@ public class GamificationService implements GamificationUseCase {
         gamificationRepository.saveWeeklyLeaderboard(leaderboard);
 
         redisLeaderboardPort.incrementWeeklyXp(year, weekNumber, leaderboard.getLeagueTier(), userId, xpToAdd);
-
-        log.info("Awarded [{}] XP to user [{}]. Level: [{}], Total XP: [{}], Streak: [{}] days",
-                xpToAdd, userId, savedProfile.getCurrentLevel(), savedProfile.getCurrentXp(), savedProfile.getStreakDays());
-
-        return savedProfile;
     }
 
     @Override

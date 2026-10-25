@@ -1,5 +1,14 @@
 import { apiClient } from '../client';
-import type { AuthLoginRequest, AuthLoginResponse, AuthRegisterRequest } from '../types';
+import type {
+  AuthLoginRequest,
+  AuthLoginResponse,
+  AuthRegisterRequest,
+  ForgotPasswordResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
+  VerifyEmailResponse,
+  ResendVerificationResponse,
+} from '../types';
 import type { UserProfile, AvatarConfig } from '@/types';
 
 type UserRoleType = UserProfile['roles'][number];
@@ -165,5 +174,41 @@ export const authService = {
    */
   async deleteAccount(): Promise<void> {
     await apiClient.delete('/auth/me');
+  },
+
+  /**
+   * Request password reset instructions
+   * Target endpoint: POST /api/v1/auth/forgot-password
+   */
+  async forgotPassword(email: string): Promise<ForgotPasswordResponse> {
+    const response = await apiClient.post<ForgotPasswordResponse>('/auth/forgot-password', { email });
+    return response.data;
+  },
+
+  /**
+   * Reset student password using verified recovery token
+   * Target endpoint: POST /api/v1/auth/reset-password
+   */
+  async resetPassword(req: ResetPasswordRequest): Promise<ResetPasswordResponse> {
+    const response = await apiClient.post<ResetPasswordResponse>('/auth/reset-password', req);
+    return response.data;
+  },
+
+  /**
+   * Verify student email address with verification token
+   * Target endpoint: POST /api/v1/auth/verify-email
+   */
+  async verifyEmail(token: string): Promise<VerifyEmailResponse> {
+    const response = await apiClient.post<VerifyEmailResponse>('/auth/verify-email', { token });
+    return response.data;
+  },
+
+  /**
+   * Resend verification email link to student
+   * Target endpoint: POST /api/v1/auth/resend-verification
+   */
+  async resendVerification(email: string): Promise<ResendVerificationResponse> {
+    const response = await apiClient.post<ResendVerificationResponse>('/auth/resend-verification', { email });
+    return response.data;
   },
 };

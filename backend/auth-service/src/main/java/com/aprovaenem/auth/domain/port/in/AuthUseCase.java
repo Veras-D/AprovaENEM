@@ -22,6 +22,10 @@ public interface AuthUseCase {
 
     void deleteAccount(UUID userId);
 
+    boolean forgotPassword(String email);
+
+    boolean resetPassword(String token, String newPassword);
+
     record AuthResult(User user, String token, long expiresInSeconds) {}
 
     record BadgeExport(

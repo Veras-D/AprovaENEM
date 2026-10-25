@@ -12,6 +12,10 @@ import type {
   TenantBrandingDto,
   AuthLoginResponse,
   InstitutionalCohortDiagnosticResponse,
+  ForgotPasswordResponse,
+  ResetPasswordResponse,
+  VerifyEmailResponse,
+  ResendVerificationResponse,
 } from '../types';
 import type { UserProfile } from '@/types';
 export {
@@ -1211,5 +1215,26 @@ export const MOCK_AUTH_LOGIN_RESPONSE: AuthLoginResponse = {
     isEmailVerified: true,
     createdAt: '2026-09-01T10:00:00Z',
   },
+};
+
+export const MOCK_FORGOT_PASSWORD_RESPONSE: ForgotPasswordResponse = {
+  message: 'Instruções de recuperação enviadas com sucesso! Verifique seu e-mail.',
+  dispatched: true,
+};
+
+export const MOCK_RESET_PASSWORD_RESPONSE: ResetPasswordResponse = {
+  message: 'Senha redefinida com sucesso! Você já pode entrar com sua nova senha.',
+  success: true,
+};
+
+export const MOCK_VERIFY_EMAIL_RESPONSE: VerifyEmailResponse = {
+  message: 'E-mail confirmado com sucesso! Sua conta agora está plenamente ativa.',
+  isEmailVerified: true,
+  verifiedAt: '2026-10-25T01:00:00Z',
+};
+
+export const MOCK_RESEND_VERIFICATION_RESPONSE: ResendVerificationResponse = {
+  message: 'Um novo link de confirmação foi enviado para seu e-mail.',
+  dispatched: true,
 };
 

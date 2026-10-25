@@ -23,7 +23,7 @@ export interface DiagnosticDashboardProps {
   readonly className?: string;
   readonly onPracticeTopic?: (topic: string) => void;
   readonly onExportReport?: () => void;
-  readonly onOpenAuthModal?: (mode?: 'login' | 'register') => void;
+  readonly onOpenAuthModal?: (mode?: 'login' | 'register' | 'forgot-password') => void;
 }
 
 export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = ({
@@ -126,12 +126,27 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = ({
           </div>
 
           <div>
-            <label
-              htmlFor="diagnostic-gate-password"
-              className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
-            >
-              Senha
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label
+                htmlFor="diagnostic-gate-password"
+                className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+              >
+                Senha
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onOpenAuthModal) {
+                    onOpenAuthModal('forgot-password');
+                  } else {
+                    useAuthStore.getState().openAuthModal('forgot-password');
+                  }
+                }}
+                className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+              >
+                Esqueci minha senha
+              </button>
+            </div>
             <div className="relative">
               <input
                 id="diagnostic-gate-password"

@@ -402,4 +402,104 @@ class AuthServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("A senha atual é necessária");
     }
+
+    @Test
+    @DisplayName("Should generate password reset token when user exists")
+    void shouldGeneratePasswordResetTokenWhenUserExists() {
+        User existingUser = User.builder()
+                .id(UUID.randomUUID())
+                .email("student@escola.gov.br")
+                .fullName("Student Name")
+                .build();
+
+        when(userRepository.findByEmail("student@escola.gov.br")).thenReturn(Optional.of(existingUser));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        boolean dispatched = authService.forgotPassword("Student@Escola.Gov.BR ");
+
+        assertThat(dispatched).isTrue();
+        assertThat(existingUser.getPasswordResetToken()).isNotNull().hasSize(32);
+        assertThat(existingUser.getPasswordResetExpiresAt()).isAfter(Instant.now());
+        verify(userRepository).save(existingUser);
+    }
+
+    @Test
+    @DisplayName("Should return true silently when forgot password requested for non-existent user")
+    void shouldReturnTrueSilentlyWhenForgotPasswordForNonExistentUser() {
+        when(userRepository.findByEmail("ghost@escola.gov.br")).thenReturn(Optional.empty());
+
+        boolean dispatched = authService.forgotPassword("ghost@escola.gov.br");
+
+        assertThat(dispatched).isTrue();
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("Should return false when forgot password email is blank")
+    void shouldReturnFalseWhenForgotPasswordEmailIsBlank() {
+        boolean dispatched = authService.forgotPassword("   ");
+        assertThat(dispatched).isFalse();
+    }
+
+    @Test
+    @DisplayName("Should reset password successfully when token is valid")
+    void shouldResetPasswordSuccessfullyWhenTokenIsValid() {
+        User existingUser = User.builder()
+                .id(UUID.randomUUID())
+                .email("student@escola.gov.br")
+                .passwordResetToken("valid-reset-token-12345")
+                .passwordResetExpiresAt(Instant.now().plusSeconds(3600))
+                .build();
+
+        when(userRepository.findByPasswordResetToken("valid-reset-token-12345")).thenReturn(Optional.of(existingUser));
+        when(passwordEncoder.encode("NewSecretPassword@2026")).thenReturn("new-encoded-hash");
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        boolean success = authService.resetPassword("valid-reset-token-12345", "NewSecretPassword@2026");
+
+        assertThat(success).isTrue();
+        assertThat(existingUser.getPasswordHash()).isEqualTo("new-encoded-hash");
+        assertThat(existingUser.getPasswordResetToken()).isNull();
+        assertThat(existingUser.getPasswordResetExpiresAt()).isNull();
+        verify(userRepository).save(existingUser);
+    }
+
+    @Test
+    @DisplayName("Should throw exception when reset password token is blank or password is too short")
+    void shouldThrowExceptionWhenResetPasswordParamsInvalid() {
+        assertThatThrownBy(() -> authService.resetPassword("", "ValidPass@123"))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("token de recuperação");
+
+        assertThatThrownBy(() -> authService.resetPassword("valid-token", "short"))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("no mínimo 8 caracteres");
+    }
+
+    @Test
+    @DisplayName("Should throw exception when reset password token does not match any user")
+    void shouldThrowExceptionWhenResetPasswordTokenNotFound() {
+        when(userRepository.findByPasswordResetToken("unknown-token")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.resetPassword("unknown-token", "NewPassword@123"))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("inválido ou expirou");
+    }
+
+    @Test
+    @DisplayName("Should throw exception when reset password token has expired")
+    void shouldThrowExceptionWhenResetPasswordTokenExpired() {
+        User existingUser = User.builder()
+                .id(UUID.randomUUID())
+                .email("student@escola.gov.br")
+                .passwordResetToken("expired-token")
+                .passwordResetExpiresAt(Instant.now().minusSeconds(60))
+                .build();
+
+        when(userRepository.findByPasswordResetToken("expired-token")).thenReturn(Optional.of(existingUser));
+
+        assertThatThrownBy(() -> authService.resetPassword("expired-token", "NewPassword@123"))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("inválido ou expirou");
+    }
 }

@@ -307,3 +307,41 @@ export interface AuthRegisterRequest {
   readonly schoolType?: 'PUBLIC_SCHOOL' | 'PRIVATE_SCHOLARSHIP' | 'PRIVATE_REGULAR';
   readonly targetDegree?: string;
 }
+
+export interface ForgotPasswordRequest {
+  readonly email: string;
+}
+
+export interface ForgotPasswordResponse {
+  readonly message: string;
+  readonly dispatched: boolean;
+}
+
+export interface ResetPasswordRequest {
+  readonly token: string;
+  readonly newPassword: string;
+}
+
+export interface ResetPasswordResponse {
+  readonly message: string;
+  readonly success: boolean;
+}
+
+export interface VerifyEmailRequest {
+  readonly token: string;
+}
+
+export interface VerifyEmailResponse {
+  readonly message: string;
+  readonly isEmailVerified: boolean;
+  readonly verifiedAt?: string;
+}
+
+export interface ResendVerificationRequest {
+  readonly email: string;
+}
+
+export interface ResendVerificationResponse {
+  readonly message: string;
+  readonly dispatched: boolean;
+}

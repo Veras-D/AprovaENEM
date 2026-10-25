@@ -176,4 +176,22 @@ describe('ProfilePage Feature', () => {
 
     expect(onNavigate).toHaveBeenCalledWith('practice');
   });
+
+  it('displays verified email badge when user email is verified', () => {
+    renderWithClient(<ProfilePage onNavigate={vi.fn()} />);
+
+    expect(screen.getByText(/E-mail Verificado/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Verificado$/i)).toBeInTheDocument();
+  });
+
+  it('displays pending email verification badge and confirm button when unverified', () => {
+    useAuthStore.setState({
+      user: { ...mockUser, isEmailVerified: false },
+    });
+
+    renderWithClient(<ProfilePage onNavigate={vi.fn()} />);
+
+    expect(screen.getByText(/Confirmação Pendente/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Confirmar Agora/i })).toBeInTheDocument();
+  });
 });

@@ -4,7 +4,13 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RegisterModal } from './RegisterModal';
 import { authService } from '@/api/services/auth.service';
-import { MOCK_AUTH_LOGIN_RESPONSE } from '@/api/mocks/mock-data';
+import {
+  MOCK_AUTH_LOGIN_RESPONSE,
+  MOCK_FORGOT_PASSWORD_RESPONSE,
+  MOCK_RESET_PASSWORD_RESPONSE,
+  MOCK_VERIFY_EMAIL_RESPONSE,
+  MOCK_RESEND_VERIFICATION_RESPONSE,
+} from '@/api/mocks/mock-data';
 
 describe('RegisterModal Component', () => {
   const handleClose = vi.fn();
@@ -171,7 +177,8 @@ describe('RegisterModal Component', () => {
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
-      expect(screen.getByText(/Conta criada com sucesso! Migrando seus simulados anteriores/i)).toBeInTheDocument();
+      expect(screen.getByText(/Confirme seu E-mail/i)).toBeInTheDocument();
+      expect(screen.getByText(/lucas@escola.gov.br/i)).toBeInTheDocument();
     });
 
     expect(authService.register).toHaveBeenCalledWith({
@@ -268,5 +275,137 @@ describe('RegisterModal Component', () => {
     await waitFor(() => {
       expect(screen.getByText('Este e-mail já está cadastrado')).toBeInTheDocument();
     });
+  });
+
+  it('should switch to forgot password mode when clicking Esqueci minha senha in login mode', () => {
+    renderWithProviders(<RegisterModal isOpen={true} onClose={handleClose} initialMode="login" />);
+
+    const forgotBtn = screen.getByRole('button', { name: /Esqueci minha senha/i });
+    expect(forgotBtn).toBeInTheDocument();
+
+    fireEvent.click(forgotBtn);
+
+    expect(screen.getByText('Recuperar Minha Senha')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Voltar ao Login/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Enviar Instruções de Recuperação/i })).toBeInTheDocument();
+  });
+
+  it('should validate and dispatch forgot password request', async () => {
+    vi.spyOn(authService, 'forgotPassword').mockResolvedValueOnce(MOCK_FORGOT_PASSWORD_RESPONSE);
+
+    renderWithProviders(<RegisterModal isOpen={true} onClose={handleClose} initialMode="forgot-password" />);
+
+    const submitBtn = screen.getByRole('button', { name: /Enviar Instruções de Recuperação/i });
+
+    // Empty email
+    fireEvent.click(submitBtn);
+    expect(screen.getByText(/Informe um e-mail válido para recuperação/i)).toBeInTheDocument();
+
+    // Fill valid email
+    fireEvent.change(screen.getByLabelText(/E-mail do Estudante/i), { target: { value: 'aluno@escola.gov.br' } });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Instruções de recuperação enviadas com sucesso/i)).toBeInTheDocument();
+    });
+
+    expect(authService.forgotPassword).toHaveBeenCalledWith('aluno@escola.gov.br');
+  });
+
+  it('should toggle to token input and reset password successfully', async () => {
+    vi.spyOn(authService, 'resetPassword').mockResolvedValueOnce(MOCK_RESET_PASSWORD_RESPONSE);
+
+    renderWithProviders(<RegisterModal isOpen={true} onClose={handleClose} initialMode="forgot-password" />);
+
+    // Click toggle to show token input
+    const toggleTokenBtn = screen.getByRole('button', { name: /Já possui um token de recuperação\? Clique aqui/i });
+    fireEvent.click(toggleTokenBtn);
+
+    expect(screen.getByLabelText(/Token \/ Código de Recuperação/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Nova Senha/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Confirmar Nova Senha/i)).toBeInTheDocument();
+
+    const submitBtn = screen.getByRole('button', { name: /Redefinir Minha Senha/i });
+
+    // Fill token and mismatched passwords
+    fireEvent.change(screen.getByLabelText(/Token \/ Código de Recuperação/i), { target: { value: 'token-abc-123' } });
+    fireEvent.change(screen.getByLabelText(/^Nova Senha/i), { target: { value: 'StrongPass@2026' } });
+    fireEvent.change(screen.getByLabelText(/Confirmar Nova Senha/i), { target: { value: 'DifferentPass@2026' } });
+    fireEvent.click(submitBtn);
+
+    expect(screen.getByText(/As senhas não coincidem/i)).toBeInTheDocument();
+
+    // Fix confirmation password
+    fireEvent.change(screen.getByLabelText(/Confirmar Nova Senha/i), { target: { value: 'StrongPass@2026' } });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Senha redefinida com sucesso/i)).toBeInTheDocument();
+    });
+
+    expect(authService.resetPassword).toHaveBeenCalledWith({
+      token: 'token-abc-123',
+      newPassword: 'StrongPass@2026',
+    });
+  });
+
+  it('should return to login when clicking Voltar ao Login', () => {
+    renderWithProviders(<RegisterModal isOpen={true} onClose={handleClose} initialMode="forgot-password" />);
+
+    const backBtn = screen.getByRole('button', { name: /Voltar ao Login/i });
+    fireEvent.click(backBtn);
+
+    expect(screen.getByText('Acessar Minha Conta')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Entrar na Plataforma/i })).toBeInTheDocument();
+  });
+
+  it('should handle email verification with valid token in verify-email mode', async () => {
+    vi.spyOn(authService, 'verifyEmail').mockResolvedValueOnce(MOCK_VERIFY_EMAIL_RESPONSE);
+
+    renderWithProviders(
+      <RegisterModal
+        isOpen={true}
+        onClose={handleClose}
+        initialMode="verify-email"
+        initialEmail="lucas@escola.gov.br"
+      />
+    );
+
+    expect(screen.getByText('Confirme seu E-mail')).toBeInTheDocument();
+    expect(screen.getByText('lucas@escola.gov.br')).toBeInTheDocument();
+
+    const tokenInput = screen.getByLabelText(/Possui o código ou token de confirmação\?/i);
+    fireEvent.change(tokenInput, { target: { value: 'tok-abc-xyz-456' } });
+
+    const submitBtn = screen.getByRole('button', { name: /Confirmar E-mail/i });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/E-mail confirmado com sucesso!/i)).toBeInTheDocument();
+    });
+
+    expect(authService.verifyEmail).toHaveBeenCalledWith('tok-abc-xyz-456');
+  });
+
+  it('should handle resending verification email in verify-email mode', async () => {
+    vi.spyOn(authService, 'resendVerification').mockResolvedValueOnce(MOCK_RESEND_VERIFICATION_RESPONSE);
+
+    renderWithProviders(
+      <RegisterModal
+        isOpen={true}
+        onClose={handleClose}
+        initialMode="verify-email"
+        initialEmail="lucas@escola.gov.br"
+      />
+    );
+
+    const resendBtn = screen.getByRole('button', { name: /Reenviar E-mail/i });
+    fireEvent.click(resendBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Um novo link de confirmação foi enviado/i)).toBeInTheDocument();
+    });
+
+    expect(authService.resendVerification).toHaveBeenCalledWith('lucas@escola.gov.br');
   });
 });

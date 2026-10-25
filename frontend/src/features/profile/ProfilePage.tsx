@@ -221,9 +221,31 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             </span>
           </div>
 
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            {user.email}
-          </p>
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+            <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+              {user.email}
+            </span>
+            {user.isEmailVerified ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                E-mail Verificado
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                  <AlertCircle className="h-3 w-3" aria-hidden="true" />
+                  Confirmação Pendente
+                </span>
+                <button
+                  type="button"
+                  onClick={() => openAuthModal('verify-email')}
+                  className="text-xs text-brand-primary dark:text-brand-accent hover:underline font-semibold cursor-pointer"
+                >
+                  Confirmar E-mail
+                </button>
+              </span>
+            )}
+          </div>
 
           {user.targetDegree && (
             <p className="text-xs sm:text-sm font-medium text-emerald-600 dark:text-emerald-400 flex items-center justify-center sm:justify-start gap-1.5 pt-1">
@@ -270,6 +292,35 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               )}
 
               <form id="profile-form" onSubmit={handleSaveProfile} className="space-y-4">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label htmlFor="profile-email" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      Endereço de E-mail
+                    </label>
+                    {user.isEmailVerified ? (
+                      <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3" /> Verificado
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => openAuthModal('verify-email')}
+                        className="text-[11px] font-medium text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <AlertCircle className="h-3 w-3" /> Confirmar Agora
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    id="profile-email"
+                    type="email"
+                    value={user.email}
+                    disabled
+                    aria-label="Endereço de e-mail do estudante"
+                    className="w-full px-3.5 py-2.5 rounded-brand border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-sm cursor-not-allowed"
+                  />
+                </div>
+
                 <div>
                   <label htmlFor="profile-fullname" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Nome Completo

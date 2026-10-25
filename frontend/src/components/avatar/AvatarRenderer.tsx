@@ -7,6 +7,7 @@ export interface AvatarRendererProps {
   readonly size?: number;
   readonly className?: string;
   readonly ariaLabel?: string;
+  readonly ariaHidden?: boolean;
 }
 
 /**
@@ -29,6 +30,7 @@ export const AvatarRenderer: React.FC<AvatarRendererProps> = ({
   size = 64,
   className = '',
   ariaLabel = 'Avatar do estudante',
+  ariaHidden,
 }) => {
   const activeConfig = config ?? DEFAULT_AVATAR_CONFIG;
   const clipId = useId();
@@ -36,8 +38,10 @@ export const AvatarRenderer: React.FC<AvatarRendererProps> = ({
 
   return (
     <svg
-      role="img"
-      aria-label={ariaLabel}
+      role={ariaHidden ? undefined : 'img'}
+      aria-label={ariaHidden ? undefined : ariaLabel}
+      aria-hidden={ariaHidden ? 'true' : undefined}
+      focusable="false"
       viewBox="0 0 100 100"
       width={size}
       height={size}

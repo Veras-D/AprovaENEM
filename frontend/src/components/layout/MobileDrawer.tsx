@@ -240,9 +240,12 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 {user.avatarConfig ? (
-                  <AvatarRenderer config={user.avatarConfig} size={40} />
+                  <AvatarRenderer config={user.avatarConfig} size={40} ariaHidden />
                 ) : (
-                  <div className="h-10 w-10 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-base">
+                  <div
+                    aria-hidden="true"
+                    className="h-10 w-10 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-base"
+                  >
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                 )}

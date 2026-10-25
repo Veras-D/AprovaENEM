@@ -55,6 +55,18 @@ export const App: React.FC = () => {
   useEffect(() => {
     void useTenantStore.getState().resolveAndApplyTenant();
     useAuthStore.getState().syncAuthFromStorage();
+
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const verifyToken = params.get('verifyToken');
+        if (verifyToken) {
+          useAuthStore.getState().openAuthModal('verify-email');
+        }
+      } catch {
+        // Fallback for non-browser environments
+      }
+    }
   }, []);
 
   const handleNavigate = (section: string) => {

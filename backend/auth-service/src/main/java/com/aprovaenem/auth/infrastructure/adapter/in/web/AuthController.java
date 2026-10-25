@@ -3,10 +3,14 @@ package com.aprovaenem.auth.infrastructure.adapter.in.web;
 import com.aprovaenem.auth.domain.model.User;
 import com.aprovaenem.auth.domain.port.in.AuthUseCase;
 import com.aprovaenem.auth.domain.port.in.EmailVerificationUseCase;
+import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.ForgotPasswordRequest;
+import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.ForgotPasswordResponse;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.LoginRequest;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.LoginResponse;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.RegisterRequest;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.RegisterResponse;
+import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.ResetPasswordRequest;
+import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.ResetPasswordResponse;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.ResendVerificationRequest;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.ResendVerificationResponse;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.UpdateProfileRequest;
@@ -179,6 +183,30 @@ public class AuthController {
         ResendVerificationResponse response = ResendVerificationResponse.builder()
                 .message("If an account with this email exists and is unverified, a new confirmation link has been dispatched.")
                 .dispatched(dispatched)
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ForgotPasswordResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        boolean dispatched = authUseCase.forgotPassword(request.getEmail());
+
+        ForgotPasswordResponse response = ForgotPasswordResponse.builder()
+                .message("If an account associated with this email exists, password reset instructions have been dispatched.")
+                .dispatched(dispatched)
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ResetPasswordResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        boolean success = authUseCase.resetPassword(request.getToken(), request.getNewPassword());
+
+        ResetPasswordResponse response = ResetPasswordResponse.builder()
+                .message("Password has been reset successfully. You may now log in with your new password.")
+                .success(success)
                 .build();
 
         return ResponseEntity.ok(response);

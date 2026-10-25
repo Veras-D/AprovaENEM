@@ -10,11 +10,22 @@ import {
   CheckCircle2,
   AlertCircle,
   GraduationCap,
+  KeyRound,
+  ArrowLeft,
+  Mail,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import { TermsAndPrivacyModal } from '@/components/legal/TermsAndPrivacyModal';
-import { useLoginMutation, useRegisterMutation } from '@/api/hooks';
+import {
+  useLoginMutation,
+  useRegisterMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
+  useVerifyEmailMutation,
+  useResendVerificationMutation,
+} from '@/api/hooks';
+import { useAuthStore } from '@/stores/useAuthStore';
 import type { ApiError } from '@/api/client';
 
 const SCHOOL_TYPE_OPTIONS = [
@@ -26,17 +37,20 @@ const SCHOOL_TYPE_OPTIONS = [
 export interface RegisterModalProps {
   readonly isOpen: boolean;
   readonly onClose: () => void;
-  readonly initialMode?: 'register' | 'login';
+  readonly initialMode?: 'register' | 'login' | 'forgot-password' | 'verify-email';
+  readonly initialEmail?: string;
 }
 
 export const RegisterModal: React.FC<RegisterModalProps> = ({
   isOpen,
   onClose,
   initialMode = 'register',
+  initialEmail = '',
 }) => {
-  const [mode, setMode] = useState<'register' | 'login'>(initialMode);
+  const [mode, setMode] = useState<'register' | 'login' | 'forgot-password' | 'verify-email'>(initialMode);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
+  const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
 
   // Form Fields
   const [fullName, setFullName] = useState<string>('');
@@ -45,6 +59,19 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [schoolType, setSchoolType] = useState<'PUBLIC_SCHOOL' | 'PRIVATE_SCHOLARSHIP' | 'PRIVATE_REGULAR'>('PUBLIC_SCHOOL');
   const [targetDegree, setTargetDegree] = useState<string>('');
+
+  // Password Recovery Fields
+  const [resetToken, setResetToken] = useState<string>('');
+  const [newPassword, setNewPassword] = useState<string>('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState<string>('');
+  const [hasResetToken, setHasResetToken] = useState<boolean>(false);
+  const [forgotSuccessMessage, setForgotSuccessMessage] = useState<string | null>(null);
+
+  // Email Verification Fields
+  const [verifyEmailTarget, setVerifyEmailTarget] = useState<string>(initialEmail);
+  const [verifyTokenInput, setVerifyTokenInput] = useState<string>('');
+  const [verifySuccessMessage, setVerifySuccessMessage] = useState<string | null>(null);
+  const [resendSuccessMessage, setResendSuccessMessage] = useState<string | null>(null);
 
   // Mandatory LGPD Consent & Optional Notifications
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState<boolean>(false);
@@ -68,8 +95,14 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 
   const loginMutation = useLoginMutation();
   const registerMutation = useRegisterMutation();
+  const forgotPasswordMutation = useForgotPasswordMutation();
+  const resetPasswordMutation = useResetPasswordMutation();
+  const verifyEmailMutation = useVerifyEmailMutation();
+  const resendVerificationMutation = useResendVerificationMutation();
+  const setEmailVerified = useAuthStore((s) => s.setEmailVerified);
+  const authUser = useAuthStore((s) => s.user);
 
-  const handleSwitchMode = (nextMode: 'register' | 'login') => {
+  const handleSwitchMode = (nextMode: 'register' | 'login' | 'forgot-password' | 'verify-email') => {
     if (nextMode === mode) return;
     if (contentInnerRef.current && contentInnerRef.current.offsetHeight > 0) {
       setBodyHeight(contentInnerRef.current.offsetHeight);
@@ -77,6 +110,9 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     setHasSwitchedMode(true);
     setMode(nextMode);
     setFormError(null);
+    setForgotSuccessMessage(null);
+    setVerifySuccessMessage(null);
+    setResendSuccessMessage(null);
   };
 
   // Smooth FLIP height interpolation when switching between Register and Login tabs
@@ -208,6 +244,15 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       setConfirmPassword('');
       setFormError(null);
       setIsSuccess(false);
+      setForgotSuccessMessage(null);
+      setVerifySuccessMessage(null);
+      setResendSuccessMessage(null);
+      setVerifyTokenInput('');
+      if (initialEmail) {
+        setVerifyEmailTarget(initialEmail);
+      } else if (authUser?.email) {
+        setVerifyEmailTarget(authUser.email);
+      }
       return undefined;
     }
     if (shouldRender) {
@@ -219,7 +264,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       return () => clearTimeout(timer);
     }
     return undefined;
-  }, [isOpen, initialMode, shouldRender]);
+  }, [isOpen, initialMode, initialEmail, authUser?.email, shouldRender]);
 
   // Focus trap & Escape listener
   useEffect(() => {
@@ -312,18 +357,24 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     }
 
     try {
+      const registeredEmail = email.trim().toLowerCase();
       await registerMutation.mutateAsync({
         fullName: fullName.trim(),
-        email: email.trim().toLowerCase(),
+        email: registeredEmail,
         password,
         schoolType,
         targetDegree: targetDegree.trim() || undefined,
       });
 
-      setIsSuccess(true);
-      setTimeout(() => {
-        onClose();
-      }, 1500);
+      setVerifyEmailTarget(registeredEmail);
+      if (contentInnerRef.current && contentInnerRef.current.offsetHeight > 0) {
+        setBodyHeight(contentInnerRef.current.offsetHeight);
+      }
+      setHasSwitchedMode(true);
+      setMode('verify-email');
+      setFormError(null);
+      setPassword('');
+      setConfirmPassword('');
     } catch (err) {
       const apiError = err as ApiError;
       setFormError(
@@ -360,6 +411,123 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       const apiError = err as ApiError;
       setFormError(
         apiError.message || 'Credenciais inválidas. Verifique seu e-mail e senha.'
+      );
+    }
+  };
+
+  const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+    setForgotSuccessMessage(null);
+
+    if (!email || !email.includes('@')) {
+      setFormError('Informe um e-mail válido para recuperação.');
+      return;
+    }
+
+    try {
+      const res = await forgotPasswordMutation.mutateAsync(email.trim().toLowerCase());
+      setForgotSuccessMessage(
+        res.message ||
+          'Instruções de recuperação enviadas com sucesso! Verifique sua caixa de entrada e pasta de spam.'
+      );
+    } catch (err) {
+      const apiError = err as ApiError;
+      setFormError(
+        apiError.message ||
+          'Não foi possível enviar as instruções no momento. Tente novamente mais tarde.'
+      );
+    }
+  };
+
+  const handleResetPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+
+    if (!resetToken.trim()) {
+      setFormError('Informe o token de recuperação recebido.');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setFormError('A nova senha deve conter no mínimo 8 caracteres.');
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setFormError('As senhas não coincidem. Digite a mesma senha nos dois campos.');
+      return;
+    }
+
+    try {
+      await resetPasswordMutation.mutateAsync({
+        token: resetToken.trim(),
+        newPassword,
+      });
+
+      setForgotSuccessMessage('Senha redefinida com sucesso! Você já pode entrar com sua nova senha.');
+      setTimeout(() => {
+        handleSwitchMode('login');
+        setForgotSuccessMessage(null);
+        setResetToken('');
+        setNewPassword('');
+        setConfirmNewPassword('');
+        setHasResetToken(false);
+      }, 1800);
+    } catch (err) {
+      const apiError = err as ApiError;
+      setFormError(
+        apiError.message ||
+          'Token de recuperação inválido ou expirado. Solicite um novo link de redefinição.'
+      );
+    }
+  };
+
+  const handleVerifyEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+    setVerifySuccessMessage(null);
+    setResendSuccessMessage(null);
+
+    const token = verifyTokenInput.trim();
+    if (!token) {
+      setFormError('Informe o token de verificação recebido por e-mail.');
+      return;
+    }
+
+    try {
+      const res = await verifyEmailMutation.mutateAsync(token);
+      setEmailVerified(true);
+      setVerifySuccessMessage(res.message || 'E-mail confirmado com sucesso!');
+      setVerifyTokenInput('');
+    } catch (err) {
+      const apiError = err as ApiError;
+      setFormError(
+        apiError.message || 'Token de verificação inválido ou expirado (validade de 24h).'
+      );
+    }
+  };
+
+  const handleResendVerification = async () => {
+    const target = verifyEmailTarget || email || authUser?.email;
+    if (!target) {
+      setFormError('Informe um e-mail válido para reenviar a confirmação.');
+      return;
+    }
+
+    setFormError(null);
+    setVerifySuccessMessage(null);
+    setResendSuccessMessage(null);
+
+    try {
+      const res = await resendVerificationMutation.mutateAsync(target);
+      setResendSuccessMessage(
+        res.message || `Novo link de confirmação enviado para ${target}.`
+      );
+    } catch (err) {
+      const apiError = err as ApiError;
+      setFormError(
+        apiError.message || 'Não foi possível reenviar o e-mail de confirmação.'
       );
     }
   };
@@ -401,6 +569,10 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
               <div className="p-2 rounded-brand bg-brand-primary/10 text-brand-primary">
                 {mode === 'register' ? (
                   <UserPlus className="h-5 w-5" aria-hidden="true" />
+                ) : mode === 'forgot-password' ? (
+                  <KeyRound className="h-5 w-5" aria-hidden="true" />
+                ) : mode === 'verify-email' ? (
+                  <Mail className="h-5 w-5" aria-hidden="true" />
                 ) : (
                   <LogIn className="h-5 w-5" aria-hidden="true" />
                 )}
@@ -410,11 +582,21 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                   id="auth-modal-title"
                   className="text-base sm:text-lg font-bold text-slate-900 dark:text-white"
                 >
-                  {mode === 'register' ? 'Criar Conta de Estudante' : 'Acessar Minha Conta'}
+                  {mode === 'register'
+                    ? 'Criar Conta de Estudante'
+                    : mode === 'forgot-password'
+                    ? 'Recuperar Minha Senha'
+                    : mode === 'verify-email'
+                    ? 'Confirmação de E-mail'
+                    : 'Acessar Minha Conta'}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {mode === 'register'
                     ? 'Salve seu progresso e conecte sua pontuação TRI'
+                    : mode === 'forgot-password'
+                    ? 'Redefina o acesso à sua conta de estudante'
+                    : mode === 'verify-email'
+                    ? 'Valide seu endereço de e-mail para ativar sua conta'
                     : 'Acesse seus simulados salvos e sua ofensiva de estudos'}
                 </p>
               </div>
@@ -431,39 +613,69 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             </button>
           </div>
 
-          {/* Mode Switch Tabs with Sliding Active Pill */}
-          <div className="relative grid grid-cols-2 border-b border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950/60 p-1.5 shrink-0">
-            <div
-              aria-hidden="true"
-              className={`pointer-events-none absolute top-1.5 bottom-1.5 left-1.5 w-[calc(50%-0.375rem)] rounded-brand bg-white dark:bg-slate-800 shadow-sm border border-brand-primary/30 dark:border-brand-primary/40 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                mode === 'login' ? 'translate-x-full' : 'translate-x-0'
-              }`}
-            />
-            <button
-              type="button"
-              onClick={() => handleSwitchMode('register')}
-              className={`relative z-10 py-2.5 px-3 text-xs sm:text-sm font-bold rounded-brand transition-colors duration-300 flex items-center justify-center gap-2 cursor-pointer ${
-                mode === 'register'
-                  ? 'text-brand-primary'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <UserPlus className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>Criar Conta Gratuita</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSwitchMode('login')}
-              className={`relative z-10 py-2.5 px-3 text-xs sm:text-sm font-bold rounded-brand transition-colors duration-300 flex items-center justify-center gap-2 cursor-pointer ${
-                mode === 'login'
-                  ? 'text-brand-primary'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <LogIn className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>Já Possuo Conta</span>
-            </button>
-          </div>
+          {/* Mode Switch Tabs with Sliding Active Pill or Subheaders */}
+          {mode === 'forgot-password' ? (
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 px-4 py-2.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => handleSwitchMode('login')}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-primary hover:underline cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>Voltar ao Login</span>
+              </button>
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                Recuperação de Acesso
+              </span>
+            </div>
+          ) : mode === 'verify-email' ? (
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 px-4 py-2.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => handleSwitchMode('login')}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-primary hover:underline cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>Voltar ao Login</span>
+              </button>
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                Ativação de Conta
+              </span>
+            </div>
+          ) : (
+            <div className="relative grid grid-cols-2 border-b border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950/60 p-1.5 shrink-0">
+              <div
+                aria-hidden="true"
+                className={`pointer-events-none absolute top-1.5 bottom-1.5 left-1.5 w-[calc(50%-0.375rem)] rounded-brand bg-white dark:bg-slate-800 shadow-sm border border-brand-primary/30 dark:border-brand-primary/40 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                  mode === 'login' ? 'translate-x-full' : 'translate-x-0'
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => handleSwitchMode('register')}
+                className={`relative z-10 py-2.5 px-3 text-xs sm:text-sm font-bold rounded-brand transition-colors duration-300 flex items-center justify-center gap-2 cursor-pointer ${
+                  mode === 'register'
+                    ? 'text-brand-primary'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <UserPlus className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>Criar Conta Gratuita</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSwitchMode('login')}
+                className={`relative z-10 py-2.5 px-3 text-xs sm:text-sm font-bold rounded-brand transition-colors duration-300 flex items-center justify-center gap-2 cursor-pointer ${
+                  mode === 'login'
+                    ? 'text-brand-primary'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <LogIn className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>Já Possuo Conta</span>
+              </button>
+            </div>
+          )}
 
           {/* Body Content with smooth non-flex height transition */}
           <div className="overflow-y-auto overflow-x-hidden scrollbar-none min-h-0">
@@ -800,12 +1012,21 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 
                 {/* Password */}
                 <div className="space-y-1">
-                  <label
-                    htmlFor="login-password"
-                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
-                  >
-                    Senha <span className="text-rose-500">*</span>
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label
+                      htmlFor="login-password"
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                    >
+                      Senha <span className="text-rose-500">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => handleSwitchMode('forgot-password')}
+                      className="text-xs font-semibold text-brand-primary hover:underline focus:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary rounded cursor-pointer"
+                    >
+                      Esqueci minha senha
+                    </button>
+                  </div>
                   <div className="relative">
                     <input
                       id="login-password"
@@ -848,6 +1069,311 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                   </Button>
                 </div>
               </form>
+            )}
+
+            {/* FORGOT PASSWORD MODE FORM */}
+            {mode === 'forgot-password' && !isSuccess && (
+              <div className={`space-y-4 ${hasSwitchedMode ? 'animate-tab-from-right' : ''}`}>
+                {/* Information Callout */}
+                <div className="p-3.5 rounded-brand bg-blue-50/70 dark:bg-blue-950/30 border border-blue-500/20 text-slate-800 dark:text-slate-200 flex items-start gap-2.5">
+                  <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" aria-hidden="true" />
+                  <div className="text-xs leading-relaxed">
+                    <strong className="text-blue-800 dark:text-blue-300">
+                      Recuperação de Acesso:
+                    </strong>{' '}
+                    {hasResetToken
+                      ? 'Informe o token recebido por e-mail e escolha uma nova senha com no mínimo 8 caracteres.'
+                      : 'Informe seu e-mail cadastrado para enviarmos um token e instruções de redefinição de senha.'}
+                  </div>
+                </div>
+
+                {/* Success alert message for forgot password */}
+                {forgotSuccessMessage && (
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    className="p-3.5 rounded-brand bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/40 text-emerald-900 dark:text-emerald-100 flex items-start gap-2.5 text-xs sm:text-sm animate-in fade-in"
+                  >
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" aria-hidden="true" />
+                    <div className="space-y-1">
+                      <p className="font-semibold">{forgotSuccessMessage}</p>
+                      {!hasResetToken && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setHasResetToken(true);
+                            setForgotSuccessMessage(null);
+                          }}
+                          className="font-bold text-emerald-700 dark:text-emerald-300 underline hover:opacity-80 block text-xs cursor-pointer"
+                        >
+                          Inserir token recebido e redefinir agora &rarr;
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Toggle Token / Email Request */}
+                <div className="flex items-center justify-between text-xs pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHasResetToken(!hasResetToken);
+                      setFormError(null);
+                      setForgotSuccessMessage(null);
+                    }}
+                    className="text-brand-primary font-semibold hover:underline cursor-pointer"
+                  >
+                    {hasResetToken
+                      ? '← Não recebeu o token? Solicitar novo e-mail'
+                      : 'Já possui um token de recuperação? Clique aqui'}
+                  </button>
+                </div>
+
+                {!hasResetToken ? (
+                  <form onSubmit={handleForgotPasswordSubmit} className="space-y-4" noValidate>
+                    <div className="space-y-1">
+                      <label
+                        htmlFor="forgot-email"
+                        className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                      >
+                        E-mail do Estudante <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        id="forgot-email"
+                        name="email"
+                        type="email"
+                        autoComplete="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="seu.email@escola.gov.br"
+                        className="w-full px-3.5 py-2.5 text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                      />
+                    </div>
+
+                    <div className="pt-2">
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        size="md"
+                        className="w-full"
+                        disabled={forgotPasswordMutation.isPending}
+                        isLoading={forgotPasswordMutation.isPending}
+                      >
+                        <Mail className="h-4 w-4 mr-2" aria-hidden="true" />
+                        Enviar Instruções de Recuperação
+                      </Button>
+                    </div>
+                  </form>
+                ) : (
+                  <form onSubmit={handleResetPasswordSubmit} className="space-y-4" noValidate>
+                    {/* Token */}
+                    <div className="space-y-1">
+                      <label
+                        htmlFor="reset-token"
+                        className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                      >
+                        Token / Código de Recuperação <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        id="reset-token"
+                        name="token"
+                        type="text"
+                        required
+                        value={resetToken}
+                        onChange={(e) => setResetToken(e.target.value)}
+                        placeholder="Ex: a1b2c3d4e5f6..."
+                        className="w-full px-3.5 py-2.5 text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary font-mono"
+                      />
+                    </div>
+
+                    {/* New Password */}
+                    <div className="space-y-1">
+                      <label
+                        htmlFor="reset-new-password"
+                        className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                      >
+                        Nova Senha <span className="text-rose-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          id="reset-new-password"
+                          name="new-password"
+                          type={showNewPassword ? 'text' : 'password'}
+                          autoComplete="new-password"
+                          required
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="Mínimo 8 caracteres"
+                          className="w-full px-3.5 py-2.5 text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                          className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                          aria-label={showNewPassword ? 'Ocultar nova senha' : 'Exibir nova senha'}
+                        >
+                          {showNewPassword ? (
+                            <EyeOff className="h-4 w-4" aria-hidden="true" />
+                          ) : (
+                            <Eye className="h-4 w-4" aria-hidden="true" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Confirm New Password */}
+                    <div className="space-y-1">
+                      <label
+                        htmlFor="reset-confirm-password"
+                        className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                      >
+                        Confirmar Nova Senha <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        id="reset-confirm-password"
+                        name="confirm-password"
+                        type={showNewPassword ? 'text' : 'password'}
+                        autoComplete="new-password"
+                        required
+                        value={confirmNewPassword}
+                        onChange={(e) => setConfirmNewPassword(e.target.value)}
+                        placeholder="Repita a nova senha"
+                        className="w-full px-3.5 py-2.5 text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                      />
+                    </div>
+
+                    <div className="pt-2">
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        size="md"
+                        className="w-full"
+                        disabled={resetPasswordMutation.isPending}
+                        isLoading={resetPasswordMutation.isPending}
+                      >
+                        <KeyRound className="h-4 w-4 mr-2" aria-hidden="true" />
+                        Redefinir Minha Senha
+                      </Button>
+                    </div>
+                  </form>
+                )}
+
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchMode('login')}
+                    className="inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-brand-primary dark:hover:text-brand-primary font-semibold cursor-pointer"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>Lembrou da senha? Entrar agora</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {mode === 'verify-email' && (
+              <div className="space-y-4">
+                <div className="text-center p-4 rounded-brand bg-brand-primary/5 dark:bg-brand-primary/10 border border-brand-primary/20 space-y-2">
+                  <div className="w-12 h-12 mx-auto rounded-full bg-brand-primary/10 dark:bg-brand-primary/20 flex items-center justify-center text-brand-primary dark:text-brand-accent">
+                    <Mail className="h-6 w-6" aria-hidden="true" />
+                  </div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    Confirme seu E-mail
+                  </h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-300">
+                    Enviamos um link de confirmação para{' '}
+                    <span className="font-semibold text-slate-900 dark:text-white break-all">
+                      {verifyEmailTarget || email || 'seu endereço de e-mail'}
+                    </span>
+                    .
+                  </p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Verifique sua caixa de entrada e pasta de spam para validar sua conta do AprovaENEM.
+                  </p>
+                </div>
+
+                {verifySuccessMessage && (
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    className="p-3.5 rounded-brand bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/40 text-emerald-900 dark:text-emerald-100 flex items-center gap-2.5 text-xs font-medium"
+                  >
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" aria-hidden="true" />
+                    <span>{verifySuccessMessage}</span>
+                  </div>
+                )}
+
+                {resendSuccessMessage && (
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    className="p-3.5 rounded-brand bg-sky-50 dark:bg-sky-950/40 border border-sky-500/40 text-sky-900 dark:text-sky-100 flex items-center gap-2.5 text-xs font-medium"
+                  >
+                    <Mail className="h-5 w-5 text-sky-600 shrink-0" aria-hidden="true" />
+                    <span>{resendSuccessMessage}</span>
+                  </div>
+                )}
+
+                {/* Token Validation Form */}
+                <form onSubmit={handleVerifyEmailSubmit} className="space-y-3" noValidate>
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="verify-token-input"
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                    >
+                      Possui o código ou token de confirmação?
+                    </label>
+                    <input
+                      id="verify-token-input"
+                      name="verifyToken"
+                      type="text"
+                      value={verifyTokenInput}
+                      onChange={(e) => setVerifyTokenInput(e.target.value)}
+                      placeholder="Cole aqui o token recebido no e-mail"
+                      className="w-full px-3.5 py-2.5 text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary font-mono text-xs"
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="md"
+                    className="w-full"
+                    disabled={verifyEmailMutation.isPending || !verifyTokenInput.trim()}
+                    isLoading={verifyEmailMutation.isPending}
+                  >
+                    <CheckCircle2 className="h-4 w-4 mr-2" aria-hidden="true" />
+                    Confirmar E-mail
+                  </Button>
+                </form>
+
+                {/* Resend Verification Action & Continue */}
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                    <span>Não recebeu a mensagem?</span>
+                    <button
+                      type="button"
+                      onClick={handleResendVerification}
+                      disabled={resendVerificationMutation.isPending}
+                      className="text-brand-primary hover:underline font-semibold cursor-pointer disabled:opacity-50"
+                    >
+                      {resendVerificationMutation.isPending ? 'Reenviando...' : 'Reenviar E-mail'}
+                    </button>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="md"
+                    className="w-full"
+                    onClick={onClose}
+                  >
+                    Continuar para a Plataforma
+                  </Button>
+                </div>
+              </div>
             )}
               </div>
             </div>

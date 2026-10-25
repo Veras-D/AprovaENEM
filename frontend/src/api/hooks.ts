@@ -16,6 +16,7 @@ import type {
   AuthLoginRequest,
   AuthRegisterRequest,
   RecordActivityRequest,
+  ResetPasswordRequest,
 } from './types';
 
 // ============================================================================
@@ -254,6 +255,37 @@ export function useDeleteAccountMutation() {
       useSessionStore.getState().clearSession();
       queryClient.removeQueries();
     },
+  });
+}
+
+export function useForgotPasswordMutation() {
+  return useMutation({
+    mutationFn: (email: string) => authService.forgotPassword(email),
+  });
+}
+
+export function useResetPasswordMutation() {
+  return useMutation({
+    mutationFn: (req: ResetPasswordRequest) => authService.resetPassword(req),
+  });
+}
+
+export function useVerifyEmailMutation() {
+  const queryClient = useQueryClient();
+  const setEmailVerified = useAuthStore((s) => s.setEmailVerified);
+
+  return useMutation({
+    mutationFn: (token: string) => authService.verifyEmail(token),
+    onSuccess: () => {
+      setEmailVerified(true);
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
+    },
+  });
+}
+
+export function useResendVerificationMutation() {
+  return useMutation({
+    mutationFn: (email: string) => authService.resendVerification(email),
   });
 }
 
