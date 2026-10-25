@@ -408,4 +408,55 @@ describe('RegisterModal Component', () => {
 
     expect(authService.resendVerification).toHaveBeenCalledWith('lucas@escola.gov.br');
   });
+
+  it('should clean all input fields when modal is closed and reopened', () => {
+    const { rerender } = renderWithProviders(
+      <RegisterModal isOpen={true} onClose={handleClose} initialMode="login" />
+    );
+
+    const emailInput = screen.getByLabelText(/E-mail do Estudante/i);
+    const passwordInput = screen.getByLabelText(/^Senha/i);
+
+    fireEvent.change(emailInput, { target: { value: 'student@example.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'SecretPass123!' } });
+
+    expect(emailInput).toHaveValue('student@example.com');
+    expect(passwordInput).toHaveValue('SecretPass123!');
+
+    // Close the modal
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <RegisterModal isOpen={false} onClose={handleClose} initialMode="login" />
+      </QueryClientProvider>
+    );
+
+    // Reopen the modal
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <RegisterModal isOpen={true} onClose={handleClose} initialMode="login" />
+      </QueryClientProvider>
+    );
+
+    const reopenedEmail = screen.getByLabelText(/E-mail do Estudante/i);
+    const reopenedPassword = screen.getByLabelText(/^Senha/i);
+
+    expect(reopenedEmail).toHaveValue('');
+    expect(reopenedPassword).toHaveValue('');
+  });
+
+  it('should clean password fields when switching between modes', () => {
+    renderWithProviders(<RegisterModal isOpen={true} onClose={handleClose} initialMode="register" />);
+
+    const regPassword = screen.getByLabelText(/Senha Segura/i);
+    const regConfirm = screen.getByLabelText(/Confirmar Senha/i);
+
+    fireEvent.change(regPassword, { target: { value: 'Password@123' } });
+    fireEvent.change(regConfirm, { target: { value: 'Password@123' } });
+
+    // Switch to login
+    fireEvent.click(screen.getByRole('button', { name: 'Já Possuo Conta' }));
+
+    const loginPassword = screen.getByLabelText(/^Senha/i);
+    expect(loginPassword).toHaveValue('');
+  });
 });

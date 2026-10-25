@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(diagnostic): Updated [`DiagnosticResultView.tsx`](frontend/src/features/diagnostic/components/DiagnosticResultView.tsx) to render a distinct "0 XP (Cadastre-se para pontuar)" card for unauthenticated guest candidates instead of granting XP ([`TASK-S6-44`](docs/BACKLOG.md#task-s6-44)).
 - feat(feedback): Suppressed the `+XP` badge in [`FeedbackBanner.tsx`](frontend/src/features/practice/components/FeedbackBanner.tsx) whenever `awardedXp <= 0`, preventing XP announcements from displaying to guest students on individual question submissions ([`TASK-S6-44`](docs/BACKLOG.md#task-s6-44)).
 
+### Fixed
+- fix(auth): Cleaned credential fields (`email`, `password`, `confirmPassword`) upon modal close, tab switch, successful login, and logout in [`RegisterModal.tsx`](frontend/src/components/auth/RegisterModal.tsx), and added autofill suppression attributes (`autoComplete="new-password"`, non-standard identifier names, dummy inputs) to prevent browsers from automatically injecting previously saved credentials when the authentication dialog is reopened ([`TASK-S6-45`](docs/BACKLOG.md#task-s6-45)).
+
 ## [0.6.17] - 2026-10-25
 
 ### Changed

@@ -109,6 +109,10 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     }
     setHasSwitchedMode(true);
     setMode(nextMode);
+    setPassword('');
+    setConfirmPassword('');
+    setNewPassword('');
+    setConfirmNewPassword('');
     setFormError(null);
     setForgotSuccessMessage(null);
     setVerifySuccessMessage(null);
@@ -231,7 +235,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     };
   })();
 
-  // Reset form when opening or changing mode
+  // Reset form when opening or closing modal
   useEffect(() => {
     if (isOpen) {
       setShouldRender(true);
@@ -241,7 +245,15 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       setMode(initialMode);
       setShowPassword(false);
       setShowConfirmPassword(false);
+      setShowNewPassword(false);
+      setPassword('');
       setConfirmPassword('');
+      setEmail(initialEmail || '');
+      setFullName('');
+      setTargetDegree('');
+      setResetToken('');
+      setNewPassword('');
+      setConfirmNewPassword('');
       setFormError(null);
       setIsSuccess(false);
       setForgotSuccessMessage(null);
@@ -257,6 +269,17 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     }
     if (shouldRender) {
       setIsClosing(true);
+      setPassword('');
+      setConfirmPassword('');
+      setEmail('');
+      setFullName('');
+      setTargetDegree('');
+      setResetToken('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+      setShowPassword(false);
+      setShowConfirmPassword(false);
+      setShowNewPassword(false);
       const timer = setTimeout(() => {
         setShouldRender(false);
         setIsClosing(false);
@@ -265,6 +288,16 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     }
     return undefined;
   }, [isOpen, initialMode, initialEmail, authUser?.email, shouldRender]);
+
+  // Clear credentials on logout
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+    }
+  }, [isAuthenticated]);
 
   // Focus trap & Escape listener
   useEffect(() => {
@@ -403,6 +436,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
         password,
       });
 
+      setPassword('');
+      setEmail('');
       setIsSuccess(true);
       setTimeout(() => {
         onClose();
@@ -465,6 +500,9 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
         newPassword,
       });
 
+      setResetToken('');
+      setNewPassword('');
+      setConfirmNewPassword('');
       setForgotSuccessMessage('Senha redefinida com sucesso! Você já pode entrar com sua nova senha.');
       setTimeout(() => {
         handleSwitchMode('login');
@@ -719,7 +757,13 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 onSubmit={handleRegisterSubmit}
                 className={`space-y-4 ${hasSwitchedMode ? 'animate-tab-from-left' : ''}`}
                 noValidate
+                autoComplete="off"
               >
+                {/* Hidden dummy fields to prevent browser autofill on modal open */}
+                <div style={{ display: 'none' }} aria-hidden="true">
+                  <input type="text" name="fake_reg_username" tabIndex={-1} autoComplete="off" />
+                  <input type="password" name="fake_reg_password" tabIndex={-1} autoComplete="off" />
+                </div>
                 {/* Data Minimization Disclosure Callout */}
                 <div className="p-3.5 rounded-brand bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-500/20 text-slate-800 dark:text-slate-200 flex items-start gap-2.5">
                   <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" aria-hidden="true" />
@@ -762,9 +806,9 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                   </label>
                   <input
                     id="reg-email"
-                    name="username"
+                    name="student-register-email"
                     type="email"
-                    autoComplete="username"
+                    autoComplete="off"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -988,7 +1032,14 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 onSubmit={handleLoginSubmit}
                 className={`space-y-4 ${hasSwitchedMode ? 'animate-tab-from-right' : ''}`}
                 noValidate
+                autoComplete="off"
               >
+                {/* Hidden dummy fields to prevent browser autofill on modal open */}
+                <div style={{ display: 'none' }} aria-hidden="true">
+                  <input type="text" name="fake_username" tabIndex={-1} autoComplete="off" />
+                  <input type="password" name="fake_password" tabIndex={-1} autoComplete="off" />
+                </div>
+
                 {/* Email */}
                 <div className="space-y-1">
                   <label
@@ -999,9 +1050,9 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                   </label>
                   <input
                     id="login-email"
-                    name="username"
+                    name="student-login-email"
                     type="email"
-                    autoComplete="username"
+                    autoComplete="off"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -1030,9 +1081,9 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                   <div className="relative">
                     <input
                       id="login-password"
-                      name="password"
+                      name="student-login-password"
                       type={showPassword ? 'text' : 'password'}
-                      autoComplete="current-password"
+                      autoComplete="new-password"
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -1141,9 +1192,9 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                       </label>
                       <input
                         id="forgot-email"
-                        name="email"
+                        name="student-forgot-email"
                         type="email"
-                        autoComplete="email"
+                        autoComplete="off"
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
