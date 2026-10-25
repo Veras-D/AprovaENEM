@@ -766,5 +766,50 @@ describe('PracticeHero Component', () => {
     expect(screen.getByText('Questões Diárias do ENEM')).toBeInTheDocument();
     expect(screen.getByText(/0 de 5 respondidas/i)).toBeInTheDocument();
   });
+
+  it('renders DiagnosticResultView and prevents daily practice when an unauthenticated guest reloads the page with completed diagnostic', async () => {
+    // Unauthenticated visitor (guest)
+    useAuthStore.setState({
+      isAuthenticated: false,
+      user: null,
+      token: null,
+    });
+
+    const mockGuestReport: DiagnosticReportDto = {
+      id: 'diag-guest-1',
+      sessionId: 'session-guest-1',
+      scorePercentage: 80,
+      radar: [
+        { knowledgeArea: 'CH', areaName: 'Ciências Humanas', scorePercentage: 80, correctQuestions: 4, totalQuestions: 5, masteryLevel: 'MASTERED' },
+      ],
+      generatedAt: new Date().toISOString(),
+      recommendedTopics: ['História do Brasil'],
+    };
+
+    // Simulate page reload where localStorage has diagnostic completed but questions is empty
+    useSessionStore.setState({
+      isDiagnosticCompleted: true,
+      savedDiagnosticReport: mockGuestReport,
+      diagnosticReport: mockGuestReport,
+      questions: [],
+      activeSession: null,
+      phase: 'DIAGNOSTIC',
+    });
+
+    renderWithProviders();
+
+    // Must render DiagnosticResultView
+    expect(screen.getByText('Seu Diagnóstico ENEM & Nível de Compreensão')).toBeInTheDocument();
+    expect(screen.getByText('Deseja salvar sua nota TRI e acompanhar sua evolução semanal?')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Refazer Diagnóstico/i })).toBeInTheDocument();
+
+    // Must NOT start or display Questões Diárias do ENEM
+    expect(screen.queryByText('Questões Diárias do ENEM')).not.toBeInTheDocument();
+    expect(screen.queryByText(/respondidas/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Iniciar Treino Diário/i })).not.toBeInTheDocument();
+
+    // Verify session store active session is not a daily practice session
+    expect(useSessionStore.getState().activeSession?.title).not.toBe('Questões Diárias do ENEM');
+  });
 });
 

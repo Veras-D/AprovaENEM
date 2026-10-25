@@ -164,8 +164,19 @@ function getSavedSeenQuestionIds(): readonly string[] {
   }
 }
 
+function getInitialPhase(): SessionPhase {
+  if (typeof window === 'undefined') return 'IDLE';
+  const userId = getCurrentUserId();
+  // If the visitor is an unauthenticated guest who already completed the diagnostic,
+  // restore them directly into the DIAGNOSTIC phase so the completed report is shown.
+  if (!userId && getSavedDiagnosticCompleted() && Boolean(getSavedDiagnosticReport())) {
+    return 'DIAGNOSTIC';
+  }
+  return 'IDLE';
+}
+
 export const useSessionStore = create<SessionState>((set, get) => ({
-  phase: 'IDLE',
+  phase: getInitialPhase(),
   activeSession: null,
   anonymousSessionId: getOrCreateAnonymousSessionId(),
   currentQuestionIndex: 0,

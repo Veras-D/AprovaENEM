@@ -85,6 +85,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     diagnosticReport,
     savedDiagnosticReport,
     isDiagnosticCompleted,
+    setPhase,
     completeSession,
     resetDiagnostic,
     recordDiagnosticSeenQuestions,
@@ -143,6 +144,19 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
 
   // Initialize session with live backend questions (or fallback pool) if empty
   useEffect(() => {
+    // If visitor is unauthenticated and already completed the diagnostic,
+    // they must remain on DiagnosticResultView and NEVER initialize daily practice.
+    if (!isAuthenticated && isDiagnosticCompleted) {
+      if (!savedDiagnosticReport && !diagnosticReport) {
+        resetDiagnostic();
+        return;
+      }
+      if (phase !== 'DIAGNOSTIC') {
+        setPhase('DIAGNOSTIC');
+      }
+      return;
+    }
+
     if (questions.length === 0) {
       const seenIds = useSessionStore.getState().seenDiagnosticQuestionIds;
       const initialDtos = selectDiagnosticQuestions(questionsPool, seenIds, targetBatchSize, starterVariant);
@@ -163,6 +177,12 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       startSession(initialSession, domainQuestions);
     }
   }, [
+    isAuthenticated,
+    phase,
+    setPhase,
+    savedDiagnosticReport,
+    diagnosticReport,
+    resetDiagnostic,
     questions.length,
     isDiagnosticCompleted,
     isDiagnostic,
@@ -176,6 +196,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
   // Resynchronize unattempted daily practice session when student's daily goal target changes
   useEffect(() => {
     if (
+      isAuthenticated &&
       isDiagnosticCompleted &&
       questions.length > 0 &&
       questions.length !== targetBatchSize &&
@@ -199,6 +220,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       startSession(syncedSession, domainQuestions);
     }
   }, [
+    isAuthenticated,
     isDiagnosticCompleted,
     questions.length,
     targetBatchSize,
@@ -339,6 +361,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
   ]);
 
   const handleStartDailyPractice = useCallback(() => {
+    if (!isAuthenticated) return;
     setShowCelebration(false);
     setIsTimeUpModalOpen(false);
 
@@ -360,7 +383,15 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       createdAt: new Date().toISOString(),
     };
     startSession(dailySession, domainQuestions);
-  }, [questions, questionsPool, recordDiagnosticSeenQuestions, startSession, starterVariant, targetBatchSize]);
+  }, [
+    isAuthenticated,
+    questions,
+    questionsPool,
+    recordDiagnosticSeenQuestions,
+    startSession,
+    starterVariant,
+    targetBatchSize,
+  ]);
 
   const handleRestart = useCallback(() => {
     setShowCelebration(false);
@@ -525,7 +556,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     (isAllAnswered && totalQuestions > 0);
 
   const isDiagnosticCompletion =
-    phase === 'DIAGNOSTIC' || (isDiagnosticSession && isCompleted);
+    phase === 'DIAGNOSTIC' || !isAuthenticated || (isDiagnosticSession && isCompleted);
 
   const activeReport: DiagnosticReportDto = useMemo(() => {
     if (diagnosticReport && 'radar' in diagnosticReport && diagnosticReport.radar) {
@@ -782,7 +813,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
             </div>
             <div className="min-w-0">
               <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 truncate">
-                {activeSession?.title || (isDiagnosticCompleted ? 'Questões Diárias do ENEM' : 'Diagnóstico ENEM')}
+                {activeSession?.title || (isDiagnosticCompleted && isAuthenticated ? 'Questões Diárias do ENEM' : 'Diagnóstico ENEM')}
               </h2>
               <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                 <span>{totalAnswered} de {totalQuestions} respondidas</span>
@@ -853,13 +884,13 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
               variant="outline"
               size="sm"
               onClick={handleRestart}
-              aria-label={isDiagnosticCompleted ? 'Novo treino' : 'Reiniciar simulado'}
-              title={isDiagnosticCompleted ? 'Iniciar nova rodada de questões de treino diário' : 'Reiniciar simulado'}
+              aria-label={isDiagnosticCompleted && isAuthenticated ? 'Novo treino' : 'Reiniciar simulado'}
+              title={isDiagnosticCompleted && isAuthenticated ? 'Iniciar nova rodada de questões de treino diário' : 'Reiniciar simulado'}
               className="shrink-0 whitespace-nowrap"
             >
               <RotateCcw className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />
               <span className="hidden sm:inline">
-                {isDiagnosticCompleted ? 'Novo Treino' : 'Reiniciar'}
+                {isDiagnosticCompleted && isAuthenticated ? 'Novo Treino' : 'Reiniciar'}
               </span>
             </Button>
           </div>
