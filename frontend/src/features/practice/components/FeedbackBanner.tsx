@@ -12,6 +12,8 @@ export interface FeedbackBannerProps {
   readonly onNextQuestion?: () => void;
   readonly hasNextQuestion?: boolean;
   readonly onFinishDiagnostic?: () => void;
+  readonly finishButtonLabel?: string;
+  readonly finishButtonAriaLabel?: string;
   readonly className?: string;
 }
 
@@ -23,6 +25,8 @@ export const FeedbackBanner: React.FC<FeedbackBannerProps> = ({
   onNextQuestion,
   hasNextQuestion = false,
   onFinishDiagnostic,
+  finishButtonLabel,
+  finishButtonAriaLabel,
   className = '',
 }) => {
   const containerStyles = isCorrect
@@ -105,7 +109,7 @@ export const FeedbackBanner: React.FC<FeedbackBannerProps> = ({
           </Button>
         )}
 
-        {/* Finalize Diagnostic Action (when at the end of questions) */}
+        {/* Finalize Diagnostic or Daily Practice Action (when at the end of questions) */}
         {!hasNextQuestion && onFinishDiagnostic && (
           <Button
             type="button"
@@ -113,9 +117,9 @@ export const FeedbackBanner: React.FC<FeedbackBannerProps> = ({
             size="sm"
             onClick={onFinishDiagnostic}
             className="self-end sm:self-auto shrink-0 shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
-            aria-label="Finalizar e ver meu diagnóstico de proficiência"
+            aria-label={finishButtonAriaLabel || 'Finalizar e ver meu diagnóstico de proficiência'}
           >
-            <span>Ver Meu Diagnóstico</span>
+            <span>{finishButtonLabel || 'Ver Meu Diagnóstico'}</span>
             <ArrowRight className="h-4 w-4 ml-1.5" aria-hidden="true" />
           </Button>
         )}

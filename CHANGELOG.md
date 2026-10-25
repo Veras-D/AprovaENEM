@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.11] - 2026-10-25
+
+### Added
+- feat(practice): Implemented dedicated Daily Practice Questions mode ("Questões Diárias do ENEM") and completion summary view ([`DailyPracticeSummaryView.tsx`](frontend/src/features/practice/components/DailyPracticeSummaryView.tsx), [`DailyPracticeSummaryView.test.tsx`](frontend/src/features/practice/components/DailyPracticeSummaryView.test.tsx), [`index.ts`](frontend/src/features/practice/components/index.ts)) with an interactive metrics grid displaying question accuracy, XP earned, daily study goal progress bar, and immediate actions to continue practicing ("Continuar Praticando"), take official exams ("Simular Prova Oficial"), view diagnostic report ("Painel Diagnóstico"), or check leaderboard ranking ("Ranking") ([`TASK-S6-36`](docs/BACKLOG.md#task-s6-36)).
+- feat(practice): Added dynamic button labeling (`finishButtonLabel`, `finishButtonAriaLabel`) in [`FeedbackBanner.tsx`](frontend/src/features/practice/components/FeedbackBanner.tsx) and [`InstantFeedback.tsx`](frontend/src/features/practice/components/InstantFeedback.tsx) so daily practice sessions present "Concluir Treino Diário" instead of "Ver Meu Diagnóstico" ([`TASK-S6-36`](docs/BACKLOG.md#task-s6-36)).
+
+### Changed
+- feat(practice): Enforced one-time diagnostic assessment for authenticated students in [`PracticeHero.tsx`](frontend/src/features/practice/PracticeHero.tsx) and [`PracticeHero.test.tsx`](frontend/src/features/practice/PracticeHero.test.tsx); once a logged-in user completes their diagnostic, subsequent visits to Practice (`?section=practice`) automatically launch fresh daily questions from the pool rather than looping back into the diagnostic test or trapping them in the diagnostic completion view ([`TASK-S6-36`](docs/BACKLOG.md#task-s6-36)).
+- feat(practice): Removed "Refazer Diagnóstico" recalibration action for authenticated students in [`DiagnosticResultView.tsx`](frontend/src/features/diagnostic/components/DiagnosticResultView.tsx) and [`DiagnosticResultView.test.tsx`](frontend/src/features/diagnostic/components/DiagnosticResultView.test.tsx) (`!isAuthenticated && onRetakeDiagnostic`), replacing it with an accessible "Iniciar Treino Diário" call to action ([`TASK-S6-36`](docs/BACKLOG.md#task-s6-36)).
+- feat(diagnostic): Added a persistent callout card in [`DiagnosticDashboard.tsx`](frontend/src/features/diagnostic/components/DiagnosticDashboard.tsx) directing students from their preserved diagnostic radar profile directly into their daily question set via "Ir para Treino Diário" ([`TASK-S6-36`](docs/BACKLOG.md#task-s6-36)).
+- refactor(session): Guarded session completion logic in [`useSessionStore.ts`](frontend/src/stores/useSessionStore.ts) so daily practice sets never overwrite the saved diagnostic report or forcibly alter session phase away from daily practice ([`TASK-S6-36`](docs/BACKLOG.md#task-s6-36)).
+
+### Security
+- sec(diagnostic): Enforced one-time diagnostic integrity guard preventing unauthorized erasure or accidental resetting of candidate diagnostic mastery level and baseline TRI scores in local session storage ([`TASK-S6-36`](docs/BACKLOG.md#task-s6-36)).
+
 ## [0.6.10] - 2026-10-25
 
 ### Added

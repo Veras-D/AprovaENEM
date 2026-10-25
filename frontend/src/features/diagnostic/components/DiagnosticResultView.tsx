@@ -23,6 +23,7 @@ export interface DiagnosticResultViewProps {
   readonly flaggedCount?: number;
   readonly onOpenAuthModal?: (mode?: 'login' | 'register') => void;
   readonly onPracticeTopic?: (topic: string) => void;
+  readonly onStartDailyPractice?: () => void;
   readonly onStartOfficialSimulation?: () => void;
   readonly onRetakeDiagnostic?: () => void;
   readonly className?: string;
@@ -33,6 +34,7 @@ export const DiagnosticResultView: React.FC<DiagnosticResultViewProps> = ({
   awardedXp = 50,
   onOpenAuthModal,
   onPracticeTopic,
+  onStartDailyPractice,
   onStartOfficialSimulation,
   onRetakeDiagnostic,
   className = '',
@@ -82,10 +84,23 @@ export const DiagnosticResultView: React.FC<DiagnosticResultViewProps> = ({
           </div>
 
           <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 flex-wrap">
-            {onStartOfficialSimulation && (
+            {onStartDailyPractice && (
               <Button
                 type="button"
                 variant="primary"
+                size="sm"
+                onClick={onStartDailyPractice}
+                className="h-9 px-3 text-xs sm:text-sm font-bold whitespace-nowrap inline-flex items-center justify-center shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white"
+                aria-label="Começar treino diário de questões"
+              >
+                <Sparkles className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                Iniciar Treino Diário
+              </Button>
+            )}
+            {onStartOfficialSimulation && (
+              <Button
+                type="button"
+                variant={onStartDailyPractice ? 'outline' : 'primary'}
                 size="sm"
                 onClick={onStartOfficialSimulation}
                 className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
@@ -94,7 +109,7 @@ export const DiagnosticResultView: React.FC<DiagnosticResultViewProps> = ({
                 Simular Prova Oficial
               </Button>
             )}
-            {onRetakeDiagnostic && (
+            {!isAuthenticated && onRetakeDiagnostic && (
               <Button
                 type="button"
                 variant="outline"

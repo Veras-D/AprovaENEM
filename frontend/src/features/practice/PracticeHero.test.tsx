@@ -4,6 +4,8 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PracticeHero } from './PracticeHero';
 import { useSessionStore } from '@/stores/useSessionStore';
+import { useAuthStore } from '@/stores/useAuthStore';
+import type { DiagnosticReportDto } from '@/api/types';
 import {
   MOCK_RESOLUTIONS,
   ENEM_2023_OFFICIAL_RESOLUTIONS,
@@ -26,6 +28,7 @@ describe('PracticeHero Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    useAuthStore.getState().clearAuth();
     useSessionStore.getState().clearSession();
   });
 
@@ -461,6 +464,185 @@ describe('PracticeHero Component', () => {
     fireEvent.click(openTutorButtons[0]!);
 
     expect(timer).toHaveAttribute('aria-label', expect.stringContaining('Pausado'));
+  });
+
+  it('initializes Daily Practice questions ("Questões Diárias do ENEM") when student has already completed diagnostic', () => {
+    // Set authenticated state and diagnostic completed in store
+    useAuthStore.setState({
+      isAuthenticated: true,
+      user: {
+        id: 'student-123',
+        email: 'student@example.com',
+        name: 'Estudante ENEM',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-01-01',
+      },
+      token: 'jwt-token',
+    });
+    const mockReport: DiagnosticReportDto = {
+      id: 'diag-1',
+      sessionId: 'session-1',
+      scorePercentage: 70,
+      radar: [
+        { knowledgeArea: 'MT', areaName: 'Matemática', scorePercentage: 75, correctQuestions: 3, totalQuestions: 4, masteryLevel: 'MASTERED' },
+      ],
+      generatedAt: new Date().toISOString(),
+      recommendedTopics: ['Geometria'],
+    };
+    useSessionStore.setState({
+      isDiagnosticCompleted: true,
+      savedDiagnosticReport: mockReport,
+      questions: [],
+      activeSession: null,
+      phase: 'IDLE',
+    });
+
+    renderWithProviders();
+
+    // Verify session initialized as Questões Diárias do ENEM, NOT Diagnóstico ENEM
+    expect(screen.getByText('Questões Diárias do ENEM')).toBeInTheDocument();
+    expect(screen.queryByText('Diagnóstico ENEM Calibrado')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Refazer Diagnóstico/i })).not.toBeInTheDocument();
+
+    const questions = useSessionStore.getState().questions;
+    expect(questions).toHaveLength(5);
+    expect(useSessionStore.getState().activeSession?.title).toBe('Questões Diárias do ENEM');
+  });
+
+  it('hides "Refazer Diagnóstico" for authenticated students and provides "Começar Treino Diário"', async () => {
+    useAuthStore.setState({
+      isAuthenticated: true,
+      user: {
+        id: 'student-123',
+        email: 'student@example.com',
+        name: 'Estudante ENEM',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-01-01',
+      },
+      token: 'jwt-token',
+    });
+    useSessionStore.setState({
+      isDiagnosticCompleted: false,
+      savedDiagnosticReport: null,
+      diagnosticReport: null,
+      questions: [],
+      activeSession: null,
+      phase: 'IDLE',
+    });
+
+    renderWithProviders();
+
+    // Verify initially Diagnostic session for first-time student
+    expect(screen.getByText('Diagnóstico ENEM')).toBeInTheDocument();
+
+    // Answer all 5 questions
+    act(() => {
+      const qs = useSessionStore.getState().questions;
+      qs.forEach((q) => {
+        useSessionStore.getState().recordAttempt({
+          questionId: q.id,
+          selectedOption: 'A',
+          correctOption: 'A',
+          isCorrect: true,
+          awardedXp: 15,
+        });
+      });
+    });
+
+    // Wait for celebration and dismiss
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: /Parabéns! Diagnóstico Concluído!/i })).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Continuar Estudando/i }));
+
+    // Verify diagnostic calibrated view is shown, but NEVER "Refazer Diagnóstico" for logged-in user
+    expect(screen.getByText('Diagnóstico ENEM Calibrado')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Refazer Diagnóstico/i })).not.toBeInTheDocument();
+
+    // Verify "Começar Treino Diário" is available
+    const startDailyBtns = screen.getAllByRole('button', { name: /Começar Treino Diário/i });
+    expect(startDailyBtns.length).toBeGreaterThan(0);
+
+    // Clicking "Começar Treino Diário" should launch Daily Practice
+    fireEvent.click(startDailyBtns[0]!);
+    expect(screen.getByText('Questões Diárias do ENEM')).toBeInTheDocument();
+    expect(useSessionStore.getState().activeSession?.title).toBe('Questões Diárias do ENEM');
+  });
+
+  it('renders DailyPracticeSummaryView upon completing Daily Practice questions and preserves diagnostic radar', async () => {
+    useAuthStore.setState({
+      isAuthenticated: true,
+      user: {
+        id: 'student-123',
+        email: 'student@example.com',
+        name: 'Estudante ENEM',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-01-01',
+      },
+      token: 'jwt-token',
+    });
+    const savedRadar: DiagnosticReportDto = {
+      id: 'diag-2',
+      sessionId: 'session-2',
+      scorePercentage: 80,
+      radar: [
+        { knowledgeArea: 'LC', areaName: 'Linguagens', scorePercentage: 85, correctQuestions: 4, totalQuestions: 5, masteryLevel: 'MASTERED' },
+      ],
+      generatedAt: new Date().toISOString(),
+      recommendedTopics: ['Interpretação Textual'],
+    };
+    useSessionStore.setState({
+      isDiagnosticCompleted: true,
+      savedDiagnosticReport: savedRadar,
+      diagnosticReport: savedRadar,
+      questions: [],
+      activeSession: null,
+      phase: 'IDLE',
+    });
+
+    renderWithProviders();
+
+    // Verify Daily Practice active
+    expect(screen.getByText('Questões Diárias do ENEM')).toBeInTheDocument();
+
+    // Answer all daily practice questions
+    act(() => {
+      const qs = useSessionStore.getState().questions;
+      qs.forEach((q) => {
+        useSessionStore.getState().recordAttempt({
+          questionId: q.id,
+          selectedOption: 'B',
+          correctOption: 'B',
+          isCorrect: true,
+          awardedXp: 15,
+        });
+      });
+    });
+
+    // Dismiss celebration modal
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: /Treino Diário Concluído! 🎉/i })).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Continuar Estudando/i }));
+
+    // Verify DailyPracticeSummaryView is rendered
+    expect(screen.getByTestId('daily-practice-summary-view')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: /Treino Diário Concluído! 🎉/i })).toBeInTheDocument();
+    expect(screen.queryByText('Diagnóstico ENEM Calibrado')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Refazer Diagnóstico/i })).not.toBeInTheDocument();
+
+    // Diagnostic report remains intact in store
+    expect(useSessionStore.getState().savedDiagnosticReport).toEqual(savedRadar);
+
+    // Clicking "Continuar Praticando" starts another daily batch
+    const continueButtons = screen.getAllByRole('button', { name: /Continuar Praticando/i });
+    fireEvent.click(continueButtons[0]!);
+
+    expect(screen.getByText('Questões Diárias do ENEM')).toBeInTheDocument();
+    expect(screen.getByText(/0 de 5 respondidas/i)).toBeInTheDocument();
   });
 });
 

@@ -103,7 +103,10 @@ function getOrCreateAnonymousSessionId(): string {
 
 function getSavedDiagnosticCompleted(): boolean {
   if (typeof window === 'undefined') return false;
-  return localStorage.getItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED) === 'true';
+  return (
+    localStorage.getItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED) === 'true' ||
+    Boolean(localStorage.getItem(STORAGE_KEY_DIAGNOSTIC_REPORT))
+  );
 }
 
 function getSavedDiagnosticReport(): DiagnosticReportDto | null {

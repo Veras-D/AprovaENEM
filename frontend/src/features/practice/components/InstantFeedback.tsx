@@ -17,6 +17,8 @@ export interface InstantFeedbackProps {
   readonly onNextQuestion?: () => void;
   readonly hasNextQuestion?: boolean;
   readonly onFinishDiagnostic?: () => void;
+  readonly finishButtonLabel?: string;
+  readonly finishButtonAriaLabel?: string;
   readonly onOpenSocraticTutor?: () => void;
   readonly className?: string;
 }
@@ -32,6 +34,8 @@ export const InstantFeedback: React.FC<InstantFeedbackProps> = ({
   onNextQuestion,
   hasNextQuestion,
   onFinishDiagnostic,
+  finishButtonLabel,
+  finishButtonAriaLabel,
   onOpenSocraticTutor,
   className = '',
 }) => {
@@ -46,6 +50,8 @@ export const InstantFeedback: React.FC<InstantFeedbackProps> = ({
         onNextQuestion={onNextQuestion}
         hasNextQuestion={hasNextQuestion}
         onFinishDiagnostic={onFinishDiagnostic}
+        finishButtonLabel={finishButtonLabel}
+        finishButtonAriaLabel={finishButtonAriaLabel}
       />
 
       {/* Step-by-Step Resolution Accordion with Distractor Analysis */}

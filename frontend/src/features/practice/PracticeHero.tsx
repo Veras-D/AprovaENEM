@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSessionStore } from '@/stores/useSessionStore';
 import { useAccessibilityStore } from '@/stores/useAccessibilityStore';
-import { useQuestionsQuery, useSubmitAnswerMutation, useRecordActivityMutation } from '@/api/hooks';
+import {
+  useQuestionsQuery,
+  useSubmitAnswerMutation,
+  useRecordActivityMutation,
+  useGamificationProfileQuery,
+} from '@/api/hooks';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { MOCK_QUESTIONS, MOCK_RESOLUTIONS } from '@/api/mocks/mock-data';
 import {
@@ -17,6 +22,7 @@ import {
   QuestionCard,
   QuestionCarousel,
   InstantFeedback,
+  DailyPracticeSummaryView,
   SocraticTutorDrawer,
   TimeAccommodationModal,
   TimeUpModal,
@@ -30,6 +36,7 @@ import {
   Trophy,
   Layers,
   BarChart2,
+  Sparkles,
 } from 'lucide-react';
 import type { QuestionOptionLetter, PracticeSession } from '@/types';
 import type { DiagnosticReportDto, QuestionItemDto } from '@/api/types';
@@ -93,6 +100,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
   const questionsQuery = useQuestionsQuery({ size: 100 });
   const submitAnswerMutation = useSubmitAnswerMutation();
   const recordActivityMutation = useRecordActivityMutation();
+  const gamificationQuery = useGamificationProfileQuery();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const completionReportedForRef = useRef<string | null>(null);
 
@@ -120,16 +128,20 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     return ALL_FALLBACK_QUESTIONS;
   }, [questionsQuery.data?.content]);
 
-  // Initialize session with live backend questions (or fallback pool) if empty and diagnostic not already completed
+  // Initialize session with live backend questions (or fallback pool) if empty
   useEffect(() => {
-    if (questions.length === 0 && !isDiagnosticCompleted) {
+    if (questions.length === 0) {
       const seenIds = useSessionStore.getState().seenDiagnosticQuestionIds;
       const initialDtos = selectDiagnosticQuestions(questionsPool, seenIds, 5, starterVariant);
       const domainQuestions = initialDtos.map(mapDtoToDomainQuestion);
       recordDiagnosticSeenQuestions(initialDtos.map((q) => q.id));
+
+      const isDiagnostic = !isDiagnosticCompleted;
+      const title = isDiagnostic ? 'Diagnóstico ENEM' : 'Questões Diárias do ENEM';
+
       const initialSession: PracticeSession = {
-        id: `session-enem-${Date.now()}`,
-        title: 'Diagnóstico ENEM',
+        id: `session-${isDiagnostic ? 'enem' : 'daily'}-${Date.now()}`,
+        title,
         questionCount: domainQuestions.length,
         status: 'IN_PROGRESS',
         currentQuestionIndex: 0,
@@ -149,17 +161,18 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       questionsQuery.data.content.length > 0 &&
       Object.keys(selectedAnswers).length === 0 &&
       Object.keys(attempts).length === 0 &&
-      !isDiagnosticCompleted &&
       questions.length > 0
     ) {
       hasUpgradedToLiveRef.current = true;
+      const isDiagnostic = !isDiagnosticCompleted;
+      const title = isDiagnostic ? 'Diagnóstico ENEM' : 'Questões Diárias do ENEM';
       const seenIds = useSessionStore.getState().seenDiagnosticQuestionIds;
       const liveDtos = selectDiagnosticQuestions(questionsQuery.data.content, seenIds, 5, starterVariant);
       const domainQuestions = liveDtos.map(mapDtoToDomainQuestion);
       recordDiagnosticSeenQuestions(liveDtos.map((q) => q.id));
       const liveSession: PracticeSession = {
         id: `session-live-${Date.now()}`,
-        title: 'Diagnóstico ENEM',
+        title,
         questionCount: domainQuestions.length,
         status: 'IN_PROGRESS',
         currentQuestionIndex: 0,
@@ -266,9 +279,39 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     recordActivityMutation,
   ]);
 
+  const handleStartDailyPractice = useCallback(() => {
+    setShowCelebration(false);
+    setIsTimeUpModalOpen(false);
+
+    const currentIds = questions.map((q) => q.id);
+    const seenIds = useSessionStore.getState().seenDiagnosticQuestionIds;
+    const excludeIds = Array.from(new Set([...seenIds, ...currentIds]));
+
+    const newDtos = selectDiagnosticQuestions(questionsPool, excludeIds, 5, starterVariant);
+    const domainQuestions = newDtos.map(mapDtoToDomainQuestion);
+    recordDiagnosticSeenQuestions(newDtos.map((q) => q.id));
+
+    const dailySession: PracticeSession = {
+      id: `session-daily-${Date.now()}`,
+      title: 'Questões Diárias do ENEM',
+      questionCount: domainQuestions.length,
+      status: 'IN_PROGRESS',
+      currentQuestionIndex: 0,
+      correctCount: 0,
+      createdAt: new Date().toISOString(),
+    };
+    startSession(dailySession, domainQuestions);
+  }, [questions, questionsPool, recordDiagnosticSeenQuestions, startSession, starterVariant]);
+
   const handleRestart = useCallback(() => {
     setShowCelebration(false);
     setIsTimeUpModalOpen(false);
+
+    // If user is authenticated or already completed diagnostic, restart a new daily practice set
+    if (isDiagnosticCompleted || isAuthenticated) {
+      handleStartDailyPractice();
+      return;
+    }
 
     // Collect questions to exclude from recalibration to ensure different questions are presented
     const currentIds = questions.map((q) => q.id);
@@ -292,7 +335,17 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       createdAt: new Date().toISOString(),
     };
     startSession(mockSession, domainQuestions);
-  }, [questions, resetDiagnostic, recordDiagnosticSeenQuestions, startSession, questionsPool, starterVariant]);
+  }, [
+    isDiagnosticCompleted,
+    isAuthenticated,
+    handleStartDailyPractice,
+    questions,
+    resetDiagnostic,
+    recordDiagnosticSeenQuestions,
+    startSession,
+    questionsPool,
+    starterVariant,
+  ]);
 
   const handlePracticeWeakTopic = useCallback(
     (topic: string) => {
@@ -401,11 +454,18 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     return Object.values(flaggedQuestions).filter(Boolean).length;
   }, [flaggedQuestions]);
 
+  // Check session type
+  const isDiagnosticSession =
+    activeSession?.title?.toLowerCase().includes('diagnóstico') ||
+    (!isDiagnosticCompleted && phase !== 'COMPLETED');
+
   const isCompleted =
     phase === 'DIAGNOSTIC' ||
     activeSession?.status === 'COMPLETED' ||
-    (isAllAnswered && totalQuestions > 0) ||
-    (isDiagnosticCompleted && questions.length === 0);
+    (isAllAnswered && totalQuestions > 0);
+
+  const isDiagnosticCompletion =
+    phase === 'DIAGNOSTIC' || (isDiagnosticSession && isCompleted);
 
   const activeReport: DiagnosticReportDto = useMemo(() => {
     if (diagnosticReport && 'radar' in diagnosticReport && diagnosticReport.radar) {
@@ -417,15 +477,28 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     return generateDiagnosticFromSession(questions, attempts, activeSession?.id);
   }, [diagnosticReport, savedDiagnosticReport, questions, attempts, activeSession?.id]);
 
-  // Trigger celebratory confetti modal and complete diagnostic upon answering all questions
+  // Trigger celebratory confetti modal and complete session upon answering all questions
   useEffect(() => {
     if (isAllAnswered && activeSession?.status !== 'COMPLETED' && phase !== 'DIAGNOSTIC') {
-      const report = generateDiagnosticFromSession(questions, attempts, activeSession?.id);
-      completeSession(report);
+      if (isDiagnosticSession) {
+        const report = generateDiagnosticFromSession(questions, attempts, activeSession?.id);
+        completeSession(report);
+      } else {
+        completeSession();
+      }
       reportSessionCompleted(activeSession?.id);
       setShowCelebration(true);
     }
-  }, [isAllAnswered, activeSession, phase, questions, attempts, completeSession, reportSessionCompleted]);
+  }, [
+    isAllAnswered,
+    activeSession,
+    phase,
+    questions,
+    attempts,
+    completeSession,
+    reportSessionCompleted,
+    isDiagnosticSession,
+  ]);
 
   // Keyboard navigation shortcuts: ArrowLeft / ArrowRight, PageUp / PageDown, [ / ]
   useEffect(() => {
@@ -497,73 +570,154 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       <div className="space-y-6">
       {/* Timed Quiz Control Bar / Calibrated Status Header */}
       {isCompleted ? (
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-brand border border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-xs">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-brand bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
-              <BarChart2 className="h-5 w-5" aria-hidden="true" />
+        isDiagnosticCompletion ? (
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-brand border border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-brand bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                <BarChart2 className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div>
+                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <span>Diagnóstico ENEM Calibrado</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-500/20">
+                    {correctCount}/{totalQuestions} ({activeReport.scorePercentage}% Acertos)
+                  </span>
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Sua proficiência inicial foi avaliada. Você pode iniciar suas questões diárias de treino ou simular provas completas.
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <span>Diagnóstico ENEM Calibrado</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-500/20">
-                  {correctCount}/{totalQuestions} ({activeReport.scorePercentage}% Acertos)
-                </span>
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Sua proficiência inicial foi avaliada. Você pode praticar tópicos recomendados ou simular provas oficiais completas.
-              </p>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-2 sm:gap-2.5 w-full lg:w-auto justify-start lg:justify-end flex-wrap">
-            {onOpenDiagnostics && (
+            <div className="flex items-center gap-2 sm:gap-2.5 w-full lg:w-auto justify-start lg:justify-end flex-wrap">
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={handleStartDailyPractice}
+                className="h-9 px-3 text-xs sm:text-sm font-bold whitespace-nowrap inline-flex items-center justify-center shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                <Sparkles className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                Começar Treino Diário
+              </Button>
+              {onOpenDiagnostics && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onOpenDiagnostics}
+                  className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
+                  aria-label="Abrir central de diagnósticos"
+                >
+                  <BarChart2 className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Painel Diagnóstico
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={onOpenDiagnostics}
-                className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
-                aria-label="Abrir central de diagnósticos"
-              >
-                <BarChart2 className="h-4 w-4 mr-1.5" aria-hidden="true" />
-                Painel Diagnóstico
-              </Button>
-            )}
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              onClick={() => setIsSimulationModalOpen(true)}
-              className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
-            >
-              <Layers className="h-4 w-4 mr-1.5" aria-hidden="true" />
-              Simular Prova Oficial
-            </Button>
-            {onOpenGamification && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onOpenGamification}
+                onClick={() => setIsSimulationModalOpen(true)}
                 className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
               >
-                <Trophy className="h-4 w-4 mr-1.5" aria-hidden="true" />
-                Ranking
+                <Layers className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                Simular Prova Oficial
               </Button>
-            )}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleRestart}
-              className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
-              title="Refazer avaliação diagnóstica para recalibrar"
-            >
-              <RotateCcw className="h-4 w-4 mr-1.5" aria-hidden="true" />
-              Refazer Diagnóstico
-            </Button>
+              {onOpenGamification && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onOpenGamification}
+                  className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
+                >
+                  <Trophy className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Ranking
+                </Button>
+              )}
+              {!isAuthenticated && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRestart}
+                  className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
+                  title="Refazer avaliação diagnóstica para recalibrar"
+                >
+                  <RotateCcw className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Refazer Diagnóstico
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-brand border border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-brand bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                <Sparkles className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div>
+                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <span>Treino Diário ENEM • Concluído</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-500/20">
+                    {correctCount}/{totalQuestions} ({totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0}% Acertos)
+                  </span>
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Sua sessão de questões diárias foi finalizada com sucesso. Continue praticando para avançar na sua meta.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-2.5 w-full lg:w-auto justify-start lg:justify-end flex-wrap">
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={handleStartDailyPractice}
+                className="h-9 px-3 text-xs sm:text-sm font-bold whitespace-nowrap inline-flex items-center justify-center shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                <Sparkles className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                Continuar Praticando
+              </Button>
+              {onOpenDiagnostics && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onOpenDiagnostics}
+                  className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
+                  aria-label="Abrir central de diagnósticos"
+                >
+                  <BarChart2 className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Painel Diagnóstico
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsSimulationModalOpen(true)}
+                className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
+              >
+                <Layers className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                Simular Prova Oficial
+              </Button>
+              {onOpenGamification && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onOpenGamification}
+                  className="h-9 px-3 text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0"
+                >
+                  <Trophy className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Ranking
+                </Button>
+              )}
+            </div>
+          </div>
+        )
       ) : (
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
           <div className="flex items-center gap-3 shrink-0 min-w-0">
@@ -572,7 +726,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
             </div>
             <div className="min-w-0">
               <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 truncate">
-                {activeSession?.title || 'Simulado Rápido ENEM'}
+                {activeSession?.title || (isDiagnosticCompleted ? 'Questões Diárias do ENEM' : 'Diagnóstico ENEM')}
               </h2>
               <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                 <span>{totalAnswered} de {totalQuestions} respondidas</span>
@@ -643,28 +797,45 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
               variant="outline"
               size="sm"
               onClick={handleRestart}
-              aria-label="Reiniciar simulado"
-              title="Reiniciar simulado"
+              aria-label={isDiagnosticCompleted ? 'Novo treino' : 'Reiniciar simulado'}
+              title={isDiagnosticCompleted ? 'Iniciar nova rodada de questões de treino diário' : 'Reiniciar simulado'}
               className="shrink-0 whitespace-nowrap"
             >
               <RotateCcw className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />
-              <span className="hidden sm:inline">Reiniciar</span>
+              <span className="hidden sm:inline">
+                {isDiagnosticCompleted ? 'Novo Treino' : 'Reiniciar'}
+              </span>
             </Button>
           </div>
         </div>
       )}
 
-      {/* Main Content: If completed, render full Diagnostic Result & Understanding Level View; otherwise Question Palette & Active Question Card */}
+      {/* Main Content: If completed, render full Diagnostic Result & Understanding Level View or Daily Practice Summary View; otherwise Question Palette & Active Question Card */}
       {isCompleted ? (
-        <DiagnosticResultView
-          report={activeReport}
-          awardedXp={totalXp}
-          flaggedCount={flaggedCount}
-          onOpenAuthModal={onOpenAuthModal}
-          onPracticeTopic={handlePracticeWeakTopic}
-          onStartOfficialSimulation={() => setIsSimulationModalOpen(true)}
-          onRetakeDiagnostic={handleRestart}
-        />
+        isDiagnosticCompletion ? (
+          <DiagnosticResultView
+            report={activeReport}
+            awardedXp={totalXp}
+            flaggedCount={flaggedCount}
+            onOpenAuthModal={onOpenAuthModal}
+            onPracticeTopic={handlePracticeWeakTopic}
+            onStartDailyPractice={handleStartDailyPractice}
+            onStartOfficialSimulation={() => setIsSimulationModalOpen(true)}
+            onRetakeDiagnostic={!isAuthenticated ? handleRestart : undefined}
+          />
+        ) : (
+          <DailyPracticeSummaryView
+            questionsCount={totalQuestions}
+            correctCount={correctCount}
+            awardedXp={totalXp}
+            dailyGoalTarget={gamificationQuery.data?.dailyGoalTarget ?? 5}
+            dailyGoalProgress={gamificationQuery.data?.dailyGoalProgress ?? 0}
+            onContinuePractice={handleStartDailyPractice}
+            onStartOfficialSimulation={() => setIsSimulationModalOpen(true)}
+            onOpenDiagnostics={onOpenDiagnostics}
+            onOpenGamification={onOpenGamification}
+          />
+        )
       ) : (
         <>
           {/* Question Carousel / Palette */}
@@ -716,11 +887,17 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
                   onNextQuestion={nextQuestion}
                   hasNextQuestion={currentQuestionIndex < totalQuestions - 1}
                   onFinishDiagnostic={() => {
-                    const report = generateDiagnosticFromSession(questions, attempts, activeSession?.id);
-                    completeSession(report);
+                    if (isDiagnosticSession) {
+                      const report = generateDiagnosticFromSession(questions, attempts, activeSession?.id);
+                      completeSession(report);
+                    } else {
+                      completeSession();
+                    }
                     reportSessionCompleted(activeSession?.id);
                     setShowCelebration(true);
                   }}
+                  finishButtonLabel={isDiagnosticSession ? 'Ver Meu Diagnóstico' : 'Concluir Treino Diário'}
+                  finishButtonAriaLabel={isDiagnosticSession ? 'Finalizar e ver meu diagnóstico de proficiência' : 'Finalizar treino diário'}
                   onOpenSocraticTutor={() => setIsTutorOpen(true)}
                 />
               )}
@@ -744,9 +921,13 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       <CelebrationOverlay
         isOpen={showCelebration}
         onClose={() => setShowCelebration(false)}
-        title="Parabéns! Diagnóstico Concluído!"
-        badgeName="Medalha Raio-X Diagnóstico Desbloqueada! 🎯"
-        subtitle={`Você respondeu a todas as ${totalQuestions} questões, calibrou sua nota TRI e desbloqueou uma nova conquista!`}
+        title={isDiagnosticSession ? 'Parabéns! Diagnóstico Concluído!' : 'Treino Diário Concluído! 🎉'}
+        badgeName={isDiagnosticSession ? 'Medalha Raio-X Diagnóstico Desbloqueada! 🎯' : 'Treino Diário Realizado! ⚡'}
+        subtitle={
+          isDiagnosticSession
+            ? `Você respondeu a todas as ${totalQuestions} questões, calibrou sua nota TRI e desbloqueou seu radar de proficiência!`
+            : `Você respondeu a todas as ${totalQuestions} questões da sua sessão diária e acumulou +${totalXp} XP para a sua liga!`
+        }
         xpAwarded={totalXp}
       />
 

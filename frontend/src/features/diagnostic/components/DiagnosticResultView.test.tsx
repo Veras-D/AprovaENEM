@@ -125,4 +125,39 @@ describe('DiagnosticResultView Component', () => {
     fireEvent.click(retakeBtn);
     expect(onRetake).toHaveBeenCalledTimes(1);
   });
+
+  it('hides "Refazer Diagnóstico" and renders "Iniciar Treino Diário" when authenticated', () => {
+    useAuthStore.setState({
+      isAuthenticated: true,
+      user: {
+        id: 'usr-456',
+        email: 'authenticated@example.com',
+        name: 'Aluno Autenticado',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-01-01',
+      },
+      token: 'jwt-token',
+    });
+
+    const handleStartDaily = vi.fn();
+    const handleRetake = vi.fn();
+
+    render(
+      <DiagnosticResultView
+        report={mockReport}
+        onStartDailyPractice={handleStartDaily}
+        onRetakeDiagnostic={handleRetake}
+      />
+    );
+
+    // Refazer Diagnóstico must NOT appear for logged in students
+    expect(screen.queryByRole('button', { name: /Refazer Diagnóstico/i })).not.toBeInTheDocument();
+
+    // Iniciar Treino Diário must be present and clickable
+    const dailyBtn = screen.getByRole('button', { name: /treino diário/i });
+    expect(dailyBtn).toBeInTheDocument();
+    fireEvent.click(dailyBtn);
+    expect(handleStartDaily).toHaveBeenCalledTimes(1);
+  });
 });

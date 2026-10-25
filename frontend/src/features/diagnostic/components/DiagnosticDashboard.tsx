@@ -6,6 +6,7 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { StudentDiagnosticRadar } from './StudentDiagnosticRadar';
@@ -249,6 +250,32 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = ({
       role="region"
       aria-label="Central de diagnósticos e proficiência ENEM do aluno"
     >
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-brand border border-blue-500/30 bg-blue-50/40 dark:bg-blue-950/20 shadow-xs">
+        <div className="space-y-1">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/30">
+            <span>Diagnóstico ENEM Calibrado</span>
+          </div>
+          <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
+            Seu Raio-X de Proficiência Individual
+          </h2>
+          <p className="text-xs text-slate-600 dark:text-slate-400">
+            Sua avaliação diagnóstica foi calibrada. Mantenha sua rotina respondendo às questões do treino diário.
+          </p>
+        </div>
+        {onPracticeTopic && (
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            onClick={() => onPracticeTopic('')}
+            className="shrink-0 font-bold whitespace-nowrap bg-emerald-600 hover:bg-emerald-700 text-white"
+          >
+            <Sparkles className="h-4 w-4 mr-1.5" aria-hidden="true" />
+            Ir para Treino Diário
+          </Button>
+        )}
+      </div>
+
       <StudentDiagnosticRadar
         report={studentReport}
         onPracticeTopic={onPracticeTopic}
