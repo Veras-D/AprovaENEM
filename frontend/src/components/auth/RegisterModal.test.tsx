@@ -312,16 +312,23 @@ describe('RegisterModal Component', () => {
     expect(authService.forgotPassword).toHaveBeenCalledWith('aluno@escola.gov.br');
   });
 
-  it('should toggle to token input and reset password successfully', async () => {
+  it('should advance to token input and reset password successfully after requesting recovery', async () => {
+    vi.spyOn(authService, 'forgotPassword').mockResolvedValueOnce(MOCK_FORGOT_PASSWORD_RESPONSE);
     vi.spyOn(authService, 'resetPassword').mockResolvedValueOnce(MOCK_RESET_PASSWORD_RESPONSE);
 
     renderWithProviders(<RegisterModal isOpen={true} onClose={handleClose} initialMode="forgot-password" />);
 
-    // Click toggle to show token input
-    const toggleTokenBtn = screen.getByRole('button', { name: /Já possui um token de recuperação\? Clique aqui/i });
-    fireEvent.click(toggleTokenBtn);
+    // Verify "Já possui um token de recuperação? Clique aqui" is NOT rendered
+    expect(screen.queryByRole('button', { name: /Já possui um token de recuperação/i })).not.toBeInTheDocument();
 
-    expect(screen.getByLabelText(/Token \/ Código de Recuperação/i)).toBeInTheDocument();
+    // Fill valid email and request instructions
+    fireEvent.change(screen.getByLabelText(/E-mail do Estudante/i), { target: { value: 'aluno@escola.gov.br' } });
+    fireEvent.click(screen.getByRole('button', { name: /Enviar Instruções de Recuperação/i }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Token \/ Código de Recuperação/i)).toBeInTheDocument();
+    });
+
     expect(screen.getByLabelText(/^Nova Senha/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Confirmar Nova Senha/i)).toBeInTheDocument();
 
@@ -347,6 +354,25 @@ describe('RegisterModal Component', () => {
       token: 'token-abc-123',
       newPassword: 'StrongPass@2026',
     });
+  });
+
+  it('allows going back to email request from token screen', async () => {
+    vi.spyOn(authService, 'forgotPassword').mockResolvedValueOnce(MOCK_FORGOT_PASSWORD_RESPONSE);
+
+    renderWithProviders(<RegisterModal isOpen={true} onClose={handleClose} initialMode="forgot-password" />);
+
+    fireEvent.change(screen.getByLabelText(/E-mail do Estudante/i), { target: { value: 'aluno@escola.gov.br' } });
+    fireEvent.click(screen.getByRole('button', { name: /Enviar Instruções de Recuperação/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Não recebeu o token\? Solicitar novo e-mail/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Não recebeu o token\? Solicitar novo e-mail/i }));
+
+    expect(screen.getByLabelText(/E-mail do Estudante/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Enviar Instruções de Recuperação/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Já possui um token de recuperação/i })).not.toBeInTheDocument();
   });
 
   it('should return to login when clicking Voltar ao Login', () => {

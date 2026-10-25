@@ -252,6 +252,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       setFullName('');
       setTargetDegree('');
       setResetToken('');
+      setHasResetToken(false);
       setNewPassword('');
       setConfirmNewPassword('');
       setFormError(null);
@@ -275,6 +276,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       setFullName('');
       setTargetDegree('');
       setResetToken('');
+      setHasResetToken(false);
       setNewPassword('');
       setConfirmNewPassword('');
       setShowPassword(false);
@@ -466,6 +468,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
         res.message ||
           'Instruções de recuperação enviadas com sucesso! Verifique sua caixa de entrada e pasta de spam.'
       );
+      setHasResetToken(true);
     } catch (err) {
       const apiError = err as ApiError;
       setFormError(
@@ -1148,38 +1151,26 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                     <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" aria-hidden="true" />
                     <div className="space-y-1">
                       <p className="font-semibold">{forgotSuccessMessage}</p>
-                      {!hasResetToken && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setHasResetToken(true);
-                            setForgotSuccessMessage(null);
-                          }}
-                          className="font-bold text-emerald-700 dark:text-emerald-300 underline hover:opacity-80 block text-xs cursor-pointer"
-                        >
-                          Inserir token recebido e redefinir agora &rarr;
-                        </button>
-                      )}
                     </div>
                   </div>
                 )}
 
-                {/* Toggle Token / Email Request */}
-                <div className="flex items-center justify-between text-xs pt-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setHasResetToken(!hasResetToken);
-                      setFormError(null);
-                      setForgotSuccessMessage(null);
-                    }}
-                    className="text-brand-primary font-semibold hover:underline cursor-pointer"
-                  >
-                    {hasResetToken
-                      ? '← Não recebeu o token? Solicitar novo e-mail'
-                      : 'Já possui um token de recuperação? Clique aqui'}
-                  </button>
-                </div>
+                {/* Back to Email Request if on Token Input */}
+                {hasResetToken && (
+                  <div className="flex items-center justify-between text-xs pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHasResetToken(false);
+                        setFormError(null);
+                        setForgotSuccessMessage(null);
+                      }}
+                      className="text-brand-primary font-semibold hover:underline cursor-pointer"
+                    >
+                      ← Não recebeu o token? Solicitar novo e-mail
+                    </button>
+                  </div>
+                )}
 
                 {!hasResetToken ? (
                   <form onSubmit={handleForgotPasswordSubmit} className="space-y-4" noValidate>
