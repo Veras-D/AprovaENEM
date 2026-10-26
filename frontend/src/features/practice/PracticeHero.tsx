@@ -47,6 +47,7 @@ import {
   generateDiagnosticFromSession,
   mergeDiagnosticWithSession,
   selectDiagnosticQuestions,
+  selectDailyPracticeQuestions,
   getSessionVariantIndex,
 } from '@/features/diagnostic/diagnostic-utils';
 
@@ -159,7 +160,9 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
 
     if (questions.length === 0) {
       const seenIds = useSessionStore.getState().seenDiagnosticQuestionIds;
-      const initialDtos = selectDiagnosticQuestions(questionsPool, seenIds, targetBatchSize, starterVariant);
+      const initialDtos = isDiagnostic
+        ? selectDiagnosticQuestions(questionsPool, seenIds, targetBatchSize, starterVariant)
+        : selectDailyPracticeQuestions(questionsPool, seenIds, targetBatchSize, starterVariant);
       const domainQuestions = initialDtos.map(mapDtoToDomainQuestion);
       recordDiagnosticSeenQuestions(initialDtos.map((q) => q.id));
 
@@ -204,7 +207,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       Object.keys(attempts).length === 0
     ) {
       const seenIds = useSessionStore.getState().seenDiagnosticQuestionIds;
-      const syncedDtos = selectDiagnosticQuestions(questionsPool, seenIds, targetBatchSize, starterVariant);
+      const syncedDtos = selectDailyPracticeQuestions(questionsPool, seenIds, targetBatchSize, starterVariant);
       const domainQuestions = syncedDtos.map(mapDtoToDomainQuestion);
       recordDiagnosticSeenQuestions(syncedDtos.map((q) => q.id));
 
@@ -246,7 +249,9 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       hasUpgradedToLiveRef.current = true;
       const title = isDiagnostic ? 'Diagnóstico ENEM' : 'Questões Diárias do ENEM';
       const seenIds = useSessionStore.getState().seenDiagnosticQuestionIds;
-      const liveDtos = selectDiagnosticQuestions(questionsQuery.data.content, seenIds, targetBatchSize, starterVariant);
+      const liveDtos = isDiagnostic
+        ? selectDiagnosticQuestions(questionsQuery.data.content, seenIds, targetBatchSize, starterVariant)
+        : selectDailyPracticeQuestions(questionsQuery.data.content, seenIds, targetBatchSize, starterVariant);
       const domainQuestions = liveDtos.map(mapDtoToDomainQuestion);
       recordDiagnosticSeenQuestions(liveDtos.map((q) => q.id));
       const liveSession: PracticeSession = {
@@ -369,7 +374,8 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     const seenIds = useSessionStore.getState().seenDiagnosticQuestionIds;
     const excludeIds = Array.from(new Set([...seenIds, ...currentIds]));
 
-    const newDtos = selectDiagnosticQuestions(questionsPool, excludeIds, targetBatchSize, starterVariant);
+    const sessionSeed = Date.now();
+    const newDtos = selectDailyPracticeQuestions(questionsPool, excludeIds, targetBatchSize, sessionSeed);
     const domainQuestions = newDtos.map(mapDtoToDomainQuestion);
     recordDiagnosticSeenQuestions(newDtos.map((q) => q.id));
 
@@ -389,7 +395,6 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     questionsPool,
     recordDiagnosticSeenQuestions,
     startSession,
-    starterVariant,
     targetBatchSize,
   ]);
 

@@ -338,9 +338,11 @@ describe('useSessionStore — Student Session State Machine', () => {
 
       // 1. Complete diagnostic while user is logged in
       useSessionStore.getState().completeSession(mockReport);
+      useSessionStore.getState().recordDiagnosticSeenQuestions(['seen-q-101', 'seen-q-102']);
 
       expect(localStorage.getItem(`aprovaenem_diagnostic_report_${testUserId}`)).not.toBeNull();
       expect(localStorage.getItem(`aprovaenem_diagnostic_completed_${testUserId}`)).toBe('true');
+      expect(localStorage.getItem(`aprovaenem_seen_question_ids_${testUserId}`)).toContain('seen-q-101');
 
       // 2. Student logs out (clearSession invoked)
       useSessionStore.getState().clearSession();
@@ -348,8 +350,9 @@ describe('useSessionStore — Student Session State Machine', () => {
       const loggedOutState = useSessionStore.getState();
       expect(loggedOutState.isDiagnosticCompleted).toBe(false);
       expect(loggedOutState.savedDiagnosticReport).toBeNull();
-      // Crucial: user-scoped key in localStorage MUST NOT be destroyed
+      // Crucial: user-scoped keys in localStorage MUST NOT be destroyed
       expect(localStorage.getItem(`aprovaenem_diagnostic_report_${testUserId}`)).not.toBeNull();
+      expect(localStorage.getItem(`aprovaenem_seen_question_ids_${testUserId}`)).not.toBeNull();
 
       // 3. Student logs back in: restoreUserDiagnostic is called
       const restored = await useSessionStore.getState().restoreUserDiagnostic(testUserId);
@@ -358,6 +361,7 @@ describe('useSessionStore — Student Session State Machine', () => {
       const loggedInState = useSessionStore.getState();
       expect(loggedInState.isDiagnosticCompleted).toBe(true);
       expect(loggedInState.savedDiagnosticReport).toBeDefined();
+      expect(loggedInState.seenDiagnosticQuestionIds).toContain('seen-q-101');
     });
 
     it('should sync diagnostic from backend when local storage is empty', async () => {

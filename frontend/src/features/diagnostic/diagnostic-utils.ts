@@ -482,7 +482,7 @@ export function selectDiagnosticQuestions(
     area: 'LC' | 'CH' | 'CN' | 'MT',
     targetDiff: 'EASY' | 'MEDIUM' | 'HARD'
   ): QuestionItemDto | null {
-    // 1. Exact area + exact difficulty in candidatePool
+    // 1. Exact area + exact difficulty in candidatePool (unseen questions)
     const exactCandidates = candidatePool.filter(
       (q) =>
         !selectedIds.has(q.id) &&
@@ -494,19 +494,7 @@ export function selectDiagnosticQuestions(
       return exactCandidates[idx]!;
     }
 
-    // 2. Exact area + exact difficulty in entire pool (recycled if needed)
-    const exactInPool = pool.filter(
-      (q) =>
-        !selectedIds.has(q.id) &&
-        getAreaCode(q.subject || q.knowledgeArea || '') === area &&
-        q.difficulty === targetDiff
-    );
-    if (exactInPool.length > 0) {
-      const idx = Math.abs(variantOffset) % exactInPool.length;
-      return exactInPool[idx]!;
-    }
-
-    // 3. Exact area with closest difficulty in candidatePool
+    // 2. Exact area with closest difficulty in candidatePool (unseen questions)
     const diffPreference: ('EASY' | 'MEDIUM' | 'HARD')[] =
       targetDiff === 'EASY'
         ? ['MEDIUM', 'HARD']
@@ -522,11 +510,33 @@ export function selectDiagnosticQuestions(
           q.difficulty === altDiff
       );
       if (altCandidates.length > 0) {
-        return altCandidates[0]!;
+        const idx = Math.abs(variantOffset) % altCandidates.length;
+        return altCandidates[idx]!;
       }
     }
 
-    // 4. Exact area in pool
+    // 3. Any available unseen candidate in candidatePool
+    const fallbackCand = candidatePool.filter((q) => !selectedIds.has(q.id));
+    if (fallbackCand.length > 0) {
+      const idx = Math.abs(variantOffset) % fallbackCand.length;
+      return fallbackCand[idx]!;
+    }
+
+    // --- ONLY if candidatePool is completely exhausted, recycle from pool ---
+
+    // 4. Exact area + exact difficulty in entire pool (recycled history)
+    const exactInPool = pool.filter(
+      (q) =>
+        !selectedIds.has(q.id) &&
+        getAreaCode(q.subject || q.knowledgeArea || '') === area &&
+        q.difficulty === targetDiff
+    );
+    if (exactInPool.length > 0) {
+      const idx = Math.abs(variantOffset) % exactInPool.length;
+      return exactInPool[idx]!;
+    }
+
+    // 5. Exact area with closest difficulty in pool (recycled history)
     for (const altDiff of diffPreference) {
       const altInPool = pool.filter(
         (q) =>
@@ -535,16 +545,19 @@ export function selectDiagnosticQuestions(
           q.difficulty === altDiff
       );
       if (altInPool.length > 0) {
-        return altInPool[0]!;
+        const idx = Math.abs(variantOffset) % altInPool.length;
+        return altInPool[idx]!;
       }
     }
 
-    // 5. Any candidate in candidatePool
-    const fallbackCand = candidatePool.find((q) => !selectedIds.has(q.id));
-    if (fallbackCand) return fallbackCand;
+    // 6. Any candidate in pool (recycled history)
+    const anyInPool = pool.filter((q) => !selectedIds.has(q.id));
+    if (anyInPool.length > 0) {
+      const idx = Math.abs(variantOffset) % anyInPool.length;
+      return anyInPool[idx]!;
+    }
 
-    // 6. Any candidate in pool
-    return pool.find((q) => !selectedIds.has(q.id)) || null;
+    return null;
   }
 
   // Populate slots from blueprint
@@ -581,6 +594,87 @@ export function selectDiagnosticQuestions(
 
   // Ensure strict progressive ordering: starts with EASY, ends with HARD
   selected.sort((a, b) => difficultyRank(a.difficulty) - difficultyRank(b.difficulty));
+
+  return selected;
+}
+
+/**
+ * Selects a fresh, diverse set of daily practice questions across ENEM areas
+ * (MT, CN, CH, LC), strictly prioritizing questions the candidate has NOT seen yet.
+ *
+ * @param pool The full question catalog (defaults to MOCK_QUESTIONS)
+ * @param excludeIds List of question IDs that were previously seen in diagnostic or prior practice
+ * @param count Batch size (default: 5 or student daily goal)
+ * @param seed Optional rotation/session seed (e.g., Date.now() or variant offset)
+ */
+export function selectDailyPracticeQuestions(
+  pool: readonly QuestionItemDto[] = MOCK_QUESTIONS,
+  excludeIds: readonly string[] = [],
+  count: number = 5,
+  seed: number = 0
+): readonly QuestionItemDto[] {
+  if (pool.length <= count) {
+    return [...pool].sort((a, b) => difficultyRank(a.difficulty) - difficultyRank(b.difficulty));
+  }
+
+  // 1. Identify unseen candidates outside excludeIds
+  let candidatePool = pool.filter((q) => !excludeIds.includes(q.id));
+
+  // If candidate pool has fewer than count questions, recycle history while excluding the most recent count items
+  if (candidatePool.length < count) {
+    const recentExclude = excludeIds.slice(-count);
+    const fallback = pool.filter((q) => !recentExclude.includes(q.id));
+    candidatePool = fallback.length >= count ? fallback : [...pool];
+  }
+
+  const selected: QuestionItemDto[] = [];
+  const selectedIds = new Set<string>();
+
+  const areas: readonly ('MT' | 'CN' | 'CH' | 'LC')[] = ['MT', 'CN', 'CH', 'LC'];
+  const startAreaIdx = Math.abs(seed) % areas.length;
+  const orderedAreas = [
+    ...areas.slice(startAreaIdx),
+    ...areas.slice(0, startAreaIdx),
+  ];
+
+  // Distribute slots across ENEM areas round-robin
+  let areaIndex = 0;
+  while (selected.length < count && candidatePool.some((q) => !selectedIds.has(q.id))) {
+    const targetArea = orderedAreas[areaIndex % orderedAreas.length]!;
+    areaIndex++;
+
+    // Find candidate in target area
+    const areaCandidates = candidatePool.filter(
+      (q) => !selectedIds.has(q.id) && getAreaCode(q.subject || q.knowledgeArea || '') === targetArea
+    );
+
+    if (areaCandidates.length > 0) {
+      const pickIdx = Math.abs(seed + selected.length) % areaCandidates.length;
+      const picked = areaCandidates[pickIdx]!;
+      selected.push(picked);
+      selectedIds.add(picked.id);
+    } else {
+      // If target area has no candidates left in candidatePool, pick any available unseen question
+      const anyCandidate = candidatePool.filter((q) => !selectedIds.has(q.id));
+      if (anyCandidate.length > 0) {
+        const pickIdx = Math.abs(seed + selected.length) % anyCandidate.length;
+        const picked = anyCandidate[pickIdx]!;
+        selected.push(picked);
+        selectedIds.add(picked.id);
+      }
+    }
+  }
+
+  // Fallback to pool if candidatePool was smaller than count
+  if (selected.length < count) {
+    for (const q of pool) {
+      if (selected.length >= count) break;
+      if (!selectedIds.has(q.id)) {
+        selected.push(q);
+        selectedIds.add(q.id);
+      }
+    }
+  }
 
   return selected;
 }

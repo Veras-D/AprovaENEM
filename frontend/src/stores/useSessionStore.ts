@@ -93,6 +93,7 @@ const STORAGE_KEY_DIAGNOSTIC_SEEN = 'aprovaenem_diagnostic_seen_ids';
 
 export const STORAGE_KEY_USER_DIAG_REPORT_PREFIX = 'aprovaenem_diagnostic_report_';
 export const STORAGE_KEY_USER_DIAG_COMPLETED_PREFIX = 'aprovaenem_diagnostic_completed_';
+export const STORAGE_KEY_USER_SEEN_PREFIX = 'aprovaenem_seen_question_ids_';
 
 function getCurrentUserId(): string | null {
   if (typeof window === 'undefined') return null;
@@ -157,6 +158,13 @@ function getSavedDiagnosticReport(): DiagnosticReportDto | null {
 function getSavedSeenQuestionIds(): readonly string[] {
   if (typeof window === 'undefined') return [];
   try {
+    const userId = getCurrentUserId();
+    if (userId) {
+      const rawUserSeen = localStorage.getItem(STORAGE_KEY_USER_SEEN_PREFIX + userId);
+      if (rawUserSeen) {
+        return JSON.parse(rawUserSeen) as string[];
+      }
+    }
     const raw = localStorage.getItem(STORAGE_KEY_DIAGNOSTIC_SEEN);
     return raw ? (JSON.parse(raw) as string[]) : [];
   } catch {
@@ -458,6 +466,15 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         if (localUserReport) {
           resolvedReport = JSON.parse(localUserReport) as DiagnosticReportDto;
         }
+        const rawUserSeen = localStorage.getItem(STORAGE_KEY_USER_SEEN_PREFIX + userId);
+        if (rawUserSeen) {
+          const userSeenIds = JSON.parse(rawUserSeen) as string[];
+          if (Array.isArray(userSeenIds) && userSeenIds.length > 0) {
+            set((state) => ({
+              seenDiagnosticQuestionIds: Array.from(new Set([...state.seenDiagnosticQuestionIds, ...userSeenIds])),
+            }));
+          }
+        }
       } catch {
         // Storage parse error
       }
@@ -508,6 +525,10 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     if (typeof localStorage !== 'undefined') {
       try {
         localStorage.setItem(STORAGE_KEY_DIAGNOSTIC_SEEN, JSON.stringify(updated));
+        const userId = getCurrentUserId();
+        if (userId) {
+          localStorage.setItem(STORAGE_KEY_USER_SEEN_PREFIX + userId, JSON.stringify(updated));
+        }
       } catch {
         // Storage quota
       }
@@ -543,6 +564,10 @@ export const useSessionStore = create<SessionState>((set, get) => ({
           localStorage.setItem(STORAGE_KEY_USER_DIAG_COMPLETED_PREFIX + userId, 'true');
           localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_REPORT);
           localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED);
+        }
+        const anonSeen = localStorage.getItem(STORAGE_KEY_DIAGNOSTIC_SEEN);
+        if (anonSeen) {
+          localStorage.setItem(STORAGE_KEY_USER_SEEN_PREFIX + userId, anonSeen);
         }
       } catch {
         // LocalStorage quota or access error

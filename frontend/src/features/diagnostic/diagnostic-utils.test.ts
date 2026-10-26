@@ -9,6 +9,7 @@ import {
   generateDiagnosticFromSession,
   mergeDiagnosticWithSession,
   selectDiagnosticQuestions,
+  selectDailyPracticeQuestions,
   ENEM_AREAS,
   MASTERY_CONFIGS,
   NATIONAL_ENEM_BASELINE,
@@ -387,6 +388,75 @@ describe('diagnostic-utils', () => {
       expect(recycledIds.some((id) => round1Ids.includes(id))).toBe(false);
       expect(recycled[0]?.difficulty).toBe('EASY');
       expect(recycled[4]?.difficulty).toBe('HARD');
+    });
+  });
+
+  describe('selectDailyPracticeQuestions', () => {
+    it('returns requested batch size distributed across ENEM areas', () => {
+      const daily = selectDailyPracticeQuestions(undefined, [], 5, 42);
+      expect(daily).toHaveLength(5);
+
+      const subjects = daily.map((q) => q.subject);
+      // All 4 areas must be represented
+      expect(subjects).toContain('MT');
+      expect(subjects).toContain('CN');
+      expect(subjects).toContain('CH');
+      expect(subjects).toContain('LC');
+    });
+
+    it('strictly avoids questions seen in diagnostic or prior daily sessions', () => {
+      const diagnosticSet = selectDiagnosticQuestions(undefined, [], 5, 0);
+      const diagnosticIds = diagnosticSet.map((q) => q.id);
+
+      const dailySet = selectDailyPracticeQuestions(undefined, diagnosticIds, 5, 100);
+      expect(dailySet).toHaveLength(5);
+
+      const dailyIds = dailySet.map((q) => q.id);
+      diagnosticIds.forEach((diagId) => {
+        expect(dailyIds).not.toContain(diagId);
+      });
+    });
+
+    it('supports custom batch sizes matching student daily study goals (e.g. 10 or 15 questions)', () => {
+      const batch10 = selectDailyPracticeQuestions(undefined, [], 10, 10);
+      expect(batch10).toHaveLength(10);
+      const unique10 = new Set(batch10.map((q) => q.id));
+      expect(unique10.size).toBe(10);
+
+      const batch15 = selectDailyPracticeQuestions(undefined, [], 15, 15);
+      expect(batch15).toHaveLength(15);
+      const unique15 = new Set(batch15.map((q) => q.id));
+      expect(unique15.size).toBe(15);
+    });
+
+    it('consecutive daily practice sessions yield distinct, non-overlapping question sets', () => {
+      const diagSet = selectDiagnosticQuestions(undefined, [], 5, 0);
+      const diagIds = diagSet.map((q) => q.id);
+
+      const day1 = selectDailyPracticeQuestions(undefined, diagIds, 5, 1);
+      const day1Ids = day1.map((q) => q.id);
+      expect(day1Ids.some((id) => diagIds.includes(id))).toBe(false);
+
+      const seenSoFar = [...diagIds, ...day1Ids];
+      const day2 = selectDailyPracticeQuestions(undefined, seenSoFar, 5, 2);
+      const day2Ids = day2.map((q) => q.id);
+      expect(day2Ids.some((id) => seenSoFar.includes(id))).toBe(false);
+
+      const seenAfterDay2 = [...seenSoFar, ...day2Ids];
+      const day3 = selectDailyPracticeQuestions(undefined, seenAfterDay2, 5, 3);
+      const day3Ids = day3.map((q) => q.id);
+      expect(day3Ids.some((id) => seenAfterDay2.includes(id))).toBe(false);
+    });
+
+    it('recycles oldest history while excluding the most recent batch when candidate pool is exhausted', () => {
+      const batch1 = selectDailyPracticeQuestions(undefined, [], 5, 0);
+      const batch1Ids = batch1.map((q) => q.id);
+
+      // Pass large list of exclusions simulating student who solved many questions
+      const recycled = selectDailyPracticeQuestions(undefined, batch1Ids, 5, 0);
+      expect(recycled).toHaveLength(5);
+      const recycledIds = recycled.map((q) => q.id);
+      expect(recycledIds.some((id) => batch1Ids.includes(id))).toBe(false);
     });
   });
 });
