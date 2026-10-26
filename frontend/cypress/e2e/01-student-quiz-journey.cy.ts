@@ -68,9 +68,9 @@ describe('Student Practice Quiz Journey E2E', () => {
     // Answer all available questions to reach completion
     for (let i = 0; i < 5; i++) {
       cy.get('input[type="radio"][value="B"], [role="radio"]').eq(1).click({ force: true });
-      cy.contains(/Confirmar Resposta|Responder/i).click();
+      cy.contains(/Confirmar Resposta|Responder/i).should('not.be.disabled').click();
       if (i < 4) {
-        cy.contains(/Próxima Questão|Avançar/i).click();
+        cy.contains(/Próxima Questão|Avançar/i, { timeout: 10000 }).should('be.visible').click();
       }
     }
 

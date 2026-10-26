@@ -58,7 +58,7 @@ export const DailyPracticeSummaryView: React.FC<DailyPracticeSummaryViewProps> =
       data-testid="daily-practice-summary-view"
     >
       {/* Header Accomplishment Card */}
-      <Card className="border-2 border-emerald-500/30 bg-white dark:bg-slate-900 shadow-md">
+      <Card className="border-2 border-emerald-500/30 bg-white dark:bg-slate-900 shadow-md animate-fade-up">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-start sm:items-center gap-3.5">
             <div className="p-3 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
@@ -196,7 +196,7 @@ export const DailyPracticeSummaryView: React.FC<DailyPracticeSummaryViewProps> =
           </div>
 
           {/* Quick Actions Footer Card */}
-          <div className="p-4 rounded-brand bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="p-4 rounded-brand bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-up stagger-1">
             <div className="space-y-0.5">
               <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 Próximos Passos

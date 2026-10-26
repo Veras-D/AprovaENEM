@@ -87,7 +87,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   return (
     <div className="space-y-10 sm:space-y-14 py-2 sm:py-6">
       {/* Hero Presentation Section */}
-      <section className="relative overflow-hidden rounded-brand bg-slate-50 dark:bg-slate-900/60 p-6 sm:p-12 border border-slate-200 dark:border-slate-800 shadow-xs">
+      <section className="relative overflow-hidden rounded-brand bg-slate-50 dark:bg-slate-900/60 p-6 sm:p-12 border border-slate-200 dark:border-slate-800 shadow-xs animate-fade-up">
         <div className="max-w-3xl space-y-5">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-brand-primary text-brand-primary-foreground shadow-sm">
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
@@ -140,7 +140,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </section>
 
       {/* Trust Highlights Bar */}
-      <section aria-label="Destaques da plataforma" className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <section aria-label="Destaques da plataforma" className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-up stagger-1">
         {highlights.map((item, idx) => (
           <div
             key={idx}
@@ -156,7 +156,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </section>
 
       {/* 4 Pillars Feature Cards Grid */}
-      <section aria-labelledby="features-heading" className="space-y-6">
+      <section aria-labelledby="features-heading" className="space-y-6 animate-fade-up stagger-2">
         <div className="text-center max-w-2xl mx-auto space-y-2">
           <h2
             id="features-heading"
@@ -217,7 +217,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </section>
 
       {/* Direct CTA Institutional Banner */}
-      <section className="rounded-brand bg-slate-900 text-white p-8 sm:p-10 text-center space-y-4">
+      <section className="rounded-brand bg-slate-900 text-white p-8 sm:p-10 text-center space-y-4 animate-fade-up stagger-3">
         <div className="inline-flex items-center justify-center p-3 rounded-full bg-brand-primary/20 text-brand-primary mb-2">
           <Zap className="h-6 w-6" aria-hidden="true" />
         </div>

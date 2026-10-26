@@ -360,7 +360,7 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
       aria-label="Painel de gamificação do estudante"
     >
       {/* Dashboard Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs animate-fade-up">
         <div className="flex items-center gap-3.5">
           <div className="h-12 w-12 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
             <Trophy className="h-6 w-6" aria-hidden="true" />
@@ -410,7 +410,7 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
 
       {/* Navigation Tabs (Meu Progresso vs Ranking da Liga) */}
       <div
-        className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3"
+        className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 animate-fade-up stagger-1"
         role="tablist"
         aria-label="Seções do painel de gamificação"
       >
@@ -459,20 +459,24 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
       >
         {/* Grid: Level Progress & Daily Streak Counter */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <LevelProgressBar
-            currentXp={profile.currentXp}
-            currentLevel={profile.level}
-          />
+          <div className="animate-fade-up stagger-2">
+            <LevelProgressBar
+              currentXp={profile.currentXp}
+              currentLevel={profile.level}
+            />
+          </div>
 
-          <DailyStreakCounter
-            currentStreakDays={profile.currentStreakDays}
-            longestStreakDays={profile.longestStreakDays}
-            streakFreezeAvailable={profile.streakFreezeAvailable}
-          />
+          <div className="animate-fade-up stagger-3">
+            <DailyStreakCounter
+              currentStreakDays={profile.currentStreakDays}
+              longestStreakDays={profile.longestStreakDays}
+              streakFreezeAvailable={profile.streakFreezeAvailable}
+            />
+          </div>
         </div>
 
         {/* Daily Study Goal Card */}
-        <div className="p-4 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-3">
+        <div className="p-4 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-3 animate-fade-up stagger-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5">
               <div className="h-8 w-8 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0">
@@ -535,7 +539,7 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
         role="tabpanel"
         aria-labelledby="tab-leaderboard"
         hidden={activeTab !== 'leaderboard'}
-        className={activeTab === 'leaderboard' ? 'space-y-4 sm:space-y-6' : 'hidden'}
+        className={activeTab === 'leaderboard' ? 'space-y-4 sm:space-y-6 animate-card-settle' : 'hidden'}
       >
         <WeeklyLeagueLeaderboard
           initialLeague={(profile.weeklyLeague as LeagueTier) || 'GOLD'}

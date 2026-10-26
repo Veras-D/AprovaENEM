@@ -360,16 +360,16 @@ body {
 @keyframes card-swap-in {
   from {
     opacity: 0;
-    transform: translate3d(0, 6px, 0);
+    transform: translate3d(0, 8px, 0);
   }
   to {
     opacity: 1;
-    transform: none;
+    transform: translate3d(0, 0, 0);
   }
 }
 
 .animate-card-enter {
-  animation: card-swap-in 260ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: card-swap-in 440ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* ============================================================================
@@ -398,9 +398,82 @@ body {
 }
 
 .animate-tab-from-left {
-  animation: tab-slide-from-left 460ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: tab-slide-from-left 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .animate-tab-from-right {
-  animation: tab-slide-from-right 460ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: tab-slide-from-right 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+/* ============================================================================
+   Fluid Enterprise Page & Element Entrance Animations (Option A: Fluid & Soft)
+   ============================================================================ */
+@keyframes page-enter-glide {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes element-fade-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes card-settle {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0) scale(0.992);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.animate-page-enter {
+  animation: page-enter-glide 520ms cubic-bezier(0.25, 1, 0.5, 1) both;
+  will-change: transform, opacity;
+}
+
+.animate-fade-up {
+  animation: element-fade-up 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+.animate-card-settle {
+  animation: card-settle 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+@keyframes badge-card-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.animate-badge-card {
+  animation: badge-card-enter 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+/* Stagger utilities for smooth cascading entrance (soft & graceful pacing) */
+.stagger-1 { animation-delay: 110ms; }
+.stagger-2 { animation-delay: 220ms; }
+.stagger-3 { animation-delay: 330ms; }
+.stagger-4 { animation-delay: 440ms; }
+.stagger-5 { animation-delay: 550ms; }
+.stagger-6 { animation-delay: 660ms; }

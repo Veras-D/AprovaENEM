@@ -216,7 +216,7 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
       aria-label="Ranking Semanal por Ligas do ENEM"
     >
       {/* Top Banner & Sunday Countdown Widget */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-5 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-5 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs animate-fade-up">
         <div className="flex items-center gap-3">
           <div
             className={`h-12 w-12 rounded-full ${currentConfig.badgeBg} ${currentConfig.badgeText} flex items-center justify-center shrink-0 border ${currentConfig.borderColor} shadow-xs`}
@@ -257,7 +257,7 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
 
       {/* Minimalist League Progression Track (Non-clickable, mystery next league) */}
       <div
-        className="p-3 sm:p-4 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-3"
+        className="p-3 sm:p-4 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-3 animate-fade-up stagger-1"
         aria-label="Jornada das Ligas"
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs">
@@ -368,7 +368,7 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
 
 
           {/* Leaderboard Table */}
-          <div className="rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+          <div className="rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden animate-fade-up stagger-2">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm" aria-label={`Tabela de classificação da ${currentConfig.name}`}>
                 <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">

@@ -886,7 +886,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
           )
         ) : null
       ) : (
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm animate-fade-up">
           <div className="flex items-center gap-3 shrink-0 min-w-0">
             <div className="p-2 rounded-brand bg-brand-primary/10 text-brand-primary shrink-0">
               <BookOpen className="h-5 w-5" aria-hidden="true" />
@@ -1009,21 +1009,23 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
         <>
           {/* Question Carousel / Palette */}
           {totalQuestions > 0 && (
-            <QuestionCarousel
-              totalQuestions={totalQuestions}
-              currentIndex={currentQuestionIndex}
-              onSelectIndex={goToQuestion}
-              onNext={nextQuestion}
-              onPrevious={previousQuestion}
-              isAnswered={(idx) => Boolean(questions[idx] && attempts[questions[idx].id])}
-              isCorrect={(idx) => (questions[idx] ? attempts[questions[idx].id]?.isCorrect : undefined)}
-              isFlagged={(idx) => Boolean(questions[idx] && flaggedQuestions[questions[idx].id])}
-            />
+            <div className="animate-fade-up stagger-1">
+              <QuestionCarousel
+                totalQuestions={totalQuestions}
+                currentIndex={currentQuestionIndex}
+                onSelectIndex={goToQuestion}
+                onNext={nextQuestion}
+                onPrevious={previousQuestion}
+                isAnswered={(idx) => Boolean(questions[idx] && attempts[questions[idx].id])}
+                isCorrect={(idx) => (questions[idx] ? attempts[questions[idx].id]?.isCorrect : undefined)}
+                isFlagged={(idx) => Boolean(questions[idx] && flaggedQuestions[questions[idx].id])}
+              />
+            </div>
           )}
 
           {/* Main Interactive Question Card */}
           {currentQuestion && (
-            <section aria-labelledby="active-question-section">
+            <section aria-labelledby="active-question-section" className="animate-fade-up stagger-2">
               <h2 id="active-question-section" className="sr-only">
                 Questão ativa do simulado
               </h2>
@@ -1045,7 +1047,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
               {/* Instant Grading Resolution & Distractor Breakdown Accordion */}
               {isCurrentSubmitted && currentAttempt && (
                 <InstantFeedback
-                  className="mt-4"
+                  className="mt-4 animate-fade-up"
                   isCorrect={Boolean(currentAttempt.isCorrect)}
                   selectedOption={currentAttempt.selectedOption}
                   correctOption={correctOption ?? 'A'}

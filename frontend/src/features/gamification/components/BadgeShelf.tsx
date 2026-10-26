@@ -187,12 +187,12 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
 
   return (
     <div
-      className={`p-4 sm:p-5 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-4 ${className}`}
+      className={`p-4 sm:p-5 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-4 animate-card-settle ${className}`}
       role="region"
       aria-label="Prateleira de conquistas e medalhas"
     >
       {/* Header & Status Filter Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-up stagger-1">
         <div className="flex items-center gap-2.5">
           <div className="h-9 w-9 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
             <Trophy className="h-4.5 w-4.5" aria-hidden="true" />
@@ -262,7 +262,7 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
 
       {/* Category Pills Filter */}
       <div
-        className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs"
+        className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs animate-fade-up stagger-2"
         role="group"
         aria-label="Filtrar conquistas por categoria"
       >
@@ -297,7 +297,7 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filteredBadges.map((item: VisibleBadgeItem) => {
+          {filteredBadges.map((item: VisibleBadgeItem, idx: number) => {
             const IconComponent = BADGE_ICONS[item.iconName] || Trophy;
             const tierTheme = item.tierConfig ? TIER_THEMES[item.tierConfig.tier] : undefined;
             const TierVectorIcon = tierTheme?.icon;
@@ -305,7 +305,8 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
             return (
               <div
                 key={item.id}
-                className={`p-3.5 rounded-brand border transition-all flex flex-col justify-between gap-2.5 ${
+                style={{ animationDelay: `${140 + Math.min(idx * 70, 750)}ms` }}
+                className={`animate-badge-card p-3.5 rounded-brand border transition-all flex flex-col justify-between gap-2.5 ${
                   item.isUnlocked
                     ? tierTheme?.cardUnlocked ??
                       'bg-amber-50/40 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800/60 shadow-xs'

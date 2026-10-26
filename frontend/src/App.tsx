@@ -97,7 +97,7 @@ export const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <RootLayout activeSection={activeSection} onNavigate={handleNavigate}>
-        <div key={activeSection} className="animate-in fade-in duration-150">
+        <div key={activeSection} className="animate-page-enter">
           {activeSection === 'home' ? (
             <LandingPage
               onStartPractice={() => handleNavigate('practice')}

@@ -270,7 +270,7 @@ export const InstitutionalDashboard: React.FC<InstitutionalDashboardProps> = ({
       aria-label="Painel da coordenação pedagógica e diagnóstico de turmas"
     >
       {/* Institutional Portal Top Control Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-brand border border-indigo-200/80 dark:border-indigo-900/60 bg-indigo-50/50 dark:bg-indigo-950/20">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-brand border border-indigo-200/80 dark:border-indigo-900/60 bg-indigo-50/50 dark:bg-indigo-950/20 animate-fade-up">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
             <Building2 className="h-5 w-5" aria-hidden="true" />
@@ -306,10 +306,12 @@ export const InstitutionalDashboard: React.FC<InstitutionalDashboardProps> = ({
       </div>
 
       {/* Main Cohort View (rendered ONLY when authorized) */}
-      <InstitutionalCohortView
-        cohortData={cohortData}
-        onExportReport={onExportReport}
-      />
+      <div>
+        <InstitutionalCohortView
+          cohortData={cohortData}
+          onExportReport={onExportReport}
+        />
+      </div>
     </div>
   );
 };

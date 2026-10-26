@@ -163,7 +163,7 @@ export const StudentDiagnosticRadar: React.FC<StudentDiagnosticRadarProps> = ({
       {/* Main Grid: Radar Chart & Highlight Summary Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Radar Spider Chart Container */}
-        <div className="lg:col-span-7 p-5 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs flex flex-col items-center justify-center">
+        <div className="lg:col-span-7 p-5 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs flex flex-col items-center justify-center animate-fade-up stagger-1">
           <div className="w-full flex items-center justify-between mb-2">
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-brand-primary" aria-hidden="true" />
@@ -277,7 +277,7 @@ export const StudentDiagnosticRadar: React.FC<StudentDiagnosticRadarProps> = ({
         <div className="lg:col-span-5 space-y-4 flex flex-col justify-between">
           {/* Strongest Area Card */}
           {strongestArea && (
-            <div className="p-4 rounded-brand border border-emerald-500/20 bg-emerald-50/60 dark:bg-emerald-950/20">
+            <div className="p-4 rounded-brand border border-emerald-500/20 bg-emerald-50/60 dark:bg-emerald-950/20 animate-fade-up stagger-2">
               <div className="flex items-center gap-2.5 mb-1.5">
                 <div className="h-8 w-8 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                   <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
@@ -299,7 +299,7 @@ export const StudentDiagnosticRadar: React.FC<StudentDiagnosticRadarProps> = ({
 
           {/* Area Requiring Focus Card */}
           {weakestArea && (
-            <div className="p-4 rounded-brand border border-amber-500/20 bg-amber-50/60 dark:bg-amber-950/20">
+            <div className="p-4 rounded-brand border border-amber-500/20 bg-amber-50/60 dark:bg-amber-950/20 animate-fade-up stagger-3">
               <div className="flex items-center gap-2.5 mb-1.5">
                 <div className="h-8 w-8 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                   <AlertCircle className="h-4 w-4" aria-hidden="true" />
@@ -325,7 +325,7 @@ export const StudentDiagnosticRadar: React.FC<StudentDiagnosticRadarProps> = ({
           )}
 
           {/* Target Score Summary Info */}
-          <div className="p-4 rounded-brand border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 space-y-2">
+          <div className="p-4 rounded-brand border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 space-y-2 animate-fade-up stagger-4">
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-600 dark:text-slate-400 font-medium">Meta de Domínio:</span>
               <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
@@ -349,7 +349,7 @@ export const StudentDiagnosticRadar: React.FC<StudentDiagnosticRadarProps> = ({
       </div>
 
       {/* 4 Knowledge Area Breakdown Cards Grid */}
-      <div className="space-y-3">
+      <div className="space-y-3 animate-fade-up stagger-5">
         <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-brand-primary" aria-hidden="true" />
           Detalhamento por Área de Conhecimento

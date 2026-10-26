@@ -250,7 +250,7 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = ({
       role="region"
       aria-label="Central de diagnósticos e proficiência ENEM do aluno"
     >
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-brand border border-blue-500/30 bg-blue-50/40 dark:bg-blue-950/20 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-brand border border-blue-500/30 bg-blue-50/40 dark:bg-blue-950/20 shadow-xs animate-fade-up">
         <div className="space-y-1">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/30">
             <span>Diagnóstico ENEM Calibrado</span>
@@ -276,10 +276,12 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = ({
         )}
       </div>
 
-      <StudentDiagnosticRadar
-        report={studentReport}
-        onPracticeTopic={onPracticeTopic}
-      />
+      <div>
+        <StudentDiagnosticRadar
+          report={studentReport}
+          onPracticeTopic={onPracticeTopic}
+        />
+      </div>
     </div>
   );
 };

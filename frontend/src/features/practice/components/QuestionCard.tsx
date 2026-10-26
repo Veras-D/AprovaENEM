@@ -249,7 +249,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         {/* Question Statement */}
         <div
           id="question-statement-heading"
-          className="text-base sm:text-lg font-medium text-slate-900 dark:text-slate-100 leading-relaxed"
+          className="text-base sm:text-lg font-medium text-slate-900 dark:text-slate-100 leading-relaxed animate-fade-up stagger-1"
         >
           <MathRenderer content={question.statement} />
         </div>
@@ -263,11 +263,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           correctOption={correctOption}
           isSubmitted={isSubmitted}
           onSubmitAnswer={onSubmitAnswer}
+          className="animate-fade-up stagger-2"
         />
       </CardBody>
 
       {/* Card Action Footer */}
-      <CardFooter className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-50/70 dark:bg-slate-900/60 p-4">
+      <CardFooter className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-50/70 dark:bg-slate-900/60 p-4 animate-fade-up stagger-3">
         <div className="hidden md:flex flex-col gap-1 text-left">
           <span className="text-xs text-slate-500 dark:text-slate-400">
             {!selectedOption && 'Selecione uma alternativa (ou use as teclas A–E)'}

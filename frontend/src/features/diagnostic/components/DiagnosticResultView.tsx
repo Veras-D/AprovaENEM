@@ -59,7 +59,7 @@ export const DiagnosticResultView: React.FC<DiagnosticResultViewProps> = ({
       data-testid="diagnostic-result-view"
     >
       {/* Header Accomplishment Card */}
-      <Card className="border-2 border-brand-primary/30 bg-white dark:bg-slate-900 shadow-md">
+      <Card className="border-2 border-brand-primary/30 bg-white dark:bg-slate-900 shadow-md animate-fade-up">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-start sm:items-center gap-3.5">
             <div className="p-3 rounded-full bg-brand-primary/10 text-brand-primary shrink-0">
@@ -195,7 +195,7 @@ export const DiagnosticResultView: React.FC<DiagnosticResultViewProps> = ({
 
       {/* Unauthenticated Guest Save Notice */}
       {!isAuthenticated && (
-        <Card className="border-2 border-amber-500/30 bg-amber-50/40 dark:bg-amber-950/20 shadow-xs">
+        <Card className="border-2 border-amber-500/30 bg-amber-50/40 dark:bg-amber-950/20 shadow-xs animate-fade-up stagger-1">
           <CardBody className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-xs font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider">
@@ -249,10 +249,12 @@ export const DiagnosticResultView: React.FC<DiagnosticResultViewProps> = ({
       )}
 
       {/* Interactive Radar Chart & Knowledge Areas Breakdown */}
-      <StudentDiagnosticRadar
-        report={report}
-        onPracticeTopic={onPracticeTopic}
-      />
+      <div>
+        <StudentDiagnosticRadar
+          report={report}
+          onPracticeTopic={onPracticeTopic}
+        />
+      </div>
     </div>
   );
 };

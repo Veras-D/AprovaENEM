@@ -172,9 +172,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   };
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8 animate-in fade-in duration-150">
+    <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8 animate-page-enter">
       {/* Top Header & Navigation Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800 animate-fade-up">
         <div>
           <button
             type="button"
@@ -206,7 +206,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       </div>
 
       {/* Student Identity Hero Card */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6 animate-fade-up stagger-1">
         <div className="relative shrink-0">
           <AvatarRenderer
             config={user.avatarConfig}
@@ -268,7 +268,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       </div>
 
       {/* SECTION 1: Duolingo-Style Avatar Creator */}
-      <section aria-labelledby="avatar-creator-heading">
+      <section aria-labelledby="avatar-creator-heading" className="animate-fade-up stagger-2">
         <AvatarCreator
           initialConfig={user.avatarConfig}
           onSave={handleSaveAvatar}
@@ -276,7 +276,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       </section>
 
       {/* Two-Column Responsive Grid: Academic Data & Daily Study Goals */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-up stagger-3">
         {/* CARD: Personal & Academic Data */}
         <section aria-labelledby="personal-data-heading">
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 h-full flex flex-col justify-between">
@@ -487,7 +487,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       </div>
 
       {/* SECTION 3: Brazilian LGPD Data Portability & Account Erasure */}
-      <section aria-labelledby="lgpd-heading" className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
+      <section aria-labelledby="lgpd-heading" className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 animate-fade-up stagger-4">
         <div className="flex items-center gap-2 pb-4 border-b border-slate-100 dark:border-slate-800 mb-4">
           <Sparkles className="h-5 w-5 text-indigo-500" aria-hidden="true" />
           <h3 id="lgpd-heading" className="text-base font-bold text-slate-900 dark:text-white">
