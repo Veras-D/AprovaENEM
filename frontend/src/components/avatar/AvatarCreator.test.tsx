@@ -8,7 +8,7 @@ describe('AvatarCreator Component', () => {
     const onSave = vi.fn();
     render(<AvatarCreator initialConfig={DEFAULT_AVATAR_CONFIG} onSave={onSave} />);
 
-    expect(screen.getByText(/criador de avatar.*stardew valley/i)).toBeInTheDocument();
+    expect(screen.getByText(/personalize seu avatar/i)).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /pele/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /cabelo/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /rosto/i })).toBeInTheDocument();

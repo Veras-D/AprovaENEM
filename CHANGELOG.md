@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(practice): Added real-time level monitoring in [`PracticeHero.tsx`](frontend/src/features/practice/PracticeHero.tsx) to automatically display `LevelUpModal` when a student's gamification level increases after completing questions or sessions.
 - refactor(gamification): Refactored [`CelebrationOverlay.tsx`](frontend/src/features/gamification/components/CelebrationOverlay.tsx) to harmonize visual hierarchy with platform design standards, eliminating duplicate header titles and icons.
 - feat(profile): Wired avatar customization in [`ProfilePage.tsx`](frontend/src/features/profile/ProfilePage.tsx) to persist directly to backend PostgreSQL database via `updateProfileMutation` and [`auth.service.ts`](frontend/src/api/services/auth.service.ts), ensuring custom student avatars are retained across browser cache resets, logouts, re-logins, and multi-device sessions ([`TASK-S6-46`](docs/BACKLOG.md#task-s6-46)).
-- feat(avatar): Updated [`AvatarCreator.tsx`](frontend/src/components/avatar/AvatarCreator.tsx) with Stardew Valley pixel-art theme heading, natural hair color palette, and curated clothing options ([`TASK-S6-46`](docs/BACKLOG.md#task-s6-46)).
+- feat(avatar): Updated header and randomize action copy in [`AvatarCreator.tsx`](frontend/src/components/avatar/AvatarCreator.tsx) to student-centric phrasing ("Personalize seu Avatar" and "Aleatório") instead of developer release notes.
 
 ### Removed
 - chore(avatar): Purged fantasy and alien skin colors (`Verde Mascote`, `Azul Céu`, `Lavanda`) from the avatar creator palette, restricting selections exclusively to authentic human skin tones ([`TASK-S6-46`](docs/BACKLOG.md#task-s6-46)).

@@ -156,15 +156,15 @@ export const AvatarCreator: React.FC<AvatarCreatorProps> = ({
 
   return (
     <div className={`bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-6 ${className}`}>
-      {/* Header with Title and Stardew-style Randomize Button */}
+      {/* Header with Title and Randomize Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-slate-100 dark:border-slate-800">
         <div>
           <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-amber-500" aria-hidden="true" />
-            Criador de Avatar Pixel Art (Estilo Stardew Valley)
+            Personalize seu Avatar
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-            Personalize seu visual 16-bit com tons de pele realistas e peças perfeitamente ajustadas para o Ranking e os Simulados.
+            Crie um visual único para acompanhar sua jornada nos simulados e nas ligas semanais.
           </p>
         </div>
 
@@ -172,10 +172,10 @@ export const AvatarCreator: React.FC<AvatarCreatorProps> = ({
           type="button"
           onClick={randomize}
           className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-brand border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
-          title="Gerar combinações aleatórias divertidas"
+          title="Gerar combinação aleatória"
         >
           <Dices className="h-4 w-4 text-brand-primary" aria-hidden="true" />
-          <span>🎲 Aleatório</span>
+          <span>Aleatório</span>
         </button>
       </div>
 
