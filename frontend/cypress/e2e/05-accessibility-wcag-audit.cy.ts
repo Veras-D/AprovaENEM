@@ -109,6 +109,36 @@ describe('Axe-Core Automated WCAG 2.1 Level AA Audit E2E', () => {
         entries: [],
       },
     });
+    cy.intercept('GET', '**/api/v1/questions*', {
+      statusCode: 200,
+      body: {
+        content: [
+          {
+            id: 'mock-q-a11y-1',
+            year: 2023,
+            subject: 'MT',
+            discipline: 'Matemática',
+            topic: 'Geometria Espacial',
+            itemNumber: 136,
+            statement: 'Um artista plástico esculpe uma escultura a partir de um bloco de madeira de lei. Qual é a massa, em grama, dessa escultura?',
+            options: [
+              { optionLetter: 'A', text: '1.198,8' },
+              { optionLetter: 'B', text: '1.296,0' },
+              { optionLetter: 'C', text: '1.360,8' },
+              { optionLetter: 'D', text: '4.665,6' },
+              { optionLetter: 'E', text: '4.860,0' },
+            ],
+            correctOption: 'B',
+            difficulty: 'MEDIUM',
+            status: 'ACTIVE',
+          },
+        ],
+        page: 0,
+        size: 100,
+        totalElements: 1,
+        totalPages: 1,
+      },
+    });
   });
 
   it('has zero critical or serious accessibility violations on Landing Page', () => {

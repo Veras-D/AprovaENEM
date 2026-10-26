@@ -11,6 +11,7 @@ export interface MathRendererProps {
   readonly blockClassName?: string;
   readonly preserveNewlines?: boolean;
   readonly as?: 'div' | 'span' | 'article' | 'section';
+  readonly disableInteractive?: boolean;
 }
 
 /**
@@ -26,6 +27,7 @@ export const MathRenderer: React.FC<MathRendererProps> = ({
   blockClassName = '',
   preserveNewlines = true,
   as: Component = 'div',
+  disableInteractive = false,
 }) => {
   const tokens = useMemo(() => parseLatexTokens(content), [content]);
 
@@ -62,6 +64,7 @@ export const MathRenderer: React.FC<MathRendererProps> = ({
             {renderMarkdown(token.content, {
               preserveNewlines,
               keyPrefix: `text-${index}`,
+              disableInteractive,
             })}
           </React.Fragment>
         );

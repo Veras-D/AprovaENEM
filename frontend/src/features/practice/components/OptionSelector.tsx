@@ -172,7 +172,7 @@ export const OptionSelector: React.FC<OptionSelectorProps> = ({
 
                 {/* Option Statement with LaTeX Support */}
                 <div className="text-sm font-medium leading-relaxed flex-1 text-slate-800 dark:text-slate-100 pt-0.5 break-words">
-                  <MathRenderer content={option.text} />
+                  <MathRenderer content={option.text} disableInteractive />
                 </div>
               </div>
 

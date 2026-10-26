@@ -71,7 +71,11 @@ export function unescapeMarkdown(text: string): string {
 /**
  * Parses inline markdown tokens (bold, italic, code, links, inline images) within a single line.
  */
-export function parseInlineMarkdown(text: string, keyPrefix: string): readonly React.ReactNode[] {
+export function parseInlineMarkdown(
+  text: string,
+  keyPrefix: string,
+  disableInteractive = false
+): readonly React.ReactNode[] {
   if (!text) return [];
 
   const matches: InlineMatch[] = [];
@@ -179,17 +183,25 @@ export function parseInlineMarkdown(text: string, keyPrefix: string): readonly R
 
       case 'link':
         if (isSafeUrl(match.url)) {
-          nodes.push(
-            <a
-              key={key}
-              href={match.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-brand-primary underline hover:opacity-80 transition-opacity"
-            >
-              {unescapeMarkdown(match.content)}
-            </a>
-          );
+          if (disableInteractive) {
+            nodes.push(
+              <span key={key} className="text-brand-primary underline font-medium">
+                {unescapeMarkdown(match.content)}
+              </span>
+            );
+          } else {
+            nodes.push(
+              <a
+                key={key}
+                href={match.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand-primary underline hover:opacity-80 transition-opacity"
+              >
+                {unescapeMarkdown(match.content)}
+              </a>
+            );
+          }
         } else {
           nodes.push(unescapeMarkdown(match.content));
         }
@@ -253,6 +265,7 @@ export function parseInlineMarkdown(text: string, keyPrefix: string): readonly R
 export interface RenderMarkdownOptions {
   readonly preserveNewlines?: boolean;
   readonly keyPrefix?: string;
+  readonly disableInteractive?: boolean;
 }
 
 /**
@@ -265,10 +278,10 @@ export function renderMarkdown(
 ): readonly React.ReactNode[] {
   if (!text) return [];
 
-  const { preserveNewlines = true, keyPrefix = 'md' } = options;
+  const { preserveNewlines = true, keyPrefix = 'md', disableInteractive = false } = options;
 
   if (!preserveNewlines && !text.includes('\n')) {
-    return parseInlineMarkdown(text, keyPrefix);
+    return parseInlineMarkdown(text, keyPrefix, disableInteractive);
   }
 
   const lines = text.split('\n');
@@ -284,14 +297,35 @@ export function renderMarkdown(
       const alt = blockImageMatch[1] ?? '';
       const src = blockImageMatch[2];
       if (isSafeUrl(src)) {
-        result.push(
-          <ZoomableImage
-            key={lineKey}
-            src={src}
-            alt={alt || 'Figura explicativa da questão ENEM'}
-            caption={alt || undefined}
-          />
-        );
+        if (disableInteractive) {
+          result.push(
+            <figure
+              key={lineKey}
+              className="my-2 flex flex-col items-center rounded-brand overflow-hidden p-1"
+            >
+              <img
+                src={src}
+                alt={alt || 'Figura explicativa da questão ENEM'}
+                className="max-h-36 sm:max-h-48 w-auto object-contain rounded-brand mx-auto"
+                loading="lazy"
+              />
+              {alt && (
+                <figcaption className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 text-center italic">
+                  {alt}
+                </figcaption>
+              )}
+            </figure>
+          );
+        } else {
+          result.push(
+            <ZoomableImage
+              key={lineKey}
+              src={src}
+              alt={alt || 'Figura explicativa da questão ENEM'}
+              caption={alt || undefined}
+            />
+          );
+        }
         continue;
       }
     }
@@ -304,14 +338,14 @@ export function renderMarkdown(
           key={lineKey}
           className="p-3 my-2 border-l-4 border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-900/40 italic text-slate-700 dark:text-slate-300 rounded-r"
         >
-          {parseInlineMarkdown(quoteContent, lineKey)}
+          {parseInlineMarkdown(quoteContent, lineKey, disableInteractive)}
         </blockquote>
       );
       continue;
     }
 
     // 3. Regular line with inline markdown
-    const inlineNodes = parseInlineMarkdown(line, lineKey);
+    const inlineNodes = parseInlineMarkdown(line, lineKey, disableInteractive);
     result.push(
       <React.Fragment key={lineKey}>
         {inlineNodes}
