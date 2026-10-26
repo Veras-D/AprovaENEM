@@ -61,18 +61,18 @@ describe('WeeklyLeagueLeaderboard Component', () => {
     expect(screen.getByText('Beatriz Costa')).toBeInTheDocument();
     expect(screen.getByText('Vanessa Moreira')).toBeInTheDocument();
 
-    // Exact zone distributions for a 10-student cohort:
+    // Exact zone distributions for a 10-student cohort (Option A: 20% Promotion / 20% Relegation):
     // Top 20% (ranks 1 & 2): Classificado (2 badges)
     const promoBadges = screen.getAllByText('Classificado');
     expect(promoBadges).toHaveLength(2);
 
-    // Middle 70% (ranks 3 to 9): Na Disputa (7 badges in table)
+    // Middle 60% (ranks 3 to 8): Na Disputa (6 badges in table)
     const permanenceBadges = screen.getAllByText('Na Disputa');
-    expect(permanenceBadges).toHaveLength(7);
+    expect(permanenceBadges).toHaveLength(6);
 
-    // Bottom 10% (rank 10): Reforço (1 badge in table)
+    // Bottom 20% (ranks 9 & 10): Reforço (2 badges in table)
     const relegationBadges = screen.getAllByText('Reforço');
-    expect(relegationBadges).toHaveLength(1);
+    expect(relegationBadges).toHaveLength(2);
   });
 
   it('hides the next league as a mystery locked tier (???) to stimulate user curiosity and progression', () => {

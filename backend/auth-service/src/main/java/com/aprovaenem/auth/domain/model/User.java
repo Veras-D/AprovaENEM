@@ -30,4 +30,5 @@ public class User {
     private Instant createdAt;
     private Instant updatedAt;
     private String avatarConfig;
+    private boolean isBot;
 }

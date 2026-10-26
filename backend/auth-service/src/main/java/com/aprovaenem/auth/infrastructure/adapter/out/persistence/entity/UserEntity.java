@@ -78,4 +78,8 @@ public class UserEntity {
 
     @Column(name = "avatar_config", columnDefinition = "TEXT")
     private String avatarConfig;
+
+    @Column(name = "is_bot", nullable = false)
+    @Builder.Default
+    private boolean isBot = false;
 }

@@ -44,6 +44,7 @@ class UserTest {
         assertThat(user.getRole()).isEqualTo(UserRole.ROLE_STUDENT);
         assertThat(user.isActive()).isTrue();
         assertThat(user.isEmailVerified()).isFalse();
+        assertThat(user.isBot()).isFalse();
         assertThat(user.getEmailVerificationToken()).isEqualTo("verify-token-123");
     }
 

@@ -7,6 +7,7 @@ import com.aprovaenem.auth.infrastructure.adapter.out.persistence.repository.Spr
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -49,6 +50,13 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     }
 
     @Override
+    public List<User> findSimulatedBots() {
+        return userRepository.findByIsBotTrue().stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
     public void deleteById(UUID id) {
         userRepository.deleteById(id);
     }
@@ -71,6 +79,7 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .avatarConfig(user.getAvatarConfig())
+                .isBot(user.isBot())
                 .build();
     }
 
@@ -92,6 +101,7 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .avatarConfig(entity.getAvatarConfig())
+                .isBot(entity.isBot())
                 .build();
     }
 }

@@ -288,9 +288,9 @@ public class GamificationService implements GamificationUseCase {
             UUID entryUserId = UUID.fromString(tuple.getValue());
             int score = tuple.getScore() != null ? tuple.getScore().intValue() : 0;
 
-            String displayName = userRepository.findById(entryUserId)
-                    .map(User::getFullName)
-                    .orElse("Estudante");
+            Optional<User> userOpt = userRepository.findById(entryUserId);
+            String displayName = userOpt.map(User::getFullName).orElse("Estudante");
+            String avatarConfig = userOpt.map(User::getAvatarConfig).orElse(null);
 
             int streak = gamificationRepository.findProfileByUserId(entryUserId)
                     .map(UserGamificationProfile::getStreakDays)
@@ -302,7 +302,8 @@ public class GamificationService implements GamificationUseCase {
                     .displayName(displayName)
                     .weeklyXp(score)
                     .streakDays(streak)
-                    .promotionZone(currentRank <= cutoffPromotion)
+                    .promotionZone(targetTier != LeagueTier.DIAMOND && currentRank <= cutoffPromotion)
+                    .avatarConfig(avatarConfig)
                     .build());
             currentRank++;
         }
@@ -312,15 +313,20 @@ public class GamificationService implements GamificationUseCase {
         Long userRank = redisLeaderboardPort.getStudentRank(year, weekNumber, targetTier, currentUserId);
         Double userScore = redisLeaderboardPort.getStudentScore(year, weekNumber, targetTier, currentUserId);
         if (userRank != null && userScore != null) {
-            String userName = userRepository.findById(currentUserId).map(User::getFullName).orElse("Você");
-            int userStreak = gamificationRepository.findProfileByUserId(currentUserId).map(UserGamificationProfile::getStreakDays).orElse(0);
+            Optional<User> currentUserOpt = userRepository.findById(currentUserId);
+            String userName = currentUserOpt.map(User::getFullName).orElse("Você");
+            String userAvatar = currentUserOpt.map(User::getAvatarConfig).orElse(null);
+            int userStreak = gamificationRepository.findProfileByUserId(currentUserId)
+                    .map(UserGamificationProfile::getStreakDays)
+                    .orElse(0);
             currentUserRankDto = WeeklyLeaderboardResponse.UserRankDto.builder()
                     .rank(userRank)
                     .userId(currentUserId)
                     .displayName(userName)
                     .weeklyXp(userScore.intValue())
                     .streakDays(userStreak)
-                    .promotionZone(userRank <= cutoffPromotion)
+                    .promotionZone(targetTier != LeagueTier.DIAMOND && userRank <= cutoffPromotion)
+                    .avatarConfig(userAvatar)
                     .build();
         }
 
@@ -456,7 +462,7 @@ public class GamificationService implements GamificationUseCase {
 
             int total = boards.size();
             int promoteCount = (int) Math.ceil(total * 0.20);
-            int relegateCount = total >= 5 ? (int) Math.ceil(total * 0.10) : 0;
+            int relegateCount = total >= 5 ? (int) Math.ceil(total * 0.20) : 0;
             int demoteStartIndex = total - relegateCount;
             log.info("Tier [{}]: total={}, promoteCount={}, relegateCount={}", tier, total, promoteCount, relegateCount);
 

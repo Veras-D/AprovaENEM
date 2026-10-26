@@ -235,7 +235,7 @@ export interface LeaderboardUserEntryDto {
   readonly streakDays?: number;
   readonly promotionZone?: boolean;
   readonly isCurrentUser: boolean;
-  readonly avatarConfig?: AvatarConfig;
+  readonly avatarConfig?: AvatarConfig | string;
 }
 
 export interface LeaderboardResponseDto {

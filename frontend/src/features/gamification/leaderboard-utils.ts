@@ -101,8 +101,8 @@ export function isLeagueCompleted(
 /**
  * Computes whether a student at a given rank is in the Promotion, Maintenance, or Relegation zone.
  * - Promotion: Top 20% of the league cohort (for Bronze, Silver, Gold).
- * - Relegation: Bottom 10% of the league cohort (for Silver, Gold, Diamond). Bronze cannot relegate.
- * - Maintenance: Remaining intermediate ranks.
+ * - Relegation: Bottom 20% of the league cohort (for Silver, Gold, Diamond). Bronze cannot relegate.
+ * - Maintenance: Remaining intermediate ranks (middle 60%).
  */
 export function getZoneStatus(
   rank: number,
@@ -112,12 +112,12 @@ export function getZoneStatus(
   const safeTotal = Math.max(1, totalParticipants);
   const safeRank = Math.max(1, rank);
 
-  // Bottom 10% count (at least 1 student when cohort >= 5)
-  const bottomTenPercentCount = Math.max(1, Math.floor(safeTotal * 0.1));
+  // Bottom 20% count (at least 1 student when cohort >= 5)
+  const bottomTwentyPercentCount = Math.max(1, Math.floor(safeTotal * 0.2));
 
   // Diamond is top league: no promotion available
   if (league === 'DIAMOND') {
-    const relegationThreshold = Math.max(2, safeTotal - bottomTenPercentCount + 1);
+    const relegationThreshold = Math.max(2, safeTotal - bottomTwentyPercentCount + 1);
     if (safeTotal >= 5 && safeRank >= relegationThreshold) {
       return 'RELEGATION';
     }
@@ -135,10 +135,10 @@ export function getZoneStatus(
     return 'MAINTENANCE';
   }
 
-  // Bottom 10% relegation threshold (e.g. for cohort of 10, rank 10)
+  // Bottom 20% relegation threshold (e.g. for cohort of 10, ranks 9 & 10)
   const relegationCutoff = Math.max(
     promotionCutoff + 1,
-    safeTotal - bottomTenPercentCount + 1
+    safeTotal - bottomTwentyPercentCount + 1
   );
   if (safeTotal >= 5 && safeRank >= relegationCutoff) {
     return 'RELEGATION';

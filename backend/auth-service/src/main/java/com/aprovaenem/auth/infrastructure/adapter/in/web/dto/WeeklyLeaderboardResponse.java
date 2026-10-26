@@ -33,5 +33,6 @@ public class WeeklyLeaderboardResponse {
         private int weeklyXp;
         private int streakDays;
         private boolean promotionZone;
+        private String avatarConfig;
     }
 }

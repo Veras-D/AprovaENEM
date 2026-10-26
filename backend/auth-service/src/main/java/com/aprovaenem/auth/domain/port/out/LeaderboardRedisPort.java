@@ -10,6 +10,8 @@ public interface LeaderboardRedisPort {
 
     void incrementWeeklyXp(int year, int weekNumber, LeagueTier tier, UUID userId, int xpToAdd);
 
+    void recordWeeklyScore(int year, int weekNumber, LeagueTier tier, UUID userId, double score);
+
     Long getStudentRank(int year, int weekNumber, LeagueTier tier, UUID userId);
 
     Double getStudentScore(int year, int weekNumber, LeagueTier tier, UUID userId);

@@ -98,6 +98,16 @@ const ACTIVE_TIER_STYLES: Record<
   },
 };
 
+function parseAvatarConfig(config: AvatarConfig | string | undefined): AvatarConfig | undefined {
+  if (!config) return undefined;
+  if (typeof config === 'object') return config;
+  try {
+    return JSON.parse(config) as AvatarConfig;
+  } catch {
+    return undefined;
+  }
+}
+
 export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = ({
   initialLeague = 'GOLD',
   leaderboardData: propData,
@@ -458,9 +468,9 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
                                 className="h-8 w-8 rounded-full shrink-0 shadow-xs ring-1 ring-slate-200 dark:ring-slate-700"
                                 ariaLabel={`Avatar de ${entry.studentName}`}
                               />
-                            ) : entry.avatarConfig ? (
+                            ) : parseAvatarConfig(entry.avatarConfig) ? (
                               <AvatarRenderer
-                                config={entry.avatarConfig}
+                                config={parseAvatarConfig(entry.avatarConfig)!}
                                 size={32}
                                 className="h-8 w-8 rounded-full shrink-0 shadow-xs ring-1 ring-slate-200 dark:ring-slate-700"
                                 ariaLabel={`Avatar de ${entry.studentName}`}

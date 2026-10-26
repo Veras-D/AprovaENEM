@@ -51,22 +51,25 @@ describe('leaderboard-utils', () => {
       expect(getZoneStatus(2, 10, 'GOLD')).toBe('PROMOTION');
     });
 
-    it('returns MAINTENANCE for middle ranks (ranks 3 to 9 in cohort of 10)', () => {
+    it('returns MAINTENANCE for middle ranks (ranks 3 to 8 in cohort of 10)', () => {
       expect(getZoneStatus(3, 10, 'GOLD')).toBe('MAINTENANCE');
       expect(getZoneStatus(5, 10, 'BRONZE')).toBe('MAINTENANCE');
       expect(getZoneStatus(5, 10, 'SILVER')).toBe('MAINTENANCE');
       expect(getZoneStatus(5, 10, 'GOLD')).toBe('MAINTENANCE');
-      expect(getZoneStatus(9, 10, 'GOLD')).toBe('MAINTENANCE');
+      expect(getZoneStatus(8, 10, 'GOLD')).toBe('MAINTENANCE');
     });
 
     it('never relegates Bronze players even at the bottom', () => {
       expect(getZoneStatus(10, 10, 'BRONZE')).toBe('MAINTENANCE');
     });
 
-    it('returns RELEGATION for bottom 10% in Silver, Gold, and Diamond', () => {
-      // 10 participants: rank 10 is bottom 10%
+    it('returns RELEGATION for bottom 20% in Silver, Gold, and Diamond', () => {
+      // 10 participants: ranks 9 and 10 are bottom 20%
+      expect(getZoneStatus(9, 10, 'SILVER')).toBe('RELEGATION');
       expect(getZoneStatus(10, 10, 'SILVER')).toBe('RELEGATION');
+      expect(getZoneStatus(9, 10, 'GOLD')).toBe('RELEGATION');
       expect(getZoneStatus(10, 10, 'GOLD')).toBe('RELEGATION');
+      expect(getZoneStatus(9, 10, 'DIAMOND')).toBe('RELEGATION');
       expect(getZoneStatus(10, 10, 'DIAMOND')).toBe('RELEGATION');
     });
 

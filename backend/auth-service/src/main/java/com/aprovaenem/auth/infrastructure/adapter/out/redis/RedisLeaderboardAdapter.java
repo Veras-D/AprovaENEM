@@ -35,6 +35,13 @@ public class RedisLeaderboardAdapter implements LeaderboardRedisPort {
     }
 
     @Override
+    public void recordWeeklyScore(int year, int weekNumber, LeagueTier tier, UUID userId, double score) {
+        String key = buildKey(year, weekNumber, tier);
+        redisTemplate.opsForZSet().add(key, userId.toString(), score);
+        redisTemplate.expire(key, 14, TimeUnit.DAYS);
+    }
+
+    @Override
     public Long getStudentRank(int year, int weekNumber, LeagueTier tier, UUID userId) {
         String key = buildKey(year, weekNumber, tier);
         Long zeroBasedRank = redisTemplate.opsForZSet().reverseRank(key, userId.toString());
