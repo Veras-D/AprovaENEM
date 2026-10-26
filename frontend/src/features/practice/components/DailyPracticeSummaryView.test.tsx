@@ -103,4 +103,32 @@ describe('DailyPracticeSummaryView Component', () => {
     fireEvent.click(continueBtn);
     expect(handleContinue).toHaveBeenCalledTimes(1);
   });
+
+  it('triggers onOpenStreakCelebration when clicking on the streak card or the goal completed badge', () => {
+    const handleOpenStreakCelebration = vi.fn();
+
+    render(
+      <DailyPracticeSummaryView
+        questionsCount={5}
+        correctCount={5}
+        awardedXp={75}
+        dailyGoalTarget={5}
+        dailyGoalProgress={5}
+        streakDays={3}
+        onContinuePractice={vi.fn()}
+        onOpenStreakCelebration={handleOpenStreakCelebration}
+      />
+    );
+
+    const goalBadge = screen.getByRole('button', { name: /Meta diária atingida/i });
+    fireEvent.click(goalBadge);
+    expect(handleOpenStreakCelebration).toHaveBeenCalledTimes(1);
+
+    const streakCard = screen.getByRole('button', { name: /Ofensiva diária/i });
+    fireEvent.click(streakCard);
+    expect(handleOpenStreakCelebration).toHaveBeenCalledTimes(2);
+
+    fireEvent.keyDown(streakCard, { key: 'Enter' });
+    expect(handleOpenStreakCelebration).toHaveBeenCalledTimes(3);
+  });
 });

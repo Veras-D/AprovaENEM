@@ -16,13 +16,18 @@ import {
 describe('PracticeHero Component', () => {
   let queryClient: QueryClient;
 
-  const renderWithProviders = (ui: React.ReactElement = <PracticeHero />) => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false, gcTime: 0 },
-        mutations: { retry: false },
-      },
-    });
+  const renderWithProviders = (
+    ui: React.ReactElement = <PracticeHero />,
+    customClient?: QueryClient
+  ) => {
+    queryClient =
+      customClient ??
+      new QueryClient({
+        defaultOptions: {
+          queries: { retry: false, gcTime: 0 },
+          mutations: { retry: false },
+        },
+      });
 
     return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
   };
@@ -810,6 +815,146 @@ describe('PracticeHero Component', () => {
 
     // Verify session store active session is not a daily practice session
     expect(useSessionStore.getState().activeSession?.title).not.toBe('Questões Diárias do ENEM');
+  });
+
+  it('triggers streak celebration modal when daily goal is reached upon completing daily practice questions, and allows reopening it via streak card', async () => {
+    useAuthStore.setState({
+      isAuthenticated: true,
+      user: {
+        id: 'student-streak-1',
+        email: 'streak@example.com',
+        name: 'Estudante Streak',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-01-01',
+      },
+      token: 'jwt-token',
+    });
+
+    const testClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false, gcTime: 0 },
+        mutations: { retry: false },
+      },
+    });
+
+    testClient.setQueryData(queryKeys.gamification.profile, {
+      userId: 'student-streak-1',
+      level: 3,
+      levelTitle: 'Calouro Iniciante',
+      currentStreakDays: 5,
+      dailyGoalTarget: 5,
+      dailyGoalProgress: 5,
+      weeklyLeague: 'PRATA',
+    });
+
+    const savedRadar: DiagnosticReportDto = {
+      id: 'diag-streak-1',
+      sessionId: 'session-streak-1',
+      scorePercentage: 80,
+      radar: [
+        { knowledgeArea: 'LC', areaName: 'Linguagens', scorePercentage: 85, correctQuestions: 4, totalQuestions: 5, masteryLevel: 'MASTERED' },
+      ],
+      generatedAt: new Date().toISOString(),
+      recommendedTopics: ['Interpretação Textual'],
+    };
+
+    useSessionStore.setState({
+      isDiagnosticCompleted: true,
+      savedDiagnosticReport: savedRadar,
+      diagnosticReport: savedRadar,
+      questions: [],
+      activeSession: null,
+      phase: 'IDLE',
+    });
+
+    renderWithProviders(<PracticeHero />, testClient);
+
+    // Answer all daily practice questions
+    act(() => {
+      const qs = useSessionStore.getState().questions;
+      qs.forEach((q) => {
+        useSessionStore.getState().recordAttempt({
+          questionId: q.id,
+          selectedOption: 'A',
+          correctOption: 'A',
+          isCorrect: true,
+          awardedXp: 15,
+        });
+      });
+    });
+
+    // Verify StreakCelebrationModal is triggered automatically
+    await waitFor(() => {
+      expect(screen.getByTestId('streak-celebration-modal')).toBeInTheDocument();
+    });
+    expect(screen.getByText('5 Dias de Ofensiva!')).toBeInTheDocument();
+
+    // Dismiss the modal
+    const closeBtn = screen.getByRole('button', { name: /Fechar celebração da ofensiva/i });
+    fireEvent.click(closeBtn);
+    await waitFor(() => {
+      expect(screen.queryByTestId('streak-celebration-modal')).not.toBeInTheDocument();
+    });
+
+    // Clicking the streak card on DailyPracticeSummaryView reopens it
+    const streakCard = screen.getByRole('button', { name: /Ofensiva diária/i });
+    fireEvent.click(streakCard);
+    await waitFor(() => {
+      expect(screen.getByTestId('streak-celebration-modal')).toBeInTheDocument();
+    });
+  });
+
+  it('triggers LevelUpModal when student level advances to a higher level', async () => {
+    useAuthStore.setState({
+      isAuthenticated: true,
+      user: {
+        id: 'student-level-1',
+        email: 'level@example.com',
+        name: 'Estudante Level',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-01-01',
+      },
+      token: 'jwt-token',
+    });
+
+    // Set initial level in localStorage
+    localStorage.setItem('aprovaenem_last_seen_level_student-level-1', '2');
+
+    const testClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false, gcTime: 0 },
+        mutations: { retry: false },
+      },
+    });
+
+    testClient.setQueryData(queryKeys.gamification.profile, {
+      userId: 'student-level-1',
+      level: 3,
+      levelTitle: 'Calouro Dedicado',
+      currentStreakDays: 2,
+      dailyGoalTarget: 5,
+      dailyGoalProgress: 1,
+      weeklyLeague: 'BRONZE',
+    });
+
+    renderWithProviders(<PracticeHero />, testClient);
+
+    // LevelUpModal should be displayed since current level (3) > previous level (2)
+    await waitFor(() => {
+      expect(screen.getByTestId('level-up-modal')).toBeInTheDocument();
+    });
+    expect(screen.getByText('Nível 3!')).toBeInTheDocument();
+    expect(screen.getByText('Calouro Dedicado')).toBeInTheDocument();
+    expect(screen.getByText(/Você evoluiu do Nível 2 para o Nível 3!/i)).toBeInTheDocument();
+
+    // Dismiss the level up modal
+    const closeBtn = screen.getByRole('button', { name: /Fechar modal de subida de nível/i });
+    fireEvent.click(closeBtn);
+    await waitFor(() => {
+      expect(screen.queryByTestId('level-up-modal')).not.toBeInTheDocument();
+    });
   });
 });
 

@@ -146,6 +146,39 @@ body {
   animation-fill-mode: forwards;
 }
 
+/* Duolingo-style Streak Flame Pulse & Rising Embers */
+@keyframes flame-pulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 10px rgba(249, 115, 22, 0.6));
+  }
+  50% {
+    transform: scale(1.08) translateY(-2px);
+    filter: drop-shadow(0 0 20px rgba(249, 115, 22, 0.9));
+  }
+}
+
+.animate-flame-pulse {
+  animation: flame-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes ember-rise {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-50px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+.animate-ember {
+  animation-name: ember-rise;
+  animation-timing-function: ease-out;
+  animation-iteration-count: infinite;
+}
+
 /* Hide scrollbar utility for clean, accessible horizontal carousels across all browsers */
 .scrollbar-none {
   -ms-overflow-style: none !important; /* IE and Edge */

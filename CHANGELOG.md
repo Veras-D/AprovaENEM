@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.19] - 2026-10-26
+
+### Added
+- feat(gamification): Implemented Duolingo-style streak celebration animation and dialog in [`StreakCelebrationModal.tsx`](frontend/src/features/gamification/components/StreakCelebrationModal.tsx) with a radiant pulsing flame (`animate-flame-pulse`), rising floating embers (`animate-ember`), streak day counter ("X Dias de Ofensiva!"), XP summary pill, and a 7-day weekly calendar tracker (`Seg`–`Dom`) showing the current streak with active flame ring for today and checkmarks for completed days.
+- feat(gamification): Implemented celebratory level advancement dialog in [`LevelUpModal.tsx`](frontend/src/features/gamification/components/LevelUpModal.tsx) with glowing trophy badge, confetti particle burst (`animate-confetti`), new level indicator ("Nível X!"), level title, unlocked perks box, and seamless navigation to continue practicing or view weekly league status.
+- feat(notifications): Added level advancement achievement notification (`achieve-level-{level}`) in [`NotificationBell.tsx`](frontend/src/components/notifications/NotificationBell.tsx) that automatically dispatches to the backend PostgreSQL notification feed and client fallback list when a student reaches level > 1.
+- feat(styles): Added `@keyframes flame-pulse` and `@keyframes ember-rise` keyframes and `.animate-flame-pulse` / `.animate-ember` animation classes in [`index.css`](frontend/src/index.css) to support flame and particle animations while respecting `prefers-reduced-motion`.
+
+### Changed
+- feat(practice): Wired automatic streak celebration triggers upon reaching the daily goal on "Treino Diário ENEM • Concluído" (`DailyPracticeSummaryView.tsx`) in [`PracticeHero.tsx`](frontend/src/features/practice/PracticeHero.tsx), and made both the "Ofensiva Diária" metric card and "Meta Diária Atingida!" badge interactively clickable to allow students to reopen and view the streak celebration anytime.
+- feat(practice): Added real-time level monitoring in [`PracticeHero.tsx`](frontend/src/features/practice/PracticeHero.tsx) to automatically display `LevelUpModal` when a student's gamification level increases after completing questions or sessions.
+
 ## [0.6.18] - 2026-10-25
 
 ### Added

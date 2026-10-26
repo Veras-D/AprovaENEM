@@ -22,6 +22,7 @@ export interface DailyPracticeSummaryViewProps {
   readonly streakDays?: number;
   readonly currentStreakDays?: number;
   readonly onContinuePractice: () => void;
+  readonly onOpenStreakCelebration?: () => void;
   readonly onStartOfficialSimulation?: () => void;
   readonly onOpenDiagnostics?: () => void;
   readonly onOpenGamification?: () => void;
@@ -37,6 +38,7 @@ export const DailyPracticeSummaryView: React.FC<DailyPracticeSummaryViewProps> =
   streakDays,
   currentStreakDays,
   onContinuePractice,
+  onOpenStreakCelebration,
   onStartOfficialSimulation,
   onOpenDiagnostics,
   onOpenGamification,
@@ -68,10 +70,16 @@ export const DailyPracticeSummaryView: React.FC<DailyPracticeSummaryViewProps> =
                   Treino Diário ENEM Concluído
                 </Badge>
                 {isGoalCompleted && (
-                  <Badge variant="secondary" className="text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border-amber-300">
-                    <Flame className="h-3 w-3 mr-1 inline text-amber-500" aria-hidden="true" />
+                  <button
+                    type="button"
+                    onClick={onOpenStreakCelebration}
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 cursor-pointer transition-colors"
+                    title="Ver comemoração da ofensiva"
+                    aria-label="Meta diária atingida. Clique para ver a celebração da ofensiva"
+                  >
+                    <Flame className="h-3 w-3 inline text-amber-500 fill-amber-500" aria-hidden="true" />
                     Meta Diária Atingida!
-                  </Badge>
+                  </button>
                 )}
               </div>
               <h1
@@ -144,9 +152,36 @@ export const DailyPracticeSummaryView: React.FC<DailyPracticeSummaryViewProps> =
             </div>
 
             {/* Daily Streak Status */}
-            <div className="p-4 rounded-brand bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center space-y-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <div
+              role={onOpenStreakCelebration ? 'button' : undefined}
+              tabIndex={onOpenStreakCelebration ? 0 : undefined}
+              onClick={onOpenStreakCelebration}
+              onKeyDown={
+                onOpenStreakCelebration
+                  ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onOpenStreakCelebration();
+                      }
+                    }
+                  : undefined
+              }
+              aria-label={
+                onOpenStreakCelebration
+                  ? 'Ofensiva diária. Clique para ver a celebração da ofensiva'
+                  : undefined
+              }
+              className={`p-4 rounded-brand bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center space-y-1 transition-all ${
+                onOpenStreakCelebration
+                  ? 'cursor-pointer hover:border-orange-400 hover:shadow-md hover:bg-orange-50/20 dark:hover:bg-orange-950/10 focus:outline-hidden focus:ring-2 focus:ring-orange-400'
+                  : ''
+              }`}
+            >
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 inline-flex items-center justify-center gap-1">
                 Ofensiva Diária
+                {onOpenStreakCelebration && (
+                  <Sparkles className="h-3 w-3 text-orange-500" aria-hidden="true" />
+                )}
               </span>
               <span className="flex items-center justify-center gap-1.5 text-3xl font-black text-orange-500 dark:text-orange-400">
                 <Flame className="h-7 w-7 fill-orange-500 text-orange-500" aria-hidden="true" />

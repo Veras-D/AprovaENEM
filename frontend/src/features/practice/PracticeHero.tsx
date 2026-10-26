@@ -41,7 +41,11 @@ import {
 import type { QuestionOptionLetter, PracticeSession } from '@/types';
 import type { DiagnosticReportDto, QuestionItemDto } from '@/api/types';
 import { mapDtoToDomainQuestion } from './practice-mappers';
-import { CelebrationOverlay } from '@/features/gamification';
+import {
+  CelebrationOverlay,
+  StreakCelebrationModal,
+  LevelUpModal,
+} from '@/features/gamification';
 import { DiagnosticResultView } from '@/features/diagnostic/components/DiagnosticResultView';
 import {
   generateDiagnosticFromSession,
@@ -96,6 +100,15 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
   const { timeMode, setTimeMode } = useAccessibilityStore();
   const [isTutorOpen, setIsTutorOpen] = useState<boolean>(false);
   const [showCelebration, setShowCelebration] = useState<boolean>(false);
+  const [isStreakCelebrationOpen, setIsStreakCelebrationOpen] = useState<boolean>(false);
+  const [isLevelUpModalOpen, setIsLevelUpModalOpen] = useState<boolean>(false);
+  const [levelUpData, setLevelUpData] = useState<{
+    newLevel: number;
+    previousLevel?: number;
+    levelTitle?: string;
+    weeklyLeague?: string;
+  } | null>(null);
+  const lastSeenLevelRef = useRef<number | null>(null);
   const [isAccommodationsOpen, setIsAccommodationsOpen] = useState<boolean>(false);
   const [isTimeUpModalOpen, setIsTimeUpModalOpen] = useState<boolean>(false);
   const [isSimulationModalOpen, setIsSimulationModalOpen] = useState<boolean>(false);
@@ -126,6 +139,48 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     },
     [isAuthenticated, recordActivityMutation]
   );
+
+  // Monitor level progression and trigger LevelUpModal celebration when level increases
+  useEffect(() => {
+    const currentLevel = gamificationQuery.data?.level;
+    if (!currentLevel || !isAuthenticated) return;
+
+    const storageKey = `aprovaenem_last_seen_level_${user?.id || 'anon'}`;
+    if (lastSeenLevelRef.current === null) {
+      if (typeof localStorage !== 'undefined') {
+        const stored = localStorage.getItem(storageKey);
+        if (stored) {
+          lastSeenLevelRef.current = parseInt(stored, 10);
+        } else {
+          lastSeenLevelRef.current = currentLevel;
+          localStorage.setItem(storageKey, String(currentLevel));
+        }
+      } else {
+        lastSeenLevelRef.current = currentLevel;
+      }
+    }
+
+    if (lastSeenLevelRef.current !== null && currentLevel > lastSeenLevelRef.current) {
+      const prev = lastSeenLevelRef.current;
+      lastSeenLevelRef.current = currentLevel;
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(storageKey, String(currentLevel));
+      }
+      setLevelUpData({
+        newLevel: currentLevel,
+        previousLevel: prev,
+        levelTitle: gamificationQuery.data?.levelTitle,
+        weeklyLeague: gamificationQuery.data?.weeklyLeague,
+      });
+      setIsLevelUpModalOpen(true);
+    }
+  }, [
+    gamificationQuery.data?.level,
+    gamificationQuery.data?.levelTitle,
+    gamificationQuery.data?.weeklyLeague,
+    isAuthenticated,
+    user?.id,
+  ]);
 
   const anonymousSessionId = useSessionStore((state) => state.anonymousSessionId);
   const starterVariant = useMemo(() => {
@@ -588,6 +643,19 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       reportSessionCompleted(activeSession?.id);
       if (isDiagnosticSession && isAuthenticated) {
         setShowCelebration(true);
+      } else if (!isDiagnosticSession && isAuthenticated) {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const streakKey = `aprovaenem_streak_celebrated_${user?.id || 'anon'}_${todayStr}`;
+        const goalTarget = gamificationQuery.data?.dailyGoalTarget ?? 5;
+        const goalProgress = gamificationQuery.data?.dailyGoalProgress ?? 0;
+        if (
+          goalProgress >= goalTarget &&
+          typeof localStorage !== 'undefined' &&
+          localStorage.getItem(streakKey) !== 'true'
+        ) {
+          localStorage.setItem(streakKey, 'true');
+          setIsStreakCelebrationOpen(true);
+        }
       }
     }
   }, [
@@ -601,6 +669,9 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     reportSessionCompleted,
     isDiagnosticSession,
     isAuthenticated,
+    gamificationQuery.data?.dailyGoalTarget,
+    gamificationQuery.data?.dailyGoalProgress,
+    user?.id,
   ]);
 
   // Keyboard navigation shortcuts: ArrowLeft / ArrowRight, PageUp / PageDown, [ / ]
@@ -622,6 +693,8 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
         isAccommodationsOpen ||
         isTimeUpModalOpen ||
         showCelebration ||
+        isStreakCelebrationOpen ||
+        isLevelUpModalOpen ||
         isSimulationModalOpen
       ) {
         return;
@@ -665,6 +738,8 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     isAccommodationsOpen,
     isTimeUpModalOpen,
     showCelebration,
+    isStreakCelebrationOpen,
+    isLevelUpModalOpen,
     isSimulationModalOpen,
   ]);
 
@@ -924,6 +999,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
             dailyGoalProgress={gamificationQuery.data?.dailyGoalProgress ?? 0}
             streakDays={gamificationQuery.data?.currentStreakDays ?? 1}
             onContinuePractice={handleStartDailyPractice}
+            onOpenStreakCelebration={() => setIsStreakCelebrationOpen(true)}
             onStartOfficialSimulation={() => setIsSimulationModalOpen(true)}
             onOpenDiagnostics={onOpenDiagnostics}
             onOpenGamification={onOpenGamification}
@@ -992,6 +1068,19 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
                     reportSessionCompleted(activeSession?.id);
                     if (isDiagnosticSession && isAuthenticated) {
                       setShowCelebration(true);
+                    } else if (!isDiagnosticSession && isAuthenticated) {
+                      const todayStr = new Date().toISOString().slice(0, 10);
+                      const streakKey = `aprovaenem_streak_celebrated_${user?.id || 'anon'}_${todayStr}`;
+                      const goalTarget = gamificationQuery.data?.dailyGoalTarget ?? 5;
+                      const goalProgress = gamificationQuery.data?.dailyGoalProgress ?? 0;
+                      if (
+                        goalProgress >= goalTarget &&
+                        typeof localStorage !== 'undefined' &&
+                        localStorage.getItem(streakKey) !== 'true'
+                      ) {
+                        localStorage.setItem(streakKey, 'true');
+                        setIsStreakCelebrationOpen(true);
+                      }
                     }
                   }}
                   finishButtonLabel={isDiagnosticSession ? 'Ver Meu Diagnóstico' : 'Concluir Treino Diário'}
@@ -1024,6 +1113,33 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
         subtitle={`Você respondeu a todas as ${totalQuestions} questões, calibrou sua nota TRI e desbloqueou seu radar de proficiência!`}
         xpAwarded={totalXp}
       />
+
+      {/* Duolingo-style Streak Celebration Modal */}
+      <StreakCelebrationModal
+        isOpen={isStreakCelebrationOpen}
+        onClose={() => setIsStreakCelebrationOpen(false)}
+        streakDays={gamificationQuery.data?.currentStreakDays ?? 1}
+        dailyGoalTarget={gamificationQuery.data?.dailyGoalTarget ?? 5}
+        dailyGoalProgress={gamificationQuery.data?.dailyGoalProgress ?? 5}
+        awardedXp={totalXp > 0 ? totalXp : 50}
+        onContinuePractice={handleStartDailyPractice}
+        onOpenGamification={onOpenGamification}
+      />
+
+      {/* Level Up Celebration Modal */}
+      {levelUpData && (
+        <LevelUpModal
+          isOpen={isLevelUpModalOpen}
+          onClose={() => setIsLevelUpModalOpen(false)}
+          newLevel={levelUpData.newLevel}
+          previousLevel={levelUpData.previousLevel}
+          levelTitle={levelUpData.levelTitle}
+          weeklyLeague={levelUpData.weeklyLeague}
+          awardedXp={50}
+          onContinuePractice={handleStartDailyPractice}
+          onOpenGamification={onOpenGamification}
+        />
+      )}
 
       {/* INEP Exam Time Accommodation Settings Modal */}
       <TimeAccommodationModal

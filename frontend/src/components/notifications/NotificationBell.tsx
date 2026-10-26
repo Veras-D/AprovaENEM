@@ -149,6 +149,29 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
     }
   }, [hasCompletedDiagnostic, user?.id, feedQuery.data?.notifications, createInAppMutation]);
 
+  // Seed level achievement in backend PostgreSQL database if student reached level > 1
+  useEffect(() => {
+    if (profile?.level && profile.level > 1 && user?.id && feedQuery.data?.notifications) {
+      const template = `ACHIEVEMENT_LEVEL_${profile.level}`;
+      const alreadyLogged = feedQuery.data.notifications.some(
+        (n) => n.templateCode === template
+      );
+      if (!alreadyLogged && !createInAppMutation.isPending) {
+        createInAppMutation.mutate({
+          templateCode: template,
+          title: `Nível ${profile.level} Alcançado! 🌟`,
+          body: `Parabéns! Você alcançou o Nível ${profile.level} (${profile.levelTitle || 'Estudante Dedicado'}) e acumulou prestígio na sua liga semanal!`,
+          metadata: JSON.stringify({
+            category: 'ACHIEVEMENT',
+            iconName: 'Trophy',
+            targetSection: 'leaderboard',
+            actionLabel: 'Ver Conquistas',
+          }),
+        });
+      }
+    }
+  }, [profile?.level, profile?.levelTitle, user?.id, feedQuery.data?.notifications, createInAppMutation]);
+
   // Build the live notifications list reflecting the authenticated student's state & PostgreSQL records
   const notifications: StudentNotification[] = useMemo(() => {
     // If backend database returned notification feed items, render them
@@ -245,6 +268,20 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
         actionLabel: 'Ver Conquistas',
         targetSection: 'leaderboard',
         isRead: readIds.has('achieve-marathoner-bronze'),
+      });
+    }
+
+    if (profile?.level && profile.level > 1) {
+      list.push({
+        id: `achieve-level-${profile.level}`,
+        category: 'ACHIEVEMENT',
+        title: `Nível ${profile.level} Alcançado! 🌟`,
+        message: `Parabéns! Você alcançou o Nível ${profile.level} (${profile.levelTitle || 'Estudante Dedicado'}) e acumulou prestígio na sua liga semanal!`,
+        iconName: 'Trophy',
+        timestamp: 'Hoje',
+        actionLabel: 'Ver Conquistas',
+        targetSection: 'leaderboard',
+        isRead: readIds.has(`achieve-level-${profile.level}`),
       });
     }
 

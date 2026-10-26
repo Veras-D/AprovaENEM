@@ -195,4 +195,22 @@ describe('NotificationBell Component', () => {
     // Notification is rendered but already read (no red dot indicator)
     expect(screen.getByText(/Meta Diária de Estudos/i)).toBeInTheDocument();
   });
+
+  it('displays level achievement notification when profile level is greater than 1', () => {
+    queryClient.setQueryData(queryKeys.gamification.profile, {
+      userId: 'user-1',
+      level: 3,
+      levelTitle: 'Calouro Dedicado',
+      dailyGoalProgress: 2,
+      dailyGoalTarget: 5,
+    });
+
+    renderWithProviders(<NotificationBell />);
+
+    const bellBtn = screen.getByRole('button', { name: /Notificações:/i });
+    fireEvent.click(bellBtn);
+
+    expect(screen.getByText(/Nível 3 Alcançado! 🌟/i)).toBeInTheDocument();
+    expect(screen.getByText(/Você alcançou o Nível 3 \(Calouro Dedicado\)/i)).toBeInTheDocument();
+  });
 });
