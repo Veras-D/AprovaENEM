@@ -18,7 +18,8 @@ public interface AuthUseCase {
 
     User updateProfile(UUID userId, String fullName, SchoolType schoolType, String targetDegree, String currentPassword, String newPassword);
 
-    User updateProfile(UUID userId, String fullName, SchoolType schoolType, String targetDegree, String currentPassword, String newPassword, String avatarConfig);
+    User updateProfile(UUID userId, String fullName, SchoolType schoolType, String targetDegree,
+                       String currentPassword, String newPassword, String avatarConfig);
 
     UserDataExport exportUserData(UUID userId);
 
