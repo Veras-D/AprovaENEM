@@ -296,8 +296,6 @@ class GamificationServiceTest {
         UUID currentUserId = UUID.randomUUID();
         UUID otherUserId = UUID.randomUUID();
 
-        when(gamificationRepository.findWeeklyLeaderboard(eq(currentUserId), anyInt(), anyInt()))
-                .thenReturn(Optional.empty());
         when(redisLeaderboardPort.getTotalParticipants(anyInt(), anyInt(), eq(LeagueTier.BRONZE)))
                 .thenReturn(10L);
 
@@ -396,13 +394,19 @@ class GamificationServiceTest {
     }
 
     @Test
-    @DisplayName("Should perform Sunday weekly league reset and clear Redis leaderboard cache")
+    @DisplayName("Should perform Sunday weekly league reset and promote top 20% to Silver")
     void shouldPerformWeeklyLeagueReset() {
         UUID u1 = UUID.randomUUID();
         UUID u2 = UUID.randomUUID();
 
-        WeeklyLeaderboard wb1 = WeeklyLeaderboard.builder().userId(u1).weeklyXp(100).build();
-        WeeklyLeaderboard wb2 = WeeklyLeaderboard.builder().userId(u2).weeklyXp(50).build();
+        WeeklyLeaderboard wb1 = WeeklyLeaderboard.builder().userId(u1).leagueTier(LeagueTier.BRONZE).weeklyXp(100).build();
+        WeeklyLeaderboard wb2 = WeeklyLeaderboard.builder().userId(u2).leagueTier(LeagueTier.BRONZE).weeklyXp(50).build();
+
+        UserGamificationProfile p1 = UserGamificationProfile.builder().userId(u1).currentLeague(LeagueTier.BRONZE).build();
+        UserGamificationProfile p2 = UserGamificationProfile.builder().userId(u2).currentLeague(LeagueTier.BRONZE).build();
+
+        when(gamificationRepository.findProfileByUserId(u1)).thenReturn(Optional.of(p1));
+        when(gamificationRepository.findProfileByUserId(u2)).thenReturn(Optional.of(p2));
 
         when(gamificationRepository.findTopByLeague(anyInt(), anyInt(), anyString()))
                 .thenAnswer(inv -> {
@@ -417,8 +421,11 @@ class GamificationServiceTest {
 
         assertThat(wb1.getRankPosition()).isEqualTo(1);
         assertThat(wb2.getRankPosition()).isEqualTo(2);
+        assertThat(p1.getCurrentLeague()).isEqualTo(LeagueTier.SILVER);
+        assertThat(p2.getCurrentLeague()).isEqualTo(LeagueTier.BRONZE);
         verify(gamificationRepository).saveWeeklyLeaderboard(wb1);
         verify(gamificationRepository).saveWeeklyLeaderboard(wb2);
+        verify(gamificationRepository).saveProfile(p1);
         verify(redisLeaderboardPort).clearWeeklyLeaderboard(anyInt(), anyInt(), eq(LeagueTier.BRONZE));
     }
 

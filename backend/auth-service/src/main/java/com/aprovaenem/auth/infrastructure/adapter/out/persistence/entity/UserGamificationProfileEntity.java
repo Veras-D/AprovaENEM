@@ -35,6 +35,10 @@ public class UserGamificationProfileEntity {
     @Builder.Default
     private int currentXp = 0;
 
+    @Column(name = "current_league", nullable = false)
+    @Builder.Default
+    private String currentLeague = "BRONZE";
+
     @Column(name = "streak_days", nullable = false)
     @Builder.Default
     private int streakDays = 0;

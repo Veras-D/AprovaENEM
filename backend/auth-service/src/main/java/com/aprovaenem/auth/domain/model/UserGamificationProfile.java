@@ -21,6 +21,8 @@ public class UserGamificationProfile {
     @Builder.Default
     private int currentXp = 0;
     @Builder.Default
+    private LeagueTier currentLeague = LeagueTier.BRONZE;
+    @Builder.Default
     private int streakDays = 0;
     @Builder.Default
     private int streakFreezeAvailable = 1;

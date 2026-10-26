@@ -73,6 +73,7 @@ public class GamificationRepositoryAdapter implements GamificationRepositoryPort
                 .userId(profile.getUserId())
                 .currentLevel(profile.getCurrentLevel())
                 .currentXp(profile.getCurrentXp())
+                .currentLeague(profile.getCurrentLeague() != null ? profile.getCurrentLeague().name() : "BRONZE")
                 .streakDays(profile.getStreakDays())
                 .streakFreezeAvailable(profile.getStreakFreezeAvailable())
                 .lastActivityDate(profile.getLastActivityDate())
@@ -161,11 +162,27 @@ public class GamificationRepositoryAdapter implements GamificationRepositoryPort
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<WeeklyLeaderboard> findUnfinalizedWeeklyLeaderboards() {
+        return leaderboardRepository.findByRankPositionIsNull().stream()
+                .map(this::toLeaderboardDomain)
+                .collect(Collectors.toList());
+    }
+
     private UserGamificationProfile toProfileDomain(UserGamificationProfileEntity entity) {
+        LeagueTier league = LeagueTier.BRONZE;
+        if (entity.getCurrentLeague() != null) {
+            try {
+                league = LeagueTier.valueOf(entity.getCurrentLeague());
+            } catch (IllegalArgumentException e) {
+                league = LeagueTier.BRONZE;
+            }
+        }
         return UserGamificationProfile.builder()
                 .userId(entity.getUserId())
                 .currentLevel(entity.getCurrentLevel())
                 .currentXp(entity.getCurrentXp())
+                .currentLeague(league)
                 .streakDays(entity.getStreakDays())
                 .streakFreezeAvailable(entity.getStreakFreezeAvailable())
                 .lastActivityDate(entity.getLastActivityDate())

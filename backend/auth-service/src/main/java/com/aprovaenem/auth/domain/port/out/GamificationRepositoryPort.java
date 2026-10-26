@@ -20,6 +20,8 @@ public interface GamificationRepositoryPort {
 
     List<WeeklyLeaderboard> findTopByLeague(int weekNumber, int year, String leagueTier);
 
+    List<WeeklyLeaderboard> findUnfinalizedWeeklyLeaderboards();
+
     List<AchievementBadge> findBadgesByUserId(UUID userId);
 
     void unlockBadge(UUID userId, String badgeCode);

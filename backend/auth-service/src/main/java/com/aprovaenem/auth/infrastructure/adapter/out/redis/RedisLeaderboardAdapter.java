@@ -66,4 +66,10 @@ public class RedisLeaderboardAdapter implements LeaderboardRedisPort {
         String key = buildKey(year, weekNumber, tier);
         redisTemplate.delete(key);
     }
+
+    @Override
+    public void removeUserFromWeeklyLeaderboard(int year, int weekNumber, LeagueTier tier, UUID userId) {
+        String key = buildKey(year, weekNumber, tier);
+        redisTemplate.opsForZSet().remove(key, userId.toString());
+    }
 }

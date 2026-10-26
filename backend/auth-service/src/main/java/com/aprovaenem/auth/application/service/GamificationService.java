@@ -16,6 +16,8 @@ import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.WeeklyLeaderboardRe
 import com.aprovaenem.common.events.DailyGoalReminderEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -29,8 +31,10 @@ import java.time.temporal.IsoFields;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
 
 @Slf4j
@@ -53,15 +57,17 @@ public class GamificationService implements GamificationUseCase {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public GamificationProfileResponse getProfileResponse(UUID userId) {
+        processPendingWeeklyResets();
         UserGamificationProfile profile = getProfile(userId);
         LocalDate today = LocalDate.now(BRT_ZONE);
         int weekNumber = today.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
         int year = today.get(IsoFields.WEEK_BASED_YEAR);
 
         Optional<WeeklyLeaderboard> userBoard = gamificationRepository.findWeeklyLeaderboard(userId, weekNumber, year);
-        String currentLeague = userBoard.map(wb -> wb.getLeagueTier().name()).orElse("BRONZE");
+        String currentLeague = userBoard.map(wb -> wb.getLeagueTier().name())
+                .orElseGet(() -> profile.getCurrentLeague() != null ? profile.getCurrentLeague().name() : "BRONZE");
         int weeklyXp = userBoard.map(WeeklyLeaderboard::getWeeklyXp).orElse(0);
 
         List<AchievementBadge> badges = gamificationRepository.findBadgesByUserId(userId);
@@ -206,18 +212,22 @@ public class GamificationService implements GamificationUseCase {
     }
 
     private void updateWeeklyLeaderboard(UUID userId, LocalDate today, int xpToAdd, int questionsSolved) {
+        processPendingWeeklyResets();
         int weekNumber = today.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
         int year = today.get(IsoFields.WEEK_BASED_YEAR);
 
         WeeklyLeaderboard leaderboard = gamificationRepository.findWeeklyLeaderboard(userId, weekNumber, year)
-                .orElseGet(() -> WeeklyLeaderboard.builder()
-                        .userId(userId)
-                        .weekNumber(weekNumber)
-                        .year(year)
-                        .leagueTier(LeagueTier.BRONZE)
-                        .weeklyXp(0)
-                        .questionsSolved(0)
-                        .build());
+                .orElseGet(() -> {
+                    LeagueTier initialTier = getProfile(userId).getCurrentLeague();
+                    return WeeklyLeaderboard.builder()
+                            .userId(userId)
+                            .weekNumber(weekNumber)
+                            .year(year)
+                            .leagueTier(initialTier != null ? initialTier : LeagueTier.BRONZE)
+                            .weeklyXp(0)
+                            .questionsSolved(0)
+                            .build();
+                });
 
         leaderboard.setWeeklyXp(leaderboard.getWeeklyXp() + xpToAdd);
         leaderboard.setQuestionsSolved(leaderboard.getQuestionsSolved() + questionsSolved);
@@ -227,16 +237,26 @@ public class GamificationService implements GamificationUseCase {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public WeeklyLeaderboardResponse getWeeklyLeaderboard(UUID currentUserId, LeagueTier leagueTier, int page, int size) {
+        processPendingWeeklyResets();
         LocalDate today = LocalDate.now(BRT_ZONE);
         int weekNumber = today.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
         int year = today.get(IsoFields.WEEK_BASED_YEAR);
 
-        LeagueTier targetTier = leagueTier != null ? leagueTier : LeagueTier.BRONZE;
-        Optional<WeeklyLeaderboard> userBoard = gamificationRepository.findWeeklyLeaderboard(currentUserId, weekNumber, year);
-        if (leagueTier == null && userBoard.isPresent()) {
-            targetTier = userBoard.get().getLeagueTier();
+        LeagueTier targetTier = leagueTier;
+        if (targetTier == null) {
+            Optional<WeeklyLeaderboard> userBoard = currentUserId != null
+                    ? gamificationRepository.findWeeklyLeaderboard(currentUserId, weekNumber, year)
+                    : Optional.empty();
+            if (userBoard.isPresent()) {
+                targetTier = userBoard.get().getLeagueTier();
+            } else if (currentUserId != null) {
+                targetTier = getProfile(currentUserId).getCurrentLeague();
+            }
+            if (targetTier == null) {
+                targetTier = LeagueTier.BRONZE;
+            }
         }
 
         // Calculate next Sunday 23:59:59 BRT
@@ -368,6 +388,15 @@ public class GamificationService implements GamificationUseCase {
         return count;
     }
 
+    @EventListener(ApplicationReadyEvent.class)
+    public void onApplicationReady() {
+        try {
+            processPendingWeeklyResets();
+        } catch (Exception e) {
+            log.warn("Failed to process pending weekly resets on application startup: {}", e.getMessage());
+        }
+    }
+
     @Override
     @Scheduled(cron = "59 59 23 * * SUN", zone = "America/Sao_Paulo")
     @Transactional
@@ -377,6 +406,47 @@ public class GamificationService implements GamificationUseCase {
         int year = today.get(IsoFields.WEEK_BASED_YEAR);
 
         log.info("Executing Sunday 23:59:59 BRT Weekly League Reset for Week [{}] Year [{}]", weekNumber, year);
+        processWeeklyResetForWeek(weekNumber, year);
+        log.info("Weekly League Reset completed successfully");
+    }
+
+    @Override
+    @Transactional
+    public void processPendingWeeklyResets() {
+        LocalDate today = LocalDate.now(BRT_ZONE);
+        int currentWeekNumber = today.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
+        int currentYear = today.get(IsoFields.WEEK_BASED_YEAR);
+
+        List<WeeklyLeaderboard> unfinalized = gamificationRepository.findUnfinalizedWeeklyLeaderboards();
+        if (unfinalized.isEmpty()) {
+            return;
+        }
+
+        Map<String, WeeklyLeaderboard> pastWeeks = new TreeMap<>();
+        for (WeeklyLeaderboard board : unfinalized) {
+            boolean isPast = board.getYear() < currentYear
+                    || (board.getYear() == currentYear && board.getWeekNumber() < currentWeekNumber);
+            if (isPast) {
+                String key = String.format("%04d-%02d", board.getYear(), board.getWeekNumber());
+                pastWeeks.putIfAbsent(key, board);
+            }
+        }
+
+        for (WeeklyLeaderboard entry : pastWeeks.values()) {
+            log.info("Catching up unfinalized weekly league reset for Week [{}] Year [{}]",
+                    entry.getWeekNumber(), entry.getYear());
+            processWeeklyResetForWeek(entry.getWeekNumber(), entry.getYear());
+        }
+    }
+
+    private void processWeeklyResetForWeek(int weekNumber, int year) {
+        LocalDate mondayOfWeek = LocalDate.of(year, 1, 1)
+                .with(IsoFields.WEEK_BASED_YEAR, year)
+                .with(IsoFields.WEEK_OF_WEEK_BASED_YEAR, weekNumber)
+                .with(DayOfWeek.MONDAY);
+        LocalDate nextWeekMonday = mondayOfWeek.plusWeeks(1);
+        int nextWeekNumber = nextWeekMonday.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
+        int nextYear = nextWeekMonday.get(IsoFields.WEEK_BASED_YEAR);
 
         for (LeagueTier tier : LeagueTier.values()) {
             List<WeeklyLeaderboard> boards = gamificationRepository.findTopByLeague(weekNumber, year, tier.name());
@@ -386,17 +456,52 @@ public class GamificationService implements GamificationUseCase {
 
             int total = boards.size();
             int promoteCount = (int) Math.ceil(total * 0.20);
-            int relegateCount = (int) Math.ceil(total * 0.10);
+            int relegateCount = total >= 5 ? (int) Math.ceil(total * 0.10) : 0;
+            int demoteStartIndex = total - relegateCount;
             log.info("Tier [{}]: total={}, promoteCount={}, relegateCount={}", tier, total, promoteCount, relegateCount);
 
             for (int i = 0; i < total; i++) {
                 WeeklyLeaderboard board = boards.get(i);
-                board.setRankPosition(i + 1);
+                int rank = i + 1;
+                board.setRankPosition(rank);
                 gamificationRepository.saveWeeklyLeaderboard(board);
+
+                LeagueTier newTier = tier;
+                if (i < promoteCount && tier != LeagueTier.DIAMOND) {
+                    newTier = tier.getNextTier();
+                    log.info("Promoting user [{}] from [{}] to [{}] (Rank {}/{})",
+                            board.getUserId(), tier, newTier, rank, total);
+                } else if (i >= demoteStartIndex && relegateCount > 0 && tier != LeagueTier.BRONZE) {
+                    newTier = tier.getPreviousTier();
+                    log.info("Demoting user [{}] from [{}] to [{}] (Rank {}/{})",
+                            board.getUserId(), tier, newTier, rank, total);
+                }
+
+                Optional<UserGamificationProfile> profileOpt = gamificationRepository.findProfileByUserId(board.getUserId());
+                if (profileOpt.isPresent()) {
+                    UserGamificationProfile profile = profileOpt.get();
+                    profile.setCurrentLeague(newTier);
+                    gamificationRepository.saveProfile(profile);
+                }
+
+                Optional<WeeklyLeaderboard> nextBoardOpt = gamificationRepository.findWeeklyLeaderboard(
+                        board.getUserId(), nextWeekNumber, nextYear);
+                if (nextBoardOpt.isPresent()) {
+                    WeeklyLeaderboard nextBoard = nextBoardOpt.get();
+                    if (nextBoard.getLeagueTier() != newTier) {
+                        LeagueTier oldTier = nextBoard.getLeagueTier();
+                        nextBoard.setLeagueTier(newTier);
+                        gamificationRepository.saveWeeklyLeaderboard(nextBoard);
+
+                        redisLeaderboardPort.removeUserFromWeeklyLeaderboard(
+                                nextYear, nextWeekNumber, oldTier, board.getUserId());
+                        redisLeaderboardPort.incrementWeeklyXp(
+                                nextYear, nextWeekNumber, newTier, board.getUserId(), nextBoard.getWeeklyXp());
+                    }
+                }
             }
             redisLeaderboardPort.clearWeeklyLeaderboard(year, weekNumber, tier);
         }
-        log.info("Weekly League Reset completed successfully");
     }
 
     private UserGamificationProfile createInitialProfile(UUID userId) {
@@ -405,6 +510,7 @@ public class GamificationService implements GamificationUseCase {
                 .userId(userId)
                 .currentLevel(1)
                 .currentXp(0)
+                .currentLeague(LeagueTier.BRONZE)
                 .streakDays(0)
                 .streakFreezeAvailable(1)
                 .lastActivityDate(null)

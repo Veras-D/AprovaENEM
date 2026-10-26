@@ -13,5 +13,7 @@ public interface SpringDataWeeklyLeaderboardRepository extends JpaRepository<Wee
 
     Optional<WeeklyLeaderboardEntity> findByUserIdAndWeekNumberAndYear(UUID userId, int weekNumber, int year);
 
+    List<WeeklyLeaderboardEntity> findByRankPositionIsNull();
+
     List<WeeklyLeaderboardEntity> findByWeekNumberAndYearAndLeagueTierOrderByWeeklyXpDesc(int weekNumber, int year, String leagueTier);
 }

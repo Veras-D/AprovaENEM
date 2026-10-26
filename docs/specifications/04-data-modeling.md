@@ -509,6 +509,7 @@ CREATE TABLE user_gamification_profiles (
     user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     current_level INT NOT NULL DEFAULT 1,
     current_xp INT NOT NULL DEFAULT 0,
+    current_league VARCHAR(20) NOT NULL DEFAULT 'BRONZE', -- BRONZE, SILVER, GOLD, DIAMOND
     streak_days INT NOT NULL DEFAULT 0,
     streak_freeze_available INT NOT NULL DEFAULT 1, -- 1 emergency streak freeze per month
     last_activity_date DATE,

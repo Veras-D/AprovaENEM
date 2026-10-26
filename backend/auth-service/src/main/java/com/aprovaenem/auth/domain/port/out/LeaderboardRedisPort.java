@@ -19,4 +19,6 @@ public interface LeaderboardRedisPort {
     Set<ZSetOperations.TypedTuple<String>> getTopRanked(int year, int weekNumber, LeagueTier tier, long start, long end);
 
     void clearWeeklyLeaderboard(int year, int weekNumber, LeagueTier tier);
+
+    void removeUserFromWeeklyLeaderboard(int year, int weekNumber, LeagueTier tier, UUID userId);
 }

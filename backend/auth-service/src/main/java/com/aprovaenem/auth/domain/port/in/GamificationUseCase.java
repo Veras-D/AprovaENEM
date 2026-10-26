@@ -25,4 +25,6 @@ public interface GamificationUseCase {
     int triggerDailyStudyReminders();
 
     void performWeeklyLeagueReset();
+
+    void processPendingWeeklyResets();
 }
