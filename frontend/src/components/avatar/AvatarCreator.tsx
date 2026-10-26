@@ -93,11 +93,11 @@ const ACCESSORIES: { id: AvatarAccessory; label: string }[] = [
 ];
 
 const BACKGROUND_COLORS = [
-  { label: 'Céu Fazenda', hex: '#e0f2fe' },
-  { label: 'Menta Primavera', hex: '#d1fae5' },
-  { label: 'Trigo Dourado', hex: '#fef3c7' },
-  { label: 'Pêssego Poente', hex: '#ffe4e6' },
-  { label: 'Lavanda Suave', hex: '#ede9fe' },
+  { label: 'Céu Fazenda', hex: '#bae6fd' },
+  { label: 'Menta Primavera', hex: '#a7f3d0' },
+  { label: 'Trigo Dourado', hex: '#fde68a' },
+  { label: 'Pêssego Poente', hex: '#fbcfe8' },
+  { label: 'Lavanda Suave', hex: '#ddd6fe' },
   { label: 'Noite Estrelada', hex: '#1e293b' },
 ];
 

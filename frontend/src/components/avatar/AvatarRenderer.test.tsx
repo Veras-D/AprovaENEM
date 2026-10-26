@@ -54,6 +54,17 @@ describe('AvatarRenderer Component', () => {
       <AvatarRenderer
         config={{
           ...DEFAULT_AVATAR_CONFIG,
+          hairStyle: 'bun',
+          accessory: 'graduationCap',
+        }}
+      />
+    );
+    expect(screen.getByRole('img')).toBeInTheDocument();
+
+    rerender(
+      <AvatarRenderer
+        config={{
+          ...DEFAULT_AVATAR_CONFIG,
           hairStyle: 'bald',
           accessory: 'none',
           clothingStyle: 'academic',

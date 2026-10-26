@@ -55,6 +55,7 @@ export const AvatarRenderer: React.FC<AvatarRendererProps> = ({
   const clipId = useId();
   const shadowSkin = getDarkerShade(activeConfig.skinColor);
   const blushColor = getBlushColor(activeConfig.skinColor);
+  const bg = (activeConfig.backgroundColor || '').toLowerCase();
 
   return (
     <svg
@@ -73,6 +74,11 @@ export const AvatarRenderer: React.FC<AvatarRendererProps> = ({
         <clipPath id={`avatar-circle-${clipId}`}>
           <circle cx="50" cy="50" r="48" />
         </clipPath>
+        <radialGradient id={`avatar-halo-${clipId}`} cx="50%" cy="38%" r="48%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.25" />
+          <stop offset="60%" stopColor="#ffffff" stopOpacity="0.08" />
+          <stop offset="100%" stopColor="#000000" stopOpacity="0.14" />
+        </radialGradient>
       </defs>
 
       {/* Outer Border & Background Circle */}
@@ -86,6 +92,146 @@ export const AvatarRenderer: React.FC<AvatarRendererProps> = ({
       />
 
       <g clipPath={`url(#avatar-circle-${clipId})`}>
+        {/* Soft Ambient Backdrop Halo (Illuminates silhouette from behind, ensuring dark hair & clothes pop on dark backgrounds) */}
+        <circle cx="50" cy="50" r="49" fill={`url(#avatar-halo-${clipId})`} />
+
+        {/* ================= THEMED 16-BIT ATMOSPHERIC ENVIRONMENTS ================= */}
+        {/* 1. Céu Fazenda (Sunny Sky with Fluffy Pixel Clouds & Morning Sun) */}
+        {(bg === '#bae6fd' || bg === '#e0f2fe') && (
+          <g>
+            {/* Gentle Morning Sun & Rays */}
+            <circle cx="20" cy="18" r="6" fill="#fef08a" opacity="0.85" />
+            <circle cx="20" cy="18" r="3.5" fill="#ffffff" opacity="0.95" />
+            <rect x="19" y="8" width="2" height="3" fill="#fef08a" opacity="0.75" />
+            <rect x="9" y="17" width="3" height="2" fill="#fef08a" opacity="0.75" />
+            <rect x="28" y="17" width="3" height="2" fill="#fef08a" opacity="0.75" />
+
+            {/* Upper Right Fluffy Pixel Cloud */}
+            <rect x="74" y="16" width="14" height="6" rx="2" fill="#ffffff" opacity="0.9" />
+            <rect x="77" y="13" width="8" height="5" rx="2" fill="#ffffff" opacity="0.95" />
+            <rect x="73" y="20" width="16" height="2" fill="#e0f2fe" opacity="0.7" />
+
+            {/* Left Edge Small Floating Cloud */}
+            <rect x="10" y="34" width="10" height="4" rx="2" fill="#ffffff" opacity="0.75" />
+            <rect x="12" y="32" width="6" height="3" rx="1.5" fill="#ffffff" opacity="0.85" />
+          </g>
+        )}
+
+        {/* 2. Menta Primavera (Spring Breeze with Drifting Leaves & Blossom Petals) */}
+        {(bg === '#a7f3d0' || bg === '#d1fae5') && (
+          <g>
+            {/* Fluttering Emerald Leaf 1 */}
+            <rect x="18" y="20" width="4" height="3" rx="1.5" fill="#059669" />
+            <rect x="20" y="19" width="2" height="3" rx="1" fill="#10b981" />
+            <rect x="21" y="20" width="1" height="1" fill="#a7f3d0" />
+
+            {/* Drifting Leaf 2 */}
+            <rect x="77" y="16" width="4" height="3" rx="1.5" fill="#059669" />
+            <rect x="78" y="15" width="2" height="2" rx="1" fill="#10b981" />
+
+            {/* Pink Spring Flower Petal 1 */}
+            <rect x="82" y="30" width="4" height="3" rx="1.5" fill="#f472b6" opacity="0.9" />
+            <rect x="83" y="31" width="2" height="1" fill="#ffffff" />
+
+            {/* Pink Spring Flower Petal 2 */}
+            <rect x="14" y="38" width="3" height="3" rx="1" fill="#f472b6" opacity="0.85" />
+
+            {/* Floating Nature Pollen Motes */}
+            <rect x="26" y="14" width="1.5" height="1.5" fill="#ecfdf5" opacity="0.85" />
+            <rect x="73" y="26" width="1.5" height="1.5" fill="#ecfdf5" opacity="0.85" />
+            <rect x="85" y="42" width="1.5" height="1.5" fill="#34d399" opacity="0.6" />
+          </g>
+        )}
+
+        {/* 3. Trigo Dourado (Harvest Glow with Golden Fireflies & Pollen) */}
+        {(bg === '#fde68a' || bg === '#fef3c7') && (
+          <g>
+            {/* Golden 4-point Harvest Sparkle 1 */}
+            <rect x="78" y="16" width="3" height="3" fill="#f59e0b" opacity="0.9" />
+            <rect x="77" y="17" width="5" height="1" fill="#fbbf24" />
+            <rect x="79" y="15" width="1" height="5" fill="#fbbf24" />
+            <rect x="79" y="17" width="1" height="1" fill="#ffffff" />
+
+            {/* Sparkle 2 */}
+            <rect x="20" y="22" width="2" height="2" fill="#f59e0b" opacity="0.8" />
+            <rect x="19" y="22" width="4" height="1" fill="#fbbf24" />
+            <rect x="20" y="21" width="1" height="4" fill="#fbbf24" />
+            <rect x="20" y="22" width="1" height="1" fill="#ffffff" />
+
+            {/* Warm Floating Dust Motes */}
+            <rect x="16" y="15" width="2" height="2" fill="#d97706" opacity="0.65" />
+            <rect x="83" y="32" width="2" height="2" fill="#f59e0b" opacity="0.75" />
+            <rect x="12" y="38" width="2" height="1.5" fill="#fbbf24" opacity="0.8" />
+            <rect x="85" y="44" width="1.5" height="1.5" fill="#b45309" opacity="0.6" />
+          </g>
+        )}
+
+        {/* 4. Pêssego Poente (Sakura Twilight with Cherry Blossom Petals) */}
+        {(bg === '#fbcfe8' || bg === '#ffe4e6') && (
+          <g>
+            {/* Cherry Blossom Petal 1 */}
+            <rect x="18" y="18" width="4" height="3" rx="1.5" fill="#ec4899" opacity="0.85" />
+            <rect x="19" y="17" width="2" height="2" rx="1" fill="#f472b6" />
+            <rect x="20" y="18" width="1" height="1" fill="#ffffff" />
+
+            {/* Cherry Blossom Petal 2 */}
+            <rect x="77" y="14" width="3" height="4" rx="1.5" fill="#ec4899" opacity="0.85" />
+            <rect x="78" y="15" width="2" height="2" rx="1" fill="#f472b6" />
+
+            {/* Drifting Petal 3 */}
+            <rect x="82" y="32" width="4" height="3" rx="1.5" fill="#db2777" opacity="0.75" />
+            <rect x="83" y="33" width="2" height="1" fill="#f472b6" />
+
+            {/* Twilight Sparkles */}
+            <rect x="24" y="26" width="2" height="2" fill="#ffffff" opacity="0.8" />
+            <rect x="72" y="24" width="1.5" height="1.5" fill="#ffffff" opacity="0.9" />
+            <rect x="14" y="36" width="2" height="1" fill="#ffffff" opacity="0.7" />
+          </g>
+        )}
+
+        {/* 5. Lavanda Suave (Junimo Magic with Shimmering Fairy Stardust) */}
+        {(bg === '#ddd6fe' || bg === '#ede9fe') && (
+          <g>
+            {/* 4-point Diamond Magic Sparkle 1 */}
+            <rect x="78" y="15" width="3" height="3" fill="#a855f7" />
+            <rect x="77" y="16" width="5" height="1" fill="#c084fc" />
+            <rect x="79" y="14" width="1" height="5" fill="#c084fc" />
+            <rect x="79" y="16" width="1" height="1" fill="#ffffff" />
+
+            {/* Magic Sparkle 2 */}
+            <rect x="20" y="20" width="2" height="2" fill="#a855f7" />
+            <rect x="19" y="20" width="4" height="1" fill="#e9d5ff" />
+            <rect x="20" y="19" width="1" height="4" fill="#e9d5ff" />
+            <rect x="20" y="20" width="1" height="1" fill="#ffffff" />
+
+            {/* Fairy Stardust Specks */}
+            <rect x="16" y="13" width="2" height="2" fill="#ffffff" opacity="0.9" />
+            <rect x="84" y="26" width="2" height="2" fill="#e9d5ff" opacity="0.85" />
+            <rect x="25" y="32" width="1.5" height="1.5" fill="#ffffff" opacity="0.9" />
+            <rect x="82" y="40" width="2" height="1.5" fill="#ffffff" opacity="0.75" />
+          </g>
+        )}
+
+        {/* 6. Noite Estrelada (Constellation Night Sky with Twinkling Stars) */}
+        {(bg === '#1e293b' || bg === '#0f172a') && (
+          <g fill="#ffffff">
+            {/* 4-point Gold North Star */}
+            <rect x="77" y="15" width="3" height="3" fill="#fef08a" />
+            <rect x="76" y="16" width="5" height="1" fill="#fef08a" />
+            <rect x="78" y="14" width="1" height="5" fill="#fef08a" />
+            <rect x="78" y="16" width="1" height="1" fill="#ffffff" />
+
+            {/* Twinkling Constellation Stars */}
+            <rect x="18" y="20" width="2" height="2" opacity="0.85" />
+            <rect x="25" y="14" width="1.5" height="1.5" opacity="0.7" />
+            <rect x="83" y="26" width="2" height="2" opacity="0.8" />
+            <rect x="14" y="36" width="1.5" height="1.5" opacity="0.6" />
+            <rect x="84" y="42" width="2" height="1.5" opacity="0.75" fill="#fef08a" />
+          </g>
+        )}
+
+        {/* Character Silhouette with ambient drop shadow for clean contrast */}
+        <g style={{ filter: 'drop-shadow(0 2px 4px rgba(15, 23, 42, 0.22))' }}>
         {/* ================= BACK HAIR LAYER (Behind Head & Shoulders) ================= */}
         {activeConfig.hairStyle === 'wavy' && (
           <g fill={activeConfig.hairColor}>
@@ -105,20 +251,34 @@ export const AvatarRenderer: React.FC<AvatarRendererProps> = ({
           </g>
         )}
 
-        {activeConfig.hairStyle === 'bun' && (
+        {activeConfig.hairStyle === 'bun' && activeConfig.accessory !== 'graduationCap' && (
           <g fill={activeConfig.hairColor}>
-            {/* Topknot bun atop head */}
+            {/* Topknot bun atop head (tucked cleanly under graduation cap when worn) */}
             <rect x="40" y="10" width="20" height="14" rx="4" />
             <rect x="44" y="8" width="12" height="4" rx="2" fill="#f59e0b" />
           </g>
         )}
 
-        {activeConfig.hairStyle === 'spiky' && (
+        {activeConfig.hairStyle === 'spiky' && activeConfig.accessory !== 'graduationCap' && (
           <g fill={activeConfig.hairColor}>
-            {/* Crown spikes peeking upward */}
-            <polygon points="30,26 38,12 44,26" />
-            <polygon points="44,24 50,8 56,24" />
-            <polygon points="56,26 62,12 70,26" />
+            {/* Crown spikes peeking upward in authentic pixel art steps (tucked under cap when worn) */}
+            {/* Left Spike */}
+            <rect x="34" y="14" width="4" height="4" />
+            <rect x="32" y="18" width="8" height="4" />
+            <rect x="30" y="22" width="12" height="4" />
+            {/* Center Spike (Tallest) */}
+            <rect x="48" y="8" width="4" height="4" />
+            <rect x="46" y="12" width="8" height="4" />
+            <rect x="44" y="16" width="12" height="4" />
+            <rect x="42" y="20" width="16" height="4" />
+            {/* Right Spike */}
+            <rect x="62" y="14" width="4" height="4" />
+            <rect x="60" y="18" width="8" height="4" />
+            <rect x="58" y="22" width="12" height="4" />
+            {/* Specular Spike Tip Highlights for clean contrast on dark hair */}
+            <rect x="34" y="14" width="4" height="2" fill="#ffffff" opacity="0.18" />
+            <rect x="48" y="8" width="4" height="2" fill="#ffffff" opacity="0.22" />
+            <rect x="62" y="14" width="4" height="2" fill="#ffffff" opacity="0.18" />
           </g>
         )}
 
@@ -131,6 +291,10 @@ export const AvatarRenderer: React.FC<AvatarRendererProps> = ({
           points="14,100 18,72 34,68 66,68 82,72 86,100"
           fill={activeConfig.clothingColor}
         />
+        {/* Subtle Shoulder Rim Lighting (Separates dark clothes from dark backgrounds) */}
+        <rect x="34" y="68" width="32" height="2" fill="#ffffff" opacity="0.14" />
+        <rect x="18" y="72" width="16" height="2" fill="#ffffff" opacity="0.14" />
+        <rect x="66" y="72" width="16" height="2" fill="#ffffff" opacity="0.14" />
         {/* Shoulder highlights & contour */}
         <rect x="20" y="74" width="60" height="26" fill={activeConfig.clothingColor} />
 
@@ -245,9 +409,18 @@ export const AvatarRenderer: React.FC<AvatarRendererProps> = ({
             <rect x="58" y="41" width="5" height="5" rx="1" fill="#1e293b" />
             <rect x="59" y="42" width="2" height="2" fill="#ffffff" />
 
+            {/* Subtle Sky-Blue Reflective Lens Glint (Ensures glasses pop on all skin tones) */}
+            <rect x="33" y="38" width="12" height="10" rx="1" fill="#38bdf8" opacity="0.22" />
+            <rect x="55" y="38" width="12" height="10" rx="1" fill="#38bdf8" opacity="0.22" />
+            <rect x="34" y="38" width="3" height="2" fill="#ffffff" opacity="0.75" />
+            <rect x="56" y="38" width="3" height="2" fill="#ffffff" opacity="0.75" />
+
             {/* Retro Pixel Spectacle Frames */}
             <rect x="32" y="37" width="14" height="12" rx="2" fill="none" stroke="#0f172a" strokeWidth="2.2" />
             <rect x="54" y="37" width="14" height="12" rx="2" fill="none" stroke="#0f172a" strokeWidth="2.2" />
+            {/* Top Frame Specular Highlight (Pops on deep/ebony skin tones) */}
+            <rect x="33" y="37" width="12" height="1" fill="#64748b" opacity="0.85" />
+            <rect x="55" y="37" width="12" height="1" fill="#64748b" opacity="0.85" />
             {/* Bridge */}
             <rect x="46" y="41" width="8" height="2.2" fill="#0f172a" />
             {/* Temples connecting to ears */}
@@ -358,11 +531,14 @@ export const AvatarRenderer: React.FC<AvatarRendererProps> = ({
 
         {activeConfig.hairStyle === 'spiky' && (
           <g fill={activeConfig.hairColor}>
-            {/* Forehead Spike Points */}
+            {/* Forehead Spike Points in Pixel Art Steps */}
             <rect x="28" y="22" width="44" height="8" rx="2" />
-            <polygon points="32,28 38,36 44,28" />
-            <polygon points="46,28 52,34 58,28" />
-            <polygon points="56,28 62,36 68,28" />
+            <rect x="34" y="28" width="6" height="3" />
+            <rect x="35" y="31" width="4" height="3" />
+            <rect x="46" y="28" width="6" height="3" />
+            <rect x="47" y="31" width="4" height="3" />
+            <rect x="58" y="28" width="6" height="3" />
+            <rect x="59" y="31" width="4" height="3" />
           </g>
         )}
 
@@ -388,28 +564,109 @@ export const AvatarRenderer: React.FC<AvatarRendererProps> = ({
 
         {activeConfig.accessory === 'graduationCap' && (
           <g>
-            {/* Cap Skull Base Band (Resting firmly on forehead, NOT floating) */}
-            <rect x="32" y="20" width="36" height="8" rx="2" fill="#1e293b" stroke="#0f172a" strokeWidth="1" />
-            {/* Diamond Mortarboard Brim */}
-            <polygon points="50,8 82,18 50,26 18,18" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+            {/* Cap Skull Base / Forehead Band */}
+            <rect x="34" y="20" width="32" height="6" fill="#0f172a" />
+            <rect x="34" y="24" width="32" height="2" fill="#020617" />
+            <rect x="36" y="21" width="28" height="1" fill="#334155" opacity="0.6" />
+
+            {/* Mortarboard Diamond (Stardew Stepped Pixel Lozenge) */}
+            {/* Top row to widest point (y=10 to y=16) */}
+            <rect x="47" y="10" width="6" height="1" fill="#1e293b" />
+            <rect x="43" y="11" width="14" height="1" fill="#1e293b" />
+            <rect x="39" y="12" width="22" height="1" fill="#1e293b" />
+            <rect x="35" y="13" width="30" height="1" fill="#1e293b" />
+            <rect x="31" y="14" width="38" height="1" fill="#1e293b" />
+            <rect x="27" y="15" width="46" height="1" fill="#1e293b" />
+            {/* Midpoint / Widest Line (y=16) */}
+            <rect x="23" y="16" width="54" height="1" fill="#0f172a" />
+            {/* Bottom half stepping back to front point (y=17 to y=22) */}
+            <rect x="27" y="17" width="46" height="1" fill="#0f172a" />
+            <rect x="31" y="18" width="38" height="1" fill="#0f172a" />
+            <rect x="35" y="19" width="30" height="1" fill="#0f172a" />
+            <rect x="39" y="20" width="22" height="1" fill="#0f172a" />
+            <rect x="43" y="21" width="14" height="1" fill="#0f172a" />
+            <rect x="47" y="22" width="6" height="1" fill="#0f172a" />
+
+            {/* Mortarboard 3D Rim Thickness (Under-edge bevel) */}
+            <rect x="23" y="17" width="4" height="2" fill="#020617" />
+            <rect x="73" y="17" width="4" height="2" fill="#020617" />
+            <rect x="27" y="18" width="4" height="2" fill="#020617" />
+            <rect x="69" y="18" width="4" height="2" fill="#020617" />
+            <rect x="31" y="19" width="4" height="2" fill="#020617" />
+            <rect x="65" y="19" width="4" height="2" fill="#020617" />
+            <rect x="35" y="20" width="4" height="2" fill="#020617" />
+            <rect x="61" y="20" width="4" height="2" fill="#020617" />
+            <rect x="39" y="21" width="4" height="2" fill="#020617" />
+            <rect x="57" y="21" width="4" height="2" fill="#020617" />
+            <rect x="43" y="22" width="4" height="2" fill="#020617" />
+            <rect x="53" y="22" width="4" height="2" fill="#020617" />
+            <rect x="47" y="23" width="6" height="2" fill="#020617" />
+
             {/* Center Gold Button */}
-            <rect x="48" y="16" width="4" height="4" fill="#f59e0b" />
-            {/* Gold Hanging Tassel */}
-            <line x1="50" y1="18" x2="32" y2="28" stroke="#f59e0b" strokeWidth="2.5" />
-            <rect x="30" y="27" width="4" height="6" rx="1" fill="#f59e0b" />
+            <rect x="48" y="15" width="4" height="3" fill="#f59e0b" />
+            <rect x="49" y="15" width="2" height="1" fill="#fde68a" />
+
+            {/* Gold Pixel-Stepped Tassel Cord (Draping across cap to left corner) */}
+            <rect x="44" y="15" width="4" height="2" fill="#f59e0b" />
+            <rect x="40" y="16" width="4" height="2" fill="#f59e0b" />
+            <rect x="35" y="16" width="5" height="2" fill="#fbbf24" />
+            <rect x="30" y="17" width="5" height="2" fill="#f59e0b" />
+            <rect x="25" y="17" width="5" height="2" fill="#d97706" />
+            <rect x="23" y="18" width="3" height="3" fill="#d97706" />
+
+            {/* Gold Tassel Ring / Knot */}
+            <rect x="22" y="21" width="4" height="2" fill="#f59e0b" />
+            <rect x="23" y="21" width="2" height="1" fill="#fde68a" />
+
+            {/* Gold Tassel Fringe / Brush (Hanging cleanly on left side) */}
+            <rect x="21" y="23" width="6" height="6" fill="#fbbf24" />
+            <rect x="22" y="24" width="4" height="4" fill="#f59e0b" />
+            <rect x="21" y="29" width="6" height="2" fill="#d97706" />
+            <rect x="22" y="31" width="4" height="1" fill="#b45309" />
           </g>
         )}
 
         {activeConfig.accessory === 'pencil' && (
           <g>
-            {/* Yellow ENEM Study Pencil Angled Behind Right Ear */}
-            <polygon points="76,46 72,42 82,24 86,26" fill="#f59e0b" stroke="#d97706" strokeWidth="0.8" />
-            {/* Pink Eraser Tip */}
-            <polygon points="82,24 86,26 88,23 84,21" fill="#f43f5e" />
-            {/* Dark Graphite Tip */}
-            <polygon points="74,48 76,46 72,42" fill="#1e293b" />
+            {/* 1. Graphite Lead Point (Crisp lead tip pointing UPWARDS above ear into hair) */}
+            <rect x="73" y="29" width="2" height="2" fill="#0f172a" />
+
+            {/* 2. Sharpened Natural Cedar Wood Collar */}
+            <rect x="72" y="31" width="3" height="2" fill="#fde68a" />
+            <rect x="74" y="31" width="1" height="2" fill="#d97706" />
+            <rect x="72" y="33" width="3" height="2" fill="#fde68a" />
+            <rect x="74" y="33" width="1" height="2" fill="#d97706" />
+
+            {/* 3. Upper Yellow Pencil Shaft (Rising naturally and compactly above ear) */}
+            <rect x="72" y="35" width="3" height="3" fill="#f59e0b" />
+            <rect x="72" y="35" width="1" height="3" fill="#fef08a" />
+            <rect x="74" y="35" width="1" height="3" fill="#b45309" />
+
+            <rect x="71" y="38" width="3" height="4" fill="#f59e0b" />
+            <rect x="71" y="38" width="1" height="4" fill="#fef08a" />
+            <rect x="73" y="38" width="1" height="4" fill="#b45309" />
+
+            {/* 4. Lower Pencil Shaft (Passing behind the ear) */}
+            <rect x="71" y="42" width="3" height="7" fill="#f59e0b" />
+            <rect x="71" y="42" width="1" height="7" fill="#fef08a" />
+            <rect x="73" y="42" width="1" height="7" fill="#b45309" />
+
+            {/* 5. Silver Metal Ferrule Band (Tucked behind ear) */}
+            <rect x="71" y="49" width="3" height="2" fill="#94a3b8" />
+            <rect x="71" y="49" width="1" height="2" fill="#e2e8f0" />
+            <rect x="73" y="49" width="1" height="2" fill="#475569" />
+
+            {/* 6. Pink Rubber Eraser (Tucked behind ear) */}
+            <rect x="71" y="51" width="3" height="2" fill="#f43f5e" />
+            <rect x="71" y="51" width="1" height="1" fill="#fda4af" />
+            <rect x="71" y="52" width="3" height="1" fill="#9f1239" />
+
+            {/* 7. Right Ear Front Cartilage Overlap (Ensures pencil sits physically BEHIND the ear) */}
+            <rect x="71" y="42" width="6" height="12" rx="2" fill={activeConfig.skinColor} />
+            <rect x="72" y="44" width="3" height="8" rx="1" fill={shadowSkin} opacity="0.6" />
           </g>
         )}
+        </g>
       </g>
     </svg>
   );

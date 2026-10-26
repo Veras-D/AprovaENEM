@@ -197,7 +197,7 @@ Always maintain [`CHANGELOG.md`](CHANGELOG.md) following [Keep a Changelog v1.0.
 Follow [Conventional Commits v1.0.0](https://www.conventionalcommits.org/):
 
 ```text
-<type>(<scope>): <imperative summary> (<TASK-ID>)
+<type>(<scope>): <imperative summary>
 ```
 
 - **Types**: `feat`, `fix`, `test`, `refactor`, `docs`, `perf`, `chore`, `style`.
@@ -206,8 +206,8 @@ Follow [Conventional Commits v1.0.0](https://www.conventionalcommits.org/):
   - Frontend: `frontend`, `ui`, `components`, `store`, `a11y`.
   - Backend: `auth`, `exam`, `notification`, `gateway`, `db`.
 - **Examples**:
-  - `test(application): implement comprehensive Mockito unit test suites for all microservices (TASK-S3-02)`
-  - `feat(frontend): implement accessible question card with KaTeX and VLibras (TASK-S5-01)`
+  - `test(application): implement comprehensive Mockito unit test suites for all microservices`
+  - `feat(frontend): implement accessible question card with KaTeX and VLibras`
   - `docs(agents): expand AGENTS.md to cover full-stack monorepo guidelines`
 
 ---
