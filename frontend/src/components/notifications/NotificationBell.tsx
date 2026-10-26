@@ -34,6 +34,7 @@ export interface StudentNotification {
   readonly actionLabel?: string;
   readonly targetSection?: 'practice' | 'leaderboard' | 'diagnostics';
   readonly isRead: boolean;
+  readonly createdAt: number;
 }
 
 export interface NotificationBellProps {
@@ -174,9 +175,42 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
 
   // Build the live notifications list reflecting the authenticated student's state & PostgreSQL records
   const notifications: StudentNotification[] = useMemo(() => {
+    const now = Date.now();
+    const MINUTE_MS = 60 * 1000;
+    const HOUR_MS = 60 * MINUTE_MS;
+    const DAY_MS = 24 * HOUR_MS;
+
+    const formatSentAt = (sentAt?: string): string => {
+      if (!sentAt) return 'Semanal';
+      const date = new Date(sentAt);
+      if (isNaN(date.getTime())) return 'Hoje';
+      const diffMs = now - date.getTime();
+      const diffHours = diffMs / HOUR_MS;
+      if (diffHours < 24) return 'Hoje';
+      if (diffHours < 48) return 'Ontem';
+      if (diffHours < 24 * 7) return 'Esta semana';
+      return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    };
+
+    const sortFeed = (items: StudentNotification[]): StudentNotification[] => {
+      return [...items].sort((a, b) => {
+        // 1. Unread notifications always appear first at the top of the feed
+        if (!a.isRead && b.isRead) return -1;
+        if (a.isRead && !b.isRead) return 1;
+
+        // 2. Newer notifications (higher createdAt timestamp) appear before older ones
+        if (b.createdAt !== a.createdAt) {
+          return b.createdAt - a.createdAt;
+        }
+
+        // 3. Deterministic tie-breaker
+        return a.id.localeCompare(b.id);
+      });
+    };
+
     // If backend database returned notification feed items, render them
     if (feedQuery.data?.notifications && feedQuery.data.notifications.length > 0) {
-      return feedQuery.data.notifications.map((n) => {
+      const backendItems = feedQuery.data.notifications.map((n) => {
         let category: 'ACHIEVEMENT' | 'REMINDER' | 'UPDATE' = 'UPDATE';
         let iconName: 'Trophy' | 'Flame' | 'Target' | 'Clock' | 'Activity' | 'Sparkles' | 'ShieldAlert' = 'Clock';
         let targetSection: 'practice' | 'leaderboard' | 'diagnostics' | undefined = undefined;
@@ -208,69 +242,29 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
           }
         }
 
+        const createdAt = n.sentAt ? new Date(n.sentAt).getTime() : now;
+
         return {
           id: n.id,
           category,
           title: n.title,
           message: n.body,
           iconName,
-          timestamp: n.sentAt ? 'Hoje' : 'Semanal',
+          timestamp: formatSentAt(n.sentAt),
           actionLabel,
           targetSection,
           isRead: n.status === 'READ' || readIds.has(n.id) || readIds.has(n.templateCode),
+          createdAt: isNaN(createdAt) ? now : createdAt,
         };
       });
+
+      return sortFeed(backendItems);
     }
 
     // Client-side fallback before database query resolves or in offline sandbox
     const list: StudentNotification[] = [];
 
-    // 1. Achievements (Conquistas)
-    if (hasCompletedDiagnostic) {
-      list.push({
-        id: 'achieve-diagnostic-complete',
-        category: 'ACHIEVEMENT',
-        title: 'Conquista: Raio-X Diagnóstico 🎯',
-        message: 'Você concluiu sua avaliação diagnóstica TRI! Seu mapa de proficiências e radar pedagógico estão calibrados.',
-        iconName: 'Activity',
-        timestamp: 'Hoje',
-        actionLabel: 'Ver Diagnóstico',
-        targetSection: 'diagnostics',
-        isRead: readIds.has('achieve-diagnostic-complete'),
-      });
-    }
-
-    const dailyProgress = profile?.dailyGoalProgress ?? 0;
-    const hasAnsweredAny = dailyProgress > 0 || (profile?.currentStreakDays ?? 0) > 0 || hasCompletedDiagnostic;
-
-    if (hasAnsweredAny) {
-      list.push({
-        id: 'achieve-first-question',
-        category: 'ACHIEVEMENT',
-        title: 'Conquista: Primeiro Passo 🏅',
-        message: 'Você deu o pontapé inicial rumo à aprovação no ENEM respondendo às suas primeiras questões!',
-        iconName: 'Trophy',
-        timestamp: 'Hoje',
-        actionLabel: 'Ver Conquistas',
-        targetSection: 'leaderboard',
-        isRead: readIds.has('achieve-first-question'),
-      });
-    }
-
-    if (dailyProgress >= 10 || (profile?.unlockedBadges ?? []).includes('MARATONISTA_QUESTOES')) {
-      list.push({
-        id: 'achieve-marathoner-bronze',
-        category: 'ACHIEVEMENT',
-        title: 'Conquista: Maratonista do ENEM 🏆',
-        message: 'Parabéns! Você alcançou a marca de 10 questões resolvidas na plataforma com dedicação.',
-        iconName: 'Trophy',
-        timestamp: 'Esta semana',
-        actionLabel: 'Ver Conquistas',
-        targetSection: 'leaderboard',
-        isRead: readIds.has('achieve-marathoner-bronze'),
-      });
-    }
-
+    // Level achievement: recently unlocked milestone
     if (profile?.level && profile.level > 1) {
       list.push({
         id: `achieve-level-${profile.level}`,
@@ -282,10 +276,12 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
         actionLabel: 'Ver Conquistas',
         targetSection: 'leaderboard',
         isRead: readIds.has(`achieve-level-${profile.level}`),
+        createdAt: now,
       });
     }
 
     // 2. Study Reminders (Lembretes) - STABLE IDs
+    const dailyProgress = profile?.dailyGoalProgress ?? 0;
     const goalTarget = profile?.dailyGoalTarget ?? 5;
     if (dailyProgress < goalTarget) {
       const remaining = goalTarget - dailyProgress;
@@ -299,6 +295,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
         actionLabel: 'Praticar Agora',
         targetSection: 'practice',
         isRead: readIds.has('reminder-daily-goal'),
+        createdAt: now - 15 * MINUTE_MS,
       });
     } else if (dailyProgress >= goalTarget && goalTarget > 0) {
       list.push({
@@ -311,6 +308,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
         actionLabel: 'Ver Pontuação',
         targetSection: 'leaderboard',
         isRead: readIds.has('reminder-daily-goal'),
+        createdAt: now - 15 * MINUTE_MS,
       });
     }
 
@@ -325,7 +323,71 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       actionLabel: 'Continuar Treino',
       targetSection: 'practice',
       isRead: readIds.has('reminder-streak'),
+      createdAt: now - 30 * MINUTE_MS,
     });
+
+    // 1. Achievements (Conquistas)
+    if (hasCompletedDiagnostic) {
+      list.push({
+        id: 'achieve-diagnostic-complete',
+        category: 'ACHIEVEMENT',
+        title: 'Conquista: Raio-X Diagnóstico 🎯',
+        message: 'Você concluiu sua avaliação diagnóstica TRI! Seu mapa de proficiências e radar pedagógico estão calibrados.',
+        iconName: 'Activity',
+        timestamp: 'Hoje',
+        actionLabel: 'Ver Diagnóstico',
+        targetSection: 'diagnostics',
+        isRead: readIds.has('achieve-diagnostic-complete'),
+        createdAt: now - 2 * HOUR_MS,
+      });
+    }
+
+    const hasAnsweredAny = dailyProgress > 0 || (profile?.currentStreakDays ?? 0) > 0 || hasCompletedDiagnostic;
+    if (hasAnsweredAny) {
+      list.push({
+        id: 'achieve-first-question',
+        category: 'ACHIEVEMENT',
+        title: 'Conquista: Primeiro Passo 🏅',
+        message: 'Você deu o pontapé inicial rumo à aprovação no ENEM respondendo às suas primeiras questões!',
+        iconName: 'Trophy',
+        timestamp: 'Ontem',
+        actionLabel: 'Ver Conquistas',
+        targetSection: 'leaderboard',
+        isRead: readIds.has('achieve-first-question'),
+        createdAt: now - 1 * DAY_MS,
+      });
+    }
+
+    if (dailyProgress >= 10 || (profile?.unlockedBadges ?? []).includes('MARATONISTA_QUESTOES')) {
+      list.push({
+        id: 'achieve-marathoner-bronze',
+        category: 'ACHIEVEMENT',
+        title: 'Conquista: Maratonista do ENEM 🏆',
+        message: 'Parabéns! Você alcançou a marca de 10 questões resolvidas na plataforma com dedicação.',
+        iconName: 'Trophy',
+        timestamp: 'Esta semana',
+        actionLabel: 'Ver Conquistas',
+        targetSection: 'leaderboard',
+        isRead: readIds.has('achieve-marathoner-bronze'),
+        createdAt: now - 3 * DAY_MS,
+      });
+    }
+
+    // Freeze Shield Consumed Notification (Aviso)
+    if (profile && !profile.streakFreezeAvailable) {
+      list.push({
+        id: 'update-streak-freeze-consumed',
+        category: 'UPDATE',
+        title: 'Escudo de Congelamento Utilizado 🛡️',
+        message: 'Seu escudo de emergência mensal salvou sua sequência de estudos! Ele recarregará no 1º dia do próximo mês.',
+        iconName: 'ShieldAlert',
+        timestamp: 'Aviso',
+        actionLabel: 'Ver Sequência & Ligas',
+        targetSection: 'leaderboard',
+        isRead: readIds.has('update-streak-freeze-consumed'),
+        createdAt: now - 4 * DAY_MS,
+      });
+    }
 
     // 3. Platform & League Updates (Avisos Importantes) - STABLE IDs
     const league = profile?.weeklyLeague ?? 'BRONZE';
@@ -339,6 +401,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       actionLabel: 'Ver Classificação',
       targetSection: 'leaderboard',
       isRead: readIds.has('update-weekly-league'),
+      createdAt: now - 5 * DAY_MS,
     });
 
     list.push({
@@ -351,24 +414,10 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       actionLabel: 'Experimentar no Simulado',
       targetSection: 'practice',
       isRead: readIds.has('update-socratic-tutor'),
+      createdAt: now - 6 * DAY_MS,
     });
 
-    // 4. Freeze Shield Consumed Notification (Aviso)
-    if (profile && !profile.streakFreezeAvailable) {
-      list.push({
-        id: 'update-streak-freeze-consumed',
-        category: 'UPDATE',
-        title: 'Escudo de Congelamento Utilizado 🛡️',
-        message: 'Seu escudo de emergência mensal salvou sua sequência de estudos! Ele recarregará no 1º dia do próximo mês.',
-        iconName: 'ShieldAlert',
-        timestamp: 'Aviso',
-        actionLabel: 'Ver Sequência & Ligas',
-        targetSection: 'leaderboard',
-        isRead: readIds.has('update-streak-freeze-consumed'),
-      });
-    }
-
-    return list;
+    return sortFeed(list);
   }, [feedQuery.data, hasCompletedDiagnostic, profile, readIds]);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;

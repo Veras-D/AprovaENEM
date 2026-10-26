@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - fix(gamification): Resolved awkward text wrapping ("Em Chamas!") and layout jitter in [`StreakCelebrationModal.tsx`](frontend/src/features/gamification/components/StreakCelebrationModal.tsx) and [`LevelUpModal.tsx`](frontend/src/features/gamification/components/LevelUpModal.tsx) by enforcing `whitespace-nowrap` on status text and badge elements across all container widths.
+- fix(notifications): Fixed notification feed sorting order in [`NotificationBell.tsx`](frontend/src/components/notifications/NotificationBell.tsx) by implementing deterministic comparator logic (`sortFeed`) that prioritizes unread notifications at the top of the feed and orders items descending by creation timestamp (`createdAt`), preventing older read milestones (such as "Maratonista do ENEM") from appearing above newly unlocked achievements (such as "Nível 7 Alcançado!").
 
 ## [0.6.18] - 2026-10-25
 

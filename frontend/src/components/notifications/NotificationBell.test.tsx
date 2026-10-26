@@ -213,4 +213,88 @@ describe('NotificationBell Component', () => {
     expect(screen.getByText(/Nível 3 Alcançado! 🌟/i)).toBeInTheDocument();
     expect(screen.getByText(/Você alcançou o Nível 3 \(Calouro Dedicado\)/i)).toBeInTheDocument();
   });
+
+  it('sorts newest and unread notifications to the very top above older read notifications', () => {
+    // Simulate user at Level 7 with 12 questions resolved (Maratonista badge unlocked)
+    localStorage.setItem(
+      'aprovaenem_read_notifications',
+      JSON.stringify(['achieve-marathoner-bronze'])
+    );
+
+    queryClient.setQueryData(queryKeys.gamification.profile, {
+      userId: 'user-1',
+      level: 7,
+      levelTitle: 'Mestre da Aprovação',
+      dailyGoalProgress: 12,
+      dailyGoalTarget: 5,
+      currentStreakDays: 5,
+    });
+
+    renderWithProviders(<NotificationBell />);
+
+    const bellBtn = screen.getByRole('button', { name: /Notificações:/i });
+    fireEvent.click(bellBtn);
+
+    // Get all rendered notification card titles inside the popover dialog
+    const dialog = screen.getByRole('dialog', { name: /Central de Notificações/i });
+    const titles = Array.from(dialog.querySelectorAll('span.font-bold')).map((el) => el.textContent?.trim());
+
+    // "Nível 7 Alcançado! 🌟" (newest & unread) MUST appear before "Conquista: Maratonista do ENEM 🏆" (older & read)
+    const levelIndex = titles.findIndex((t) => t?.includes('Nível 7 Alcançado!'));
+    const marathonerIndex = titles.findIndex((t) => t?.includes('Maratonista do ENEM'));
+
+    expect(levelIndex).toBeGreaterThanOrEqual(0);
+    expect(marathonerIndex).toBeGreaterThan(levelIndex);
+  });
+
+  it('sorts backend notifications chronologically with newest and unread items first', () => {
+    queryClient.setQueryData(queryKeys.notifications.feed('ALL'), {
+      unreadCount: 1,
+      notifications: [
+        {
+          id: '11111111-1111-1111-1111-111111111111',
+          channel: 'IN_APP',
+          templateCode: 'OLD_READ_NOTIFICATION',
+          title: 'Notificação Antiga Lida',
+          body: 'Notificação antiga já visualizada pelo estudante.',
+          status: 'READ',
+          sentAt: '2026-10-20T10:00:00Z',
+        },
+        {
+          id: '22222222-2222-2222-2222-222222222222',
+          channel: 'IN_APP',
+          templateCode: 'NEW_UNREAD_NOTIFICATION',
+          title: 'Nova Notificação Recente e Não Lida! 🔔',
+          body: 'Esta notificação acabou de ser enviada e não foi lida.',
+          status: 'SENT',
+          sentAt: '2026-10-26T12:00:00Z',
+        },
+        {
+          id: '33333333-3333-3333-3333-333333333333',
+          channel: 'IN_APP',
+          templateCode: 'RECENT_READ_NOTIFICATION',
+          title: 'Notificação Recente Lida',
+          body: 'Notificação recente que já foi marcada como lida.',
+          status: 'READ',
+          sentAt: '2026-10-26T11:00:00Z',
+        },
+      ],
+    });
+
+    renderWithProviders(<NotificationBell />);
+
+    const bellBtn = screen.getByRole('button', { name: /Notificações:/i });
+    fireEvent.click(bellBtn);
+
+    const dialog = screen.getByRole('dialog', { name: /Central de Notificações/i });
+    const titles = Array.from(dialog.querySelectorAll('span.font-bold')).map((el) => el.textContent?.trim());
+
+    const newUnreadIndex = titles.findIndex((t) => t?.includes('Nova Notificação Recente e Não Lida!'));
+    const recentReadIndex = titles.findIndex((t) => t?.includes('Notificação Recente Lida'));
+    const oldReadIndex = titles.findIndex((t) => t?.includes('Notificação Antiga Lida'));
+
+    expect(newUnreadIndex).toBe(0); // Unread and newest appears at index 0 (top)
+    expect(recentReadIndex).toBe(1); // Read from today appears at index 1
+    expect(oldReadIndex).toBe(2); // Read from days ago appears at index 2
+  });
 });
