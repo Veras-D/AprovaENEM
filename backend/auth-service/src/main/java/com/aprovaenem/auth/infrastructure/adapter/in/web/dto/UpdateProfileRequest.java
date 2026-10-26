@@ -25,4 +25,7 @@ public class UpdateProfileRequest {
 
     @Size(min = 8, max = 100, message = "New password must be between 8 and 100 characters")
     private String newPassword;
+
+    @Size(max = 2000, message = "Avatar configuration payload cannot exceed 2000 characters")
+    private String avatarConfig;
 }

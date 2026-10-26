@@ -234,6 +234,7 @@ export function useUpdateProfileMutation() {
       targetDegree?: string;
       currentPassword?: string;
       newPassword?: string;
+      avatarConfig?: string;
     }) => authService.updateProfile(data),
     onSuccess: (updatedUser) => {
       updateUser(updatedUser);

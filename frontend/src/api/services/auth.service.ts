@@ -65,6 +65,19 @@ function normalizeUserProfile(raw: RawBackendAuthPayload): UserProfile {
     return raw.user;
   }
   const userId = raw.id ?? raw.userId ?? '';
+  let avatarConfig = getStoredAvatarConfig(userId);
+  if (raw.avatarConfig) {
+    if (typeof raw.avatarConfig === 'string') {
+      try {
+        avatarConfig = JSON.parse(raw.avatarConfig) as AvatarConfig;
+      } catch {
+        // Fallback to local cache
+      }
+    } else if (typeof raw.avatarConfig === 'object') {
+      avatarConfig = raw.avatarConfig as AvatarConfig;
+    }
+  }
+
   return {
     id: userId,
     email: raw.email ?? '',
@@ -74,7 +87,7 @@ function normalizeUserProfile(raw: RawBackendAuthPayload): UserProfile {
     createdAt: raw.createdAt ?? new Date().toISOString(),
     schoolType: raw.schoolType === 'PRIVATE_SCHOOL' ? 'PRIVATE_SCHOOL' : 'PUBLIC_SCHOOL',
     targetDegree: raw.targetDegree ?? '',
-    avatarConfig: raw.avatarConfig ?? getStoredAvatarConfig(userId),
+    avatarConfig,
   };
 }
 
@@ -154,6 +167,7 @@ export const authService = {
     targetDegree?: string;
     currentPassword?: string;
     newPassword?: string;
+    avatarConfig?: string;
   }): Promise<UserProfile> {
     const response = await apiClient.put<RawBackendAuthPayload>('/auth/me', req);
     return normalizeUserProfile(response.data);

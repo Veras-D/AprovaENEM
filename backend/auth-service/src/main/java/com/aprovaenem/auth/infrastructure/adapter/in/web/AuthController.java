@@ -114,7 +114,8 @@ public class AuthController {
                 request.getSchoolType(),
                 request.getTargetDegree(),
                 request.getCurrentPassword(),
-                request.getNewPassword()
+                request.getNewPassword(),
+                request.getAvatarConfig()
         );
         return ResponseEntity.ok(toUserResponse(user));
     }
@@ -129,6 +130,7 @@ public class AuthController {
                 .role(user.getRole().name())
                 .isEmailVerified(user.isEmailVerified())
                 .createdAt(user.getCreatedAt())
+                .avatarConfig(user.getAvatarConfig())
                 .build();
     }
 

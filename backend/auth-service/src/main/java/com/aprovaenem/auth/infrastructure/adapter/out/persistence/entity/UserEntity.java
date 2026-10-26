@@ -75,4 +75,7 @@ public class UserEntity {
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @Column(name = "avatar_config", columnDefinition = "TEXT")
+    private String avatarConfig;
 }

@@ -345,6 +345,29 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("Should update profile with custom avatar configuration successfully")
+    void shouldUpdateProfileWithAvatarConfigSuccessfully() {
+        UUID userId = UUID.randomUUID();
+        User existingUser = User.builder()
+                .id(userId)
+                .email("student@escola.gov.br")
+                .fullName("Student Name")
+                .schoolType(SchoolType.PUBLIC_SCHOOL)
+                .targetDegree("Direito")
+                .passwordHash("hashed-pw")
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        String avatarJson = "{\"skinColor\":\"#fbd38d\",\"hairStyle\":\"short\",\"hairColor\":\"#1e293b\"}";
+        User updated = authService.updateProfile(userId, "Student Name", SchoolType.PUBLIC_SCHOOL, "Direito", null, null, avatarJson);
+
+        assertThat(updated.getAvatarConfig()).isEqualTo(avatarJson);
+        verify(userRepository).save(existingUser);
+    }
+
+    @Test
     @DisplayName("Should update profile and password when current password matches")
     void shouldUpdateProfileWithPasswordSuccessfully() {
         UUID userId = UUID.randomUUID();

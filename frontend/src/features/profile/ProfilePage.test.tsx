@@ -111,7 +111,7 @@ describe('ProfilePage Feature', () => {
   it('allows customizing and saving avatar configuration', () => {
     renderWithClient(<ProfilePage onNavigate={vi.fn()} />);
 
-    expect(screen.getByText(/criador de avatar estilo duolingo/i)).toBeInTheDocument();
+    expect(screen.getByText(/criador de avatar.*stardew valley/i)).toBeInTheDocument();
     const saveAvatarBtn = screen.getByRole('button', { name: /salvar meu avatar/i });
     fireEvent.click(saveAvatarBtn);
 

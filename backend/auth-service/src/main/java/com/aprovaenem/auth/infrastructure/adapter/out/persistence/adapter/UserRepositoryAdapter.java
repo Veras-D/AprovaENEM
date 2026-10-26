@@ -70,6 +70,7 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
                 .passwordResetExpiresAt(user.getPasswordResetExpiresAt())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
+                .avatarConfig(user.getAvatarConfig())
                 .build();
     }
 
@@ -90,6 +91,7 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
                 .passwordResetExpiresAt(entity.getPasswordResetExpiresAt())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
+                .avatarConfig(entity.getAvatarConfig())
                 .build();
     }
 }

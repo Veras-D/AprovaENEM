@@ -9,6 +9,7 @@ import type {
 } from '@/types';
 import { DEFAULT_AVATAR_CONFIG } from '@/types';
 import { AvatarRenderer } from './AvatarRenderer';
+import { REALISTIC_SKIN_PALETTE } from './avatar-constants';
 import {
   Sparkles,
   Dices,
@@ -26,34 +27,30 @@ export interface AvatarCreatorProps {
   readonly className?: string;
 }
 
-const SKIN_COLORS = [
-  { label: 'Pele Clara', hex: '#fbd38d' },
-  { label: 'Moreno Claro', hex: '#f6ad55' },
-  { label: 'Caramelo', hex: '#dd6b20' },
-  { label: 'Bronze Escuro', hex: '#9c4221' },
-  { label: 'Cacau / Negro', hex: '#652b19' },
-  { label: 'Verde Mascote', hex: '#58cc02' },
-  { label: 'Azul Céu', hex: '#38bdf8' },
-  { label: 'Lavanda', hex: '#a855f7' },
-];
+const SKIN_COLORS = REALISTIC_SKIN_PALETTE;
 
 const HAIR_STYLES: { id: AvatarHairStyle; label: string }[] = [
-  { id: 'short', label: 'Curto' },
+  { id: 'short', label: 'Curto Clássico' },
   { id: 'curly', label: 'Cacheado / Black' },
-  { id: 'wavy', label: 'Ondulado' },
-  { id: 'bun', label: 'Coque' },
-  { id: 'spiky', label: 'Espetado' },
-  { id: 'bald', label: 'Careca' },
+  { id: 'wavy', label: 'Ondulado / Longo' },
+  { id: 'bun', label: 'Coque Estudante' },
+  { id: 'spiky', label: 'Espetado Aventureiro' },
+  { id: 'bald', label: 'Careca / Raspado' },
 ];
 
 const HAIR_COLORS = [
-  { label: 'Preto', hex: '#1e293b' },
-  { label: 'Castanho', hex: '#5b3926' },
-  { label: 'Loiro Dourado', hex: '#f59e0b' },
-  { label: 'Ruivo / Cobre', hex: '#c2410c' },
-  { label: 'Ciano Neon', hex: '#06b6d4' },
-  { label: 'Roxo Elétrico', hex: '#8b5cf6' },
-  { label: 'Grisalho', hex: '#94a3b8' },
+  { label: 'Castanho Escuro / Preto', hex: '#1a1614' },
+  { label: 'Castanho Café', hex: '#422b1d' },
+  { label: 'Castanho Chocolate', hex: '#6b3f23' },
+  { label: 'Castanho Avelã', hex: '#915833' },
+  { label: 'Loiro Dourado', hex: '#d99b3b' },
+  { label: 'Loiro Claro', hex: '#ecc56d' },
+  { label: 'Ruivo Cobre', hex: '#b84824' },
+  { label: 'Ruivo Mogno', hex: '#7c2617' },
+  { label: 'Grisalho', hex: '#8a9199' },
+  { label: 'Branco Neve', hex: '#d8dde2' },
+  { label: 'Azul Abigail', hex: '#2c4d75' },
+  { label: 'Roxo Ametista', hex: '#5b326d' },
 ];
 
 const EYE_EXPRESSIONS: { id: AvatarEyeExpression; label: string }[] = [
@@ -78,12 +75,14 @@ const CLOTHING_STYLES: { id: AvatarClothingStyle; label: string }[] = [
 ];
 
 const CLOTHING_COLORS = [
-  { label: 'Azul ENEM', hex: '#0284c7' },
-  { label: 'Verde Esmeralda', hex: '#10b981' },
-  { label: 'Roxo Estudante', hex: '#7c3aed' },
-  { label: 'Coral Vivo', hex: '#f43f5e' },
-  { label: 'Âmbar Solar', hex: '#f59e0b' },
-  { label: 'Grafite Escuro', hex: '#334155' },
+  { label: 'Azul ENEM', hex: '#1e5f8a' },
+  { label: 'Verde Floresta', hex: '#2f7444' },
+  { label: 'Vinho / Rubi', hex: '#942929' },
+  { label: 'Âmbar Solar', hex: '#cf7b23' },
+  { label: 'Roxo Lavanda', hex: '#68458f' },
+  { label: 'Terracota', hex: '#b85328' },
+  { label: 'Grafite Carvão', hex: '#374151' },
+  { label: 'Branco Algodão', hex: '#e2e8f0' },
 ];
 
 const ACCESSORIES: { id: AvatarAccessory; label: string }[] = [
@@ -94,12 +93,12 @@ const ACCESSORIES: { id: AvatarAccessory; label: string }[] = [
 ];
 
 const BACKGROUND_COLORS = [
-  { label: 'Céu Suave', hex: '#e0f2fe' },
-  { label: 'Menta', hex: '#d1fae5' },
-  { label: 'Lavanda', hex: '#ede9fe' },
-  { label: 'Ouro Claro', hex: '#fef3c7' },
-  { label: 'Rosa Claro', hex: '#ffe4e6' },
-  { label: 'Grafite Noturno', hex: '#1e293b' },
+  { label: 'Céu Fazenda', hex: '#e0f2fe' },
+  { label: 'Menta Primavera', hex: '#d1fae5' },
+  { label: 'Trigo Dourado', hex: '#fef3c7' },
+  { label: 'Pêssego Poente', hex: '#ffe4e6' },
+  { label: 'Lavanda Suave', hex: '#ede9fe' },
+  { label: 'Noite Estrelada', hex: '#1e293b' },
 ];
 
 type CreatorTab = 'skin' | 'hair' | 'face' | 'clothes' | 'accessories' | 'bg';
@@ -157,15 +156,15 @@ export const AvatarCreator: React.FC<AvatarCreatorProps> = ({
 
   return (
     <div className={`bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-6 ${className}`}>
-      {/* Header with Title and Duolingo-style Randomize Button */}
+      {/* Header with Title and Stardew-style Randomize Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-slate-100 dark:border-slate-800">
         <div>
           <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-amber-500" aria-hidden="true" />
-            Criador de Avatar Estilo Duolingo
+            Criador de Avatar Pixel Art (Estilo Stardew Valley)
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-            Personalize seu visual para destacar sua presença no Ranking, nos Simulados e no Portal.
+            Personalize seu visual 16-bit com tons de pele realistas e peças perfeitamente ajustadas para o Ranking e os Simulados.
           </p>
         </div>
 
@@ -249,15 +248,15 @@ export const AvatarCreator: React.FC<AvatarCreatorProps> = ({
 
           {/* Active Tab Customizer Controls */}
           <div className="pt-4 flex-1">
-            {/* SKIN TONE TAB */}
+            {/* SKIN TONE TAB (Realistic human tones only) */}
             {activeTab === 'skin' && (
               <div className="space-y-4">
                 <p className="text-xs font-medium text-slate-600 dark:text-slate-300">
-                  Escolha o tom de pele ou a cor temática do seu personagem:
+                  Escolha um tom de pele realista representativo da diversidade estudantil:
                 </p>
-                <div className="grid grid-cols-4 sm:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
                   {SKIN_COLORS.map((item) => {
-                    const isSelected = config.skinColor === item.hex;
+                    const isSelected = config.skinColor.toLowerCase() === item.hex.toLowerCase();
                     return (
                       <button
                         key={item.hex}
@@ -273,12 +272,12 @@ export const AvatarCreator: React.FC<AvatarCreatorProps> = ({
                         }`}
                       >
                         <span
-                          className="h-8 w-8 rounded-full border border-black/10 shadow-inner flex items-center justify-center"
+                          className="h-8 w-8 rounded-full border border-black/15 shadow-inner flex items-center justify-center shrink-0"
                           style={{ backgroundColor: item.hex }}
                         >
                           {isSelected && <Check className="h-4 w-4 text-white drop-shadow-md" />}
                         </span>
-                        <span className="text-[11px] font-medium text-slate-700 dark:text-slate-300 truncate w-full">
+                        <span className="text-[10px] font-medium text-slate-700 dark:text-slate-300 truncate w-full">
                           {item.label}
                         </span>
                       </button>
@@ -325,7 +324,7 @@ export const AvatarCreator: React.FC<AvatarCreatorProps> = ({
                   </label>
                   <div className="flex flex-wrap gap-2.5">
                     {HAIR_COLORS.map((item) => {
-                      const isSelected = config.hairColor === item.hex;
+                      const isSelected = config.hairColor.toLowerCase() === item.hex.toLowerCase();
                       return (
                         <button
                           key={item.hex}
@@ -450,7 +449,7 @@ export const AvatarCreator: React.FC<AvatarCreatorProps> = ({
                   </label>
                   <div className="flex flex-wrap gap-2.5">
                     {CLOTHING_COLORS.map((item) => {
-                      const isSelected = config.clothingColor === item.hex;
+                      const isSelected = config.clothingColor.toLowerCase() === item.hex.toLowerCase();
                       return (
                         <button
                           key={item.hex}
@@ -517,7 +516,7 @@ export const AvatarCreator: React.FC<AvatarCreatorProps> = ({
                 </label>
                 <div className="grid grid-cols-3 gap-2.5">
                   {BACKGROUND_COLORS.map((item) => {
-                    const isSelected = config.backgroundColor === item.hex;
+                    const isSelected = config.backgroundColor.toLowerCase() === item.hex.toLowerCase();
                     return (
                       <button
                         key={item.hex}

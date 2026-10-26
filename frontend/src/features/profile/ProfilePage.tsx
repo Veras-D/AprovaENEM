@@ -96,7 +96,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             Acesse seu Perfil de Estudante
           </h1>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            Faça login ou crie sua conta gratuita para criar seu avatar no estilo Duolingo, personalizar suas metas diárias de estudo e acompanhar seu progresso rumo ao ENEM.
+            Faça login ou crie sua conta gratuita para criar seu avatar no estilo Stardew Valley, personalizar suas metas diárias de estudo e acompanhar seu progresso rumo ao ENEM.
           </p>
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
             <button
@@ -119,8 +119,15 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     );
   }
 
-  const handleSaveAvatar = (newConfig: AvatarConfig) => {
+  const handleSaveAvatar = async (newConfig: AvatarConfig) => {
     updateUser({ avatarConfig: newConfig });
+    try {
+      await updateProfileMutation.mutateAsync({
+        avatarConfig: JSON.stringify(newConfig),
+      });
+    } catch {
+      // Local fallback handled by useAuthStore
+    }
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {

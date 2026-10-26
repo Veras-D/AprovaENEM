@@ -145,6 +145,13 @@ public class AuthService implements AuthUseCase {
     @Override
     @Transactional
     public User updateProfile(UUID userId, String fullName, SchoolType schoolType, String targetDegree, String currentPassword, String newPassword) {
+        return updateProfile(userId, fullName, schoolType, targetDegree, currentPassword, newPassword, null);
+    }
+
+    @Override
+    @Transactional
+    public User updateProfile(UUID userId, String fullName, SchoolType schoolType, String targetDegree,
+                              String currentPassword, String newPassword, String avatarConfig) {
         User user = getCurrentUser(userId);
 
         if (fullName != null && !fullName.isBlank()) {
@@ -155,6 +162,9 @@ public class AuthService implements AuthUseCase {
         }
         if (targetDegree != null) {
             user.setTargetDegree(targetDegree.trim());
+        }
+        if (avatarConfig != null) {
+            user.setAvatarConfig(avatarConfig);
         }
 
         if (newPassword != null && !newPassword.isBlank()) {

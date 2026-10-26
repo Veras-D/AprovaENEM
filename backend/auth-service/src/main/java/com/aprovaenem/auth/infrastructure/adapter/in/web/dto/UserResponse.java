@@ -22,4 +22,5 @@ public class UserResponse {
     private String role;
     private boolean isEmailVerified;
     private Instant createdAt;
+    private String avatarConfig;
 }
