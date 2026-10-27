@@ -495,7 +495,7 @@ describe('API Services', () => {
 
       const result = await notificationService.getFeed('ALL', 0, 20);
 
-      expect(getSpy).toHaveBeenCalledWith('/api/v1/notifications', {
+      expect(getSpy).toHaveBeenCalledWith('/notifications', {
         params: { status: 'ALL', page: 0, size: 20 },
       });
       expect(result).toEqual(mockFeed);
@@ -506,7 +506,7 @@ describe('API Services', () => {
 
       const result = await notificationService.getUnreadCount();
 
-      expect(getSpy).toHaveBeenCalledWith('/api/v1/notifications/unread-count');
+      expect(getSpy).toHaveBeenCalledWith('/notifications/unread-count');
       expect(result.unreadCount).toBe(3);
     });
 
@@ -516,7 +516,7 @@ describe('API Services', () => {
 
       const result = await notificationService.markAsRead('notif-1');
 
-      expect(patchSpy).toHaveBeenCalledWith('/api/v1/notifications/notif-1/read');
+      expect(patchSpy).toHaveBeenCalledWith('/notifications/notif-1/read');
       expect(result).toEqual(mockRes);
     });
 
@@ -526,7 +526,7 @@ describe('API Services', () => {
 
       const result = await notificationService.markAllAsRead();
 
-      expect(patchSpy).toHaveBeenCalledWith('/api/v1/notifications/read-all');
+      expect(patchSpy).toHaveBeenCalledWith('/notifications/read-all');
       expect(result).toEqual(mockRes);
     });
 
@@ -547,7 +547,7 @@ describe('API Services', () => {
         body: 'Você concluiu o diagnóstico!',
       });
 
-      expect(postSpy).toHaveBeenCalledWith('/api/v1/notifications', {
+      expect(postSpy).toHaveBeenCalledWith('/notifications', {
         templateCode: 'ACHIEVEMENT_DIAGNOSTIC',
         title: 'Conquista: Raio-X Diagnóstico 🎯',
         body: 'Você concluiu o diagnóstico!',

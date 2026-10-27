@@ -85,8 +85,8 @@ describe('InstitutionalDashboard Component - Security & Role Guards', () => {
       <InstitutionalDashboard cohortData={MOCK_COHORT_DIAGNOSTICS} />
     );
 
-    // Should display 403 Forbidden message
-    expect(screen.getByText(/Acesso Negado \(403\)/i)).toBeInTheDocument();
+    // Should display student-friendly restricted area message
+    expect(screen.getByText(/Acesso Restrito • Gestão Escolar/i)).toBeInTheDocument();
     expect(screen.getByText(/Área Exclusiva da Coordenação Pedagógica/i)).toBeInTheDocument();
     expect(screen.getByText(/Lucas Estudante/i)).toBeInTheDocument();
 

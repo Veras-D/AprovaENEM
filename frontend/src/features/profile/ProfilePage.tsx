@@ -175,7 +175,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       await updatePlanMutation.mutateAsync(targetPlan);
       setPlanSuccessMsg(
         targetPlan === 'PRO'
-          ? 'Plano Pro ativado gratuitamente (Modo Dev)! Consultas ilimitadas ao Tutor IA liberadas.'
+          ? 'Plano Pro ativado gratuitamente! Consultas ilimitadas ao Tutor IA liberadas.'
           : 'Plano alterado para Gratuito (1 questão diária no Tutor IA).'
       );
       setTimeout(() => setPlanSuccessMsg(null), 5000);
@@ -519,10 +519,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             <Crown className={`h-5 w-5 ${isPro ? 'text-amber-500' : 'text-slate-400'}`} aria-hidden="true" />
             <div>
               <h3 id="subscription-plan-heading" className="text-base font-bold text-slate-900 dark:text-white">
-                Plano de Estudos & Assinatura (Modo Dev)
+                Plano de Estudos & Assinatura
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Ambiente de desenvolvimento — ative ou alterne o Plano Pro gratuitamente sem cobrança.
+                Gerencie seu plano de estudos e o acesso às orientações do Tutor Socrático IA.
               </p>
             </div>
           </div>
@@ -542,13 +542,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           <div className="space-y-1">
             <p className="text-sm font-bold text-slate-900 dark:text-white">
               {isPro
-                ? 'Você possui acesso ilimitado ao Tutor Socrático IA (Gemini 1.5 Flash)'
+                ? 'Você possui acesso ilimitado ao Tutor Socrático IA'
                 : 'Desbloqueie dicas socráticas ilimitadas em todas as questões do ENEM'}
             </p>
             <p className="text-xs text-slate-600 dark:text-slate-300">
               {isPro
-                ? 'Sem limite diário de questões ou dicas socráticas. Seu token JWT e perfil estão configurados como ROLE_PREMIUM_STUDENT.'
-                : 'No Plano Gratuito você possui até 3 questões com dicas socráticas por dia. Ative o Plano Pro grátis para remover todos os limites.'}
+                ? 'Sem limite diário de questões ou dicas socráticas durante seus simulados e treinos.'
+                : 'No Plano Gratuito você possui até 3 questões com dicas socráticas por dia. Ative o Plano Pro grátis para estudar sem limites.'}
             </p>
           </div>
 

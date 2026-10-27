@@ -93,7 +93,9 @@ export const tutorService = {
           role: normalizeMessageRole(m.role),
           content: String(m.content ?? m.message ?? ''),
           timestamp: m.timestamp ?? m.createdAt ?? new Date().toISOString(),
-          isFallback: Boolean(m.isFallback ?? m.fallback),
+          ...(m.isFallback !== undefined || m.fallback !== undefined
+            ? { isFallback: Boolean(m.isFallback ?? m.fallback) }
+            : {}),
         }))
       : [];
 

@@ -233,13 +233,13 @@ export const InstitutionalDashboard: React.FC<InstitutionalDashboardProps> = ({
 
           <div className="space-y-1">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
-              <span>Acesso Negado (403) &bull; Permissão Insuficiente</span>
+              <span>Acesso Restrito &bull; Gestão Escolar</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
               Área Exclusiva da Coordenação Pedagógica
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto">
-              Você está autenticado como <strong className="text-slate-800 dark:text-slate-200">{user?.name ?? 'Estudante'}</strong> ({user?.email}). Sua conta possui perfil de estudante e não possui autorização para consultar os dados pedagógicos e métricas de turmas de {currentTenant.name}.
+              Olá, <strong className="text-slate-800 dark:text-slate-200">{user?.name ?? 'Estudante'}</strong>! Você está conectado com uma conta de estudante ({user?.email}). Este ambiente reúne relatórios pedagógicos de turmas e é destinado exclusivamente a professores e coordenadores de {currentTenant.name}.
             </p>
           </div>
         </div>
