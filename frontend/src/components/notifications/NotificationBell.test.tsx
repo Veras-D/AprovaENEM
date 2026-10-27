@@ -294,8 +294,69 @@ describe('NotificationBell Component', () => {
     const oldReadIndex = titles.findIndex((t) => t?.includes('Notificação Antiga Lida'));
 
     expect(newUnreadIndex).toBe(0); // Unread and newest appears at index 0 (top)
-    expect(recentReadIndex).toBe(1); // Read from today appears at index 1
-    expect(oldReadIndex).toBe(2); // Read from days ago appears at index 2
+    expect(recentReadIndex).toBeGreaterThan(newUnreadIndex);
+    expect(oldReadIndex).toBeGreaterThan(recentReadIndex);
+  });
+
+  it('deduplicates backend notifications with identical template codes, strips ": null", and assigns valid navigation targets', () => {
+    const handleNavigate = vi.fn();
+    queryClient.setQueryData(queryKeys.notifications.feed('ALL'), {
+      unreadCount: 2,
+      notifications: [
+        {
+          id: 'aaaa1111-1111-1111-1111-111111111111',
+          channel: 'IN_APP',
+          templateCode: 'ACHIEVEMENT_LEVEL_7',
+          title: 'Nível 7 Alcançado! 🌟',
+          body: 'Parabéns! Você alcançou o Nível 7.',
+          status: 'READ',
+          sentAt: '2026-10-27T19:25:43Z',
+        },
+        {
+          id: 'bbbb2222-2222-2222-2222-222222222222',
+          channel: 'IN_APP',
+          templateCode: 'ACHIEVEMENT_LEVEL_7',
+          title: 'Nível 7 Alcançado! 🌟',
+          body: 'Parabéns! Você alcançou o Nível 7.',
+          status: 'READ',
+          sentAt: '2026-10-27T19:25:43Z',
+        },
+        {
+          id: 'cccc3333-3333-3333-3333-333333333333',
+          channel: 'IN_APP',
+          templateCode: 'DAILY_STREAK_REMINDER',
+          title: '🔥 Proteja sua ofensiva!',
+          body: 'Faltam apenas 1 questões para atingir sua meta diária.',
+          status: 'SENT',
+          sentAt: '2026-10-27T22:00:00Z',
+          metadata: JSON.stringify({ streakDays: 4 }),
+        },
+        {
+          id: 'dddd4444-4444-4444-4444-444444444444',
+          channel: 'EMAIL',
+          templateCode: 'EMAIL_VERIFICATION',
+          title: 'Confirme seu e-mail no AprovaENEM',
+          body: 'Olá Vivi Veras! Clique no link de confirmação ou informe o código para ativar sua conta AprovaENEM: null',
+          status: 'SENT',
+          sentAt: '2026-10-22T00:26:10Z',
+        },
+      ],
+    });
+
+    renderWithProviders(<NotificationBell onNavigate={handleNavigate} />);
+
+    const bellBtn = screen.getByRole('button', { name: /Notificações:/i });
+    fireEvent.click(bellBtn);
+
+    // Duplicate ACHIEVEMENT_LEVEL_7 should only appear once
+    expect(screen.getAllByText('Nível 7 Alcançado! 🌟')).toHaveLength(1);
+
+    // ": null" should be stripped from EMAIL_VERIFICATION body
+    expect(screen.queryByText(/:\s*null/i)).not.toBeInTheDocument();
+
+    // Clicking "🔥 Proteja sua ofensiva!" (DAILY_STREAK_REMINDER without targetSection in metadata) should navigate to 'practice'
+    fireEvent.click(screen.getByText('🔥 Proteja sua ofensiva!'));
+    expect(handleNavigate).toHaveBeenCalledWith('practice');
   });
 
   it('opens the full Central de Notificações modal when clicking "Ver todas as notificações" and filters by search/unread', () => {

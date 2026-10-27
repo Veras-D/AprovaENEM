@@ -33,7 +33,7 @@ export interface StudentNotification {
   readonly iconName: 'Trophy' | 'Flame' | 'Target' | 'Clock' | 'Activity' | 'Sparkles' | 'ShieldAlert';
   readonly timestamp: string;
   readonly actionLabel?: string;
-  readonly targetSection?: 'practice' | 'leaderboard' | 'diagnostics';
+  readonly targetSection?: 'practice' | 'leaderboard' | 'diagnostics' | 'profile';
   readonly isRead: boolean;
   readonly createdAt: number;
 }
@@ -197,11 +197,15 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       if (!sentAt) return 'Semanal';
       const date = new Date(sentAt);
       if (isNaN(date.getTime())) return 'Hoje';
-      const diffMs = now - date.getTime();
-      const diffHours = diffMs / HOUR_MS;
-      if (diffHours < 24) return 'Hoje';
-      if (diffHours < 48) return 'Ontem';
-      if (diffHours < 24 * 7) return 'Esta semana';
+
+      const nowDate = new Date(now);
+      const startOfToday = new Date(nowDate.getFullYear(), nowDate.getMonth(), nowDate.getDate()).getTime();
+      const startOfSentDay = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+      const diffDays = Math.round((startOfToday - startOfSentDay) / DAY_MS);
+
+      if (diffDays <= 0) return 'Hoje';
+      if (diffDays === 1) return 'Ontem';
+      if (diffDays < 7) return `Há ${diffDays} dias`;
       return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
     };
 
@@ -221,60 +225,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       });
     };
 
-    // If backend database returned notification feed items, render them
-    if (feedQuery.data?.notifications && feedQuery.data.notifications.length > 0) {
-      const backendItems = feedQuery.data.notifications.map((n) => {
-        let category: 'ACHIEVEMENT' | 'REMINDER' | 'UPDATE' = 'UPDATE';
-        let iconName: 'Trophy' | 'Flame' | 'Target' | 'Clock' | 'Activity' | 'Sparkles' | 'ShieldAlert' = 'Clock';
-        let targetSection: 'practice' | 'leaderboard' | 'diagnostics' | undefined = undefined;
-        let actionLabel = 'Ver Detalhes';
-
-        if (n.metadata) {
-          try {
-            const meta = JSON.parse(n.metadata);
-            if (meta.category) category = meta.category;
-            if (meta.iconName) iconName = meta.iconName;
-            if (meta.targetSection) targetSection = meta.targetSection;
-            if (meta.actionLabel) actionLabel = meta.actionLabel;
-          } catch {
-            // Keep defaults
-          }
-        }
-
-        if (!n.metadata) {
-          if (n.templateCode.includes('ACHIEV') || n.templateCode.includes('WELCOME')) {
-            category = 'ACHIEVEMENT';
-            iconName = n.templateCode.includes('DIAG') ? 'Activity' : 'Trophy';
-            targetSection = n.templateCode.includes('DIAG') ? 'diagnostics' : 'leaderboard';
-            actionLabel = n.templateCode.includes('DIAG') ? 'Ver Diagnóstico' : 'Ver Conquistas';
-          } else if (n.templateCode.includes('GOAL') || n.templateCode.includes('STREAK')) {
-            category = 'REMINDER';
-            iconName = n.templateCode.includes('STREAK') ? 'Flame' : 'Target';
-            targetSection = 'practice';
-            actionLabel = 'Praticar Agora';
-          }
-        }
-
-        const createdAt = n.sentAt ? new Date(n.sentAt).getTime() : now;
-
-        return {
-          id: n.id,
-          category,
-          title: n.title,
-          message: n.body,
-          iconName,
-          timestamp: formatSentAt(n.sentAt),
-          actionLabel,
-          targetSection,
-          isRead: n.status === 'READ' || readIds.has(n.id) || readIds.has(n.templateCode),
-          createdAt: isNaN(createdAt) ? now : createdAt,
-        };
-      });
-
-      return sortFeed(backendItems);
-    }
-
-    // Client-side fallback before database query resolves or in offline sandbox
+    // Build the client-side dynamic/milestone notifications list
     const list: StudentNotification[] = [];
 
     // Level achievement: recently unlocked milestone
@@ -288,7 +239,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
         timestamp: 'Hoje',
         actionLabel: 'Ver Conquistas',
         targetSection: 'leaderboard',
-        isRead: readIds.has(`achieve-level-${profile.level}`),
+        isRead: readIds.has(`achieve-level-${profile.level}`) || readIds.has(`ACHIEVEMENT_LEVEL_${profile.level}`),
         createdAt: now,
       });
     }
@@ -307,7 +258,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
         timestamp: 'Hoje',
         actionLabel: 'Praticar Agora',
         targetSection: 'practice',
-        isRead: readIds.has('reminder-daily-goal'),
+        isRead: readIds.has('reminder-daily-goal') || readIds.has('DAILY_GOAL_REMINDER'),
         createdAt: now - 15 * MINUTE_MS,
       });
     } else if (dailyProgress >= goalTarget && goalTarget > 0) {
@@ -320,7 +271,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
         timestamp: 'Hoje',
         actionLabel: 'Ver Pontuação',
         targetSection: 'leaderboard',
-        isRead: readIds.has('reminder-daily-goal'),
+        isRead: readIds.has('reminder-daily-goal') || readIds.has('DAILY_GOAL_REMINDER'),
         createdAt: now - 15 * MINUTE_MS,
       });
     }
@@ -335,7 +286,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       timestamp: 'Hoje',
       actionLabel: 'Continuar Treino',
       targetSection: 'practice',
-      isRead: readIds.has('reminder-streak'),
+      isRead: readIds.has('reminder-streak') || readIds.has('DAILY_STREAK_ACTIVE'),
       createdAt: now - 30 * MINUTE_MS,
     });
 
@@ -350,7 +301,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
         timestamp: 'Hoje',
         actionLabel: 'Ver Diagnóstico',
         targetSection: 'diagnostics',
-        isRead: readIds.has('achieve-diagnostic-complete'),
+        isRead: readIds.has('achieve-diagnostic-complete') || readIds.has('ACHIEVEMENT_DIAGNOSTIC'),
         createdAt: now - 2 * HOUR_MS,
       });
     }
@@ -366,7 +317,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
         timestamp: 'Ontem',
         actionLabel: 'Ver Conquistas',
         targetSection: 'leaderboard',
-        isRead: readIds.has('achieve-first-question'),
+        isRead: readIds.has('achieve-first-question') || readIds.has('ACHIEVEMENT_FIRST_QUESTION'),
         createdAt: now - 1 * DAY_MS,
       });
     }
@@ -378,10 +329,10 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
         title: 'Conquista: Maratonista do ENEM 🏆',
         message: 'Parabéns! Você alcançou a marca de 10 questões resolvidas na plataforma com dedicação.',
         iconName: 'Trophy',
-        timestamp: 'Esta semana',
+        timestamp: 'Há 3 dias',
         actionLabel: 'Ver Conquistas',
         targetSection: 'leaderboard',
-        isRead: readIds.has('achieve-marathoner-bronze'),
+        isRead: readIds.has('achieve-marathoner-bronze') || readIds.has('ACHIEVEMENT_MARATHONER_BRONZE'),
         createdAt: now - 3 * DAY_MS,
       });
     }
@@ -394,10 +345,10 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
         title: 'Escudo de Congelamento Utilizado 🛡️',
         message: 'Seu escudo de emergência mensal salvou sua sequência de estudos! Ele recarregará no 1º dia do próximo mês.',
         iconName: 'ShieldAlert',
-        timestamp: 'Aviso',
+        timestamp: 'Há 4 dias',
         actionLabel: 'Ver Sequência & Ligas',
         targetSection: 'leaderboard',
-        isRead: readIds.has('update-streak-freeze-consumed'),
+        isRead: readIds.has('update-streak-freeze-consumed') || readIds.has('STREAK_FREEZE_CONSUMED'),
         createdAt: now - 4 * DAY_MS,
       });
     }
@@ -410,10 +361,10 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       title: `Disputa Semanal da Liga ${league} ⚡`,
       message: 'A pontuação da rodada semanal reinicia domingo às 23:59 BRT. Resolva simulados para subir de liga!',
       iconName: 'Clock',
-      timestamp: 'Semanal',
+      timestamp: 'Há 5 dias',
       actionLabel: 'Ver Classificação',
       targetSection: 'leaderboard',
-      isRead: readIds.has('update-weekly-league'),
+      isRead: readIds.has('update-weekly-league') || readIds.has('WEEKLY_LEAGUE_UPDATE'),
       createdAt: now - 5 * DAY_MS,
     });
 
@@ -423,12 +374,110 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       title: 'Tutor IA Socrático Pedagógico ✨',
       message: 'Travou em uma questão difícil? Abra o Tutor IA nas questões para pistas conceituais guiadas sem respostas prontas.',
       iconName: 'Sparkles',
-      timestamp: 'Dica',
+      timestamp: 'Há 6 dias',
       actionLabel: 'Experimentar no Simulado',
       targetSection: 'practice',
-      isRead: readIds.has('update-socratic-tutor'),
+      isRead: readIds.has('update-socratic-tutor') || readIds.has('SOCRATIC_TUTOR_TIP'),
       createdAt: now - 6 * DAY_MS,
     });
+
+    // If backend database returned notification feed items, deduplicate and merge them
+    if (feedQuery.data?.notifications && feedQuery.data.notifications.length > 0) {
+      const backendTemplates = new Set<string>();
+      const backendItems: StudentNotification[] = [];
+
+      for (const n of feedQuery.data.notifications) {
+        const dedupKey = n.templateCode || n.title;
+        if (backendTemplates.has(dedupKey)) {
+          continue;
+        }
+        backendTemplates.add(dedupKey);
+
+        let category: 'ACHIEVEMENT' | 'REMINDER' | 'UPDATE' = 'UPDATE';
+        let iconName: 'Trophy' | 'Flame' | 'Target' | 'Clock' | 'Activity' | 'Sparkles' | 'ShieldAlert' = 'Clock';
+        let targetSection: 'practice' | 'leaderboard' | 'diagnostics' | 'profile' | undefined = undefined;
+        let actionLabel = 'Ver Detalhes';
+
+        if (n.metadata) {
+          try {
+            const meta = JSON.parse(n.metadata);
+            if (meta.category) category = meta.category;
+            if (meta.iconName) iconName = meta.iconName;
+            if (meta.targetSection) targetSection = meta.targetSection;
+            if (meta.actionLabel) actionLabel = meta.actionLabel;
+          } catch {
+            // Keep defaults
+          }
+        }
+
+        // Infer category, icon, targetSection, and actionLabel from templateCode if missing in metadata
+        if (n.templateCode.includes('ACHIEV') || n.templateCode.includes('WELCOME')) {
+          category = 'ACHIEVEMENT';
+          iconName = n.templateCode.includes('DIAG') ? 'Activity' : 'Trophy';
+          if (!targetSection) {
+            targetSection = n.templateCode.includes('DIAG') ? 'diagnostics' : 'leaderboard';
+          }
+          if (actionLabel === 'Ver Detalhes') {
+            actionLabel = n.templateCode.includes('DIAG') ? 'Ver Diagnóstico' : 'Ver Conquistas';
+          }
+        } else if (n.templateCode.includes('GOAL') || n.templateCode.includes('STREAK')) {
+          category = 'REMINDER';
+          iconName = n.templateCode.includes('STREAK') ? 'Flame' : 'Target';
+          if (!targetSection) {
+            targetSection = 'practice';
+          }
+          if (actionLabel === 'Ver Detalhes') {
+            actionLabel = 'Praticar Agora';
+          }
+        } else if (n.templateCode.includes('EMAIL_VERIFICATION')) {
+          category = 'UPDATE';
+          iconName = 'ShieldAlert';
+          if (!targetSection) {
+            targetSection = 'profile';
+          }
+          if (actionLabel === 'Ver Detalhes') {
+            actionLabel = 'Ver Perfil';
+          }
+        } else if (n.templateCode.includes('LEAGUE')) {
+          category = 'UPDATE';
+          iconName = 'Clock';
+          if (!targetSection) {
+            targetSection = 'leaderboard';
+          }
+          if (actionLabel === 'Ver Detalhes') {
+            actionLabel = 'Ver Classificação';
+          }
+        } else if (n.templateCode.includes('TUTOR')) {
+          category = 'UPDATE';
+          iconName = 'Sparkles';
+          if (!targetSection) {
+            targetSection = 'practice';
+          }
+          if (actionLabel === 'Ver Detalhes') {
+            actionLabel = 'Experimentar no Simulado';
+          }
+        }
+
+        // Sanitize legacy ": null" suffix in email verification notifications
+        const cleanedBody = n.body.replace(/:\s*null\s*$/i, '.');
+        const createdAt = n.sentAt ? new Date(n.sentAt).getTime() : now;
+
+        backendItems.push({
+          id: n.id,
+          category,
+          title: n.title,
+          message: cleanedBody,
+          iconName,
+          timestamp: formatSentAt(n.sentAt),
+          actionLabel,
+          targetSection: targetSection ?? 'leaderboard',
+          isRead: n.status === 'READ' || readIds.has(n.id) || readIds.has(n.templateCode),
+          createdAt: isNaN(createdAt) ? now : createdAt,
+        });
+      }
+
+      return sortFeed(backendItems);
+    }
 
     return sortFeed(list);
   }, [feedQuery.data, hasCompletedDiagnostic, profile, readIds]);

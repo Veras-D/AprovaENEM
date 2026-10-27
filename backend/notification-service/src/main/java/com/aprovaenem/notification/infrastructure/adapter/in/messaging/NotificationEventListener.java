@@ -38,6 +38,10 @@ public class NotificationEventListener {
                 remaining, event.getStreakDays());
 
         String metadataJson = toJson(Map.of(
+                "category", "REMINDER",
+                "iconName", "Flame",
+                "targetSection", "practice",
+                "actionLabel", "Praticar Agora",
                 "streakDays", event.getStreakDays(),
                 "targetQuestions", event.getTargetQuestions(),
                 "questionsCompleted", event.getQuestionsCompleted()
@@ -65,12 +69,16 @@ public class NotificationEventListener {
         Instant now = Instant.now();
 
         String title = "Confirme seu e-mail no AprovaENEM";
-        String body = String.format(
-                "Olá %s! Clique no link de confirmação ou informe o código para ativar sua conta AprovaENEM: %s",
-                event.getFullName() != null ? event.getFullName() : "Estudante",
-                event.getVerificationToken());
+        String name = event.getFullName() != null ? event.getFullName() : "Estudante";
+        String body = event.getVerificationToken() != null && !event.getVerificationToken().isBlank()
+                ? String.format("Olá %s! Clique no link de confirmação ou informe o código para ativar sua conta AprovaENEM: %s", name, event.getVerificationToken())
+                : String.format("Olá %s! Seu endereço de e-mail foi registrado na plataforma AprovaENEM. Acesse seu perfil para gerenciar seus dados.", name);
 
         String metadataJson = toJson(Map.of(
+                "category", "UPDATE",
+                "iconName", "ShieldAlert",
+                "targetSection", "profile",
+                "actionLabel", "Ver Perfil",
                 "email", event.getEmail() != null ? event.getEmail() : "",
                 "token", event.getVerificationToken() != null ? event.getVerificationToken() : ""
         ));

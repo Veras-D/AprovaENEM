@@ -26,6 +26,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -111,6 +112,7 @@ class NotificationServiceTest {
     void shouldGetUnreadFeed() {
         UUID userId = UUID.randomUUID();
         when(notificationLogRepository.countByUserId(userId)).thenReturn(1L);
+        when(notificationLogRepository.existsByUserIdAndTemplateCode(eq(userId), anyString())).thenReturn(true);
         NotificationLogEntity item = NotificationLogEntity.builder()
                 .id(UUID.randomUUID())
                 .userId(userId)
@@ -122,6 +124,8 @@ class NotificationServiceTest {
                 .sentAt(Instant.now())
                 .build();
 
+        when(notificationLogRepository.findByUserIdOrderByCreatedAtDesc(eq(userId), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(item)));
         when(notificationLogRepository.findByUserIdAndStatusOrderByCreatedAtDesc(eq(userId), eq("SENT"), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(item)));
         when(notificationLogRepository.countByUserIdAndStatus(userId, "SENT")).thenReturn(1L);
@@ -140,6 +144,7 @@ class NotificationServiceTest {
     void shouldGetAllFeed() {
         UUID userId = UUID.randomUUID();
         when(notificationLogRepository.countByUserId(userId)).thenReturn(1L);
+        when(notificationLogRepository.existsByUserIdAndTemplateCode(eq(userId), anyString())).thenReturn(true);
         NotificationLogEntity item1 = NotificationLogEntity.builder()
                 .id(UUID.randomUUID())
                 .userId(userId)
