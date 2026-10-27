@@ -53,7 +53,7 @@ jwt:
 
 gemini:
   api-key: ${GEMINI_API_KEY:}
-  model: ${GEMINI_MODEL:gemini-1.5-flash}
+  model: ${GEMINI_MODEL:gemini-flash-lite-latest}
   base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
 
 resilience4j:

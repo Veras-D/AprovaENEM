@@ -38,11 +38,18 @@ export const QuizTimer: React.FC<QuizTimerProps> = ({
   const [internalPaused, setInternalPaused] = useState<boolean>(false);
   const [srAnnouncement, setSrAnnouncement] = useState<string>('');
   const hasCalledTimeUp = useRef<boolean>(false);
+  const secondsRef = useRef<number>(effectiveIsCountdown ? effectiveInitialSeconds : 0);
+  const onTickRef = useRef(onTick);
+  const onTimeUpRef = useRef(onTimeUp);
+  onTickRef.current = onTick;
+  onTimeUpRef.current = onTimeUp;
 
   // Sync timer when timeMode or initialSeconds changes
   useEffect(() => {
     hasCalledTimeUp.current = false;
-    setSeconds(effectiveIsCountdown ? effectiveInitialSeconds : 0);
+    const startVal = effectiveIsCountdown ? effectiveInitialSeconds : 0;
+    secondsRef.current = startVal;
+    setSeconds(startVal);
   }, [timeMode, effectiveIsCountdown, effectiveInitialSeconds]);
 
   const isPaused = externalPaused || internalPaused;
@@ -51,29 +58,27 @@ export const QuizTimer: React.FC<QuizTimerProps> = ({
     if (isPaused) return;
 
     const interval = setInterval(() => {
-      setSeconds((prev) => {
-        const next = effectiveIsCountdown ? Math.max(0, prev - 1) : prev + 1;
-        onTick?.(next);
+      const prev = secondsRef.current;
+      const next = effectiveIsCountdown ? Math.max(0, prev - 1) : prev + 1;
+      secondsRef.current = next;
+      setSeconds(next);
+      onTickRef.current?.(next);
 
-        // Screen reader announcements at important thresholds
-        if (effectiveIsCountdown) {
-          if (next === 300) {
-            setSrAnnouncement('Atenção: restam 5 minutos para o término do simulado.');
-          } else if (next === 60) {
-            setSrAnnouncement('Atenção: resta 1 minuto para o término do simulado.');
-          } else if (next === 0 && !hasCalledTimeUp.current) {
-            hasCalledTimeUp.current = true;
-            setSrAnnouncement('Tempo esgotado.');
-            onTimeUp?.();
-          }
+      if (effectiveIsCountdown) {
+        if (next === 300) {
+          setSrAnnouncement('Atenção: restam 5 minutos para o término do simulado.');
+        } else if (next === 60) {
+          setSrAnnouncement('Atenção: resta 1 minuto para o término do simulado.');
+        } else if (next === 0 && !hasCalledTimeUp.current) {
+          hasCalledTimeUp.current = true;
+          setSrAnnouncement('Tempo esgotado.');
+          onTimeUpRef.current?.();
         }
-
-        return next;
-      });
+      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [effectiveIsCountdown, isPaused, onTick, onTimeUp]);
+  }, [effectiveIsCountdown, isPaused]);
 
   const formatTime = (totalSeconds: number): string => {
     const mins = Math.floor(totalSeconds / 60);

@@ -28,6 +28,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { isProOrAdmin, SOCRATIC_STARTER_PROMPTS } from '../tutor-utils';
 import type { UnifiedQuestion } from './QuestionCard';
 import type { Question } from '@/types';
+import type { SocraticMessageItemDto } from '@/api/types';
 
 export interface SocraticTutorDrawerProps {
   readonly isOpen: boolean;
@@ -49,10 +50,43 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
   const [shouldRender, setShouldRender] = useState<boolean>(isOpen);
   const [isClosing, setIsClosing] = useState<boolean>(false);
 
+  // Optimistic message & fluid streaming state
+  const [optimisticUserMsg, setOptimisticUserMsg] = useState<SocraticMessageItemDto | null>(null);
+  const [optimisticAssistantMsg, setOptimisticAssistantMsg] = useState<SocraticMessageItemDto | null>(null);
+  const [isThinkingPhase, setIsThinkingPhase] = useState<boolean>(false);
+  const [streamingAssistantId, setStreamingAssistantId] = useState<string | null>(null);
+
+  const preSendCountRef = useRef<number>(0);
+  const activeUserKeyRef = useRef<string | null>(null);
+  const activeAssistantKeyRef = useRef<string | null>(null);
+  const thinkingTimerRef = useRef<number | null>(null);
+
   const drawerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (thinkingTimerRef.current !== null) {
+      window.clearTimeout(thinkingTimerRef.current);
+      thinkingTimerRef.current = null;
+    }
+    setOptimisticUserMsg(null);
+    setOptimisticAssistantMsg(null);
+    setStreamingAssistantId(null);
+    setIsThinkingPhase(false);
+    preSendCountRef.current = 0;
+    activeUserKeyRef.current = null;
+    activeAssistantKeyRef.current = null;
+  }, [question.id]);
+
+  useEffect(() => {
+    return () => {
+      if (thinkingTimerRef.current !== null) {
+        window.clearTimeout(thinkingTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -82,7 +116,7 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
   const updatePlanMutation = useUpdatePlanMutation();
 
   const thread = threadQuery.data;
-  const messages = thread?.messages ?? [];
+  const messages = React.useMemo(() => thread?.messages ?? [], [thread?.messages]);
   const remainingTurns = thread?.remainingTurns ?? 6;
   const maxTurns = thread?.maxTurns ?? 6;
   const isTurnQuotaExhausted = remainingTurns <= 0;
@@ -90,12 +124,53 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
   const examYear = 'examYear' in question ? question.examYear : question.year;
   const disciplineName = question.discipline || 'ENEM';
 
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    if (typeof messagesEndRef.current?.scrollIntoView === 'function') {
+      messagesEndRef.current.scrollIntoView({ behavior, block: 'nearest' });
+    }
+  };
+
+  // Compute rendered messages combining server history with optimistic & streaming turn
+  const renderedMessages: SocraticMessageItemDto[] = React.useMemo(() => {
+    if (isThinkingPhase && optimisticUserMsg) {
+      const baseHistory =
+        messages.length > preSendCountRef.current
+          ? messages.slice(0, Math.max(0, messages.length - 2))
+          : messages;
+      return [...baseHistory, optimisticUserMsg];
+    }
+
+    if (messages.length > preSendCountRef.current && activeUserKeyRef.current && activeAssistantKeyRef.current) {
+      const lastIdx = messages.length - 1;
+      const secondLastIdx = messages.length - 2;
+      return messages.map((msg, idx) => {
+        if (idx === secondLastIdx && msg.role === 'user') {
+          return { ...msg, id: activeUserKeyRef.current ?? msg.id };
+        }
+        if (idx === lastIdx && msg.role === 'assistant') {
+          return { ...msg, id: activeAssistantKeyRef.current ?? msg.id };
+        }
+        return msg;
+      });
+    }
+
+    if (optimisticUserMsg) {
+      const list = [...messages, optimisticUserMsg];
+      if (optimisticAssistantMsg) {
+        list.push(optimisticAssistantMsg);
+      }
+      return list;
+    }
+
+    return [...messages];
+  }, [messages, isThinkingPhase, optimisticUserMsg, optimisticAssistantMsg]);
+
   // Auto-scroll to latest message or typing indicator
   useEffect(() => {
-    if (isOpen && messages.length > 0 && typeof messagesEndRef.current?.scrollIntoView === 'function') {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (isOpen && (renderedMessages.length > 0 || isThinkingPhase || askMutation.isPending)) {
+      scrollToBottom('smooth');
     }
-  }, [messages.length, askMutation.isPending, isOpen]);
+  }, [renderedMessages.length, isThinkingPhase, askMutation.isPending, isOpen]);
 
   // Focus management and Escape key handling
   useEffect(() => {
@@ -155,7 +230,7 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
 
   const handleSendMessage = (contentToSend?: string) => {
     const rawText = (contentToSend ?? inputMessage).trim();
-    if (!rawText || askMutation.isPending) return;
+    if (!rawText || askMutation.isPending || isThinkingPhase) return;
 
     // Enforce 1,000 character maximum limit (VULN-JAM2-18)
     const text = rawText.slice(0, 1000);
@@ -167,11 +242,62 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
 
     if (isTurnQuotaExhausted) return;
 
+    // Immediately clear input field and append optimistic user bubble
+    setInputMessage('');
+    preSendCountRef.current = messages.length;
+    const userKey = `turn-user-${Date.now()}`;
+    const assistantKey = `turn-assistant-${Date.now()}`;
+    activeUserKeyRef.current = userKey;
+    activeAssistantKeyRef.current = assistantKey;
+
+    setOptimisticUserMsg({
+      id: userKey,
+      role: 'user',
+      content: text,
+      timestamp: new Date().toISOString(),
+    });
+    setOptimisticAssistantMsg(null);
+    setStreamingAssistantId(null);
+    setIsThinkingPhase(true);
+
+    const sendStartTime = Date.now();
+    const isTestEnv = import.meta.env.MODE === 'test';
+
     askMutation.mutate(
       { message: text },
       {
-        onSuccess: () => {
-          setInputMessage('');
+        onSuccess: (data) => {
+          const elapsed = Date.now() - sendStartTime;
+          const remainingThinkingWait = isTestEnv ? 0 : Math.max(0, 900 - elapsed);
+
+          const revealAssistantReply = () => {
+            thinkingTimerRef.current = null;
+            setOptimisticAssistantMsg({
+              id: assistantKey,
+              role: 'assistant',
+              content: data.socraticResponse,
+              timestamp: new Date().toISOString(),
+              isFallback: data.isFallback,
+            });
+            setStreamingAssistantId(assistantKey);
+            setIsThinkingPhase(false);
+          };
+
+          if (remainingThinkingWait > 0) {
+            thinkingTimerRef.current = window.setTimeout(revealAssistantReply, remainingThinkingWait);
+          } else {
+            revealAssistantReply();
+          }
+        },
+        onError: () => {
+          if (thinkingTimerRef.current !== null) {
+            window.clearTimeout(thinkingTimerRef.current);
+            thinkingTimerRef.current = null;
+          }
+          setIsThinkingPhase(false);
+          setOptimisticUserMsg(null);
+          setOptimisticAssistantMsg(null);
+          setInputMessage(text);
         },
       }
     );
@@ -187,6 +313,17 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
   const handleResetConfirm = () => {
     resetMutation.mutate(undefined, {
       onSuccess: () => {
+        if (thinkingTimerRef.current !== null) {
+          window.clearTimeout(thinkingTimerRef.current);
+          thinkingTimerRef.current = null;
+        }
+        setOptimisticUserMsg(null);
+        setOptimisticAssistantMsg(null);
+        setStreamingAssistantId(null);
+        setIsThinkingPhase(false);
+        preSendCountRef.current = 0;
+        activeUserKeyRef.current = null;
+        activeAssistantKeyRef.current = null;
         setIsResetConfirmOpen(false);
       },
     });
@@ -386,7 +523,7 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
           aria-label="Histórico de mensagens do Tutor Socrático"
         >
           {/* Empty Conversation Welcome State */}
-          {messages.length === 0 && !askMutation.isPending && (
+          {renderedMessages.length === 0 && !askMutation.isPending && !isThinkingPhase && (
             <div className="py-6 px-2 text-center space-y-4">
               <div className="h-12 w-12 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center mx-auto">
                 <Bot className="h-6 w-6" aria-hidden="true" />
@@ -423,29 +560,46 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
           )}
 
           {/* Render Messages */}
-          {messages.map((msg) => (
-            <SocraticMessageBubble key={msg.id} message={msg} />
+          {renderedMessages.map((msg) => (
+            <SocraticMessageBubble
+              key={msg.id}
+              message={msg}
+              animateStream={msg.id === streamingAssistantId}
+              onStreamTick={() => scrollToBottom('auto')}
+              onStreamComplete={() => {
+                setStreamingAssistantId((prev) => (prev === msg.id ? null : prev));
+              }}
+            />
           ))}
 
           {/* Typing / Thinking Indicator */}
-          {askMutation.isPending && (
+          {(askMutation.isPending || isThinkingPhase) && (
             <div
-              className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 p-2"
+              className="flex justify-start gap-2.5 max-w-[90%] sm:max-w-[85%] mr-auto animate-fade-up"
+              style={{ animationDuration: '320ms' }}
               role="status"
               aria-live="polite"
             >
-              <div className="h-6 w-6 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0">
-                <Bot className="h-3.5 w-3.5 animate-pulse" aria-hidden="true" />
+              <div className="h-7 w-7 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                <Bot className="h-4 w-4 animate-pulse" aria-hidden="true" />
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-semibold text-slate-700 dark:text-slate-300">
-                  Tutor Socrático pensando...
-                </span>
-                <span className="flex space-x-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-brand-primary animate-bounce [animation-delay:-0.3s]" />
-                  <span className="h-1.5 w-1.5 rounded-full bg-brand-primary animate-bounce [animation-delay:-0.15s]" />
-                  <span className="h-1.5 w-1.5 rounded-full bg-brand-primary animate-bounce" />
-                </span>
+              <div className="flex flex-col items-start space-y-1">
+                <div className="flex items-center gap-1.5 px-1">
+                  <Sparkles className="h-3 w-3 text-brand-primary" aria-hidden="true" />
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    Tutor Socrático
+                  </span>
+                </div>
+                <div className="px-4 py-3 rounded-2xl rounded-tl-xs bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center gap-2.5">
+                  <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                    Tutor Socrático pensando...
+                  </span>
+                  <span className="flex space-x-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-brand-primary animate-bounce [animation-delay:-0.3s]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-brand-primary animate-bounce [animation-delay:-0.15s]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-brand-primary animate-bounce" />
+                  </span>
+                </div>
               </div>
             </div>
           )}
@@ -453,16 +607,39 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
           {/* Mutation Error Alert */}
           {askMutation.isError && (
             <div
-              className="p-3 rounded-brand bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-xs text-rose-800 dark:text-rose-300 flex items-start gap-2"
+              className="p-3 rounded-brand bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-xs text-rose-800 dark:text-rose-300 flex items-start justify-between gap-3"
               role="alert"
             >
-              <AlertCircle className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" aria-hidden="true" />
-              <div className="space-y-1">
-                <strong>Não foi possível obter resposta do tutor.</strong>
-                <p className="text-[11px]">
-                  Verifique sua conexão ou se seu limite diário foi atingido.
-                </p>
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" aria-hidden="true" />
+                <div className="space-y-1">
+                  <strong>Não foi possível obter resposta do tutor.</strong>
+                  <p className="text-[11px]">
+                    {(() => {
+                      const errObj = askMutation.error as {
+                        response?: { data?: { message?: string; detail?: string } };
+                      } | null;
+                      return (
+                        errObj?.response?.data?.message ||
+                        errObj?.response?.data?.detail ||
+                        'Verifique sua conexão ou se seu limite diário foi atingido.'
+                      );
+                    })()}
+                  </p>
+                </div>
               </div>
+              {!isPro && isAuthenticated && (
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={() => updatePlanMutation.mutate('PRO')}
+                  disabled={updatePlanMutation.isPending}
+                  className="text-xs h-7 px-2.5 shrink-0 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white"
+                >
+                  {updatePlanMutation.isPending ? 'Ativando...' : 'Ativar Pro Grátis'}
+                </Button>
+              )}
             </div>
           )}
 
@@ -515,7 +692,7 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
                   placeholder="Digite sua dúvida sobre o conceito ou fórmula..."
                   rows={2}
                   maxLength={1000}
-                  disabled={askMutation.isPending || isTurnQuotaExhausted}
+                  disabled={askMutation.isPending || isThinkingPhase || isTurnQuotaExhausted}
                   className="w-full resize-none p-2.5 pb-6 text-xs sm:text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-brand-primary/50"
                   aria-label="Pergunta para o Tutor Socrático"
                 />
@@ -544,11 +721,11 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
                 variant="primary"
                 size="md"
                 onClick={() => handleSendMessage()}
-                disabled={!inputMessage.trim() || askMutation.isPending || isTurnQuotaExhausted}
+                disabled={!inputMessage.trim() || askMutation.isPending || isThinkingPhase || isTurnQuotaExhausted}
                 className="h-10 px-3.5 shrink-0"
                 aria-label="Enviar pergunta ao Tutor Socrático"
               >
-                {askMutation.isPending ? (
+                {askMutation.isPending || isThinkingPhase ? (
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 ) : (
                   <Send className="h-4 w-4" aria-hidden="true" />

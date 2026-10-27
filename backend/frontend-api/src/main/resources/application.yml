@@ -93,7 +93,7 @@ spring:
         - id: notification-service-routes
           uri: ${NOTIFICATION_SERVICE_URL:http://notification-service:8083}
           predicates:
-            - Path=/api/v1/notifications/**
+            - Path=/api/v1/notifications, /api/v1/notifications/**
           filters:
             - name: RequestRateLimiter
               args:

@@ -113,6 +113,8 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
 
   const popoverRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const seededTemplatesRef = useRef<Set<string>>(new Set());
+  const { mutate: mutateCreateInApp } = createInAppMutation;
 
   const profileQuery = useGamificationProfileQuery();
   const profile = profileQuery.data;
@@ -130,13 +132,20 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
 
   // Seed diagnostic achievement in backend PostgreSQL database if completed
   useEffect(() => {
-    if (hasCompletedDiagnostic && user?.id && feedQuery.data?.notifications) {
+    const template = 'ACHIEVEMENT_DIAGNOSTIC';
+    if (
+      hasCompletedDiagnostic &&
+      user?.id &&
+      feedQuery.data?.notifications &&
+      !seededTemplatesRef.current.has(template)
+    ) {
       const alreadyLogged = feedQuery.data.notifications.some(
-        (n) => n.templateCode === 'ACHIEVEMENT_DIAGNOSTIC'
+        (n) => n.templateCode === template
       );
-      if (!alreadyLogged && !createInAppMutation.isPending) {
-        createInAppMutation.mutate({
-          templateCode: 'ACHIEVEMENT_DIAGNOSTIC',
+      seededTemplatesRef.current.add(template);
+      if (!alreadyLogged) {
+        mutateCreateInApp({
+          templateCode: template,
           title: 'Conquista: Raio-X Diagnóstico 🎯',
           body: 'Você concluiu sua avaliação diagnóstica TRI! Seu mapa de proficiências e radar pedagógico estão calibrados.',
           metadata: JSON.stringify({
@@ -148,17 +157,19 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
         });
       }
     }
-  }, [hasCompletedDiagnostic, user?.id, feedQuery.data?.notifications, createInAppMutation]);
+  }, [hasCompletedDiagnostic, user?.id, feedQuery.data?.notifications, mutateCreateInApp]);
 
   // Seed level achievement in backend PostgreSQL database if student reached level > 1
   useEffect(() => {
     if (profile?.level && profile.level > 1 && user?.id && feedQuery.data?.notifications) {
       const template = `ACHIEVEMENT_LEVEL_${profile.level}`;
+      if (seededTemplatesRef.current.has(template)) return;
       const alreadyLogged = feedQuery.data.notifications.some(
         (n) => n.templateCode === template
       );
-      if (!alreadyLogged && !createInAppMutation.isPending) {
-        createInAppMutation.mutate({
+      seededTemplatesRef.current.add(template);
+      if (!alreadyLogged) {
+        mutateCreateInApp({
           templateCode: template,
           title: `Nível ${profile.level} Alcançado! 🌟`,
           body: `Parabéns! Você alcançou o Nível ${profile.level} (${profile.levelTitle || 'Estudante Dedicado'}) e acumulou prestígio na sua liga semanal!`,
@@ -171,7 +182,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
         });
       }
     }
-  }, [profile?.level, profile?.levelTitle, user?.id, feedQuery.data?.notifications, createInAppMutation]);
+  }, [profile?.level, profile?.levelTitle, user?.id, feedQuery.data?.notifications, mutateCreateInApp]);
 
   // Build the live notifications list reflecting the authenticated student's state & PostgreSQL records
   const notifications: StudentNotification[] = useMemo(() => {

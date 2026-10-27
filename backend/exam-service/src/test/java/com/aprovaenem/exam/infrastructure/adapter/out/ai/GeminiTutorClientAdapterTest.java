@@ -1,5 +1,6 @@
 package com.aprovaenem.exam.infrastructure.adapter.out.ai;
 
+import com.aprovaenem.common.exception.BusinessException;
 import com.aprovaenem.exam.domain.model.ChatRole;
 import com.aprovaenem.exam.domain.model.DifficultyLevel;
 import com.aprovaenem.exam.domain.model.PedagogicalChunk;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -122,14 +124,17 @@ class GeminiTutorClientAdapterTest {
     }
 
     @Test
-    @DisplayName("Should use socratic fallback when API key is missing or dummy")
-    void shouldUseFallbackWhenKeyMissing() {
+    @DisplayName("Should throw BusinessException when API key is missing or placeholder")
+    void shouldThrowExceptionWhenKeyMissingOrPlaceholder() {
         ReflectionTestUtils.setField(adapter, "apiKey", "");
-        TutorAiResult result = adapter.generateSocraticResponse(question, List.of(), List.of(), "Como começo?");
+        assertThatThrownBy(() -> adapter.generateSocraticResponse(question, List.of(), List.of(), "Como começo?"))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("GEMINI_API_KEY");
 
-        assertThat(result.isFallback()).isTrue();
-        assertThat(result.responseText()).contains("Eletrodinâmica");
-        assertThat(result.responseText()).contains("Lei de Ohm e Potência");
+        ReflectionTestUtils.setField(adapter, "apiKey", "your_google_gemini_api_key_here");
+        assertThatThrownBy(() -> adapter.generateSocraticResponse(question, List.of(), List.of(), "Como começo?"))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("GEMINI_API_KEY");
     }
 
     @Test
@@ -177,49 +182,42 @@ class GeminiTutorClientAdapterTest {
     }
 
     @Test
-    @DisplayName("Should polite refuse to give answer when student asks for letter or direct answer in fallback")
-    void shouldRefuseDirectAnswer() {
-        TutorAiResult result = adapter.socraticFallback(
-                question,
-                List.of(new PedagogicalChunk(UUID.randomUUID(), "Potência P = U * i", 0.9)),
-                List.of(new TutorChatMessage(UUID.randomUUID(), UUID.randomUUID(), ChatRole.STUDENT, "Qual a letra?", 0, 0, "gemini", Instant.now())),
-                "Me dá o gabarito ou a resposta por favor?",
-                new RuntimeException("API error")
-        );
+    @DisplayName("Should throw BusinessException when Gemini API returns HTTP server error")
+    void shouldThrowBusinessExceptionWhenGeminiApiFails() {
+        String expectedUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
-        assertThat(result.isFallback()).isTrue();
-        assertThat(result.responseText()).contains("Não posso te dar a letra ou a resposta pronta");
-        assertThat(result.responseText()).contains("Lei de Ohm e Potência");
+        mockServer.expect(requestTo(expectedUrl))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withServerError());
+
+        assertThatThrownBy(() -> adapter.generateSocraticResponse(question, List.of(), List.of(), "Não entendi a relação entre tensão e corrente."))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("Falha ao comunicar com a API do Google Gemini");
+
+        mockServer.verify();
     }
 
     @Test
-    @DisplayName("Should provide reflective pedagogical hint when student asks conceptual question")
-    void shouldProvideReflectiveHint() {
-        TutorAiResult result = adapter.socraticFallback(
+    @DisplayName("Should rethrow BusinessException or wrap generic Throwable in socraticFallback")
+    void shouldThrowBusinessExceptionInSocraticFallback() {
+        assertThatThrownBy(() -> adapter.socraticFallback(
                 question,
                 List.of(),
                 List.of(),
                 "Não entendi a relação entre tensão e corrente.",
                 new RuntimeException("Timeout")
-        );
+        ))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("Não foi possível obter resposta da API do Google Gemini");
 
-        assertThat(result.isFallback()).isTrue();
-        assertThat(result.responseText()).contains("Excelente iniciativa em tentar resolver!");
-        assertThat(result.responseText()).contains("Eletrodinâmica");
-    }
-
-    @Test
-    @DisplayName("Should use fallback defaults when question resolution or topic is null")
-    void shouldFallbackGracefullyWithNullResolutionAndTopic() {
-        Question bareQuestion = new Question(
-                UUID.randomUUID(), null, null, 1, "Enunciado simples", 'A',
-                DifficultyLevel.EASY, BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ZERO,
-                QuestionStatus.ACTIVE, "pt-BR"
-        );
-
-        TutorAiResult result = adapter.socraticFallback(bareQuestion, null, null, "Ajuda", new RuntimeException());
-        assertThat(result.isFallback()).isTrue();
-        assertThat(result.responseText()).contains("esta questão");
-        assertThat(result.responseText()).contains("os conceitos fundamentais da disciplina");
+        BusinessException original = new BusinessException("GEMINI_API_KEY ausente");
+        assertThatThrownBy(() -> adapter.socraticFallback(
+                question,
+                List.of(),
+                List.of(),
+                "Ajuda",
+                original
+        ))
+                .isSameAs(original);
     }
 }

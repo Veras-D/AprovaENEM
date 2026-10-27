@@ -186,6 +186,69 @@ describe('SocraticTutorDrawer Component', () => {
     });
   });
 
+  it('should immediately clear input field and display optimistic user bubble while tutor is thinking', async () => {
+    useAuthStore.getState().setAuth('mock-token', {
+      id: 'student-1',
+      name: 'Maria Aluna',
+      email: 'maria@example.com',
+      roles: ['ROLE_STUDENT'],
+      isEmailVerified: true,
+      createdAt: '2026-01-01',
+    });
+
+    const emptyThread: SocraticThreadDto = {
+      threadId: 't-1',
+      questionId: mockQuestion.id,
+      remainingTurns: 6,
+      maxTurns: 6,
+      messages: [],
+    };
+    vi.spyOn(tutorService, 'getSocraticThread').mockResolvedValue(emptyThread);
+
+    let resolveAsk!: (value: SocraticChatResponse) => void;
+    vi.spyOn(tutorService, 'askSocraticTutor').mockImplementation(
+      () =>
+        new Promise<SocraticChatResponse>((resolve) => {
+          resolveAsk = resolve;
+        })
+    );
+
+    renderWithProviders(
+      <SocraticTutorDrawer isOpen={true} onClose={handleClose} question={mockQuestion} />
+    );
+
+    const textarea = await screen.findByPlaceholderText(/Digite sua dúvida sobre o conceito/i);
+    fireEvent.change(textarea, { target: { value: 'Quem é vc? Qual modelo é vc?' } });
+
+    const sendBtn = screen.getByRole('button', { name: /Enviar pergunta ao Tutor Socrático/i });
+    fireEvent.click(sendBtn);
+
+    // Input is cleared immediately before server responds
+    expect(textarea).toHaveValue('');
+    // Optimistic user bubble and thinking indicator are both visible simultaneously
+    expect(screen.getByText('Quem é vc? Qual modelo é vc?')).toBeInTheDocument();
+    expect(screen.getByText(/Tutor Socrático pensando/i)).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(resolveAsk).toBeTypeOf('function');
+    });
+
+    resolveAsk({
+      threadId: 't-1',
+      questionId: mockQuestion.id,
+      turnNumber: 1,
+      maxTurnsPerThread: 6,
+      remainingTurnsInThread: 5,
+      socraticResponse: 'Sou o Tutor IA Socrático do AprovaENEM!',
+      modelUsed: 'gemini-1.5-flash',
+      isFallback: false,
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Sou o Tutor IA Socrático do AprovaENEM!')).toBeInTheDocument();
+    });
+  });
+
   it('should prompt confirmation and invoke resetSocraticThread on confirm', async () => {
     useAuthStore.getState().setAuth('mock-token', {
       id: 'student-1',
@@ -353,6 +416,52 @@ describe('SocraticTutorDrawer Component', () => {
       expect(askSpy).toHaveBeenCalledWith(mockQuestion.id, {
         message: 'A'.repeat(1000),
       });
+    });
+  });
+
+  it('should display specific backend error message when tutor API throws an error', async () => {
+    useAuthStore.getState().setAuth('mock-token', {
+      id: 'student-1',
+      name: 'Maria Aluna',
+      email: 'maria@example.com',
+      roles: ['ROLE_STUDENT'],
+      isEmailVerified: true,
+      createdAt: '2026-01-01',
+    });
+
+    const activeThread: SocraticThreadDto = {
+      threadId: 't-1',
+      questionId: mockQuestion.id,
+      remainingTurns: 6,
+      maxTurns: 6,
+      messages: [],
+    };
+    vi.spyOn(tutorService, 'getSocraticThread').mockResolvedValue(activeThread);
+    vi.spyOn(tutorService, 'askSocraticTutor').mockRejectedValue({
+      response: {
+        data: {
+          message:
+            'A chave da API do Google Gemini (GEMINI_API_KEY) não está configurada no ambiente (.env).',
+        },
+      },
+    });
+
+    renderWithProviders(
+      <SocraticTutorDrawer isOpen={true} onClose={handleClose} question={mockQuestion} />
+    );
+
+    const textarea = await screen.findByPlaceholderText(/Digite sua dúvida sobre o conceito/i);
+    fireEvent.change(textarea, { target: { value: 'Como resolvo esta questão?' } });
+
+    const sendBtn = screen.getByRole('button', { name: /Enviar pergunta ao Tutor Socrático/i });
+    fireEvent.click(sendBtn);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/A chave da API do Google Gemini \(GEMINI_API_KEY\) não está configurada/i)
+      ).toBeInTheDocument();
+      // Input message should be restored so the user doesn't lose what they typed
+      expect(textarea).toHaveValue('Como resolvo esta questão?');
     });
   });
 });

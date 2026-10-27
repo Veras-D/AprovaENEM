@@ -1,5 +1,6 @@
 package com.aprovaenem.exam.infrastructure.adapter.out.ai;
 
+import com.aprovaenem.common.exception.BusinessException;
 import com.aprovaenem.exam.domain.model.PedagogicalChunk;
 import com.aprovaenem.exam.domain.model.Question;
 import com.aprovaenem.exam.domain.model.QuestionOption;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -69,9 +71,15 @@ public class GeminiTutorClientAdapter implements TutorAiPort {
             return TutorAiResult.success(createSocraticRefusal(question));
         }
 
-        if (apiKey == null || apiKey.isBlank() || apiKey.equalsIgnoreCase("dummy_or_test_key")) {
-            log.info("Gemini API key is not configured or is placeholder. Using pedagogical fallback.");
-            return socraticFallback(question, pedagogicalChunks, history, studentMessage, new IllegalStateException("Gemini API key not configured"));
+        String sanitizedKey = apiKey != null ? apiKey.trim().replaceAll("^[\"']+|[\"']+$", "") : "";
+        if (sanitizedKey.isBlank()
+                || sanitizedKey.equalsIgnoreCase("dummy_or_test_key")
+                || sanitizedKey.equalsIgnoreCase("your_google_gemini_api_key_here")) {
+            log.error("Gemini API key is not configured or is a placeholder in environment.");
+            throw new BusinessException(
+                    "A chave da API do Google Gemini (GEMINI_API_KEY) não está configurada no ambiente (.env). "
+                            + "Configure uma chave válida para utilizar o Tutor Socrático IA."
+            );
         }
 
         String systemInstruction = buildSystemPrompt(question, pedagogicalChunks);
@@ -89,13 +97,22 @@ public class GeminiTutorClientAdapter implements TutorAiPort {
 
         String url = String.format("%s/v1beta/models/%s:generateContent", baseUrl, model);
 
-        String responseBody = restClient.post()
-                .uri(url)
-                .contentType(MediaType.APPLICATION_JSON)
-                .header("x-goog-api-key", apiKey)
-                .body(requestPayload)
-                .retrieve()
-                .body(String.class);
+        String responseBody;
+        try {
+            responseBody = restClient.post()
+                    .uri(url)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("x-goog-api-key", sanitizedKey)
+                    .body(requestPayload)
+                    .retrieve()
+                    .body(String.class);
+        } catch (RestClientException ex) {
+            log.error("Gemini API call failed for model [{}]: {}", model, ex.getMessage());
+            throw new BusinessException(
+                    "Falha ao comunicar com a API do Google Gemini (" + model + "). "
+                            + "Verifique se a chave GEMINI_API_KEY e o modelo GEMINI_MODEL no arquivo .env são válidos."
+            );
+        }
 
         String candidateText = extractCandidateText(responseBody);
         String sanitizedText = sanitizeCandidateOutput(candidateText, question);
@@ -110,25 +127,14 @@ public class GeminiTutorClientAdapter implements TutorAiPort {
             String studentMessage,
             Throwable t
     ) {
-        log.warn("Gemini Tutor call diverted to Socratic fallback. Reason: {}", t.getMessage());
-
-        if (isDirectAnswerRequest(studentMessage)) {
-            return TutorAiResult.fallback(createSocraticRefusal(question));
+        log.error("Gemini Tutor call failed in circuit breaker fallback. Reason: {}", t != null ? t.getMessage() : "unknown");
+        if (t instanceof BusinessException businessEx) {
+            throw businessEx;
         }
-
-        QuestionResolution res = question.getResolution();
-        String keyConcepts = (res != null && res.getKeyConcepts() != null)
-                ? res.getKeyConcepts()
-                : "os conceitos fundamentais da disciplina";
-
-        String topicName = question.getTopicName() != null ? question.getTopicName() : "esta questão";
-
-        return TutorAiResult.fallback(String.format(
-                "Excelente iniciativa em tentar resolver! Vamos analisar a questão sobre **%s** passo a passo.\n\n" +
-                "💡 **Dica reflexiva**: Lembre-se de conectar a pergunta com %s.\n\n" +
-                "Qual é o primeiro passo que você daria para isolar as grandezas dadas pelo enunciado?",
-                topicName, keyConcepts
-        ));
+        throw new BusinessException(
+                "Não foi possível obter resposta da API do Google Gemini. "
+                        + "Verifique sua chave GEMINI_API_KEY no arquivo .env ou tente novamente em instantes."
+        );
     }
 
     private boolean isDirectAnswerRequest(String message) {
