@@ -297,4 +297,34 @@ describe('NotificationBell Component', () => {
     expect(recentReadIndex).toBe(1); // Read from today appears at index 1
     expect(oldReadIndex).toBe(2); // Read from days ago appears at index 2
   });
+
+  it('opens the full Central de Notificações modal when clicking "Ver todas as notificações" and filters by search/unread', () => {
+    const handleNavigate = vi.fn();
+    renderWithProviders(<NotificationBell onNavigate={handleNavigate} />);
+
+    const bellBtn = screen.getByRole('button', { name: /Notificações:/i });
+    fireEvent.click(bellBtn);
+
+    const viewAllBtn = screen.getByRole('button', { name: /Ver todas as notificações/i });
+    fireEvent.click(viewAllBtn);
+
+    // Full NotificationCenterModal should now be open
+    const modal = screen.getByTestId('notification-center-modal');
+    expect(modal).toBeInTheDocument();
+    expect(screen.getByText(/Histórico completo de conquistas, lembretes de estudo e avisos/i)).toBeInTheDocument();
+
+    // Filter by search query
+    const searchInput = screen.getByRole('searchbox', { name: /Buscar notificações/i });
+    fireEvent.change(searchInput, { target: { value: 'Tutor IA Socrático' } });
+    expect(screen.getByText(/Tutor IA Socrático Pedagógico/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Meta Diária de Estudos/i)).not.toBeInTheDocument();
+
+    // Clear search and click secondary shortcut to Ranking & Conquistas
+    fireEvent.change(searchInput, { target: { value: '' } });
+    const leaderboardShortcut = screen.getByRole('button', { name: /Ir para Conquistas & Ranking da Liga/i });
+    fireEvent.click(leaderboardShortcut);
+
+    expect(handleNavigate).toHaveBeenCalledWith('leaderboard');
+    expect(screen.queryByTestId('notification-center-modal')).not.toBeInTheDocument();
+  });
 });

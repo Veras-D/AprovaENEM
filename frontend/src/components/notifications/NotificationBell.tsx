@@ -21,6 +21,7 @@ import {
 } from '@/api/hooks';
 import { useSessionStore } from '@/stores/useSessionStore';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { NotificationCenterModal } from './NotificationCenterModal';
 
 export type NotificationCategory = 'ALL' | 'ACHIEVEMENT' | 'REMINDER' | 'UPDATE';
 
@@ -62,6 +63,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   const storageKey = user?.id ? `${STORAGE_KEY_READ_NOTIFICATIONS}_${user.id}` : STORAGE_KEY_READ_NOTIFICATIONS;
 
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isCenterModalOpen, setIsCenterModalOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<NotificationCategory>('ALL');
 
   // Backend PostgreSQL notifications queries & mutations
@@ -693,20 +695,41 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="p-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-center">
+          <div className="p-2.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setIsOpen(false);
+                setIsCenterModalOpen(true);
+              }}
+              className="text-xs text-brand-primary hover:underline font-semibold cursor-pointer"
+            >
+              Ver todas as notificações &rarr;
+            </button>
             <button
               type="button"
               onClick={() => {
                 setIsOpen(false);
                 onNavigate?.('leaderboard');
               }}
-              className="text-xs text-slate-500 hover:text-brand-primary font-medium cursor-pointer"
+              className="text-[11px] text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium cursor-pointer"
             >
-              Ver todas as conquistas &amp; ranking da liga &rarr;
+              Ranking &amp; Conquistas
             </button>
           </div>
         </div>
       )}
+
+      {/* Full Notification Center Modal */}
+      <NotificationCenterModal
+        isOpen={isCenterModalOpen}
+        onClose={() => setIsCenterModalOpen(false)}
+        notifications={notifications}
+        unreadCount={unreadCount}
+        onMarkAllAsRead={markAllAsRead}
+        onNotificationClick={handleNotificationClick}
+        onNavigate={onNavigate}
+      />
     </div>
   );
 };
