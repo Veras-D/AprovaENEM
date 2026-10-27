@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BarChart2,
   Lock,
@@ -42,6 +42,15 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = ({
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [formError, setFormError] = useState<string | null>(null);
 
+  // Clear credentials when unauthenticated or on mount to avoid stale or autofilled credentials
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setEmail('');
+      setPassword('');
+      setFormError(null);
+    }
+  }, [isAuthenticated]);
+
   const handleStudentLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
@@ -61,6 +70,8 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = ({
         email: email.trim().toLowerCase(),
         password,
       });
+      setEmail('');
+      setPassword('');
     } catch (err) {
       const apiError = err as ApiError;
       setFormError(
@@ -107,7 +118,13 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = ({
           </div>
         )}
 
-        <form onSubmit={handleStudentLogin} className="space-y-4">
+        <form onSubmit={handleStudentLogin} className="space-y-4" noValidate autoComplete="off">
+          {/* Hidden dummy fields to prevent browser autofill on gate view */}
+          <div style={{ display: 'none' }} aria-hidden="true">
+            <input type="text" name="fake_diagnostic_gate_username" tabIndex={-1} autoComplete="off" />
+            <input type="password" name="fake_diagnostic_gate_password" tabIndex={-1} autoComplete="off" />
+          </div>
+
           <div>
             <label
               htmlFor="diagnostic-gate-email"
@@ -117,7 +134,9 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = ({
             </label>
             <input
               id="diagnostic-gate-email"
+              name="diagnostic-gate-email"
               type="email"
+              autoComplete="off"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="seu.email@exemplo.com"
@@ -151,7 +170,9 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = ({
             <div className="relative">
               <input
                 id="diagnostic-gate-password"
+                name="diagnostic-gate-password"
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Sua senha de acesso"

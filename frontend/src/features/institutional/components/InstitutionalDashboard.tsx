@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Building2,
   GraduationCap,
@@ -43,6 +43,15 @@ export const InstitutionalDashboard: React.FC<InstitutionalDashboardProps> = ({
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [formError, setFormError] = useState<string | null>(null);
 
+  // Clear credentials when unauthenticated or on mount to avoid stale or autofilled credentials
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setEmail('');
+      setPassword('');
+      setFormError(null);
+    }
+  }, [isAuthenticated]);
+
   const isCoordinator = Boolean(
     isAuthenticated &&
       user?.roles?.some(
@@ -71,6 +80,8 @@ export const InstitutionalDashboard: React.FC<InstitutionalDashboardProps> = ({
         email: email.trim().toLowerCase(),
         password,
       });
+      setEmail('');
+      setPassword('');
     } catch (err) {
       const apiError = err as ApiError;
       setFormError(
@@ -117,7 +128,13 @@ export const InstitutionalDashboard: React.FC<InstitutionalDashboardProps> = ({
           </div>
         )}
 
-        <form onSubmit={handleCoordinatorLogin} className="space-y-4">
+        <form onSubmit={handleCoordinatorLogin} className="space-y-4" noValidate autoComplete="off">
+          {/* Hidden dummy fields to prevent browser autofill on gate view */}
+          <div style={{ display: 'none' }} aria-hidden="true">
+            <input type="text" name="fake_coordinator_username" tabIndex={-1} autoComplete="off" />
+            <input type="password" name="fake_coordinator_password" tabIndex={-1} autoComplete="off" />
+          </div>
+
           <div>
             <label
               htmlFor="coordinator-email"
@@ -127,7 +144,9 @@ export const InstitutionalDashboard: React.FC<InstitutionalDashboardProps> = ({
             </label>
             <input
               id="coordinator-email"
+              name="coordinator-email"
               type="email"
+              autoComplete="off"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="coordenacao@escola.gov.br"
@@ -146,7 +165,9 @@ export const InstitutionalDashboard: React.FC<InstitutionalDashboardProps> = ({
             <div className="relative">
               <input
                 id="coordinator-password"
+                name="coordinator-password"
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"

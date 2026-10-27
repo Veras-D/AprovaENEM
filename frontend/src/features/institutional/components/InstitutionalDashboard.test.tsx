@@ -55,8 +55,17 @@ describe('InstitutionalDashboard Component - Security & Role Guards', () => {
 
     // Should display access restriction and institutional login form
     expect(screen.getByText(/Acesso Restrito/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/E-mail Institucional/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Senha Institucional/i)).toBeInTheDocument();
+    
+    const emailInput = screen.getByLabelText(/E-mail Institucional/i);
+    const passwordInput = screen.getByLabelText(/Senha Institucional/i);
+    expect(emailInput).toBeInTheDocument();
+    expect(emailInput).toHaveValue('');
+    expect(emailInput).toHaveAttribute('autoComplete', 'off');
+
+    expect(passwordInput).toBeInTheDocument();
+    expect(passwordInput).toHaveValue('');
+    expect(passwordInput).toHaveAttribute('autoComplete', 'new-password');
+
     expect(screen.getByRole('button', { name: /Acessar Painel da Coordenação/i })).toBeInTheDocument();
 
     // MUST NOT leak sensitive cohort metrics to unauthenticated visitors

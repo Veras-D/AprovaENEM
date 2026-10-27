@@ -62,8 +62,17 @@ describe('DiagnosticDashboard Component', () => {
 
     expect(screen.getByText('Diagnóstico Individual & Radar de Proficiência ENEM')).toBeInTheDocument();
     expect(screen.getByText(/Acesso Restrito/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/E-mail do Aluno/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^Senha$/i)).toBeInTheDocument();
+    
+    const emailInput = screen.getByLabelText(/E-mail do Aluno/i);
+    const passwordInput = screen.getByLabelText(/^Senha$/i);
+    expect(emailInput).toBeInTheDocument();
+    expect(emailInput).toHaveValue('');
+    expect(emailInput).toHaveAttribute('autoComplete', 'off');
+
+    expect(passwordInput).toBeInTheDocument();
+    expect(passwordInput).toHaveValue('');
+    expect(passwordInput).toHaveAttribute('autoComplete', 'new-password');
+
     expect(screen.getByRole('button', { name: /Entrar na Minha Conta/i })).toBeInTheDocument();
 
     // Sensitive diagnostic metrics must NOT leak

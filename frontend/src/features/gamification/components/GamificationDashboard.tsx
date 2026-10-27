@@ -67,6 +67,15 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [formError, setFormError] = useState<string | null>(null);
 
+  // Clear credentials when unauthenticated or on mount to avoid stale or autofilled credentials
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setEmail('');
+      setPassword('');
+      setFormError(null);
+    }
+  }, [isAuthenticated]);
+
   const handleStudentLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
@@ -86,6 +95,8 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
         email: email.trim().toLowerCase(),
         password,
       });
+      setEmail('');
+      setPassword('');
     } catch (err) {
       const apiError = err as ApiError;
       setFormError(
@@ -266,7 +277,13 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
           </div>
         )}
 
-        <form onSubmit={handleStudentLogin} className="space-y-4">
+        <form onSubmit={handleStudentLogin} className="space-y-4" noValidate autoComplete="off">
+          {/* Hidden dummy fields to prevent browser autofill on gate view */}
+          <div style={{ display: 'none' }} aria-hidden="true">
+            <input type="text" name="fake_student_gate_username" tabIndex={-1} autoComplete="off" />
+            <input type="password" name="fake_student_gate_password" tabIndex={-1} autoComplete="off" />
+          </div>
+
           <div>
             <label
               htmlFor="student-gate-email"
@@ -276,7 +293,9 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
             </label>
             <input
               id="student-gate-email"
+              name="student-gate-email"
               type="email"
+              autoComplete="off"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="seu.email@exemplo.com"
@@ -295,7 +314,9 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
             <div className="relative">
               <input
                 id="student-gate-password"
+                name="student-gate-password"
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Sua senha de acesso"
