@@ -161,30 +161,63 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
     }
   }, [hasCompletedDiagnostic, user?.id, feedQuery.data?.notifications, mutateCreateInApp]);
 
-  // Seed level achievement in backend PostgreSQL database if student reached level > 1
+  // Seed level achievements (2..currentLevel) and freeze shield in backend PostgreSQL database
   useEffect(() => {
-    if (profile?.level && profile.level > 1 && user?.id && feedQuery.data?.notifications) {
-      const template = `ACHIEVEMENT_LEVEL_${profile.level}`;
-      if (seededTemplatesRef.current.has(template)) return;
-      const alreadyLogged = feedQuery.data.notifications.some(
-        (n) => n.templateCode === template
-      );
-      seededTemplatesRef.current.add(template);
-      if (!alreadyLogged) {
-        mutateCreateInApp({
-          templateCode: template,
-          title: `Nível ${profile.level} Alcançado! 🌟`,
-          body: `Parabéns! Você alcançou o Nível ${profile.level} (${profile.levelTitle || 'Estudante Dedicado'}) e acumulou prestígio na sua liga semanal!`,
-          metadata: JSON.stringify({
-            category: 'ACHIEVEMENT',
-            iconName: 'Trophy',
-            targetSection: 'leaderboard',
-            actionLabel: 'Ver Conquistas',
-          }),
-        });
+    if (!profile || !user?.id || !feedQuery.data?.notifications) return;
+
+    const getLevelTitleFor = (lvl: number): string => {
+      if (lvl <= 4) return 'Calouro Iniciante';
+      if (lvl <= 9) return 'Focado no SISU';
+      if (lvl <= 19) return 'Mestre dos Simulados';
+      return 'Nota 1000';
+    };
+
+    for (let lvl = 2; lvl <= profile.level; lvl++) {
+      const template = `ACHIEVEMENT_LEVEL_${lvl}`;
+      if (!seededTemplatesRef.current.has(template)) {
+        const alreadyLogged = feedQuery.data.notifications.some(
+          (n) => n.templateCode === template
+        );
+        seededTemplatesRef.current.add(template);
+        if (!alreadyLogged) {
+          mutateCreateInApp({
+            templateCode: template,
+            title: `Nível ${lvl} Alcançado! 🌟`,
+            body: `Parabéns! Você alcançou o Nível ${lvl} (${getLevelTitleFor(lvl)}) e acumulou prestígio na sua liga semanal!`,
+            metadata: JSON.stringify({
+              category: 'ACHIEVEMENT',
+              iconName: 'Trophy',
+              targetSection: 'leaderboard',
+              actionLabel: 'Ver Conquistas',
+            }),
+          });
+        }
       }
     }
-  }, [profile?.level, profile?.levelTitle, user?.id, feedQuery.data?.notifications, mutateCreateInApp]);
+
+    if (!profile.streakFreezeAvailable) {
+      const freezeTemplate = 'STREAK_FREEZE_CONSUMED';
+      if (!seededTemplatesRef.current.has(freezeTemplate)) {
+        const alreadyLogged = feedQuery.data.notifications.some(
+          (n) => n.templateCode === freezeTemplate
+        );
+        seededTemplatesRef.current.add(freezeTemplate);
+        if (!alreadyLogged) {
+          mutateCreateInApp({
+            templateCode: freezeTemplate,
+            title: 'Escudo de Congelamento Utilizado 🛡️',
+            body: 'Seu escudo de emergência mensal salvou sua sequência de estudos! Ele recarregará no 1º dia do próximo mês.',
+            metadata: JSON.stringify({
+              category: 'UPDATE',
+              iconName: 'ShieldAlert',
+              targetSection: 'leaderboard',
+              actionLabel: 'Ver Sequência & Ligas',
+            }),
+          });
+        }
+      }
+    }
+  }, [profile, user?.id, feedQuery.data?.notifications, mutateCreateInApp]);
 
   // Build the live notifications list reflecting the authenticated student's state & PostgreSQL records
   const notifications: StudentNotification[] = useMemo(() => {
@@ -488,6 +521,15 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
     if (activeTab === 'ALL') return notifications;
     return notifications.filter((n) => n.category === activeTab);
   }, [notifications, activeTab]);
+
+  const { refetch: refetchFeed } = feedQuery;
+
+  // Refetch notifications feed whenever the popover or full modal is opened
+  useEffect(() => {
+    if ((isOpen || isCenterModalOpen) && user?.id) {
+      void refetchFeed();
+    }
+  }, [isOpen, isCenterModalOpen, user?.id, refetchFeed]);
 
   // Click outside to close popover
   useEffect(() => {
