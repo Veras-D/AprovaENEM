@@ -219,6 +219,36 @@ Vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers
 
 ---
 
+### 2.5.1 Update Student Subscription Plan (Dev Mode Free Pro Upgrade)
+* **Method**: `PUT`
+* **Path**: `/api/v1/auth/me/plan`
+* **Headers**: `Authorization: Bearer <token>` (Requires `ROLE_STUDENT`, `ROLE_PREMIUM_STUDENT`, or `ROLE_ADMIN`)
+* **Description**: Toggles the authenticated student's subscription plan between `FREE` (`ROLE_STUDENT`) and `PRO` (`ROLE_PREMIUM_STUDENT`) for free in development/staging environments, persists the updated role in PostgreSQL (`users`), and returns a refreshed JWT token containing the updated role claim.
+
+#### Request Body
+```json
+{
+  "plan": "PRO"
+}
+```
+
+#### Response `200 OK`
+```json
+{
+  "id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "email": "lucas.silva@escola.ma.gov.br",
+  "fullName": "Lucas Silva",
+  "schoolType": "PUBLIC_SCHOOL",
+  "targetDegree": "Computer Science",
+  "role": "ROLE_PREMIUM_STUDENT",
+  "isEmailVerified": true,
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "createdAt": "2026-09-18T10:00:00Z"
+}
+```
+
+---
+
 ### 2.6 Export User Personal Data (LGPD Art. 18, V - Portabilidade)
 * **Method**: `GET`
 * **Path**: `/api/v1/auth/export` *(alias: `/api/v1/auth/me/export`)*

@@ -68,4 +68,24 @@ describe('SocraticQuotaWidget', () => {
 
     expect(handleUpgrade).toHaveBeenCalledTimes(1);
   });
+
+  it('renders free dev-mode Ativar Pro Grátis button even before daily quota is exhausted', () => {
+    const handleUpgrade = vi.fn();
+    render(
+      <SocraticQuotaWidget
+        remainingTurns={5}
+        isGuest={false}
+        isPro={false}
+        dailyQuestionsUnlocked={1}
+        dailyQuestionsLimit={3}
+        onUpgradePro={handleUpgrade}
+      />
+    );
+
+    const devProBtn = screen.getByRole('button', { name: /Ativar Plano Pro Grátis \(Modo Dev\)/i });
+    expect(devProBtn).toBeInTheDocument();
+    fireEvent.click(devProBtn);
+
+    expect(handleUpgrade).toHaveBeenCalledTimes(1);
+  });
 });

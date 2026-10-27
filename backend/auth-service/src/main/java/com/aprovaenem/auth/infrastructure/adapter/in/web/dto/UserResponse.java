@@ -23,4 +23,5 @@ public class UserResponse {
     private boolean isEmailVerified;
     private Instant createdAt;
     private String avatarConfig;
+    private String token;
 }

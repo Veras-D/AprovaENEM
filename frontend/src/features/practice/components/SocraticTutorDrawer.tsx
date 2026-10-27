@@ -22,6 +22,7 @@ import {
   useSocraticThreadQuery,
   useAskSocraticTutorMutation,
   useResetSocraticThreadMutation,
+  useUpdatePlanMutation,
 } from '@/api/hooks';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { isProOrAdmin, SOCRATIC_STARTER_PROMPTS } from '../tutor-utils';
@@ -78,6 +79,7 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
   const threadQuery = useSocraticThreadQuery(isOpen ? question.id : '');
   const askMutation = useAskSocraticTutorMutation(question.id);
   const resetMutation = useResetSocraticThreadMutation(question.id);
+  const updatePlanMutation = useUpdatePlanMutation();
 
   const thread = threadQuery.data;
   const messages = thread?.messages ?? [];
@@ -334,7 +336,7 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
             isPro={isPro}
             onRegisterGuest={() => setIsRegisterModalOpen(true)}
             onUpgradePro={() => {
-              // Upgrade CTA feedback / modal
+              updatePlanMutation.mutate('PRO');
             }}
           />
         </div>

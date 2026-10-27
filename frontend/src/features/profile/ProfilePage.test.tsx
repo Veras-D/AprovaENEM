@@ -10,6 +10,7 @@ import type { UserProfile } from '@/types';
 vi.mock('@/api/services/auth.service', () => ({
   authService: {
     updateProfile: vi.fn(),
+    updatePlan: vi.fn(),
     exportUserData: vi.fn(),
   },
 }));
@@ -205,5 +206,31 @@ describe('ProfilePage Feature', () => {
 
     expect(screen.getByText(/Confirmação Pendente/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Confirmar Agora/i })).toBeInTheDocument();
+  });
+
+  it('activates Free Dev-Mode Pro plan and updates user role to ROLE_PREMIUM_STUDENT', async () => {
+    vi.mocked(authService.updatePlan).mockResolvedValue({
+      token: 'refreshed-pro-jwt-token',
+      expiresInSeconds: 86400,
+      user: {
+        ...mockUser,
+        roles: ['ROLE_PREMIUM_STUDENT'],
+      },
+    });
+
+    renderWithClient(<ProfilePage onNavigate={vi.fn()} />);
+
+    expect(screen.getByText(/Plano Gratuito Ativo/i)).toBeInTheDocument();
+    const upgradeBtn = screen.getByRole('button', { name: /Ativar Plano Pro Gratuitamente/i });
+    fireEvent.click(upgradeBtn);
+
+    await waitFor(() => {
+      expect(authService.updatePlan).toHaveBeenCalledWith('PRO');
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Plano Pro Ativo • Ilimitado/i)).toBeInTheDocument();
+      expect(screen.getByText('Estudante Pro')).toBeInTheDocument();
+    });
   });
 });

@@ -525,4 +525,57 @@ class AuthServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("inválido ou expirou");
     }
+
+    @Test
+    @DisplayName("Should upgrade student plan to ROLE_PREMIUM_STUDENT and issue refreshed JWT token")
+    void shouldUpgradeStudentPlanToPro() {
+        UUID userId = UUID.randomUUID();
+        User existingUser = User.builder()
+                .id(userId)
+                .email("student@escola.gov.br")
+                .role(UserRole.ROLE_STUDENT)
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(tokenProvider.generateToken(any(User.class))).thenReturn("refreshed-pro-jwt");
+        when(tokenProvider.getExpirationSeconds()).thenReturn(86400L);
+
+        AuthUseCase.AuthResult result = authService.updatePlan(userId, true);
+
+        assertThat(result.user().getRole()).isEqualTo(UserRole.ROLE_PREMIUM_STUDENT);
+        assertThat(result.token()).isEqualTo("refreshed-pro-jwt");
+        assertThat(result.expiresInSeconds()).isEqualTo(86400L);
+        verify(userRepository).save(existingUser);
+    }
+
+    @Test
+    @DisplayName("Should downgrade student plan to ROLE_STUDENT and preserve ROLE_ADMIN when admin")
+    void shouldDowngradeStudentPlanToFreeAndPreserveAdminRole() {
+        UUID userId = UUID.randomUUID();
+        User premiumUser = User.builder()
+                .id(userId)
+                .email("pro@escola.gov.br")
+                .role(UserRole.ROLE_PREMIUM_STUDENT)
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(premiumUser));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(tokenProvider.generateToken(any(User.class))).thenReturn("refreshed-free-jwt");
+        when(tokenProvider.getExpirationSeconds()).thenReturn(86400L);
+
+        AuthUseCase.AuthResult result = authService.updatePlan(userId, false);
+        assertThat(result.user().getRole()).isEqualTo(UserRole.ROLE_STUDENT);
+
+        UUID adminId = UUID.randomUUID();
+        User adminUser = User.builder()
+                .id(adminId)
+                .email("admin@escola.gov.br")
+                .role(UserRole.ROLE_ADMIN)
+                .build();
+        when(userRepository.findById(adminId)).thenReturn(Optional.of(adminUser));
+
+        AuthUseCase.AuthResult adminResult = authService.updatePlan(adminId, false);
+        assertThat(adminResult.user().getRole()).isEqualTo(UserRole.ROLE_ADMIN);
+    }
 }

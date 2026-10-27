@@ -174,6 +174,15 @@ export const authService = {
   },
 
   /**
+   * Update student subscription plan (Free vs Pro)
+   * Target endpoint: PUT /api/v1/auth/me/plan
+   */
+  async updatePlan(plan: 'FREE' | 'PRO'): Promise<AuthLoginResponse> {
+    const response = await apiClient.put<RawBackendAuthPayload>('/auth/me/plan', { plan });
+    return normalizeAuthResponse(response.data);
+  },
+
+  /**
    * Export all student personal data (LGPD Art. 18, V Portabilidade)
    * Target endpoint: GET /api/v1/auth/export
    */

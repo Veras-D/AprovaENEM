@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import {
   useUpdateProfileMutation,
+  useUpdatePlanMutation,
   useUpdateDailyGoalMutation,
   useExportUserDataMutation,
   useGamificationProfileQuery,
@@ -23,6 +24,7 @@ import {
   Flame,
   Award,
   BookOpen,
+  Crown,
 } from 'lucide-react';
 
 export interface ProfilePageProps {
@@ -66,8 +68,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const [profileErrorMsg, setProfileErrorMsg] = useState<string | null>(null);
   const [goalSuccessMsg, setGoalSuccessMsg] = useState<string | null>(null);
   const [goalErrorMsg, setGoalErrorMsg] = useState<string | null>(null);
+  const [planSuccessMsg, setPlanSuccessMsg] = useState<string | null>(null);
 
   const updateProfileMutation = useUpdateProfileMutation();
+  const updatePlanMutation = useUpdatePlanMutation();
   const updateDailyGoalMutation = useUpdateDailyGoalMutation();
   const exportUserDataMutation = useExportUserDataMutation();
 
@@ -163,6 +167,23 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     }
   };
 
+  const isPro = user.roles.includes('ROLE_PREMIUM_STUDENT') || user.roles.includes('ROLE_ADMIN');
+
+  const handleTogglePlan = async (targetPlan: 'FREE' | 'PRO') => {
+    setPlanSuccessMsg(null);
+    try {
+      await updatePlanMutation.mutateAsync(targetPlan);
+      setPlanSuccessMsg(
+        targetPlan === 'PRO'
+          ? 'Plano Pro ativado gratuitamente (Modo Dev)! Consultas ilimitadas ao Tutor IA liberadas.'
+          : 'Plano alterado para Gratuito (1 questão diária no Tutor IA).'
+      );
+      setTimeout(() => setPlanSuccessMsg(null), 5000);
+    } catch {
+      // fallback handled by mutation
+    }
+  };
+
   const handleExportData = async () => {
     try {
       await exportUserDataMutation.mutateAsync();
@@ -225,7 +246,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 ? 'Administrador'
                 : user.roles.includes('ROLE_INSTITUTIONAL_ADMIN')
                   ? 'Coordenador'
-                  : 'Estudante'}
+                  : user.roles.includes('ROLE_PREMIUM_STUDENT')
+                    ? 'Estudante Pro'
+                    : 'Estudante'}
             </span>
             <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
               {user.schoolType === 'PRIVATE_SCHOOL' ? 'Escola Privada' : 'Escola Pública'}
@@ -485,6 +508,85 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           </div>
         </section>
       </div>
+
+      {/* SECTION 2.5: Subscription Plan & Dev Mode Free Pro Upgrade */}
+      <section
+        aria-labelledby="subscription-plan-heading"
+        className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 animate-fade-up stagger-4"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800 mb-4">
+          <div className="flex items-center gap-2.5">
+            <Crown className={`h-5 w-5 ${isPro ? 'text-amber-500' : 'text-slate-400'}`} aria-hidden="true" />
+            <div>
+              <h3 id="subscription-plan-heading" className="text-base font-bold text-slate-900 dark:text-white">
+                Plano de Estudos & Assinatura (Modo Dev)
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Ambiente de desenvolvimento — ative ou alterne o Plano Pro gratuitamente sem cobrança.
+              </p>
+            </div>
+          </div>
+          <span
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold self-start sm:self-center ${
+              isPro
+                ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+            }`}
+          >
+            <Crown className="h-3.5 w-3.5" aria-hidden="true" />
+            {isPro ? 'Plano Pro Ativo • Ilimitado' : 'Plano Gratuito Ativo'}
+          </span>
+        </div>
+
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl border border-indigo-100 dark:border-indigo-900/40 bg-gradient-to-r from-indigo-50/60 to-purple-50/60 dark:from-indigo-950/20 dark:to-purple-950/20">
+          <div className="space-y-1">
+            <p className="text-sm font-bold text-slate-900 dark:text-white">
+              {isPro
+                ? 'Você possui acesso ilimitado ao Tutor Socrático IA (Gemini 1.5 Flash)'
+                : 'Desbloqueie dicas socráticas ilimitadas em todas as questões do ENEM'}
+            </p>
+            <p className="text-xs text-slate-600 dark:text-slate-300">
+              {isPro
+                ? 'Sem limite diário de questões ou dicas socráticas. Seu token JWT e perfil estão configurados como ROLE_PREMIUM_STUDENT.'
+                : 'No Plano Gratuito você possui até 3 questões com dicas socráticas por dia. Ative o Plano Pro grátis para remover todos os limites.'}
+            </p>
+          </div>
+
+          <div className="shrink-0">
+            {isPro ? (
+              <button
+                type="button"
+                onClick={() => handleTogglePlan('FREE')}
+                disabled={updatePlanMutation.isPending}
+                className="w-full md:w-auto py-2.5 px-4 rounded-brand text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {updatePlanMutation.isPending ? 'Atualizando...' : 'Voltar para o Plano Gratuito'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => handleTogglePlan('PRO')}
+                disabled={updatePlanMutation.isPending}
+                className="w-full md:w-auto inline-flex items-center justify-center gap-2 py-2.5 px-5 rounded-brand text-xs sm:text-sm font-bold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-sm transition-all disabled:opacity-50 cursor-pointer"
+              >
+                <Crown className="h-4 w-4 text-amber-300" aria-hidden="true" />
+                <span>{updatePlanMutation.isPending ? 'Ativando...' : 'Ativar Plano Pro Gratuitamente'}</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {planSuccessMsg && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="mt-3 flex items-center gap-2 text-xs font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-lg px-3 py-2"
+          >
+            <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>{planSuccessMsg}</span>
+          </div>
+        )}
+      </section>
 
       {/* SECTION 3: Brazilian LGPD Data Portability & Account Erasure */}
       <section aria-labelledby="lgpd-heading" className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 animate-fade-up stagger-4">

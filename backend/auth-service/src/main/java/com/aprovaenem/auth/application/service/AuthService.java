@@ -186,6 +186,21 @@ public class AuthService implements AuthUseCase {
     }
 
     @Override
+    @Transactional
+    public AuthResult updatePlan(UUID userId, boolean proEnabled) {
+        User user = getCurrentUser(userId);
+        if (user.getRole() != UserRole.ROLE_ADMIN) {
+            user.setRole(proEnabled ? UserRole.ROLE_PREMIUM_STUDENT : UserRole.ROLE_STUDENT);
+        }
+        user.setUpdatedAt(Instant.now());
+        User saved = userRepository.save(user);
+        String token = tokenProvider.generateToken(saved);
+        long expiresInSeconds = tokenProvider.getExpirationSeconds();
+        log.info("Subscription plan updated for user [{}] to role [{}]", userId, saved.getRole());
+        return new AuthResult(saved, token, expiresInSeconds);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public UserDataExport exportUserData(UUID userId) {
         User user = getCurrentUser(userId);

@@ -13,6 +13,7 @@ import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.ResetPasswordReques
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.ResetPasswordResponse;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.ResendVerificationRequest;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.ResendVerificationResponse;
+import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.UpdatePlanRequest;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.UpdateProfileRequest;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.UserResponse;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.VerifyEmailRequest;
@@ -118,6 +119,23 @@ public class AuthController {
                 request.getAvatarConfig()
         );
         return ResponseEntity.ok(toUserResponse(user));
+    }
+
+    @PutMapping("/me/plan")
+    public ResponseEntity<UserResponse> updatePlan(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody(required = false) UpdatePlanRequest request
+    ) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        UUID userId = UUID.fromString(userDetails.getUsername());
+        boolean proEnabled = request == null || request.getPlan() == null
+                || !"FREE".equalsIgnoreCase(request.getPlan().trim());
+        AuthUseCase.AuthResult result = authUseCase.updatePlan(userId, proEnabled);
+        UserResponse response = toUserResponse(result.user());
+        response.setToken(result.token());
+        return ResponseEntity.ok(response);
     }
 
     private UserResponse toUserResponse(User user) {

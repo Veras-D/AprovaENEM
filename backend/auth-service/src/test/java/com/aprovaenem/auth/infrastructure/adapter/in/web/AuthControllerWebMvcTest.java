@@ -10,6 +10,7 @@ import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.LoginRequest;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.RegisterRequest;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.ResetPasswordRequest;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.ResendVerificationRequest;
+import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.UpdatePlanRequest;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.VerifyEmailRequest;
 import com.aprovaenem.auth.infrastructure.adapter.out.security.CustomUserDetailsService;
 import com.aprovaenem.auth.infrastructure.adapter.out.security.DelegatingAccessDeniedHandler;
@@ -43,6 +44,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -350,5 +352,34 @@ class AuthControllerWebMvcTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(username = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", roles = "STUDENT")
+    @DisplayName("PUT /api/v1/auth/me/plan should update student role to ROLE_PREMIUM_STUDENT and return refreshed token")
+    void shouldUpdatePlanSuccessfully() throws Exception {
+        UUID userId = UUID.fromString("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11");
+        UpdatePlanRequest request = new UpdatePlanRequest("PRO");
+
+        User updatedUser = User.builder()
+                .id(userId)
+                .email("student@escola.gov.br")
+                .fullName("Aluno Pro")
+                .schoolType(SchoolType.PUBLIC_SCHOOL)
+                .targetDegree("Medicina")
+                .role(UserRole.ROLE_PREMIUM_STUDENT)
+                .isEmailVerified(true)
+                .createdAt(Instant.now())
+                .build();
+
+        when(authUseCase.updatePlan(userId, true))
+                .thenReturn(new AuthUseCase.AuthResult(updatedUser, "refreshed-pro-token", 86400L));
+
+        mockMvc.perform(put("/api/v1/auth/me/plan")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role", is("ROLE_PREMIUM_STUDENT")))
+                .andExpect(jsonPath("$.token", is("refreshed-pro-token")));
     }
 }

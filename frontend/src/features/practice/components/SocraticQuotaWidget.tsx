@@ -100,9 +100,24 @@ export const SocraticQuotaWidget: React.FC<SocraticQuotaWidgetProps> = ({
             Modo Visitante
           </Badge>
         ) : (
-          <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs">
-            <Clock className="h-3 w-3" aria-hidden="true" />
-            <span>Reseta em {timeUntilReset.formatted}</span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs">
+              <Clock className="h-3 w-3" aria-hidden="true" />
+              <span>Reseta em {timeUntilReset.formatted}</span>
+            </div>
+            {onUpgradePro && !isDailyQuestionsExhausted && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onUpgradePro}
+                className="text-[11px] h-6 py-0 px-2 border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-semibold"
+                aria-label="Ativar Plano Pro Grátis (Modo Dev)"
+              >
+                <Crown className="h-3 w-3 mr-1 text-amber-500" aria-hidden="true" />
+                Ativar Pro Grátis
+              </Button>
+            )}
           </div>
         )}
       </div>

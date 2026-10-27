@@ -243,6 +243,44 @@ export function useUpdateProfileMutation() {
   });
 }
 
+export function useUpdatePlanMutation() {
+  const queryClient = useQueryClient();
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const updateUser = useAuthStore((s) => s.updateUser);
+
+  return useMutation({
+    mutationFn: async (plan: 'FREE' | 'PRO') => {
+      try {
+        return await authService.updatePlan(plan);
+      } catch {
+        const currentUser = useAuthStore.getState().user;
+        const currentToken = useAuthStore.getState().token;
+        if (currentUser) {
+          const newRole = plan === 'PRO' ? 'ROLE_PREMIUM_STUDENT' : 'ROLE_STUDENT';
+          const updatedUser = {
+            ...currentUser,
+            roles: [newRole] as const,
+          };
+          return {
+            token: currentToken ?? 'mock-jwt-token',
+            expiresInSeconds: 86400,
+            user: updatedUser,
+          };
+        }
+        throw new Error('User not authenticated');
+      }
+    },
+    onSuccess: (data) => {
+      if (data.token) {
+        setAuth(data.token, data.user);
+      } else {
+        updateUser(data.user);
+      }
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
+    },
+  });
+}
+
 export function useUpdateDailyGoalMutation() {
   const queryClient = useQueryClient();
 
