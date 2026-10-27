@@ -133,6 +133,41 @@ onde a **velocidade inicial** é dada por $v_0 = 20\\text{ m/s}$.`;
       const mathBlocks = screen.getAllByRole('math');
       expect(mathBlocks).toHaveLength(2); // block math and inline math
     });
+
+    it('renders bold wrapping inline math (**$0$**, **$\\pi$**), bullet lists (- item), and horizontal rules (---)', () => {
+      const content = `$$e^{i\\pi} + 1 = 0$$
+
+Cinco das constantes matemáticas mais importantes:
+- O **$0$** e o **$1$** (a base da aritmética);
+- O **$\\pi$** (presente nos círculos e na geometria);
+- O **$e$** (a base dos logaritmos naturais);
+- E o **$i$** (a unidade imaginária).
+
+---
+
+### Reflexão Filosófica`;
+
+      const { container } = render(<MathRenderer content={content} />);
+
+      // Should not leave raw ** or --- in text output
+      expect(container.textContent).not.toContain('**');
+      expect(container.textContent).not.toContain('---');
+
+      // Should render semantic unordered list and list items
+      const ul = container.querySelector('ul');
+      expect(ul).toBeInTheDocument();
+      expect(container.querySelectorAll('li')).toHaveLength(4);
+
+      // Should render horizontal rule
+      expect(container.querySelector('hr')).toBeInTheDocument();
+
+      // Should render heading
+      expect(screen.getByText('Reflexão Filosófica')).toBeInTheDocument();
+
+      // Should render 1 block math + 5 inline math elements inside bold tags
+      const mathElements = screen.getAllByRole('math');
+      expect(mathElements).toHaveLength(6);
+    });
   });
 
   describe('Unescaping Markdown punctuation', () => {

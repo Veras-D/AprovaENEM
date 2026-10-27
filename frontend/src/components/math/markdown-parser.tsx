@@ -1,5 +1,7 @@
 import React from 'react';
 import { ZoomableImage } from '@/components/ui/ZoomableImage';
+import { InlineMath } from './InlineMath';
+import { extractInlineMathPlaceholders } from './latex-parser';
 
 /**
  * Validates that an image or link URL uses safe protocols to prevent XSS.
@@ -43,10 +45,10 @@ const INLINE_LINK_REGEX = /(?<!!)\[([^\]\n]+)\]\((https?:\/\/[^\s)]+|\/[^\s)]+)\
 const INLINE_CODE_REGEX = /`([^`\n]+)`/g;
 
 // 4. Bold + Italic: ***text***
-const BOLD_ITALIC_REGEX = /\*\*\*([^\s*](?:[^*\n]*?[^\s*])?)\*\*\*/g;
+const BOLD_ITALIC_REGEX = /\*\*\*(?!\s*\*\*\*)([^*\n]+?)\*\*\*/g;
 
 // 5. Bold: **text** or __text__
-const BOLD_ASTERISK_REGEX = /\*\*([^\s*](?:[^*\n]*?[^\s*])?)\*\*/g;
+const BOLD_ASTERISK_REGEX = /\*\*(?!\s*\*\*)([^*\n]+?)\*\*/g;
 const BOLD_UNDERSCORE_REGEX = /(?<![a-zA-Z0-9_])__([^\s_](?:[^_\n]*?[^\s_])?)__(?![a-zA-Z0-9_])/g;
 
 // 6. Italic: *text* or _text_
@@ -59,6 +61,19 @@ const STRIKE_REGEX = /~~([^~\n]+)~~/g;
 // 8. Block image check (the entire line contains only the image)
 const BLOCK_IMAGE_REGEX = /^\s*!\[(.*?)\]\((https?:\/\/[^\s)]+|\/[^\s)]+|data:image\/[^\s)]+)\)\s*$/;
 
+// 9. Horizontal rule: ---, ***, ___
+const HORIZONTAL_RULE_REGEX = /^\s*(?:---+|\*\*\*+|___+)\s*$/;
+
+// 10. Heading: # to ####
+const HEADING_REGEX = /^\s*(#{1,4})\s+(.+)$/;
+
+// 11. Unordered list item: - item, * item, • item
+const UNORDERED_LIST_ITEM_REGEX = /^\s*[-*•]\s+(.+)$/;
+
+// 12. Inline math placeholder token: \uE000{idx}\uE001
+const MATH_PLACEHOLDER_SPLIT_REGEX = /(\uE000\d+\uE001)/g;
+const MATH_PLACEHOLDER_EXACT_REGEX = /^\uE000(\d+)\uE001$/;
+
 /**
  * Unescapes standard Markdown backslash-escaped punctuation characters (CommonMark § 2.4).
  * Specifically converts escaped punctuation such as "1\." -> "1.", "\*" -> "*", "\[" -> "[", etc.
@@ -69,12 +84,58 @@ export function unescapeMarkdown(text: string): string {
 }
 
 /**
- * Parses inline markdown tokens (bold, italic, code, links, inline images) within a single line.
+ * Replaces inline math placeholders (\uE000{idx}\uE001) with <InlineMath /> components
+ * and unescapes Markdown punctuation on plain text segments.
+ */
+function renderTextWithMath(
+  text: string,
+  mathSlots: readonly string[],
+  keyPrefix: string,
+  inlineClassName = ''
+): readonly React.ReactNode[] {
+  if (!text) return [];
+  if (mathSlots.length === 0 || !text.includes('\uE000')) {
+    return [unescapeMarkdown(text)];
+  }
+
+  const parts = text.split(MATH_PLACEHOLDER_SPLIT_REGEX);
+  const nodes: React.ReactNode[] = [];
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    if (!part) continue;
+
+    const exactMatch = part.match(MATH_PLACEHOLDER_EXACT_REGEX);
+    if (exactMatch) {
+      const slotIdx = Number(exactMatch[1]);
+      const mathFormula = mathSlots[slotIdx];
+      if (mathFormula !== undefined) {
+        nodes.push(
+          <InlineMath
+            key={`${keyPrefix}-math-${slotIdx}-${i}`}
+            math={mathFormula}
+            className={inlineClassName}
+          />
+        );
+        continue;
+      }
+    }
+
+    nodes.push(unescapeMarkdown(part));
+  }
+
+  return nodes;
+}
+
+/**
+ * Parses inline markdown tokens (bold, italic, code, links, inline images, and inline math) within a single line.
  */
 export function parseInlineMarkdown(
   text: string,
   keyPrefix: string,
-  disableInteractive = false
+  disableInteractive = false,
+  mathSlots: readonly string[] = [],
+  inlineClassName = ''
 ): readonly React.ReactNode[] {
   if (!text) return [];
 
@@ -114,13 +175,13 @@ export function parseInlineMarkdown(
     content: m[1] ?? '',
   }));
   collectMatches(BOLD_ITALIC_REGEX, 'bold-italic', (m) => ({
-    content: m[1] ?? '',
+    content: (m[1] ?? '').trim(),
   }));
   collectMatches(BOLD_ASTERISK_REGEX, 'bold', (m) => ({
-    content: m[1] ?? '',
+    content: (m[1] ?? '').trim(),
   }));
   collectMatches(BOLD_UNDERSCORE_REGEX, 'bold', (m) => ({
-    content: m[1] ?? '',
+    content: (m[1] ?? '').trim(),
   }));
   collectMatches(ITALIC_ASTERISK_REGEX, 'italic', (m) => ({
     content: m[1] ?? '',
@@ -133,7 +194,7 @@ export function parseInlineMarkdown(
   }));
 
   if (matches.length === 0) {
-    return [unescapeMarkdown(text)];
+    return renderTextWithMath(text, mathSlots, `${keyPrefix}-txt`, inlineClassName);
   }
 
   // Sort matches by index
@@ -159,7 +220,14 @@ export function parseInlineMarkdown(
 
     // Text prior to match
     if (match.index > currentIdx) {
-      nodes.push(unescapeMarkdown(text.slice(currentIdx, match.index)));
+      nodes.push(
+        ...renderTextWithMath(
+          text.slice(currentIdx, match.index),
+          mathSlots,
+          `${keyPrefix}-pre-${matchCounter}`,
+          inlineClassName
+        )
+      );
     }
 
     const key = `${keyPrefix}-m-${matchCounter}`;
@@ -186,7 +254,7 @@ export function parseInlineMarkdown(
           if (disableInteractive) {
             nodes.push(
               <span key={key} className="text-brand-primary underline font-medium">
-                {unescapeMarkdown(match.content)}
+                {renderTextWithMath(match.content, mathSlots, key, inlineClassName)}
               </span>
             );
           } else {
@@ -198,12 +266,12 @@ export function parseInlineMarkdown(
                 rel="noopener noreferrer"
                 className="text-brand-primary underline hover:opacity-80 transition-opacity"
               >
-                {unescapeMarkdown(match.content)}
+                {renderTextWithMath(match.content, mathSlots, key, inlineClassName)}
               </a>
             );
           }
         } else {
-          nodes.push(unescapeMarkdown(match.content));
+          nodes.push(...renderTextWithMath(match.content, mathSlots, key, inlineClassName));
         }
         break;
 
@@ -221,7 +289,7 @@ export function parseInlineMarkdown(
       case 'bold-italic':
         nodes.push(
           <strong key={key} className="font-semibold text-slate-900 dark:text-slate-100">
-            <em>{unescapeMarkdown(match.content)}</em>
+            <em>{renderTextWithMath(match.content, mathSlots, key, inlineClassName)}</em>
           </strong>
         );
         break;
@@ -229,7 +297,7 @@ export function parseInlineMarkdown(
       case 'bold':
         nodes.push(
           <strong key={key} className="font-semibold text-slate-900 dark:text-slate-100">
-            {unescapeMarkdown(match.content)}
+            {renderTextWithMath(match.content, mathSlots, key, inlineClassName)}
           </strong>
         );
         break;
@@ -237,7 +305,7 @@ export function parseInlineMarkdown(
       case 'italic':
         nodes.push(
           <em key={key} className="italic text-slate-800 dark:text-slate-200">
-            {unescapeMarkdown(match.content)}
+            {renderTextWithMath(match.content, mathSlots, key, inlineClassName)}
           </em>
         );
         break;
@@ -245,7 +313,7 @@ export function parseInlineMarkdown(
       case 'strikethrough':
         nodes.push(
           <del key={key} className="line-through text-slate-500">
-            {unescapeMarkdown(match.content)}
+            {renderTextWithMath(match.content, mathSlots, key, inlineClassName)}
           </del>
         );
         break;
@@ -256,7 +324,14 @@ export function parseInlineMarkdown(
 
   // Trailing text
   if (currentIdx < text.length) {
-    nodes.push(unescapeMarkdown(text.slice(currentIdx)));
+    nodes.push(
+      ...renderTextWithMath(
+        text.slice(currentIdx),
+        mathSlots,
+        `${keyPrefix}-post`,
+        inlineClassName
+      )
+    );
   }
 
   return nodes;
@@ -266,11 +341,12 @@ export interface RenderMarkdownOptions {
   readonly preserveNewlines?: boolean;
   readonly keyPrefix?: string;
   readonly disableInteractive?: boolean;
+  readonly inlineClassName?: string;
 }
 
 /**
  * Renders Markdown text containing bold, italic, code, block/inline images, links,
- * blockquotes, and preserved linebreaks into safe React elements.
+ * blockquotes, lists, headings, horizontal rules, inline math, and preserved linebreaks into safe React elements.
  */
 export function renderMarkdown(
   text: string,
@@ -278,13 +354,20 @@ export function renderMarkdown(
 ): readonly React.ReactNode[] {
   if (!text) return [];
 
-  const { preserveNewlines = true, keyPrefix = 'md', disableInteractive = false } = options;
+  const {
+    preserveNewlines = true,
+    keyPrefix = 'md',
+    disableInteractive = false,
+    inlineClassName = '',
+  } = options;
 
-  if (!preserveNewlines && !text.includes('\n')) {
-    return parseInlineMarkdown(text, keyPrefix, disableInteractive);
+  const { maskedText, mathSlots } = extractInlineMathPlaceholders(text);
+
+  if (!preserveNewlines && !maskedText.includes('\n')) {
+    return parseInlineMarkdown(maskedText, keyPrefix, disableInteractive, mathSlots, inlineClassName);
   }
 
-  const lines = text.split('\n');
+  const lines = maskedText.split('\n');
   const result: React.ReactNode[] = [];
 
   for (let i = 0; i < lines.length; i++) {
@@ -330,7 +413,35 @@ export function renderMarkdown(
       }
     }
 
-    // 2. Check if line is a Blockquote: > quote
+    // 2. Check if line is a Horizontal Rule: ---, ***, ___
+    if (HORIZONTAL_RULE_REGEX.test(line)) {
+      result.push(
+        <hr
+          key={lineKey}
+          className="my-3 border-t border-slate-200 dark:border-slate-700"
+        />
+      );
+      continue;
+    }
+
+    // 3. Check if line is a Markdown Heading: # to ####
+    const headingMatch = line.match(HEADING_REGEX);
+    if (headingMatch) {
+      const level = (headingMatch[1] ?? '#').length;
+      const headingContent = headingMatch[2] ?? '';
+      const headingClass =
+        level <= 2
+          ? 'text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 mt-2.5 mb-1 block'
+          : 'text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 mt-2 mb-0.5 block';
+      result.push(
+        <strong key={lineKey} className={headingClass}>
+          {parseInlineMarkdown(headingContent, lineKey, disableInteractive, mathSlots, inlineClassName)}
+        </strong>
+      );
+      continue;
+    }
+
+    // 4. Check if line is a Blockquote: > quote
     if (line.startsWith('> ')) {
       const quoteContent = line.slice(2).trim();
       result.push(
@@ -338,18 +449,69 @@ export function renderMarkdown(
           key={lineKey}
           className="p-3 my-2 border-l-4 border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-900/40 italic text-slate-700 dark:text-slate-300 rounded-r"
         >
-          {parseInlineMarkdown(quoteContent, lineKey, disableInteractive)}
+          {parseInlineMarkdown(quoteContent, lineKey, disableInteractive, mathSlots, inlineClassName)}
         </blockquote>
       );
       continue;
     }
 
-    // 3. Regular line with inline markdown
-    const inlineNodes = parseInlineMarkdown(line, lineKey, disableInteractive);
+    // 5. Check if line starts an Unordered Bullet List: - item, * item, • item
+    const listMatch = line.match(UNORDERED_LIST_ITEM_REGEX);
+    if (listMatch) {
+      const listItems: { key: string; content: string }[] = [];
+      let j = i;
+      while (j < lines.length) {
+        const candidateLine = lines[j] ?? '';
+        const itemMatch = candidateLine.match(UNORDERED_LIST_ITEM_REGEX);
+        if (!itemMatch) break;
+        listItems.push({
+          key: `${keyPrefix}-li-${j}`,
+          content: itemMatch[1] ?? '',
+        });
+        j++;
+      }
+      i = j - 1;
+      result.push(
+        <ul
+          key={lineKey}
+          className="my-1.5 pl-4 space-y-1 list-disc marker:text-brand-primary"
+        >
+          {listItems.map((item) => (
+            <li key={item.key} className="leading-relaxed">
+              {parseInlineMarkdown(
+                item.content,
+                item.key,
+                disableInteractive,
+                mathSlots,
+                inlineClassName
+              )}
+            </li>
+          ))}
+        </ul>
+      );
+      continue;
+    }
+
+    // 6. Regular line with inline markdown & inline math
+    const inlineNodes = parseInlineMarkdown(
+      line,
+      lineKey,
+      disableInteractive,
+      mathSlots,
+      inlineClassName
+    );
+    const nextLine = lines[i + 1] ?? '';
+    const isNextBlock =
+      HORIZONTAL_RULE_REGEX.test(nextLine) ||
+      HEADING_REGEX.test(nextLine) ||
+      UNORDERED_LIST_ITEM_REGEX.test(nextLine) ||
+      nextLine.startsWith('> ') ||
+      BLOCK_IMAGE_REGEX.test(nextLine);
+
     result.push(
       <React.Fragment key={lineKey}>
         {inlineNodes}
-        {preserveNewlines && i < lines.length - 1 && <br />}
+        {preserveNewlines && i < lines.length - 1 && !isNextBlock && <br />}
       </React.Fragment>
     );
   }

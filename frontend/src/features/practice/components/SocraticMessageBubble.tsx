@@ -71,9 +71,9 @@ export const SocraticMessageBubble: React.FC<SocraticMessageBubbleProps> = ({
     }
 
     const fullText = safeContent;
-    // Keep LaTeX formulas ($...$ and $$...$$) atomic while splitting text into individual words
+    // Keep bold/italic LaTeX formulas (**$...$**), block/inline LaTeX, and words atomic during stream
     const tokens = fullText
-      ? (fullText.match(/\$\$[\s\S]*?\$\$|\$[^$\n]+\$|\S+\s*/g) ?? [fullText])
+      ? (fullText.match(/\*{1,3}\$[^$\n]+\$\*{1,3}\s*|\$\$[\s\S]*?\$\$|\$[^$\n]+\$|\S+\s*/g) ?? [fullText])
       : [''];
     let currentIndex = 0;
     setDisplayedContent('');

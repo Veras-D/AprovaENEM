@@ -135,3 +135,151 @@ export function parseLatexTokens(rawInput: string): readonly LatexToken[] {
 
   return tokens;
 }
+
+/**
+ * Splits content into block-level LaTeX math tokens ($$...$$, \[...\]) and text tokens,
+ * preserving inline math ($...$, \(...\)) inside text tokens so Markdown block and inline
+ * rules (lists, headings, bold around math like **$0$**) can be parsed cohesively.
+ */
+export function parseBlockLatexTokens(rawInput: string): readonly LatexToken[] {
+  if (!rawInput) {
+    return [];
+  }
+
+  const input = sanitizeCurrencyDelimiters(rawInput);
+  const matches: MatchOccurrence[] = [];
+
+  const collectMatches = (regex: RegExp) => {
+    regex.lastIndex = 0;
+    let match: RegExpExecArray | null;
+    while ((match = regex.exec(input)) !== null) {
+      matches.push({
+        index: match.index,
+        length: match[0].length,
+        type: 'block-math',
+        content: (match[1] || '').trim(),
+        raw: match[0],
+      });
+    }
+  };
+
+  collectMatches(BLOCK_DOLLAR_REGEX);
+  collectMatches(BLOCK_BRACKET_REGEX);
+
+  matches.sort((a, b) => a.index - b.index);
+
+  const nonOverlapping: MatchOccurrence[] = [];
+  let lastEnd = 0;
+  for (const m of matches) {
+    if (m.index >= lastEnd) {
+      nonOverlapping.push(m);
+      lastEnd = m.index + m.length;
+    }
+  }
+
+  const tokens: LatexToken[] = [];
+  let currentIndex = 0;
+
+  for (const match of nonOverlapping) {
+    if (match.index > currentIndex) {
+      const textChunk = input.slice(currentIndex, match.index);
+      if (textChunk) {
+        tokens.push({
+          type: 'text',
+          content: textChunk,
+          raw: textChunk,
+        });
+      }
+    }
+
+    tokens.push({
+      type: 'block-math',
+      content: match.content,
+      raw: match.raw,
+    });
+
+    currentIndex = match.index + match.length;
+  }
+
+  if (currentIndex < input.length) {
+    const trailingText = input.slice(currentIndex);
+    if (trailingText) {
+      tokens.push({
+        type: 'text',
+        content: trailingText,
+        raw: trailingText,
+      });
+    }
+  }
+
+  return tokens;
+}
+
+/**
+ * Extracts inline math expressions (\(...\) and $...$) into a lookup array and masks them
+ * with private-use Unicode placeholders (\uE000{index}\uE001) so Markdown formatting
+ * (**$0$**, lists, italics) never collides with or gets split by LaTeX syntax.
+ */
+export function extractInlineMathPlaceholders(rawText: string): {
+  readonly maskedText: string;
+  readonly mathSlots: readonly string[];
+} {
+  if (!rawText) {
+    return { maskedText: '', mathSlots: [] };
+  }
+
+  const input = sanitizeCurrencyDelimiters(rawText);
+  const matches: MatchOccurrence[] = [];
+
+  const collectMatches = (regex: RegExp) => {
+    regex.lastIndex = 0;
+    let match: RegExpExecArray | null;
+    while ((match = regex.exec(input)) !== null) {
+      matches.push({
+        index: match.index,
+        length: match[0].length,
+        type: 'inline-math',
+        content: (match[1] || '').trim(),
+        raw: match[0],
+      });
+    }
+  };
+
+  collectMatches(INLINE_PAREN_REGEX);
+  collectMatches(INLINE_DOLLAR_REGEX);
+
+  if (matches.length === 0) {
+    return { maskedText: input, mathSlots: [] };
+  }
+
+  matches.sort((a, b) => a.index - b.index);
+
+  const nonOverlapping: MatchOccurrence[] = [];
+  let lastEnd = 0;
+  for (const m of matches) {
+    if (m.index >= lastEnd) {
+      nonOverlapping.push(m);
+      lastEnd = m.index + m.length;
+    }
+  }
+
+  const mathSlots: string[] = [];
+  let maskedText = '';
+  let currentIndex = 0;
+
+  for (const match of nonOverlapping) {
+    if (match.index > currentIndex) {
+      maskedText += input.slice(currentIndex, match.index);
+    }
+    const slotIdx = mathSlots.length;
+    mathSlots.push(match.content);
+    maskedText += `\uE000${slotIdx}\uE001`;
+    currentIndex = match.index + match.length;
+  }
+
+  if (currentIndex < input.length) {
+    maskedText += input.slice(currentIndex);
+  }
+
+  return { maskedText, mathSlots };
+}

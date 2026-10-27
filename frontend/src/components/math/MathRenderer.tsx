@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
-import { parseLatexTokens } from './latex-parser';
+import { parseBlockLatexTokens } from './latex-parser';
 import { renderMarkdown } from './markdown-parser';
-import { InlineMath } from './InlineMath';
 import { BlockMath } from './BlockMath';
 
 export interface MathRendererProps {
@@ -29,7 +28,7 @@ export const MathRenderer: React.FC<MathRendererProps> = ({
   as: Component = 'div',
   disableInteractive = false,
 }) => {
-  const tokens = useMemo(() => parseLatexTokens(content), [content]);
+  const tokens = useMemo(() => parseBlockLatexTokens(content), [content]);
 
   if (!content) {
     return null;
@@ -48,23 +47,14 @@ export const MathRenderer: React.FC<MathRendererProps> = ({
           );
         }
 
-        if (token.type === 'inline-math') {
-          return (
-            <InlineMath
-              key={`inline-${index}`}
-              math={token.content}
-              className={inlineClassName}
-            />
-          );
-        }
-
-        // Markdown-aware text token
+        // Markdown-aware text token (handles inline math, lists, bold, italic, hr, headings)
         return (
           <React.Fragment key={`text-${index}`}>
             {renderMarkdown(token.content, {
               preserveNewlines,
               keyPrefix: `text-${index}`,
               disableInteractive,
+              inlineClassName,
             })}
           </React.Fragment>
         );
