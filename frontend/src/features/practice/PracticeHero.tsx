@@ -140,12 +140,16 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     [isAuthenticated, recordActivityMutation]
   );
 
-  // Monitor level progression and trigger LevelUpModal celebration when level increases
+  // Monitor level progression and queue LevelUpModal celebration when level increases
+  // (Displayed only upon session completion or tab switch to never interrupt an active study session)
   useEffect(() => {
     const currentLevel = gamificationQuery.data?.level;
     if (!currentLevel || !isAuthenticated) return;
 
-    const storageKey = `aprovaenem_last_seen_level_${user?.id || 'anon'}`;
+    const userId = user?.id || 'anon';
+    const storageKey = `aprovaenem_last_seen_level_${userId}`;
+    const pendingKey = `aprovaenem_pending_level_up_${userId}`;
+
     if (lastSeenLevelRef.current === null) {
       if (typeof localStorage !== 'undefined') {
         const stored = localStorage.getItem(storageKey);
@@ -155,6 +159,26 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
           lastSeenLevelRef.current = currentLevel;
           localStorage.setItem(storageKey, String(currentLevel));
         }
+
+        // Restore any pending unshown level-up from localStorage if still valid
+        if (!levelUpData) {
+          const pendingRaw = localStorage.getItem(pendingKey);
+          if (pendingRaw) {
+            try {
+              const parsed = JSON.parse(pendingRaw) as {
+                newLevel: number;
+                previousLevel?: number;
+                levelTitle?: string;
+                weeklyLeague?: string;
+              };
+              if (parsed && typeof parsed.newLevel === 'number') {
+                setLevelUpData(parsed);
+              }
+            } catch {
+              localStorage.removeItem(pendingKey);
+            }
+          }
+        }
       } else {
         lastSeenLevelRef.current = currentLevel;
       }
@@ -163,16 +187,17 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     if (lastSeenLevelRef.current !== null && currentLevel > lastSeenLevelRef.current) {
       const prev = lastSeenLevelRef.current;
       lastSeenLevelRef.current = currentLevel;
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem(storageKey, String(currentLevel));
-      }
-      setLevelUpData({
+      const payload = {
         newLevel: currentLevel,
         previousLevel: prev,
         levelTitle: gamificationQuery.data?.levelTitle,
         weeklyLeague: gamificationQuery.data?.weeklyLeague,
-      });
-      setIsLevelUpModalOpen(true);
+      };
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(storageKey, String(currentLevel));
+        localStorage.setItem(pendingKey, JSON.stringify(payload));
+      }
+      setLevelUpData(payload);
     }
   }, [
     gamificationQuery.data?.level,
@@ -180,6 +205,7 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
     gamificationQuery.data?.weeklyLeague,
     isAuthenticated,
     user?.id,
+    levelUpData,
   ]);
 
   const anonymousSessionId = useSessionStore((state) => state.anonymousSessionId);
@@ -617,6 +643,16 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
 
   const isDiagnosticCompletion =
     phase === 'DIAGNOSTIC' || !isAuthenticated || (isDiagnosticSession && isCompleted);
+
+  // Display queued LevelUpModal only after the student finishes the current study session
+  useEffect(() => {
+    if (isCompleted && levelUpData && !isLevelUpModalOpen) {
+      setIsLevelUpModalOpen(true);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(`aprovaenem_pending_level_up_${user?.id || 'anon'}`);
+      }
+    }
+  }, [isCompleted, levelUpData, isLevelUpModalOpen, user?.id]);
 
   const activeReport: DiagnosticReportDto = useMemo(() => {
     if (diagnosticReport && 'radar' in diagnosticReport && diagnosticReport.radar) {
@@ -1132,7 +1168,13 @@ export const PracticeHero: React.FC<PracticeHeroProps> = ({
       {levelUpData && (
         <LevelUpModal
           isOpen={isLevelUpModalOpen}
-          onClose={() => setIsLevelUpModalOpen(false)}
+          onClose={() => {
+            setIsLevelUpModalOpen(false);
+            setLevelUpData(null);
+            if (typeof localStorage !== 'undefined') {
+              localStorage.removeItem(`aprovaenem_pending_level_up_${user?.id || 'anon'}`);
+            }
+          }}
           newLevel={levelUpData.newLevel}
           previousLevel={levelUpData.previousLevel}
           levelTitle={levelUpData.levelTitle}

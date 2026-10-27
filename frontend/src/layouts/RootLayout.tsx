@@ -14,6 +14,7 @@ import {
 } from '@/components/accessibility';
 import { RegisterModal } from '@/components/auth';
 import { TermsAndPrivacyModal, AccountErasureModal } from '@/components/legal';
+import { LevelUpModal } from '@/features/gamification/components/LevelUpModal';
 import { ShieldCheck } from 'lucide-react';
 
 export interface RootLayoutProps {
@@ -37,15 +38,50 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
   const authModalMode = useAuthStore((s) => s.authModalMode);
   const openAuthModal = useAuthStore((s) => s.openAuthModal);
   const closeAuthModal = useAuthStore((s) => s.closeAuthModal);
+  const user = useAuthStore((s) => s.user);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [isLegalModalOpen, setIsLegalModalOpen] = useState<boolean>(false);
   const [legalModalTab, setLegalModalTab] = useState<'terms' | 'privacy'>('terms');
   const [isErasureModalOpen, setIsErasureModalOpen] = useState<boolean>(false);
+  const [pendingLevelUp, setPendingLevelUp] = useState<{
+    newLevel: number;
+    previousLevel?: number;
+    levelTitle?: string;
+    weeklyLeague?: string;
+  } | null>(null);
+  const [isTabLevelUpModalOpen, setIsTabLevelUpModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const handleOpenErasure = () => setIsErasureModalOpen(true);
     window.addEventListener('aprovaenem:open-erasure-modal', handleOpenErasure);
     return () => window.removeEventListener('aprovaenem:open-erasure-modal', handleOpenErasure);
   }, []);
+
+  // When switching away from the 'practice' tab, check if there is a queued level-up celebration
+  useEffect(() => {
+    if (!isAuthenticated || activeSection === 'practice' || typeof localStorage === 'undefined') {
+      return;
+    }
+    const pendingKey = `aprovaenem_pending_level_up_${user?.id || 'anon'}`;
+    const pendingRaw = localStorage.getItem(pendingKey);
+    if (pendingRaw) {
+      try {
+        const parsed = JSON.parse(pendingRaw) as {
+          newLevel: number;
+          previousLevel?: number;
+          levelTitle?: string;
+          weeklyLeague?: string;
+        };
+        if (parsed && typeof parsed.newLevel === 'number') {
+          setPendingLevelUp(parsed);
+          setIsTabLevelUpModalOpen(true);
+          localStorage.removeItem(pendingKey);
+        }
+      } catch {
+        localStorage.removeItem(pendingKey);
+      }
+    }
+  }, [activeSection, isAuthenticated, user?.id]);
 
   const openLegalModal = (tab: 'terms' | 'privacy' = 'terms') => {
     setLegalModalTab(tab);
@@ -166,6 +202,24 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
         isOpen={isErasureModalOpen}
         onClose={() => setIsErasureModalOpen(false)}
       />
+
+      {/* Queued Level-Up Celebration Modal displayed on tab switch */}
+      {pendingLevelUp && (
+        <LevelUpModal
+          isOpen={isTabLevelUpModalOpen}
+          onClose={() => {
+            setIsTabLevelUpModalOpen(false);
+            setPendingLevelUp(null);
+          }}
+          newLevel={pendingLevelUp.newLevel}
+          previousLevel={pendingLevelUp.previousLevel}
+          levelTitle={pendingLevelUp.levelTitle}
+          weeklyLeague={pendingLevelUp.weeklyLeague}
+          awardedXp={50}
+          onContinuePractice={() => handleNavigate('practice')}
+          onOpenGamification={() => handleNavigate('leaderboard')}
+        />
+      )}
 
     </div>
   );

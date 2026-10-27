@@ -147,4 +147,52 @@ describe('RootLayout component', () => {
 
     expect(screen.queryByRole('button', { name: /Acesso da Coordenação/i })).not.toBeInTheDocument();
   });
+
+  it('should display queued LevelUpModal when user switches away from practice tab', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-level-tab',
+        name: 'Carlos Nivel',
+        email: 'carlos@example.com',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-01-01T00:00:00Z',
+      },
+      token: 'jwt-token',
+      isAuthenticated: true,
+    });
+
+    localStorage.setItem(
+      'aprovaenem_pending_level_up_usr-level-tab',
+      JSON.stringify({
+        newLevel: 4,
+        previousLevel: 3,
+        levelTitle: 'Veterano ENEM',
+        weeklyLeague: 'PRATA',
+      })
+    );
+
+    const { rerender } = renderWithProviders(
+      <RootLayout activeSection="practice">
+        <div>Prática em andamento</div>
+      </RootLayout>
+    );
+
+    // Should not appear while still on the practice tab
+    expect(screen.queryByTestId('level-up-modal')).not.toBeInTheDocument();
+
+    // Switch tab to leaderboard
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <RootLayout activeSection="leaderboard">
+          <div>Ranking</div>
+        </RootLayout>
+      </QueryClientProvider>
+    );
+
+    expect(screen.getByTestId('level-up-modal')).toBeInTheDocument();
+    expect(screen.getByText('Nível 4!')).toBeInTheDocument();
+    expect(screen.getByText('Veterano ENEM')).toBeInTheDocument();
+    expect(localStorage.getItem('aprovaenem_pending_level_up_usr-level-tab')).toBeNull();
+  });
 });

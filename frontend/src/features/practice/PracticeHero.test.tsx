@@ -905,7 +905,7 @@ describe('PracticeHero Component', () => {
     });
   });
 
-  it('triggers LevelUpModal when student level advances to a higher level', async () => {
+  it('defers LevelUpModal while in active study session and triggers it only after session completion', async () => {
     useAuthStore.setState({
       isAuthenticated: true,
       user: {
@@ -941,7 +941,25 @@ describe('PracticeHero Component', () => {
 
     renderWithProviders(<PracticeHero />, testClient);
 
-    // LevelUpModal should be displayed since current level (3) > previous level (2)
+    // While the study session is active, LevelUpModal must NOT interrupt the student
+    expect(screen.queryByTestId('level-up-modal')).not.toBeInTheDocument();
+    expect(localStorage.getItem('aprovaenem_pending_level_up_student-level-1')).toBeTruthy();
+
+    // Complete all questions in the study session
+    act(() => {
+      const qs = useSessionStore.getState().questions;
+      qs.forEach((q) => {
+        useSessionStore.getState().recordAttempt({
+          questionId: q.id,
+          selectedOption: 'A',
+          correctOption: 'A',
+          isCorrect: true,
+          awardedXp: 15,
+        });
+      });
+    });
+
+    // Now that the session is completed, LevelUpModal should be displayed
     await waitFor(() => {
       expect(screen.getByTestId('level-up-modal')).toBeInTheDocument();
     });
