@@ -14,6 +14,7 @@ import type {
   StartSessionRequest,
   SubmitAnswerRequest,
   SocraticChatRequest,
+  SocraticThreadDto,
   AuthLoginRequest,
   AuthRegisterRequest,
   RecordActivityRequest,
@@ -120,6 +121,13 @@ export function useResetSocraticThreadMutation(questionId: string) {
   return useMutation({
     mutationFn: () => tutorService.resetSocraticThread(questionId),
     onSuccess: () => {
+      queryClient.setQueryData<SocraticThreadDto>(queryKeys.tutor.thread(questionId), {
+        threadId: '',
+        questionId,
+        remainingTurns: 6,
+        maxTurns: 6,
+        messages: [],
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.tutor.thread(questionId) });
     },
   });

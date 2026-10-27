@@ -317,6 +317,7 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
           window.clearTimeout(thinkingTimerRef.current);
           thinkingTimerRef.current = null;
         }
+        askMutation.reset();
         setOptimisticUserMsg(null);
         setOptimisticAssistantMsg(null);
         setStreamingAssistantId(null);
@@ -668,10 +669,11 @@ export const SocraticTutorDrawer: React.FC<SocraticTutorDrawerProps> = ({
               Limite de 6 turnos atingido para esta questão. Você pode{' '}
               <button
                 type="button"
-                onClick={() => setIsResetConfirmOpen(true)}
-                className="text-brand-primary underline font-semibold"
+                onClick={handleResetConfirm}
+                disabled={resetMutation.isPending}
+                className="text-brand-primary underline font-semibold hover:text-brand-primary/80 disabled:opacity-50 cursor-pointer"
               >
-                reiniciar a conversa
+                {resetMutation.isPending ? 'reiniciando...' : 'reiniciar a conversa'}
               </button>{' '}
               ou avançar no simulado.
             </div>

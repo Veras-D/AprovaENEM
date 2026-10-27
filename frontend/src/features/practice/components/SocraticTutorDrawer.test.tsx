@@ -325,6 +325,7 @@ describe('SocraticTutorDrawer Component', () => {
     };
 
     vi.spyOn(tutorService, 'getSocraticThread').mockResolvedValue(exhaustedThread);
+    const resetSpy = vi.spyOn(tutorService, 'resetSocraticThread').mockResolvedValue(undefined);
 
     renderWithProviders(
       <SocraticTutorDrawer isOpen={true} onClose={handleClose} question={mockQuestion} />
@@ -333,6 +334,13 @@ describe('SocraticTutorDrawer Component', () => {
     await waitFor(() => {
       expect(screen.getByText(/Limite de 6 turnos atingido para esta questão/i)).toBeInTheDocument();
       expect(screen.queryByPlaceholderText(/Digite sua dúvida/i)).not.toBeInTheDocument();
+    });
+
+    const footerResetBtn = screen.getByRole('button', { name: /^reiniciar a conversa$/i });
+    fireEvent.click(footerResetBtn);
+
+    await waitFor(() => {
+      expect(resetSpy).toHaveBeenCalledWith(mockQuestion.id);
     });
   });
 
