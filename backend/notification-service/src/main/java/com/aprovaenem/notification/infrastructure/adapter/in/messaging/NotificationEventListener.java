@@ -70,17 +70,16 @@ public class NotificationEventListener {
 
         String title = "Confirme seu e-mail no AprovaENEM";
         String name = event.getFullName() != null ? event.getFullName() : "Estudante";
-        String body = event.getVerificationToken() != null && !event.getVerificationToken().isBlank()
-                ? String.format("Olá %s! Clique no link de confirmação ou informe o código para ativar sua conta AprovaENEM: %s", name, event.getVerificationToken())
-                : String.format("Olá %s! Seu endereço de e-mail foi registrado na plataforma AprovaENEM. Acesse seu perfil para gerenciar seus dados.", name);
+        String body = String.format(
+                "Olá %s! Enviamos um e-mail de confirmação para ativar sua conta AprovaENEM. Acesse seu perfil para verificar o status.",
+                name);
 
         String metadataJson = toJson(Map.of(
                 "category", "UPDATE",
                 "iconName", "ShieldAlert",
                 "targetSection", "profile",
                 "actionLabel", "Ver Perfil",
-                "email", event.getEmail() != null ? event.getEmail() : "",
-                "token", event.getVerificationToken() != null ? event.getVerificationToken() : ""
+                "email", event.getEmail() != null ? event.getEmail() : ""
         ));
 
         NotificationLogEntity entity = NotificationLogEntity.builder()

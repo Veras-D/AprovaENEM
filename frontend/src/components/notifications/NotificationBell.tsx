@@ -491,8 +491,10 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
           }
         }
 
-        // Sanitize legacy ": null" suffix in email verification notifications
-        const cleanedBody = n.body.replace(/:\s*null\s*$/i, '.');
+        // Sanitize legacy ": null" or leaked hex token suffixes in email verification notifications
+        const cleanedBody = n.body
+          .replace(/:\s*[a-f0-9]{16,64}\s*$/i, '.')
+          .replace(/:\s*null\s*$/i, '.');
         const createdAt = n.sentAt ? new Date(n.sentAt).getTime() : now;
 
         backendItems.push({

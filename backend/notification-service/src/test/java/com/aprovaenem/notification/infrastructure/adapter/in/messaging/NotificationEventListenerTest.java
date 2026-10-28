@@ -92,9 +92,9 @@ class NotificationEventListenerTest {
         assertThat(saved.getTemplateCode()).isEqualTo("EMAIL_VERIFICATION");
         assertThat(saved.getTitle()).contains("Confirme seu e-mail");
         assertThat(saved.getBody()).contains("Carlos Silva");
-        assertThat(saved.getBody()).contains("token-xyz-789");
+        assertThat(saved.getBody()).doesNotContain("token-xyz-789");
         assertThat(saved.getStatus()).isEqualTo("SENT");
-        assertThat(saved.getMetadata()).contains("token-xyz-789");
+        assertThat(saved.getMetadata()).doesNotContain("token-xyz-789");
     }
 
     @Test

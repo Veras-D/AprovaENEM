@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { queryKeys } from '@/api/query-keys';
 import { NotificationBell } from './NotificationBell';
 import { useSessionStore } from '@/stores/useSessionStore';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 describe('NotificationBell Component', () => {
   let queryClient: QueryClient;
@@ -336,7 +337,7 @@ describe('NotificationBell Component', () => {
           channel: 'EMAIL',
           templateCode: 'EMAIL_VERIFICATION',
           title: 'Confirme seu e-mail no AprovaENEM',
-          body: 'Olá Vivi Veras! Clique no link de confirmação ou informe o código para ativar sua conta AprovaENEM: null',
+          body: 'Olá Vivi Veras! Clique no link de confirmação ou informe o código para ativar sua conta AprovaENEM: 4acf7de1e73a4c0a9aa25d349614e6af',
           status: 'SENT',
           sentAt: '2026-10-22T00:26:10Z',
         },
@@ -351,8 +352,8 @@ describe('NotificationBell Component', () => {
     // Duplicate ACHIEVEMENT_LEVEL_7 should only appear once
     expect(screen.getAllByText('Nível 7 Alcançado! 🌟')).toHaveLength(1);
 
-    // ": null" should be stripped from EMAIL_VERIFICATION body
-    expect(screen.queryByText(/:\s*null/i)).not.toBeInTheDocument();
+    // Raw hex verification token should be stripped from EMAIL_VERIFICATION body
+    expect(screen.queryByText(/4acf7de1e73a4c0a9aa25d349614e6af/i)).not.toBeInTheDocument();
 
     // Clicking "🔥 Proteja sua ofensiva!" (DAILY_STREAK_REMINDER without targetSection in metadata) should navigate to 'practice'
     fireEvent.click(screen.getByText('🔥 Proteja sua ofensiva!'));
@@ -380,12 +381,75 @@ describe('NotificationBell Component', () => {
     expect(screen.getByText(/Tutor IA Socrático Pedagógico/i)).toBeInTheDocument();
     expect(screen.queryByText(/Meta Diária de Estudos/i)).not.toBeInTheDocument();
 
-    // Clear search and click secondary shortcut to Ranking & Conquistas
+    // Clear search, toggle only unread, filter by category tab, click a notification item, and close via Escape
     fireEvent.change(searchInput, { target: { value: '' } });
+
+    const onlyUnreadBtn = screen.getByRole('button', { name: /Apenas não lidas/i });
+    fireEvent.click(onlyUnreadBtn);
+    expect(onlyUnreadBtn).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(onlyUnreadBtn);
+
+    const modalRemindersTab = screen.getByRole('tab', { name: /Lembretes/i });
+    fireEvent.click(modalRemindersTab);
+    expect(screen.getByText(/Meta Diária de Estudos/i)).toBeInTheDocument();
+
+    const modalAllTab = screen.getByRole('tab', { name: /Todas/i });
+    fireEvent.click(modalAllTab);
+
+    // Click a notification inside the modal to trigger navigation and close
+    fireEvent.click(screen.getByText(/Tutor IA Socrático Pedagógico/i));
+    expect(handleNavigate).toHaveBeenCalledWith('practice');
+    expect(screen.queryByTestId('notification-center-modal')).not.toBeInTheDocument();
+
+    // Reopen modal and test secondary shortcut to Ranking & Conquistas
+    fireEvent.click(bellBtn);
+    fireEvent.click(screen.getByRole('button', { name: /Ver todas as notificações/i }));
     const leaderboardShortcut = screen.getByRole('button', { name: /Ir para Conquistas & Ranking da Liga/i });
     fireEvent.click(leaderboardShortcut);
 
     expect(handleNavigate).toHaveBeenCalledWith('leaderboard');
     expect(screen.queryByTestId('notification-center-modal')).not.toBeInTheDocument();
+
+    // Reopen modal and close via Escape key
+    fireEvent.click(bellBtn);
+    fireEvent.click(screen.getByRole('button', { name: /Ver todas as notificações/i }));
+    expect(screen.getByTestId('notification-center-modal')).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByTestId('notification-center-modal')).not.toBeInTheDocument();
+  });
+
+  it('seeds intermediate level achievements (2..N) and freeze shield in PostgreSQL when user is authenticated', () => {
+    useAuthStore.setState({
+      isAuthenticated: true,
+      user: {
+        id: 'user-auth-seed',
+        email: 'seed@example.com',
+        name: 'Seed User',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-01-01T00:00:00Z',
+      },
+    });
+    useSessionStore.setState({
+      isDiagnosticCompleted: true,
+    });
+    queryClient.setQueryData(queryKeys.gamification.profile, {
+      userId: 'user-auth-seed',
+      level: 10,
+      levelTitle: 'Mestre dos Simulados',
+      streakFreezeAvailable: false,
+      dailyGoalProgress: 5,
+      dailyGoalTarget: 5,
+    });
+    queryClient.setQueryData(queryKeys.notifications.feed('ALL'), {
+      unreadCount: 0,
+      notifications: [],
+    });
+
+    renderWithProviders(<NotificationBell />);
+    const bellBtn = screen.getByRole('button', { name: /Notificações:/i });
+    fireEvent.click(bellBtn);
+
+    expect(screen.getByText(/Nível 10 Alcançado!/i)).toBeInTheDocument();
   });
 });

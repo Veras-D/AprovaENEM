@@ -90,7 +90,7 @@ public class NotificationService {
                         .channel(n.getChannel())
                         .templateCode(n.getTemplateCode())
                         .title(n.getTitle())
-                        .body(n.getBody())
+                        .body(sanitizeNotificationBody(n.getTemplateCode(), n.getBody()))
                         .metadata(n.getMetadata())
                         .status(n.getStatus())
                         .sentAt(n.getSentAt())
@@ -233,7 +233,8 @@ public class NotificationService {
                         .templateCode("SOCRATIC_TUTOR_TIP")
                         .title("Tutor IA Socrático Pedagógico ✨")
                         .body("Travou em uma questão difícil? Abra o Tutor IA nas questões para pistas conceituais guiadas sem respostas prontas.")
-                        .metadata("{\"category\":\"UPDATE\",\"iconName\":\"Sparkles\",\"targetSection\":\"practice\",\"actionLabel\":\"Experimentar no Simulado\"}")
+                        .metadata("{\"category\":\"UPDATE\",\"iconName\":\"Sparkles\","
+                                + "\"targetSection\":\"practice\",\"actionLabel\":\"Experimentar no Simulado\"}")
                         .status("SENT")
                         .sentAt(now.minus(4, ChronoUnit.DAYS))
                         .createdAt(now.minus(4, ChronoUnit.DAYS))
@@ -292,6 +293,18 @@ public class NotificationService {
             notificationLogRepository.deleteAll(duplicates);
             log.info("Cleaned up [{}] duplicate notifications for user [{}]", duplicates.size(), userId);
         }
+    }
+
+    private String sanitizeNotificationBody(String templateCode, String body) {
+        if (body == null) {
+            return "";
+        }
+        if ("EMAIL_VERIFICATION".equals(templateCode)) {
+            return body
+                    .replaceAll(":\\s*[a-fA-F0-9]{16,64}\\s*$", ".")
+                    .replaceAll(":\\s*null\\s*$", ".");
+        }
+        return body;
     }
 }
 
