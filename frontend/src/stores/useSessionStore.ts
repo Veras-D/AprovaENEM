@@ -491,7 +491,9 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     // 2. Query backend PostgreSQL for the user's latest persistent diagnostic report
     try {
       const backendReport = await examService.getLatestDiagnosticReport();
-      if (backendReport && typeof backendReport.scorePercentage === 'number') {
+      const backendHasAreas = (backendReport?.radar?.length ?? 0) > 0;
+      const localHasAreas = (resolvedReport?.radar?.length ?? 0) > 0;
+      if (backendReport && typeof backendReport.scorePercentage === 'number' && (backendHasAreas || !localHasAreas)) {
         resolvedReport = backendReport;
         if (typeof localStorage !== 'undefined') {
           try {

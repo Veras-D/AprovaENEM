@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -225,6 +226,19 @@ public class PracticeSessionService implements PracticeSessionUseCase {
                 ? command.getAnonymousSessionId()
                 : (command.getUserId() != null ? command.getUserId().toString() : "diagnostic-session");
 
+        if (command.getUserId() != null) {
+            Optional<DiagnosticReport> existing = diagnosticReportRepository.findLatestByUserId(command.getUserId());
+            if (existing.isPresent()) {
+                DiagnosticReport updated = existing.get();
+                updated.setScorePercentage(command.getScorePercentage());
+                updated.setTopicBreakdown(command.getTopicBreakdown());
+                updated.setRadar(command.getRadar());
+                updated.setRecommendedTopics(command.getRecommendedTopics());
+                updated.setGeneratedAt(Instant.now());
+                return diagnosticReportRepository.save(updated);
+            }
+        }
+
         PracticeSession session = new PracticeSession(
                 null,
                 command.getUserId(),
@@ -242,6 +256,7 @@ public class PracticeSessionService implements PracticeSessionUseCase {
                 command.getTopicBreakdown(),
                 command.getRecommendedTopics()
         );
+        report.setRadar(command.getRadar());
         return diagnosticReportRepository.save(report);
     }
 }

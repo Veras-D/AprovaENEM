@@ -2,6 +2,7 @@ package com.aprovaenem.exam.infrastructure.adapter.out.persistence.adapter;
 
 import com.aprovaenem.exam.domain.model.DiagnosticReport;
 import com.aprovaenem.exam.domain.model.MasteryLevel;
+import com.aprovaenem.exam.domain.model.RadarArea;
 import com.aprovaenem.exam.domain.model.TopicPerformance;
 import com.aprovaenem.exam.infrastructure.adapter.out.persistence.entity.DiagnosticSummaryEntity;
 import com.aprovaenem.exam.infrastructure.adapter.out.persistence.entity.PracticeSessionEntity;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -112,6 +114,47 @@ class DiagnosticReportRepositoryAdapterTest {
         assertThat(found).isPresent();
         assertThat(found.get().getTopicBreakdown()).isEmpty();
         assertThat(found.get().getRecommendedTopics()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Should persist per-area radar in the JSONB column and read it back unchanged")
+    void shouldRoundTripRadarAreas() {
+        UUID reportId = UUID.randomUUID();
+        UUID sessionId = UUID.randomUUID();
+        PracticeSessionEntity sessionEntity = PracticeSessionEntity.builder().id(sessionId).build();
+        when(entityManager.getReference(eq(PracticeSessionEntity.class), eq(sessionId))).thenReturn(sessionEntity);
+
+        RadarArea math = new RadarArea();
+        math.setKnowledgeArea("MT");
+        math.setAreaName("Matemática e suas Tecnologias");
+        math.setScorePercentage(new BigDecimal("75.00"));
+        math.setTotalQuestions(15);
+        math.setCorrectQuestions(11);
+        math.setMasteryLevel("MASTERED");
+        math.setTopWeakTopic("Geometria Espacial");
+
+        DiagnosticReport report = new DiagnosticReport(
+                reportId, sessionId, new BigDecimal("75.00"), Map.of(), List.of("Matemática"));
+        report.setRadar(List.of(math));
+
+        ArgumentCaptor<DiagnosticSummaryEntity> captor = ArgumentCaptor.forClass(DiagnosticSummaryEntity.class);
+        when(summaryRepository.save(captor.capture())).thenAnswer(inv -> inv.getArgument(0));
+
+        adapter.save(report);
+
+        DiagnosticSummaryEntity persisted = captor.getValue();
+        assertThat(persisted.getTopicBreakdown()).contains("\"radar\"").contains("Geometria Espacial");
+
+        when(summaryRepository.findBySessionId(sessionId)).thenReturn(Optional.of(persisted));
+        DiagnosticReport loaded = adapter.findBySessionId(sessionId).orElseThrow();
+
+        assertThat(loaded.getRadar()).hasSize(1);
+        RadarArea loadedMath = loaded.getRadar().get(0);
+        assertThat(loadedMath.getKnowledgeArea()).isEqualTo("MT");
+        assertThat(loadedMath.getCorrectQuestions()).isEqualTo(11);
+        assertThat(loadedMath.getTotalQuestions()).isEqualTo(15);
+        assertThat(loadedMath.getTopWeakTopic()).isEqualTo("Geometria Espacial");
+        assertThat(loadedMath.getScorePercentage()).isEqualByComparingTo(new BigDecimal("75.00"));
     }
 
     @Test

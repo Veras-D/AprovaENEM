@@ -15,6 +15,7 @@ public class DiagnosticReport {
     private BigDecimal scorePercentage;
     private Map<String, TopicPerformance> topicBreakdown = new HashMap<>();
     private List<String> recommendedTopics = new ArrayList<>();
+    private List<RadarArea> radar = new ArrayList<>();
     private Instant generatedAt;
 
     public DiagnosticReport() {
@@ -74,6 +75,14 @@ public class DiagnosticReport {
 
     public void setRecommendedTopics(List<String> recommendedTopics) {
         this.recommendedTopics = recommendedTopics != null ? recommendedTopics : new ArrayList<>();
+    }
+
+    public List<RadarArea> getRadar() {
+        return radar;
+    }
+
+    public void setRadar(List<RadarArea> radar) {
+        this.radar = radar != null ? radar : new ArrayList<>();
     }
 
     public Instant getGeneratedAt() {

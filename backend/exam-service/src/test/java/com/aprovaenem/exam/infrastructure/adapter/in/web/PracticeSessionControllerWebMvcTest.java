@@ -356,14 +356,26 @@ class PracticeSessionControllerWebMvcTest {
         UUID reportId = UUID.randomUUID();
         UUID sessionId = UUID.randomUUID();
         DiagnosticReport report = new DiagnosticReport(reportId, sessionId, BigDecimal.valueOf(85.0), Map.of(), List.of("Tópico B"));
+        com.aprovaenem.exam.domain.model.RadarArea mathArea = new com.aprovaenem.exam.domain.model.RadarArea();
+        mathArea.setKnowledgeArea("MT");
+        mathArea.setScorePercentage(BigDecimal.valueOf(75));
+        mathArea.setTotalQuestions(15);
+        mathArea.setCorrectQuestions(11);
+        mathArea.setTopWeakTopic("Geometria Espacial");
+        report.setRadar(List.of(mathArea));
 
-        when(sessionUseCase.saveDiagnosticReport(any())).thenReturn(report);
+        when(sessionUseCase.saveDiagnosticReport(org.mockito.ArgumentMatchers.argThat(cmd ->
+                cmd.getRadar().size() == 1
+                        && "MT".equals(cmd.getRadar().get(0).getKnowledgeArea())
+                        && cmd.getRadar().get(0).getCorrectQuestions() == 11)))
+                .thenReturn(report);
 
         com.aprovaenem.exam.infrastructure.adapter.in.web.dto.SaveDiagnosticReportRequest req =
                 new com.aprovaenem.exam.infrastructure.adapter.in.web.dto.SaveDiagnosticReportRequest(
                         BigDecimal.valueOf(85.0),
                         Map.of(),
-                        List.of("Tópico B")
+                        List.of("Tópico B"),
+                        List.of(mathArea)
                 );
 
         mockMvc.perform(post("/api/v1/practice/sessions/diagnostic")
@@ -372,6 +384,8 @@ class PracticeSessionControllerWebMvcTest {
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", is(reportId.toString())))
-                .andExpect(jsonPath("$.scorePercentage", is(85.0)));
+                .andExpect(jsonPath("$.scorePercentage", is(85.0)))
+                .andExpect(jsonPath("$.radar[0].knowledgeArea", is("MT")))
+                .andExpect(jsonPath("$.radar[0].topWeakTopic", is("Geometria Espacial")));
     }
 }

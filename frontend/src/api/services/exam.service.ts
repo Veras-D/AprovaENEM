@@ -227,9 +227,23 @@ export const examService = {
           ? report.topicBreakdown
           : {};
 
+      const radar =
+        'radar' in report && Array.isArray(report.radar)
+          ? report.radar.map((area) => ({
+              knowledgeArea: area.knowledgeArea,
+              areaName: 'areaName' in area ? area.areaName : undefined,
+              scorePercentage: area.scorePercentage,
+              totalQuestions: area.totalQuestions,
+              correctQuestions: area.correctQuestions,
+              masteryLevel: area.masteryLevel,
+              topWeakTopic: 'topWeakTopic' in area ? area.topWeakTopic : undefined,
+            }))
+          : [];
+
       const response = await apiClient.post<DiagnosticReportDto>('/sessions/diagnostic', {
         scorePercentage: score,
         topicBreakdown: breakdown,
+        radar,
         recommendedTopics: topics,
       });
       return response.data;

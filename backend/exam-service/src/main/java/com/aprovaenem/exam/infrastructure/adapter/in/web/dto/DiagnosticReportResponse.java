@@ -1,5 +1,6 @@
 package com.aprovaenem.exam.infrastructure.adapter.in.web.dto;
 
+import com.aprovaenem.exam.domain.model.RadarArea;
 import com.aprovaenem.exam.domain.model.TopicPerformance;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,6 +23,7 @@ public class DiagnosticReportResponse {
     private UUID sessionId;
     private BigDecimal scorePercentage;
     private Map<String, TopicPerformance> topicBreakdown;
+    private List<RadarArea> radar;
     private List<String> recommendedTopics;
     private Instant generatedAt;
 }

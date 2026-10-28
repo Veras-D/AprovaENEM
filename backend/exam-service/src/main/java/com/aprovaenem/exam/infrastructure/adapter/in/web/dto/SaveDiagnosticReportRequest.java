@@ -1,5 +1,6 @@
 package com.aprovaenem.exam.infrastructure.adapter.in.web.dto;
 
+import com.aprovaenem.exam.domain.model.RadarArea;
 import com.aprovaenem.exam.domain.model.TopicPerformance;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -27,4 +28,6 @@ public class SaveDiagnosticReportRequest {
     private Map<String, TopicPerformance> topicBreakdown;
 
     private List<String> recommendedTopics;
+
+    private List<RadarArea> radar;
 }

@@ -101,6 +101,15 @@ describe('API Services', () => {
       expect(postSpy).toHaveBeenCalledWith('/sessions/diagnostic', {
         scorePercentage: MOCK_DIAGNOSTIC_REPORT.scorePercentage,
         topicBreakdown: MOCK_DIAGNOSTIC_REPORT.topicBreakdown,
+        radar: MOCK_DIAGNOSTIC_REPORT.radar?.map((area) => ({
+          knowledgeArea: area.knowledgeArea,
+          areaName: area.areaName,
+          scorePercentage: area.scorePercentage,
+          totalQuestions: area.totalQuestions,
+          correctQuestions: area.correctQuestions,
+          masteryLevel: area.masteryLevel,
+          topWeakTopic: area.topWeakTopic,
+        })),
         recommendedTopics: MOCK_DIAGNOSTIC_REPORT.recommendedTopics,
       });
       expect(latest).toEqual(MOCK_DIAGNOSTIC_REPORT);

@@ -208,6 +208,8 @@ public class PracticeSessionController {
                 request.getRecommendedTopics()
         );
 
+        command.setRadar(request.getRadar());
+
         DiagnosticReport report = sessionUseCase.saveDiagnosticReport(command);
         return ResponseEntity.status(HttpStatus.CREATED).body(toDiagnosticResponse(report));
     }
@@ -268,6 +270,7 @@ public class PracticeSessionController {
                 .sessionId(report.getSessionId())
                 .scorePercentage(report.getScorePercentage())
                 .topicBreakdown(report.getTopicBreakdown())
+                .radar(report.getRadar())
                 .recommendedTopics(report.getRecommendedTopics())
                 .generatedAt(report.getGeneratedAt())
                 .build();
