@@ -104,16 +104,23 @@ class NotificationEventListenerTest {
         assertThat(saved.getStatus()).isEqualTo("SENT");
         assertThat(saved.getMetadata()).doesNotContain("token-xyz-789");
 
-        ArgumentCaptor<String> emailBody = ArgumentCaptor.forClass(String.class);
-        verify(emailSender).send(eq("aluno@enem.com.br"), eq("Confirme seu e-mail no AprovaENEM"), emailBody.capture());
-        assertThat(emailBody.getValue()).contains("Carlos Silva").contains("token-xyz-789");
+        ArgumentCaptor<String> htmlBody = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> fallbackText = ArgumentCaptor.forClass(String.class);
+        verify(emailSender).sendHtml(
+                eq("aluno@enem.com.br"),
+                eq("Confirme seu e-mail no AprovaENEM"),
+                htmlBody.capture(),
+                fallbackText.capture()
+        );
+        assertThat(htmlBody.getValue()).contains("Carlos Silva").contains("token-xyz-789").contains("?verifyToken=");
+        assertThat(fallbackText.getValue()).contains("Carlos Silva").contains("token-xyz-789");
     }
 
     @Test
     @DisplayName("Should mark the EMAIL log FAILED and not claim delivery when the SMTP server is unavailable")
     void shouldMarkEmailVerificationFailedWhenDeliveryFails() {
         doThrow(new EmailDeliveryException("smtp down", new RuntimeException("refused")))
-                .when(emailSender).send(any(), any(), any());
+                .when(emailSender).sendHtml(any(), any(), any(), any());
 
         listener.handleEmailVerification(EmailVerificationRequestedEvent.builder()
                 .userId(UUID.randomUUID())

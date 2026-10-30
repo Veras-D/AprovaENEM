@@ -11,4 +11,11 @@ public interface EmailSenderPort {
      * @throws EmailDeliveryException when the message could not be handed to the mail server
      */
     void send(String to, String subject, String textBody);
+
+    /**
+     * Delivers a multipart/alternative HTML email with plain-text fallback.
+     *
+     * @throws EmailDeliveryException when the message could not be handed to the mail server
+     */
+    void sendHtml(String to, String subject, String htmlBody, String textFallback);
 }

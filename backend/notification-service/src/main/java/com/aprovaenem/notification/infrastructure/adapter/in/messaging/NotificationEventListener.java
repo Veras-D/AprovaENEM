@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -28,6 +29,9 @@ public class NotificationEventListener {
     private final UserDeviceTokenRepository userDeviceTokenRepository;
     private final EmailSenderPort emailSender;
     private final ObjectMapper objectMapper;
+
+    @Value("${app.frontend.url:http://localhost}")
+    private String frontendUrl = "http://localhost";
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_REMINDERS_QUEUE)
     public void handleDailyGoalReminder(DailyGoalReminderEvent event) {
@@ -115,18 +119,72 @@ public class NotificationEventListener {
             log.warn("Skipping verification email for user [{}]: missing recipient or token", event.getUserId());
             return "FAILED";
         }
-        String text = String.format(
-                "Olá %s!%n%nBem-vindo(a) ao AprovaENEM. Para ativar sua conta, abra o aplicativo, escolha "
-                        + "\"Verificar e-mail\" e informe o código abaixo:%n%n    %s%n%n"
-                        + "Se você não criou esta conta, ignore esta mensagem.%n",
-                name, event.getVerificationToken());
+        String verifyUrl = String.format("%s/?verifyToken=%s", frontendUrl, event.getVerificationToken());
+
+        String textFallback = String.format(
+                "Olá %s!%n%nBem-vindo(a) ao AprovaENEM.%nPara ativar sua conta, confirme seu e-mail no link abaixo:%n%s%n%n"
+                        + "Ou informe o seguinte código no aplicativo:%n    %s%n%n(Válido por 24 horas)%n",
+                name, verifyUrl, event.getVerificationToken());
+
+        String html = buildVerificationHtml(name, verifyUrl, event.getVerificationToken());
+
         try {
-            emailSender.send(event.getEmail(), "Confirme seu e-mail no AprovaENEM", text);
+            emailSender.sendHtml(event.getEmail(), "Confirme seu e-mail no AprovaENEM", html, textFallback);
             return "SENT";
         } catch (EmailDeliveryException e) {
             log.error("Could not deliver verification email to [{}]", event.getEmail(), e);
             return "FAILED";
         }
+    }
+
+    private String buildVerificationHtml(String name, String verifyUrl, String token) {
+        String template = """
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confirme seu e-mail no AprovaENEM</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#0f172a;">
+  <div style="max-width:560px;margin:32px auto;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);">
+    <div style="background:linear-gradient(135deg,#0284c7 0%,#0369a1 100%);padding:32px 24px;text-align:center;color:#ffffff;">
+      <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.5px;">🎓 AprovaENEM</h1>
+    </div>
+    <div style="padding:32px 24px;">
+      <div style="font-size:18px;font-weight:700;margin-bottom:12px;color:#0f172a;">Olá, {{NAME}}!</div>
+      <p style="font-size:15px;line-height:1.6;color:#475569;margin-bottom:24px;">
+        Obrigado por criar sua conta no <strong>AprovaENEM</strong>. Para ativar seu acesso e liberar o simulado com o Tutor IA Socrático,
+        confirme seu endereço de e-mail clicando no botão abaixo:
+      </p>
+      <div style="text-align:center;margin:28px 0;">
+        <a href="{{VERIFY_URL}}"
+           style="display:inline-block;background-color:#0284c7;color:#ffffff !important;padding:14px 28px;"
+           target="_blank">Ativar Minha Conta</a>
+      </div>
+      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;text-align:center;margin:24px 0;">
+        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#64748b;margin-bottom:8px;">
+          Ou informe este código no aplicativo
+        </div>
+        <div style="font-family:monospace;font-size:20px;font-weight:700;color:#0369a1;letter-spacing:1.5px;">
+          {{TOKEN}}
+        </div>
+      </div>
+      <p style="font-size:13px;color:#64748b;margin-bottom:0;">
+        ⚠️ Este link e código de confirmação expiram em 24 horas.
+      </p>
+    </div>
+    <div style="padding:20px 24px;background-color:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;font-size:13px;color:#94a3b8;">
+      Se você não criou uma conta no AprovaENEM, ignore esta mensagem com segurança.
+    </div>
+  </div>
+</body>
+</html>
+""";
+        return template
+                .replace("{{NAME}}", name)
+                .replace("{{VERIFY_URL}}", verifyUrl)
+                .replace("{{TOKEN}}", token);
     }
 
 

@@ -260,7 +260,20 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       setForgotSuccessMessage(null);
       setVerifySuccessMessage(null);
       setResendSuccessMessage(null);
-      setVerifyTokenInput('');
+      let initialToken = '';
+      if (typeof window !== 'undefined') {
+        try {
+          const params = new URLSearchParams(window.location.search);
+          const queryToken = params.get('verifyToken');
+          if (queryToken) {
+            initialToken = queryToken;
+            setMode('verify-email');
+          }
+        } catch {
+          // Non-browser fallback
+        }
+      }
+      setVerifyTokenInput(initialToken);
       if (initialEmail) {
         setVerifyEmailTarget(initialEmail);
       } else if (authUser?.email) {

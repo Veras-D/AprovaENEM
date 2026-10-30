@@ -33,9 +33,14 @@ spring:
   mail:
     host: ${SPRING_MAIL_HOST:localhost}
     port: ${SPRING_MAIL_PORT:1025}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
+          auth: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH:false}
+          starttls:
+            enable: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE:false}
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
@@ -43,6 +48,9 @@ spring:
 app:
   mail:
     from: ${APP_MAIL_FROM:no-reply@aprovaenem.local}
+    from-name: ${APP_MAIL_FROM_NAME:AprovaENEM}
+  frontend:
+    url: ${APP_FRONTEND_URL:http://localhost}
 
 management:
   endpoints:

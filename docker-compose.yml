@@ -211,6 +211,7 @@ services:
       - "8083"
     networks:
       - aprovaenem-internal
+      - frontend-edge
     environment:
       - SERVER_PORT=8083
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-notification:5432/${NOTIFICATION_DB_NAME:-notification_db}
@@ -220,9 +221,15 @@ services:
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=${RABBITMQ_DEFAULT_USER:-aprovaenem_rabbit}
       - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_DEFAULT_PASS:-rabbit_secure_password_2026}
-      - SPRING_MAIL_HOST=${SMTP_HOST:-mailpit}
-      - SPRING_MAIL_PORT=${SMTP_PORT:-1025}
+      - SPRING_MAIL_HOST=${SPRING_MAIL_HOST:-mailpit}
+      - SPRING_MAIL_PORT=${SPRING_MAIL_PORT:-1025}
+      - SPRING_MAIL_USERNAME=${SPRING_MAIL_USERNAME:-}
+      - SPRING_MAIL_PASSWORD=${SPRING_MAIL_PASSWORD:-}
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH:-false}
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE:-false}
       - APP_MAIL_FROM=${APP_MAIL_FROM:-no-reply@aprovaenem.local}
+      - APP_MAIL_FROM_NAME=${APP_MAIL_FROM_NAME:-AprovaENEM}
+      - APP_FRONTEND_URL=${APP_FRONTEND_URL:-http://localhost}
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8083/actuator/health || exit 1"]
       interval: 15s
