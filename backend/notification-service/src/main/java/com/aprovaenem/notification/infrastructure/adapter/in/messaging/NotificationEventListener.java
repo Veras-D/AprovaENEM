@@ -3,6 +3,8 @@ package com.aprovaenem.notification.infrastructure.adapter.in.messaging;
 import com.aprovaenem.common.events.DailyGoalReminderEvent;
 import com.aprovaenem.common.events.EmailVerificationRequestedEvent;
 import com.aprovaenem.common.events.UserDeletedEvent;
+import com.aprovaenem.notification.application.port.out.EmailDeliveryException;
+import com.aprovaenem.notification.application.port.out.EmailSenderPort;
 import com.aprovaenem.notification.infrastructure.config.RabbitMQConfig;
 import com.aprovaenem.notification.infrastructure.persistence.entity.NotificationLogEntity;
 import com.aprovaenem.notification.infrastructure.persistence.repository.NotificationLogRepository;
@@ -24,6 +26,7 @@ public class NotificationEventListener {
 
     private final NotificationLogRepository notificationLogRepository;
     private final UserDeviceTokenRepository userDeviceTokenRepository;
+    private final EmailSenderPort emailSender;
     private final ObjectMapper objectMapper;
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_REMINDERS_QUEUE)
@@ -65,14 +68,16 @@ public class NotificationEventListener {
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_AUTH_QUEUE)
     public void handleEmailVerification(EmailVerificationRequestedEvent event) {
+        if (event == null || event.getVerificationToken() == null || event.getVerificationToken().isBlank()) {
+            log.warn("Skipping EmailVerificationRequestedEvent: missing verification token for user [{}]",
+                    event != null ? event.getUserId() : null);
+            return;
+        }
         log.info("Received EmailVerificationRequestedEvent for user [{}]", event.getUserId());
         Instant now = Instant.now();
 
         String title = "Confirme seu e-mail no AprovaENEM";
         String name = event.getFullName() != null ? event.getFullName() : "Estudante";
-        String body = String.format(
-                "Olá %s! Enviamos um e-mail de confirmação para ativar sua conta AprovaENEM. Acesse seu perfil para verificar o status.",
-                name);
 
         String metadataJson = toJson(Map.of(
                 "category", "UPDATE",
@@ -82,6 +87,13 @@ public class NotificationEventListener {
                 "email", event.getEmail() != null ? event.getEmail() : ""
         ));
 
+        String status = deliverVerificationEmail(event, name);
+        String body = "SENT".equals(status)
+                ? String.format("Olá %s! Enviamos um e-mail de confirmação para ativar sua conta AprovaENEM. "
+                        + "Verifique sua caixa de entrada e informe o código recebido.", name)
+                : String.format("Olá %s! Não conseguimos enviar o e-mail de confirmação agora. "
+                        + "Acesse seu perfil e solicite o reenvio.", name);
+
         NotificationLogEntity entity = NotificationLogEntity.builder()
                 .userId(event.getUserId())
                 .channel("EMAIL")
@@ -89,14 +101,34 @@ public class NotificationEventListener {
                 .title(title)
                 .body(body)
                 .metadata(metadataJson)
-                .status("SENT")
-                .sentAt(now)
+                .status(status)
+                .sentAt("SENT".equals(status) ? now : null)
                 .createdAt(now)
                 .build();
 
         notificationLogRepository.save(entity);
-        log.info("Persisted EMAIL verification notification log for [{}]", event.getEmail());
+        log.info("Persisted EMAIL verification notification log for [{}] with status [{}]", event.getEmail(), status);
     }
+
+    private String deliverVerificationEmail(EmailVerificationRequestedEvent event, String name) {
+        if (event.getEmail() == null || event.getEmail().isBlank() || event.getVerificationToken() == null) {
+            log.warn("Skipping verification email for user [{}]: missing recipient or token", event.getUserId());
+            return "FAILED";
+        }
+        String text = String.format(
+                "Olá %s!%n%nBem-vindo(a) ao AprovaENEM. Para ativar sua conta, abra o aplicativo, escolha "
+                        + "\"Verificar e-mail\" e informe o código abaixo:%n%n    %s%n%n"
+                        + "Se você não criou esta conta, ignore esta mensagem.%n",
+                name, event.getVerificationToken());
+        try {
+            emailSender.send(event.getEmail(), "Confirme seu e-mail no AprovaENEM", text);
+            return "SENT";
+        } catch (EmailDeliveryException e) {
+            log.error("Could not deliver verification email to [{}]", event.getEmail(), e);
+            return "FAILED";
+        }
+    }
+
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_LGPD_QUEUE)
     public void handleUserDeleted(UserDeletedEvent event) {

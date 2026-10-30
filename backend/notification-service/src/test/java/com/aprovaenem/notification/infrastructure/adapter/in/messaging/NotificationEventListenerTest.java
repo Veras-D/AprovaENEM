@@ -3,6 +3,8 @@ package com.aprovaenem.notification.infrastructure.adapter.in.messaging;
 import com.aprovaenem.common.events.DailyGoalReminderEvent;
 import com.aprovaenem.common.events.EmailVerificationRequestedEvent;
 import com.aprovaenem.common.events.UserDeletedEvent;
+import com.aprovaenem.notification.application.port.out.EmailDeliveryException;
+import com.aprovaenem.notification.application.port.out.EmailSenderPort;
 import com.aprovaenem.notification.infrastructure.persistence.entity.NotificationLogEntity;
 import com.aprovaenem.notification.infrastructure.persistence.repository.NotificationLogRepository;
 import com.aprovaenem.notification.infrastructure.persistence.repository.UserDeviceTokenRepository;
@@ -21,8 +23,11 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,13 +40,16 @@ class NotificationEventListenerTest {
     @Mock
     private UserDeviceTokenRepository userDeviceTokenRepository;
 
+    @Mock
+    private EmailSenderPort emailSender;
+
     private ObjectMapper objectMapper = new ObjectMapper();
 
     private NotificationEventListener listener;
 
     @BeforeEach
     void setUp() {
-        listener = new NotificationEventListener(notificationLogRepository, userDeviceTokenRepository, objectMapper);
+        listener = new NotificationEventListener(notificationLogRepository, userDeviceTokenRepository, emailSender, objectMapper);
     }
 
     @Test
@@ -95,6 +103,61 @@ class NotificationEventListenerTest {
         assertThat(saved.getBody()).doesNotContain("token-xyz-789");
         assertThat(saved.getStatus()).isEqualTo("SENT");
         assertThat(saved.getMetadata()).doesNotContain("token-xyz-789");
+
+        ArgumentCaptor<String> emailBody = ArgumentCaptor.forClass(String.class);
+        verify(emailSender).send(eq("aluno@enem.com.br"), eq("Confirme seu e-mail no AprovaENEM"), emailBody.capture());
+        assertThat(emailBody.getValue()).contains("Carlos Silva").contains("token-xyz-789");
+    }
+
+    @Test
+    @DisplayName("Should mark the EMAIL log FAILED and not claim delivery when the SMTP server is unavailable")
+    void shouldMarkEmailVerificationFailedWhenDeliveryFails() {
+        doThrow(new EmailDeliveryException("smtp down", new RuntimeException("refused")))
+                .when(emailSender).send(any(), any(), any());
+
+        listener.handleEmailVerification(EmailVerificationRequestedEvent.builder()
+                .userId(UUID.randomUUID())
+                .email("aluno@enem.com.br")
+                .fullName("Carlos Silva")
+                .verificationToken("token-xyz-789")
+                .build());
+
+        ArgumentCaptor<NotificationLogEntity> captor = ArgumentCaptor.forClass(NotificationLogEntity.class);
+        verify(notificationLogRepository).save(captor.capture());
+        NotificationLogEntity saved = captor.getValue();
+        assertThat(saved.getStatus()).isEqualTo("FAILED");
+        assertThat(saved.getSentAt()).isNull();
+        assertThat(saved.getBody()).contains("Não conseguimos enviar").doesNotContain("token-xyz-789");
+    }
+
+    @Test
+    @DisplayName("Should not attempt delivery and mark FAILED when the recipient email is blank")
+    void shouldMarkEmailVerificationFailedWhenRecipientMissing() {
+        listener.handleEmailVerification(EmailVerificationRequestedEvent.builder()
+                .userId(UUID.randomUUID())
+                .email(" ")
+                .fullName("Carlos Silva")
+                .verificationToken("token-xyz-789")
+                .build());
+
+        ArgumentCaptor<NotificationLogEntity> captor = ArgumentCaptor.forClass(NotificationLogEntity.class);
+        verify(notificationLogRepository).save(captor.capture());
+        assertThat(captor.getValue().getStatus()).isEqualTo("FAILED");
+        verifyNoInteractions(emailSender);
+    }
+
+    @Test
+    @DisplayName("Should ignore event without saving notification when verificationToken is null or blank")
+    void shouldIgnoreEventWhenTokenIsMissing() {
+        listener.handleEmailVerification(EmailVerificationRequestedEvent.builder()
+                .userId(UUID.randomUUID())
+                .email("aluno@enem.com.br")
+                .fullName("Carlos Silva")
+                .verificationToken(null)
+                .build());
+
+        verifyNoInteractions(notificationLogRepository);
+        verifyNoInteractions(emailSender);
     }
 
     @Test
@@ -141,7 +204,7 @@ class NotificationEventListenerTest {
         when(failingMapper.writeValueAsString(any())).thenThrow(new JsonProcessingException("mock-err") {});
 
         NotificationEventListener customListener = new NotificationEventListener(
-                notificationLogRepository, userDeviceTokenRepository, failingMapper);
+                notificationLogRepository, userDeviceTokenRepository, emailSender, failingMapper);
 
         DailyGoalReminderEvent event = DailyGoalReminderEvent.builder()
                 .userId(UUID.randomUUID())

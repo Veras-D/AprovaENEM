@@ -220,6 +220,9 @@ services:
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=${RABBITMQ_DEFAULT_USER:-aprovaenem_rabbit}
       - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_DEFAULT_PASS:-rabbit_secure_password_2026}
+      - SPRING_MAIL_HOST=${SMTP_HOST:-mailpit}
+      - SPRING_MAIL_PORT=${SMTP_PORT:-1025}
+      - APP_MAIL_FROM=${APP_MAIL_FROM:-no-reply@aprovaenem.local}
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8083/actuator/health || exit 1"]
       interval: 15s
@@ -231,6 +234,41 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      mailpit:
+        condition: service_healthy
+
+  # ============================================================================
+  # 3b. Local SMTP Server & Web Inbox (Mailpit) — captures transactional emails
+  #     (e.g. email verification codes) without sending them to the real internet.
+  #     SMTP (1025) is reachable only inside the platform network; the web inbox
+  #     is bound to the host loopback interface only: http://localhost:8025
+  # ============================================================================
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: aprovaenem-mailpit
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+    expose:
+      - "1025"
+    ports:
+      - "127.0.0.1:8025:8025"
+    networks:
+      - aprovaenem-internal
+      - frontend-edge
+    environment:
+      - MP_SMTP_AUTH_ACCEPT_ANY=true
+      - MP_SMTP_AUTH_ALLOW_INSECURE=true
+      - MP_MAX_MESSAGES=500
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
   # ============================================================================
   # 4. In-Memory Cache Grid (Redis 7+)

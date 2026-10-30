@@ -33,6 +33,16 @@ spring:
   mail:
     host: ${SPRING_MAIL_HOST:localhost}
     port: ${SPRING_MAIL_PORT:1025}
+    properties:
+      mail:
+        smtp:
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+app:
+  mail:
+    from: ${APP_MAIL_FROM:no-reply@aprovaenem.local}
 
 management:
   endpoints:

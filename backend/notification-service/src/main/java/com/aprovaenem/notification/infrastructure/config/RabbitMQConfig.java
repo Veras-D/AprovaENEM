@@ -54,11 +54,6 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Binding bindingUserRegistered(Queue notificationAuthQueue, TopicExchange authExchange) {
-        return BindingBuilder.bind(notificationAuthQueue).to(authExchange).with(USER_REGISTERED_ROUTING_KEY);
-    }
-
-    @Bean
     public Binding bindingEmailVerification(Queue notificationAuthQueue, TopicExchange authExchange) {
         return BindingBuilder.bind(notificationAuthQueue).to(authExchange).with(EMAIL_VERIFICATION_ROUTING_KEY);
     }

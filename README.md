@@ -330,6 +330,7 @@ In strict adherence to **Perimeter Isolation**, external clients (browsers and m
 - **Student Web Application (Frontend)**: `http://localhost`
 - **Public REST API (via frontend-api BFF)**: `http://localhost/api/v1/...`
 - **OpenAPI Swagger UI (Dev Ingress)**: `http://localhost/swagger-ui.html`
+- **Mailpit Web Inbox (Captured Transactional Emails)**: `http://localhost:8025` (Inspect verification emails and tokens locally)
 
 #### 🔒 Internal Backend Network (`aprovaenem-internal` - Zero Host Port Exposure)
 In production, all domain services, databases, caches, and telemetry run within the private Docker network:
