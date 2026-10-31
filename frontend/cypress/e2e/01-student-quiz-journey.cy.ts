@@ -1,5 +1,47 @@
 describe('Student Practice Quiz Journey E2E', () => {
   beforeEach(() => {
+    // Intercept backend API routes to ensure deterministic E2E behavior in headless CI
+    cy.intercept('GET', '**/api/v1/gamification/profile', {
+      statusCode: 200,
+      body: {
+        userId: 'student-e2e',
+        currentLevel: 3,
+        currentXp: 350,
+        nextLevelXp: 500,
+        streakDays: 4,
+        dailyGoalTarget: 5,
+        dailyGoalCompleted: 2,
+        levelTitle: 'Estudante Focado',
+        weeklyLeague: 'DIAMOND',
+      },
+    }).as('getGamificationProfile');
+
+    cy.intercept('POST', '**/api/v1/sessions/*/attempts', (req) => {
+      req.reply({
+        statusCode: 200,
+        body: {
+          attemptId: 'att-mock-' + Date.now(),
+          sessionId: req.url.split('/')[6] || 'session-enem',
+          questionId: req.body?.questionId || 'q-mock',
+          selectedOption: req.body?.selectedOption || 'B',
+          isCorrect: true,
+          awardedXp: 15,
+          correctOption: 'B',
+          explanation: 'Resolução detalhada da questão para estudo orientado.',
+        },
+      });
+    }).as('submitAttempt');
+
+    cy.intercept('POST', '**/api/v1/gamification/activity', {
+      statusCode: 200,
+      body: { status: 'OK' },
+    }).as('recordActivity');
+
+    cy.intercept('GET', '**/api/v1/notifications*', {
+      statusCode: 200,
+      body: { content: [], totalElements: 0 },
+    }).as('getNotifications');
+
     // Clear localStorage and visit practice simulator
     cy.clearLocalStorage();
     cy.visit('/?section=practice');
@@ -71,6 +113,8 @@ describe('Student Practice Quiz Journey E2E', () => {
       cy.contains(/Confirmar Resposta|Responder/i).should('not.be.disabled').click();
       if (i < 4) {
         cy.contains(/Próxima Questão|Avançar/i, { timeout: 10000 }).should('be.visible').click();
+        // Wait for question index to advance in carousel before next iteration
+        cy.get('button[aria-current="step"]').should('contain.text', `${i + 2}`);
       }
     }
 
