@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -43,6 +44,12 @@ public class AuthService implements AuthUseCase {
     private final TokenProviderPort tokenProvider;
     private final ObjectMapper objectMapper;
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    private String generateVerificationToken() {
+        return String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
+    }
+
     @Override
     @Transactional
     public User register(String email, String rawPassword, String fullName, SchoolType schoolType, String targetDegree) {
@@ -53,7 +60,7 @@ public class AuthService implements AuthUseCase {
         }
 
         String passwordHash = passwordEncoder.encode(rawPassword);
-        String verificationToken = UUID.randomUUID().toString().replace("-", "");
+        String verificationToken = generateVerificationToken();
         Instant now = Instant.now();
         Instant tokenExpiresAt = now.plus(24, ChronoUnit.HOURS);
 

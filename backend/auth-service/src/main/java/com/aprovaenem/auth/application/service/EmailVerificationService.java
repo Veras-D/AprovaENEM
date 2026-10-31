@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -27,6 +28,12 @@ public class EmailVerificationService implements EmailVerificationUseCase {
     private final UserRepositoryPort userRepository;
     private final OutboxRepositoryPort outboxRepository;
     private final ObjectMapper objectMapper;
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    private String generateVerificationToken() {
+        return String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
+    }
 
     @Override
     @Transactional
@@ -71,7 +78,7 @@ public class EmailVerificationService implements EmailVerificationUseCase {
             return true;
         }
 
-        String newToken = UUID.randomUUID().toString().replace("-", "");
+        String newToken = generateVerificationToken();
         Instant now = Instant.now();
         Instant expiresAt = now.plus(24, ChronoUnit.HOURS);
 

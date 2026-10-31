@@ -157,16 +157,19 @@ public class NotificationEventListener {
         Obrigado por criar sua conta no <strong>AprovaENEM</strong>. Para ativar seu acesso e liberar o simulado com o Tutor IA Socrático,
         confirme seu endereço de e-mail clicando no botão abaixo:
       </p>
-      <div style="text-align:center;margin:28px 0;">
+      <div style="text-align:center;margin:32px 0;">
         <a href="{{VERIFY_URL}}"
-           style="display:inline-block;background-color:#0284c7;color:#ffffff !important;padding:14px 28px;"
-           target="_blank">Ativar Minha Conta</a>
+           style="display:inline-block;background-color:#0284c7;color:#ffffff !important;
+                  font-size:16px;font-weight:700;text-decoration:none !important;
+                  padding:14px 36px;border-radius:10px;letter-spacing:0.3px;
+                  box-shadow:0 4px 14px rgba(2,132,199,0.35);"
+           target="_blank">Ativar Minha Conta &rarr;</a>
       </div>
-      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;text-align:center;margin:24px 0;">
-        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#64748b;margin-bottom:8px;">
+      <div style="background-color:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:20px;text-align:center;margin:28px 0;">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-bottom:8px;">
           Ou informe este código no aplicativo
         </div>
-        <div style="font-family:monospace;font-size:20px;font-weight:700;color:#0369a1;letter-spacing:1.5px;">
+        <div style="font-family:'Courier New',Courier,monospace;font-size:32px;font-weight:800;color:#0284c7;letter-spacing:8px;">
           {{TOKEN}}
         </div>
       </div>
