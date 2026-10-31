@@ -621,14 +621,24 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
         >
           {/* Header */}
           <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 shrink-0">
-            <div key={mode} className="flex items-center gap-2.5 animate-in fade-in duration-200">
-              <div className="p-2 rounded-brand bg-brand-primary/10 text-brand-primary">
+            <div key={`${mode}-${!!verifySuccessMessage}`} className="flex items-center gap-2.5 animate-in fade-in duration-200">
+              <div
+                className={`p-2 rounded-brand ${
+                  mode === 'verify-email' && verifySuccessMessage
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                    : 'bg-brand-primary/10 text-brand-primary'
+                }`}
+              >
                 {mode === 'register' ? (
                   <UserPlus className="h-5 w-5" aria-hidden="true" />
                 ) : mode === 'forgot-password' ? (
                   <KeyRound className="h-5 w-5" aria-hidden="true" />
                 ) : mode === 'verify-email' ? (
-                  <Mail className="h-5 w-5" aria-hidden="true" />
+                  verifySuccessMessage ? (
+                    <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
+                  ) : (
+                    <Mail className="h-5 w-5" aria-hidden="true" />
+                  )
                 ) : (
                   <LogIn className="h-5 w-5" aria-hidden="true" />
                 )}
@@ -643,7 +653,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                     : mode === 'forgot-password'
                     ? 'Recuperar Minha Senha'
                     : mode === 'verify-email'
-                    ? 'Confirmação de E-mail'
+                    ? (verifySuccessMessage ? 'E-mail Confirmado!' : 'Confirmação de E-mail')
                     : 'Acessar Minha Conta'}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -652,7 +662,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                     : mode === 'forgot-password'
                     ? 'Redefina o acesso à sua conta de estudante'
                     : mode === 'verify-email'
-                    ? 'Valide seu endereço de e-mail para ativar sua conta'
+                    ? (verifySuccessMessage ? 'Sua conta de estudante está ativa' : 'Valide seu endereço de e-mail para ativar sua conta')
                     : 'Acesse seus simulados salvos e sua ofensiva de estudos'}
                 </p>
               </div>
@@ -686,16 +696,23 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             </div>
           ) : mode === 'verify-email' ? (
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 px-4 py-2.5 shrink-0">
-              <button
-                type="button"
-                onClick={() => handleSwitchMode('login')}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-primary hover:underline cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-                <span>Voltar ao Login</span>
-              </button>
+              {verifySuccessMessage ? (
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>Conta Validada</span>
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleSwitchMode('login')}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-primary hover:underline cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>Voltar ao Login</span>
+                </button>
+              )}
               <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                Ativação de Conta
+                {verifySuccessMessage ? 'Status: 100% Ativo' : 'Ativação de Conta'}
               </span>
             </div>
           ) : (
@@ -1332,173 +1349,237 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 
             {mode === 'verify-email' && (
               <div className="space-y-4">
-                <div className="text-center p-4 rounded-brand bg-brand-primary/5 dark:bg-brand-primary/10 border border-brand-primary/20 space-y-2">
-                  <div className="w-12 h-12 mx-auto rounded-full bg-brand-primary/10 dark:bg-brand-primary/20 flex items-center justify-center text-brand-primary dark:text-brand-accent">
-                    <Mail className="h-6 w-6" aria-hidden="true" />
-                  </div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                    Confirme seu E-mail
-                  </h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-300">
-                    Enviamos um código de confirmação para{' '}
-                    <span className="font-semibold text-slate-900 dark:text-white break-all">
-                      {verifyEmailTarget || email || 'seu endereço de e-mail'}
-                    </span>
-                    .
-                  </p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Verifique sua caixa de entrada e pasta de spam para validar sua conta do AprovaENEM.
-                  </p>
-                </div>
+                {verifySuccessMessage ? (
+                  <div className="space-y-5 py-2 text-center animate-in fade-in zoom-in-95 duration-300">
+                    {/* Animated Pulsing Celebration Icon */}
+                    <div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
+                      <div className="absolute inset-0 rounded-full bg-emerald-500/20 dark:bg-emerald-500/30 animate-ping opacity-60" />
+                      <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-xl shadow-emerald-500/25">
+                        <CheckCircle2 className="h-8 w-8 sm:h-10 sm:w-10 stroke-[2.5]" aria-hidden="true" />
+                      </div>
+                    </div>
 
-                {verifySuccessMessage && (
-                  <div
-                    role="status"
-                    aria-live="polite"
-                    className="p-3.5 rounded-brand bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/40 text-emerald-900 dark:text-emerald-100 flex items-center gap-2.5 text-xs font-medium"
-                  >
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" aria-hidden="true" />
-                    <span>{verifySuccessMessage}</span>
-                  </div>
-                )}
-
-                {resendSuccessMessage && (
-                  <div
-                    role="status"
-                    aria-live="polite"
-                    className="p-3.5 rounded-brand bg-sky-50 dark:bg-sky-950/40 border border-sky-500/40 text-sky-900 dark:text-sky-100 flex items-center gap-2.5 text-xs font-medium"
-                  >
-                    <Mail className="h-5 w-5 text-sky-600 shrink-0" aria-hidden="true" />
-                    <span>{resendSuccessMessage}</span>
-                  </div>
-                )}
-
-                {/* Token Validation Form */}
-                <form onSubmit={handleVerifyEmailSubmit} className="space-y-4" noValidate>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label
-                        htmlFor="verify-token-input"
-                        className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                    {/* Headline and confirmation details */}
+                    <div className="space-y-2">
+                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                        Conta Ativada com Sucesso! 🎉
+                      </h3>
+                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-sm mx-auto leading-relaxed">
+                        O endereço{' '}
+                        <span className="font-semibold text-slate-900 dark:text-white break-all">
+                          {verifyEmailTarget || email || 'de e-mail'}
+                        </span>{' '}
+                        foi confirmado e sua conta no AprovaENEM está plenamente ativa.
+                      </p>
+                      <div
+                        role="status"
+                        aria-live="polite"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-semibold"
                       >
-                        Possui o código ou token de confirmação?
-                      </label>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                        Código de 6 dígitos
-                      </span>
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
+                        <span>{verifySuccessMessage}</span>
+                      </div>
                     </div>
 
-                    {/* Modern Segmented 6-Digit OTP UI */}
-                    <div
-                      className="relative group cursor-text py-1"
-                      onClick={() => tokenInputRef.current?.focus()}
-                    >
-                      <input
-                        ref={tokenInputRef}
-                        id="verify-token-input"
-                        name="verifyToken"
-                        type="text"
-                        inputMode="numeric"
-                        autoComplete="one-time-code"
-                        maxLength={32}
-                        value={verifyTokenInput}
-                        onChange={(e) => setVerifyTokenInput(e.target.value.trim())}
-                        onFocus={() => setIsTokenInputFocused(true)}
-                        onBlur={() => setIsTokenInputFocused(false)}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-text z-10"
-                        aria-label="Código de confirmação de 6 dígitos"
-                      />
-
-                      {verifyTokenInput.length > 6 ? (
-                        <div className="w-full px-4 py-3 text-center font-mono text-sm tracking-wide rounded-xl border-2 border-brand-primary bg-brand-primary/5 dark:bg-brand-primary/10 text-brand-primary dark:text-sky-400 font-semibold break-all">
-                          {verifyTokenInput}
+                    {/* Feature Unlocked Highlights Card */}
+                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-left space-y-2.5">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        Recursos Liberados no seu Acesso
+                      </div>
+                      <div className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-200 font-medium">
+                        <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                          <CheckCircle2 className="h-3.5 w-3.5" />
                         </div>
-                      ) : (
-                        <div className="flex items-center justify-center gap-2 sm:gap-2.5">
-                          {[0, 1, 2, 3, 4, 5].map((index) => {
-                            const digit = verifyTokenInput[index] || '';
-                            const isCurrent =
-                              isTokenInputFocused &&
-                              (index === verifyTokenInput.length ||
-                                (index === 5 && verifyTokenInput.length === 6));
-                            const isFilled = !!digit;
-
-                            return (
-                              <React.Fragment key={index}>
-                                {index === 3 && (
-                                  <span
-                                    className="w-2.5 h-0.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-0.5 self-center"
-                                    aria-hidden="true"
-                                  />
-                                )}
-                                <div
-                                  className={`w-11 h-14 sm:w-12 sm:h-14 flex items-center justify-center rounded-xl font-mono text-2xl font-bold transition-all duration-150 select-none ${
-                                    isFilled
-                                      ? 'border-2 border-brand-primary bg-brand-primary/5 dark:bg-brand-primary/10 text-brand-primary dark:text-sky-400 shadow-sm'
-                                      : isCurrent
-                                      ? 'border-2 border-brand-primary ring-4 ring-brand-primary/20 bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
-                                      : 'border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-900/60 text-slate-400 dark:text-slate-600'
-                                  }`}
-                                >
-                                  {digit ? (
-                                    digit
-                                  ) : isCurrent ? (
-                                    <span className="w-0.5 h-6 bg-brand-primary dark:bg-sky-400 animate-pulse rounded-full" />
-                                  ) : (
-                                    <span className="text-slate-300 dark:text-slate-700 text-sm font-normal">
-                                      ·
-                                    </span>
-                                  )}
-                                </div>
-                              </React.Fragment>
-                            );
-                          })}
+                        <span>Simulados ENEM com cálculo oficial de TRI</span>
+                      </div>
+                      <div className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-200 font-medium">
+                        <div className="w-5 h-5 rounded-full bg-sky-100 dark:bg-sky-950 flex items-center justify-center text-sky-600 dark:text-sky-400 shrink-0">
+                          <Sparkles className="h-3.5 w-3.5" />
                         </div>
-                      )}
+                        <span>Tutor IA Socrático Pedagógico sem respostas prontas</span>
+                      </div>
+                      <div className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-200 font-medium">
+                        <div className="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-950 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                          <ShieldCheck className="h-3.5 w-3.5" />
+                        </div>
+                        <span>Metas diárias, ofensiva de estudos e ranking semanal</span>
+                      </div>
                     </div>
 
-                    <p className="text-[11px] text-center text-slate-500 dark:text-slate-400">
-                      Digite o código de 6 dígitos recebido no seu e-mail para ativar sua conta.
-                    </p>
+                    {/* Primary Action Button */}
+                    <div className="pt-2">
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size="md"
+                        className="w-full shadow-lg shadow-brand-primary/20 text-sm font-bold"
+                        onClick={isAuthenticated ? onClose : () => handleSwitchMode('login')}
+                      >
+                        <Sparkles className="h-4 w-4 mr-2" aria-hidden="true" />
+                        {isAuthenticated ? 'Continuar para a Plataforma' : 'Entrar na Minha Conta'}
+                      </Button>
+                    </div>
                   </div>
+                ) : (
+                  <>
+                    <div className="text-center p-4 rounded-brand bg-brand-primary/5 dark:bg-brand-primary/10 border border-brand-primary/20 space-y-2">
+                      <div className="w-12 h-12 mx-auto rounded-full bg-brand-primary/10 dark:bg-brand-primary/20 flex items-center justify-center text-brand-primary dark:text-brand-accent">
+                        <Mail className="h-6 w-6" aria-hidden="true" />
+                      </div>
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                        Confirme seu E-mail
+                      </h3>
+                      <p className="text-xs text-slate-600 dark:text-slate-300">
+                        Enviamos um código de confirmação para{' '}
+                        <span className="font-semibold text-slate-900 dark:text-white break-all">
+                          {verifyEmailTarget || email || 'seu endereço de e-mail'}
+                        </span>
+                        .
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Verifique sua caixa de entrada e pasta de spam para validar sua conta do AprovaENEM.
+                      </p>
+                    </div>
 
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    size="md"
-                    className="w-full"
-                    disabled={verifyEmailMutation.isPending || !verifyTokenInput.trim()}
-                    isLoading={verifyEmailMutation.isPending}
-                  >
-                    <CheckCircle2 className="h-4 w-4 mr-2" aria-hidden="true" />
-                    Confirmar E-mail
-                  </Button>
-                </form>
+                    {resendSuccessMessage && (
+                      <div
+                        role="status"
+                        aria-live="polite"
+                        className="p-3.5 rounded-brand bg-sky-50 dark:bg-sky-950/40 border border-sky-500/40 text-sky-900 dark:text-sky-100 flex items-center gap-2.5 text-xs font-medium"
+                      >
+                        <Mail className="h-5 w-5 text-sky-600 shrink-0" aria-hidden="true" />
+                        <span>{resendSuccessMessage}</span>
+                      </div>
+                    )}
 
-                {/* Resend Verification Action & Continue */}
-                <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                    <span>Não recebeu a mensagem?</span>
-                    <button
-                      type="button"
-                      onClick={handleResendVerification}
-                      disabled={resendVerificationMutation.isPending}
-                      className="text-brand-primary hover:underline font-semibold cursor-pointer disabled:opacity-50"
-                    >
-                      {resendVerificationMutation.isPending ? 'Reenviando...' : 'Reenviar E-mail'}
-                    </button>
-                  </div>
+                    {/* Token Validation Form */}
+                    <form onSubmit={handleVerifyEmailSubmit} className="space-y-4" noValidate>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label
+                            htmlFor="verify-token-input"
+                            className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                          >
+                            Possui o código ou token de confirmação?
+                          </label>
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                            Código de 6 dígitos
+                          </span>
+                        </div>
 
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="md"
-                    className="w-full"
-                    onClick={onClose}
-                  >
-                    Continuar para a Plataforma
-                  </Button>
-                </div>
+                        {/* Modern Segmented 6-Digit OTP UI */}
+                        <div
+                          className="relative group cursor-text py-1"
+                          onClick={() => tokenInputRef.current?.focus()}
+                        >
+                          <input
+                            ref={tokenInputRef}
+                            id="verify-token-input"
+                            name="verifyToken"
+                            type="text"
+                            inputMode="numeric"
+                            autoComplete="one-time-code"
+                            maxLength={32}
+                            value={verifyTokenInput}
+                            onChange={(e) => setVerifyTokenInput(e.target.value.trim())}
+                            onFocus={() => setIsTokenInputFocused(true)}
+                            onBlur={() => setIsTokenInputFocused(false)}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-text z-10"
+                            aria-label="Código de confirmação de 6 dígitos"
+                          />
+
+                          {verifyTokenInput.length > 6 ? (
+                            <div className="w-full px-4 py-3 text-center font-mono text-sm tracking-wide rounded-xl border-2 border-brand-primary bg-brand-primary/5 dark:bg-brand-primary/10 text-brand-primary dark:text-sky-400 font-semibold break-all">
+                              {verifyTokenInput}
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center gap-2 sm:gap-2.5">
+                              {[0, 1, 2, 3, 4, 5].map((index) => {
+                                const digit = verifyTokenInput[index] || '';
+                                const isCurrent =
+                                  isTokenInputFocused &&
+                                  (index === verifyTokenInput.length ||
+                                    (index === 5 && verifyTokenInput.length === 6));
+                                const isFilled = !!digit;
+
+                                return (
+                                  <React.Fragment key={index}>
+                                    {index === 3 && (
+                                      <span
+                                        className="w-2.5 h-0.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-0.5 self-center"
+                                        aria-hidden="true"
+                                      />
+                                    )}
+                                    <div
+                                      className={`w-11 h-14 sm:w-12 sm:h-14 flex items-center justify-center rounded-xl font-mono text-2xl font-bold transition-all duration-150 select-none ${
+                                        isFilled
+                                          ? 'border-2 border-brand-primary bg-brand-primary/5 dark:bg-brand-primary/10 text-brand-primary dark:text-sky-400 shadow-sm'
+                                          : isCurrent
+                                          ? 'border-2 border-brand-primary ring-4 ring-brand-primary/20 bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+                                          : 'border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-900/60 text-slate-400 dark:text-slate-600'
+                                      }`}
+                                    >
+                                      {digit ? (
+                                        digit
+                                      ) : isCurrent ? (
+                                        <span className="w-0.5 h-6 bg-brand-primary dark:bg-sky-400 animate-pulse rounded-full" />
+                                      ) : (
+                                        <span className="text-slate-300 dark:text-slate-700 text-sm font-normal">
+                                          ·
+                                        </span>
+                                      )}
+                                    </div>
+                                  </React.Fragment>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+
+                        <p className="text-[11px] text-center text-slate-500 dark:text-slate-400">
+                          Digite o código de 6 dígitos recebido no seu e-mail para ativar sua conta.
+                        </p>
+                      </div>
+
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        size="md"
+                        className="w-full"
+                        disabled={verifyEmailMutation.isPending || !verifyTokenInput.trim()}
+                        isLoading={verifyEmailMutation.isPending}
+                      >
+                        <CheckCircle2 className="h-4 w-4 mr-2" aria-hidden="true" />
+                        Confirmar E-mail
+                      </Button>
+                    </form>
+
+                    {/* Resend Verification Action & Continue */}
+                    <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-3">
+                      <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                        <span>Não recebeu a mensagem?</span>
+                        <button
+                          type="button"
+                          onClick={handleResendVerification}
+                          disabled={resendVerificationMutation.isPending}
+                          className="text-brand-primary hover:underline font-semibold cursor-pointer disabled:opacity-50"
+                        >
+                          {resendVerificationMutation.isPending ? 'Reenviando...' : 'Reenviar E-mail'}
+                        </button>
+                      </div>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="md"
+                        className="w-full"
+                        onClick={onClose}
+                      >
+                        Continuar para a Plataforma
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
             )}
               </div>
