@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(frontend): Removed premature "Continuar para a Plataforma" outline button from the unconfirmed email verification input form in [`RegisterModal.tsx`](frontend/src/components/auth/RegisterModal.tsx).
 
 ### Fixed
+- fix(frontend): Prevented browser password autofill on login modal open by configuring `autoComplete="new-password"` on the password field while retaining `autoComplete="email"` for student email suggestions in [`RegisterModal.tsx`](frontend/src/components/auth/RegisterModal.tsx).
 - fix(cypress): Resolved E2E flakiness in student practice quiz spec ([frontend/cypress/e2e/01-student-quiz-journey.cy.ts](frontend/cypress/e2e/01-student-quiz-journey.cy.ts)) by stubbing backend endpoints (profile, attempts, activity, notifications) and synchronizing carousel question advancement via `button[aria-current="step"]` before submitting next answers.
 - fix(frontend): Enabled native browser email autocomplete and credential autofill in [`RegisterModal.tsx`](frontend/src/components/auth/RegisterModal.tsx) by configuring standard `autoComplete="email"`, `autoComplete="username"`, and `autoComplete="current-password"` attributes across registration, login, and recovery forms, removing legacy autofill suppression attributes and dummy inputs.
 - fix(auth): Resolved silent failure in password recovery flow where `forgotPassword` generated tokens in PostgreSQL without dispatching events or sending emails, preventing users from receiving password reset instructions.
