@@ -1554,8 +1554,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                       </Button>
                     </form>
 
-                    {/* Resend Verification Action & Continue */}
-                    <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-3">
+                    {/* Resend Verification Action */}
+                    <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
                       <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                         <span>Não recebeu a mensagem?</span>
                         <button
@@ -1567,16 +1567,6 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                           {resendVerificationMutation.isPending ? 'Reenviando...' : 'Reenviar E-mail'}
                         </button>
                       </div>
-
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="md"
-                        className="w-full"
-                        onClick={onClose}
-                      >
-                        Continuar para a Plataforma
-                      </Button>
                     </div>
                   </>
                 )}
