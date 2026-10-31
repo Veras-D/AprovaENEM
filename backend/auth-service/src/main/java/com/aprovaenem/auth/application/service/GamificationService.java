@@ -81,8 +81,25 @@ public class GamificationService implements GamificationUseCase {
         // 2. Monthly Freeze Recharge Evaluation: Recharges to 1 on a new calendar month
         int streakFreeze = profile.getStreakFreezeAvailable();
         LocalDate lastDate = profile.getLastActivityDate();
+        boolean profileModified = false;
         if (streakFreeze < 1 && isNewCalendarMonth(today, lastDate)) {
             streakFreeze = 1;
+            profile.setStreakFreezeAvailable(1);
+            profileModified = true;
+        }
+
+        // 3. Streak Expiration Evaluation: If student missed yesterday (or earlier) and has no freeze shield, streak resets to 0
+        int streakDays = profile.getStreakDays();
+        if (isStreakExpired(profile, today)) {
+            streakDays = 0;
+            if (profile.getStreakDays() > 0) {
+                profile.setStreakDays(0);
+                profileModified = true;
+            }
+        }
+
+        if (profileModified) {
+            gamificationRepository.saveProfile(profile);
         }
 
         GamificationProfileResponse.DailyGoalDto dailyGoalDto = GamificationProfileResponse.DailyGoalDto.builder()
@@ -99,7 +116,7 @@ public class GamificationService implements GamificationUseCase {
                 .currentXp(profile.getCurrentXp())
                 .xpNextLevel(profile.getXpNextLevel())
                 .levelProgressPercentage(profile.getLevelProgressPercentage())
-                .streakDays(profile.getStreakDays())
+                .streakDays(streakDays)
                 .streakFreezeAvailable(streakFreeze)
                 .dailyGoal(dailyGoalDto)
                 .currentLeague(currentLeague)
@@ -188,6 +205,21 @@ public class GamificationService implements GamificationUseCase {
 
     private boolean isNewCalendarMonth(LocalDate today, LocalDate lastDate) {
         return lastDate != null && (today.getYear() > lastDate.getYear() || today.getMonthValue() > lastDate.getMonthValue());
+    }
+
+    private boolean isStreakExpired(UserGamificationProfile profile, LocalDate today) {
+        LocalDate lastDate = profile.getLastActivityDate();
+        if (lastDate == null || profile.getStreakDays() <= 0) {
+            return false;
+        }
+        if (lastDate.equals(today) || lastDate.equals(today.minusDays(1))) {
+            return false;
+        }
+        int streakFreeze = profile.getStreakFreezeAvailable();
+        if (streakFreeze < 1 && isNewCalendarMonth(today, lastDate)) {
+            streakFreeze = 1;
+        }
+        return streakFreeze <= 0;
     }
 
     private int checkDailyGoalBonus(UserGamificationProfile profile, UUID userId, Instant now) {
@@ -293,7 +325,7 @@ public class GamificationService implements GamificationUseCase {
             String avatarConfig = userOpt.map(User::getAvatarConfig).orElse(null);
 
             int streak = gamificationRepository.findProfileByUserId(entryUserId)
-                    .map(UserGamificationProfile::getStreakDays)
+                    .map(p -> isStreakExpired(p, today) ? 0 : p.getStreakDays())
                     .orElse(0);
 
             leaderboardList.add(WeeklyLeaderboardResponse.UserRankDto.builder()
@@ -317,7 +349,7 @@ public class GamificationService implements GamificationUseCase {
             String userName = currentUserOpt.map(User::getFullName).orElse("Você");
             String userAvatar = currentUserOpt.map(User::getAvatarConfig).orElse(null);
             int userStreak = gamificationRepository.findProfileByUserId(currentUserId)
-                    .map(UserGamificationProfile::getStreakDays)
+                    .map(p -> isStreakExpired(p, today) ? 0 : p.getStreakDays())
                     .orElse(0);
             currentUserRankDto = WeeklyLeaderboardResponse.UserRankDto.builder()
                     .rank(userRank)
@@ -372,6 +404,7 @@ public class GamificationService implements GamificationUseCase {
         List<UserGamificationProfile> pendingProfiles = gamificationRepository.findPendingStudyReminderProfiles();
         int count = 0;
 
+        LocalDate today = LocalDate.now(BRT_ZONE);
         for (UserGamificationProfile profile : pendingProfiles) {
             Optional<User> userOpt = userRepository.findById(profile.getUserId());
             if (userOpt.isPresent()) {
@@ -380,7 +413,7 @@ public class GamificationService implements GamificationUseCase {
                         .userId(profile.getUserId())
                         .email(user.getEmail())
                         .fullName(user.getFullName())
-                        .streakDays(profile.getStreakDays())
+                        .streakDays(isStreakExpired(profile, today) ? 0 : profile.getStreakDays())
                         .questionsCompleted(profile.getDailyQuestionsCompleted())
                         .targetQuestions(profile.getDailyGoalQuestions())
                         .occurredAt(Instant.now())
