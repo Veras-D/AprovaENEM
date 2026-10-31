@@ -112,7 +112,7 @@ class NotificationEventListenerTest {
                 htmlBody.capture(),
                 fallbackText.capture()
         );
-        assertThat(htmlBody.getValue()).contains("Carlos Silva").contains("token-xyz-789").contains("?verifyToken=");
+        assertThat(htmlBody.getValue()).contains("Carlos Silva").contains("token-xyz-789");
         assertThat(fallbackText.getValue()).contains("Carlos Silva").contains("token-xyz-789");
     }
 

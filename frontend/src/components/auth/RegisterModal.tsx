@@ -1340,7 +1340,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                     Confirme seu E-mail
                   </h3>
                   <p className="text-xs text-slate-600 dark:text-slate-300">
-                    Enviamos um link de confirmação para{' '}
+                    Enviamos um código de confirmação para{' '}
                     <span className="font-semibold text-slate-900 dark:text-white break-all">
                       {verifyEmailTarget || email || 'seu endereço de e-mail'}
                     </span>
@@ -1458,7 +1458,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                     </div>
 
                     <p className="text-[11px] text-center text-slate-500 dark:text-slate-400">
-                      Digite os 6 números recebidos no seu e-mail ou clique no link da mensagem.
+                      Digite o código de 6 dígitos recebido no seu e-mail para ativar sua conta.
                     </p>
                   </div>
 

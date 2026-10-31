@@ -119,14 +119,13 @@ public class NotificationEventListener {
             log.warn("Skipping verification email for user [{}]: missing recipient or token", event.getUserId());
             return "FAILED";
         }
-        String verifyUrl = String.format("%s/?verifyToken=%s", frontendUrl, event.getVerificationToken());
 
         String textFallback = String.format(
-                "Olá %s!%n%nBem-vindo(a) ao AprovaENEM.%nPara ativar sua conta, confirme seu e-mail no link abaixo:%n%s%n%n"
-                        + "Ou informe o seguinte código no aplicativo:%n    %s%n%n(Válido por 24 horas)%n",
-                name, verifyUrl, event.getVerificationToken());
+                "Olá %s!%n%nBem-vindo(a) ao AprovaENEM.%nPara ativar sua conta e liberar o simulado com o Tutor IA Socrático, "
+                        + "informe o seguinte código no aplicativo:%n%n    %s%n%n(Código de confirmação válido por 24 horas)%n",
+                name, event.getVerificationToken());
 
-        String html = buildVerificationHtml(name, verifyUrl, event.getVerificationToken());
+        String html = buildVerificationHtml(name, event.getVerificationToken());
 
         try {
             emailSender.sendHtml(event.getEmail(), "Confirme seu e-mail no AprovaENEM", html, textFallback);
@@ -137,7 +136,7 @@ public class NotificationEventListener {
         }
     }
 
-    private String buildVerificationHtml(String name, String verifyUrl, String token) {
+    private String buildVerificationHtml(String name, String token) {
         String template = """
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -155,26 +154,18 @@ public class NotificationEventListener {
       <div style="font-size:18px;font-weight:700;margin-bottom:12px;color:#0f172a;">Olá, {{NAME}}!</div>
       <p style="font-size:15px;line-height:1.6;color:#475569;margin-bottom:24px;">
         Obrigado por criar sua conta no <strong>AprovaENEM</strong>. Para ativar seu acesso e liberar o simulado com o Tutor IA Socrático,
-        confirme seu endereço de e-mail clicando no botão abaixo:
+        informe o código de confirmação abaixo no aplicativo:
       </p>
-      <div style="text-align:center;margin:32px 0;">
-        <a href="{{VERIFY_URL}}"
-           style="display:inline-block;background-color:#0284c7;color:#ffffff !important;
-                  font-size:16px;font-weight:700;text-decoration:none !important;
-                  padding:14px 36px;border-radius:10px;letter-spacing:0.3px;
-                  box-shadow:0 4px 14px rgba(2,132,199,0.35);"
-           target="_blank">Ativar Minha Conta &rarr;</a>
-      </div>
-      <div style="background-color:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:20px;text-align:center;margin:28px 0;">
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-bottom:8px;">
-          Ou informe este código no aplicativo
+      <div style="background-color:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:24px 20px;text-align:center;margin:28px 0;">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-bottom:10px;">
+          Código de Confirmação
         </div>
-        <div style="font-family:'Courier New',Courier,monospace;font-size:32px;font-weight:800;color:#0284c7;letter-spacing:8px;">
+        <div style="font-family:'Courier New',Courier,monospace;font-size:36px;font-weight:800;color:#0284c7;letter-spacing:10px;">
           {{TOKEN}}
         </div>
       </div>
-      <p style="font-size:13px;color:#64748b;margin-bottom:0;">
-        ⚠️ Este link e código de confirmação expiram em 24 horas.
+      <p style="font-size:13px;color:#64748b;margin-bottom:0;text-align:center;">
+        ⚠️ Este código de confirmação expira em 24 horas.
       </p>
     </div>
     <div style="padding:20px 24px;background-color:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;font-size:13px;color:#94a3b8;">
@@ -186,7 +177,6 @@ public class NotificationEventListener {
 """;
         return template
                 .replace("{{NAME}}", name)
-                .replace("{{VERIFY_URL}}", verifyUrl)
                 .replace("{{TOKEN}}", token);
     }
 
