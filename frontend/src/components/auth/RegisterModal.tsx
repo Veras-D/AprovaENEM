@@ -72,6 +72,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   const [verifyTokenInput, setVerifyTokenInput] = useState<string>('');
   const [verifySuccessMessage, setVerifySuccessMessage] = useState<string | null>(null);
   const [resendSuccessMessage, setResendSuccessMessage] = useState<string | null>(null);
+  const [isTokenInputFocused, setIsTokenInputFocused] = useState<boolean>(false);
+  const tokenInputRef = useRef<HTMLInputElement | null>(null);
 
   // Mandatory LGPD Consent & Optional Notifications
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState<boolean>(false);
@@ -1372,23 +1374,92 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 )}
 
                 {/* Token Validation Form */}
-                <form onSubmit={handleVerifyEmailSubmit} className="space-y-3" noValidate>
-                  <div className="space-y-1">
-                    <label
-                      htmlFor="verify-token-input"
-                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                <form onSubmit={handleVerifyEmailSubmit} className="space-y-4" noValidate>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label
+                        htmlFor="verify-token-input"
+                        className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                      >
+                        Possui o código ou token de confirmação?
+                      </label>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                        Código de 6 dígitos
+                      </span>
+                    </div>
+
+                    {/* Modern Segmented 6-Digit OTP UI */}
+                    <div
+                      className="relative group cursor-text py-1"
+                      onClick={() => tokenInputRef.current?.focus()}
                     >
-                      Possui o código ou token de confirmação?
-                    </label>
-                    <input
-                      id="verify-token-input"
-                      name="verifyToken"
-                      type="text"
-                      value={verifyTokenInput}
-                      onChange={(e) => setVerifyTokenInput(e.target.value)}
-                      placeholder="Ex: 849201"
-                      className="w-full px-3.5 py-2.5 text-center text-lg font-mono tracking-widest rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary"
-                    />
+                      <input
+                        ref={tokenInputRef}
+                        id="verify-token-input"
+                        name="verifyToken"
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        maxLength={32}
+                        value={verifyTokenInput}
+                        onChange={(e) => setVerifyTokenInput(e.target.value.trim())}
+                        onFocus={() => setIsTokenInputFocused(true)}
+                        onBlur={() => setIsTokenInputFocused(false)}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-text z-10"
+                        aria-label="Código de confirmação de 6 dígitos"
+                      />
+
+                      {verifyTokenInput.length > 6 ? (
+                        <div className="w-full px-4 py-3 text-center font-mono text-sm tracking-wide rounded-xl border-2 border-brand-primary bg-brand-primary/5 dark:bg-brand-primary/10 text-brand-primary dark:text-sky-400 font-semibold break-all">
+                          {verifyTokenInput}
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center gap-2 sm:gap-2.5">
+                          {[0, 1, 2, 3, 4, 5].map((index) => {
+                            const digit = verifyTokenInput[index] || '';
+                            const isCurrent =
+                              isTokenInputFocused &&
+                              (index === verifyTokenInput.length ||
+                                (index === 5 && verifyTokenInput.length === 6));
+                            const isFilled = !!digit;
+
+                            return (
+                              <React.Fragment key={index}>
+                                {index === 3 && (
+                                  <span
+                                    className="w-2.5 h-0.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-0.5 self-center"
+                                    aria-hidden="true"
+                                  />
+                                )}
+                                <div
+                                  className={`w-11 h-14 sm:w-12 sm:h-14 flex items-center justify-center rounded-xl font-mono text-2xl font-bold transition-all duration-150 select-none ${
+                                    isFilled
+                                      ? 'border-2 border-brand-primary bg-brand-primary/5 dark:bg-brand-primary/10 text-brand-primary dark:text-sky-400 shadow-sm'
+                                      : isCurrent
+                                      ? 'border-2 border-brand-primary ring-4 ring-brand-primary/20 bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+                                      : 'border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-900/60 text-slate-400 dark:text-slate-600'
+                                  }`}
+                                >
+                                  {digit ? (
+                                    digit
+                                  ) : isCurrent ? (
+                                    <span className="w-0.5 h-6 bg-brand-primary dark:bg-sky-400 animate-pulse rounded-full" />
+                                  ) : (
+                                    <span className="text-slate-300 dark:text-slate-700 text-sm font-normal">
+                                      ·
+                                    </span>
+                                  )}
+                                </div>
+                              </React.Fragment>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    <p className="text-[11px] text-center text-slate-500 dark:text-slate-400">
+                      Digite os 6 números recebidos no seu e-mail ou clique no link da mensagem.
+                    </p>
                   </div>
 
                   <Button
