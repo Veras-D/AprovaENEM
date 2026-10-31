@@ -5,6 +5,7 @@ import com.aprovaenem.notification.application.port.out.EmailSenderPort;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
@@ -26,6 +27,7 @@ public class SmtpEmailSender implements EmailSenderPort {
     private final String fromAddress;
     private final String fromName;
 
+    @Autowired
     public SmtpEmailSender(
             JavaMailSender mailSender,
             @Value("${app.mail.from:no-reply@aprovaenem.local}") String fromAddress,
