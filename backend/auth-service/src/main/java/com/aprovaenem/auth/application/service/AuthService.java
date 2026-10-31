@@ -303,7 +303,7 @@ public class AuthService implements AuthUseCase {
         }
 
         User user = userOpt.get();
-        String resetToken = String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
+        String resetToken = UUID.randomUUID().toString().replace("-", "");
         Instant now = Instant.now();
         Instant expiresAt = now.plus(24, ChronoUnit.HOURS);
 

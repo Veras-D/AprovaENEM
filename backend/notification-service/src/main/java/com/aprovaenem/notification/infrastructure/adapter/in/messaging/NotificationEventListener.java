@@ -204,8 +204,8 @@ public class NotificationEventListener {
 
         String status = deliverPasswordResetEmail(event, name);
         String body = "SENT".equals(status)
-                ? String.format("Olá %s! Enviamos o código para recuperação da sua senha AprovaENEM. "
-                        + "Verifique sua caixa de entrada e informe o código no aplicativo.", name)
+                ? String.format("Olá %s! Enviamos um link seguro para recuperação da sua senha AprovaENEM. "
+                        + "Verifique sua caixa de entrada e clique no link para cadastrar uma nova senha.", name)
                 : String.format("Olá %s! Não conseguimos enviar o e-mail de recuperação de senha agora.", name);
 
         NotificationLogEntity entity = NotificationLogEntity.builder()
@@ -230,13 +230,15 @@ public class NotificationEventListener {
             return "FAILED";
         }
 
+        String resetUrl = String.format("%s/?resetToken=%s", frontendUrl, event.getResetToken());
+
         String textFallback = String.format(
                 "Olá %s!%n%nRecebemos uma solicitação para redefinir a senha da sua conta no AprovaENEM.%n"
-                        + "Informe o seguinte código no aplicativo para cadastrar uma nova senha:%n%n    %s%n%n(Código válido por 24 horas)%n%n"
+                        + "Para cadastrar uma nova senha com segurança, acesse o link abaixo:%n%n    %s%n%n(Link seguro válido por 24 horas)%n%n"
                         + "Se você não solicitou a redefinição de senha, ignore este e-mail.%n",
-                name, event.getResetToken());
+                name, resetUrl);
 
-        String html = buildPasswordResetHtml(name, event.getResetToken());
+        String html = buildPasswordResetHtml(name, resetUrl);
 
         try {
             emailSender.sendHtml(event.getEmail(), "Recuperação de Senha — AprovaENEM", html, textFallback);
@@ -247,7 +249,7 @@ public class NotificationEventListener {
         }
     }
 
-    private String buildPasswordResetHtml(String name, String token) {
+    private String buildPasswordResetHtml(String name, String resetUrl) {
         String template = """
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -265,18 +267,19 @@ public class NotificationEventListener {
       <div style="font-size:18px;font-weight:700;margin-bottom:12px;color:#0f172a;">Olá, {{NAME}}!</div>
       <p style="font-size:15px;line-height:1.6;color:#475569;margin-bottom:24px;">
         Recebemos uma solicitação para redefinir a senha de acesso à sua conta <strong>AprovaENEM</strong>.
-        Para prosseguir, informe o código de segurança abaixo no aplicativo:
+        Para cadastrar uma nova senha com segurança, clique no botão abaixo:
       </p>
-      <div style="background-color:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:24px 20px;text-align:center;margin:28px 0;">
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-bottom:10px;">
-          Código de Recuperação de Senha
-        </div>
-        <div style="font-family:'Courier New',Courier,monospace;font-size:36px;font-weight:800;color:#0284c7;letter-spacing:10px;">
-          {{TOKEN}}
-        </div>
+      <div style="text-align:center;margin:32px 0;">
+        <a href="{{RESET_URL}}" style="display:inline-block;background:linear-gradient(135deg,#0284c7 0%,#0369a1 100%);color:#ffffff;text-decoration:none;font-weight:700;font-size:16px;padding:14px 32px;border-radius:10px;box-shadow:0 4px 14px rgba(2,132,199,0.35);">
+          Redefinir Minha Senha &rarr;
+        </a>
       </div>
-      <p style="font-size:13px;color:#64748b;margin-bottom:0;text-align:center;">
-        ⚠️ Este código de segurança expira em 24 horas. Se você não solicitou esta alteração, ignore este e-mail e sua senha permanecerá inalterada.
+      <p style="font-size:13px;color:#64748b;margin-bottom:12px;text-align:center;line-height:1.5;">
+        Se o botão acima não funcionar, copie e cole o seguinte link em seu navegador:<br/>
+        <a href="{{RESET_URL}}" style="color:#0284c7;word-break:break-all;">{{RESET_URL}}</a>
+      </p>
+      <p style="font-size:13px;color:#94a3b8;margin-bottom:0;text-align:center;">
+        ⚠️ Este link de recuperação expira em 24 horas. Se você não solicitou esta alteração, ignore este e-mail.
       </p>
     </div>
     <div style="padding:20px 24px;background-color:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;font-size:13px;color:#94a3b8;">
@@ -288,7 +291,7 @@ public class NotificationEventListener {
 """;
         return template
                 .replace("{{NAME}}", name)
-                .replace("{{TOKEN}}", token);
+                .replace("{{RESET_URL}}", resetUrl);
     }
 
 

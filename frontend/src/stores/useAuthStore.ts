@@ -7,13 +7,13 @@ interface AuthState {
   readonly user: UserProfile | null;
   readonly isAuthenticated: boolean;
   readonly isAuthModalOpen: boolean;
-  readonly authModalMode: 'login' | 'register' | 'forgot-password' | 'verify-email';
+  readonly authModalMode: 'login' | 'register' | 'forgot-password' | 'verify-email' | 'reset-password';
   readonly setAuth: (token: string, user: UserProfile) => void;
   readonly updateUser: (updatedFields: Partial<UserProfile>) => void;
   readonly setEmailVerified: (verified: boolean) => void;
   readonly clearAuth: () => void;
   readonly syncAuthFromStorage: () => void;
-  readonly openAuthModal: (mode?: 'login' | 'register' | 'forgot-password' | 'verify-email') => void;
+  readonly openAuthModal: (mode?: 'login' | 'register' | 'forgot-password' | 'verify-email' | 'reset-password') => void;
   readonly closeAuthModal: () => void;
 }
 
@@ -87,7 +87,7 @@ export const useAuthStore = create<AuthState>((set) => {
         isAuthModalOpen: state.isAuthModalOpen,
       }));
     },
-    openAuthModal: (mode: 'login' | 'register' | 'forgot-password' | 'verify-email' = 'login') => {
+    openAuthModal: (mode: 'login' | 'register' | 'forgot-password' | 'verify-email' | 'reset-password' = 'login') => {
       set({ isAuthModalOpen: true, authModalMode: mode });
     },
     closeAuthModal: () => {

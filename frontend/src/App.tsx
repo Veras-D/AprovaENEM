@@ -63,6 +63,10 @@ export const App: React.FC = () => {
         if (verifyToken) {
           useAuthStore.getState().openAuthModal('verify-email');
         }
+        const resetToken = params.get('resetToken');
+        if (resetToken) {
+          useAuthStore.getState().openAuthModal('reset-password');
+        }
       } catch {
         // Fallback for non-browser environments
       }

@@ -221,8 +221,8 @@ class NotificationEventListenerTest {
                 htmlBody.capture(),
                 fallbackText.capture()
         );
-        assertThat(htmlBody.getValue()).contains("Carlos Silva").contains("849201");
-        assertThat(fallbackText.getValue()).contains("Carlos Silva").contains("849201");
+        assertThat(htmlBody.getValue()).contains("Carlos Silva").contains("?resetToken=849201").contains("Redefinir Minha Senha");
+        assertThat(fallbackText.getValue()).contains("Carlos Silva").contains("?resetToken=849201");
     }
 
     @Test

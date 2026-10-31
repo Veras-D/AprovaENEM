@@ -37,7 +37,7 @@ const SCHOOL_TYPE_OPTIONS = [
 export interface RegisterModalProps {
   readonly isOpen: boolean;
   readonly onClose: () => void;
-  readonly initialMode?: 'register' | 'login' | 'forgot-password' | 'verify-email';
+  readonly initialMode?: 'register' | 'login' | 'forgot-password' | 'verify-email' | 'reset-password';
   readonly initialEmail?: string;
 }
 
@@ -47,10 +47,11 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   initialMode = 'register',
   initialEmail = '',
 }) => {
-  const [mode, setMode] = useState<'register' | 'login' | 'forgot-password' | 'verify-email'>(initialMode);
+  const [mode, setMode] = useState<'register' | 'login' | 'forgot-password' | 'verify-email' | 'reset-password'>(initialMode);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState<boolean>(false);
 
   // Form Fields
   const [fullName, setFullName] = useState<string>('');
@@ -64,8 +65,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   const [resetToken, setResetToken] = useState<string>('');
   const [newPassword, setNewPassword] = useState<string>('');
   const [confirmNewPassword, setConfirmNewPassword] = useState<string>('');
-  const [hasResetToken, setHasResetToken] = useState<boolean>(false);
   const [forgotSuccessMessage, setForgotSuccessMessage] = useState<string | null>(null);
+  const [resetSuccessMessage, setResetSuccessMessage] = useState<string | null>(null);
 
   // Email Verification Fields
   const [verifyEmailTarget, setVerifyEmailTarget] = useState<string>(initialEmail);
@@ -104,7 +105,21 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   const setEmailVerified = useAuthStore((s) => s.setEmailVerified);
   const authUser = useAuthStore((s) => s.user);
 
-  const handleSwitchMode = (nextMode: 'register' | 'login' | 'forgot-password' | 'verify-email') => {
+  const clearResetTokenFromUrl = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('resetToken')) {
+          url.searchParams.delete('resetToken');
+          window.history.replaceState({}, '', url.pathname + (url.search ? url.search : ''));
+        }
+      } catch {
+        // Non-browser fallback
+      }
+    }
+  };
+
+  const handleSwitchMode = (nextMode: 'register' | 'login' | 'forgot-password' | 'verify-email' | 'reset-password') => {
     if (nextMode === mode) return;
     if (contentInnerRef.current && contentInnerRef.current.offsetHeight > 0) {
       setBodyHeight(contentInnerRef.current.offsetHeight);
@@ -115,8 +130,13 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     setConfirmPassword('');
     setNewPassword('');
     setConfirmNewPassword('');
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    setShowNewPassword(false);
+    setShowConfirmNewPassword(false);
     setFormError(null);
     setForgotSuccessMessage(null);
+    setResetSuccessMessage(null);
     setVerifySuccessMessage(null);
     setResendSuccessMessage(null);
   };
@@ -248,21 +268,23 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       setShowPassword(false);
       setShowConfirmPassword(false);
       setShowNewPassword(false);
+      setShowConfirmNewPassword(false);
       setPassword('');
       setConfirmPassword('');
       setEmail(initialEmail || '');
       setFullName('');
       setTargetDegree('');
       setResetToken('');
-      setHasResetToken(false);
       setNewPassword('');
       setConfirmNewPassword('');
       setFormError(null);
       setIsSuccess(false);
       setForgotSuccessMessage(null);
+      setResetSuccessMessage(null);
       setVerifySuccessMessage(null);
       setResendSuccessMessage(null);
       let initialToken = '';
+      let initialResetToken = '';
       if (typeof window !== 'undefined') {
         try {
           const params = new URLSearchParams(window.location.search);
@@ -271,11 +293,17 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             initialToken = queryToken;
             setMode('verify-email');
           }
+          const queryResetToken = params.get('resetToken');
+          if (queryResetToken) {
+            initialResetToken = queryResetToken;
+            setMode('reset-password');
+          }
         } catch {
           // Non-browser fallback
         }
       }
       setVerifyTokenInput(initialToken);
+      setResetToken(initialResetToken);
       if (initialEmail) {
         setVerifyEmailTarget(initialEmail);
       } else if (authUser?.email) {
@@ -285,18 +313,19 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     }
     if (shouldRender) {
       setIsClosing(true);
+      clearResetTokenFromUrl();
       setPassword('');
       setConfirmPassword('');
       setEmail('');
       setFullName('');
       setTargetDegree('');
       setResetToken('');
-      setHasResetToken(false);
       setNewPassword('');
       setConfirmNewPassword('');
       setShowPassword(false);
       setShowConfirmPassword(false);
       setShowNewPassword(false);
+      setShowConfirmNewPassword(false);
       const timer = setTimeout(() => {
         setShouldRender(false);
         setIsClosing(false);
@@ -483,7 +512,6 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
         res.message ||
           'Instruções de recuperação enviadas com sucesso! Verifique sua caixa de entrada e pasta de spam.'
       );
-      setHasResetToken(true);
     } catch (err) {
       const apiError = err as ApiError;
       setFormError(
@@ -497,8 +525,9 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     e.preventDefault();
     setFormError(null);
 
-    if (!resetToken.trim()) {
-      setFormError('Informe o token de recuperação recebido.');
+    const tokenToUse = resetToken.trim();
+    if (!tokenToUse) {
+      setFormError('Token de recuperação não encontrado. Solicite um novo link de recuperação.');
       return;
     }
 
@@ -514,27 +543,24 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 
     try {
       await resetPasswordMutation.mutateAsync({
-        token: resetToken.trim(),
+        token: tokenToUse,
         newPassword,
       });
 
+      clearResetTokenFromUrl();
+      setResetSuccessMessage('Senha redefinida com sucesso! Você já pode entrar com sua nova senha.');
       setResetToken('');
       setNewPassword('');
       setConfirmNewPassword('');
-      setForgotSuccessMessage('Senha redefinida com sucesso! Você já pode entrar com sua nova senha.');
       setTimeout(() => {
         handleSwitchMode('login');
-        setForgotSuccessMessage(null);
-        setResetToken('');
-        setNewPassword('');
-        setConfirmNewPassword('');
-        setHasResetToken(false);
+        setResetSuccessMessage(null);
       }, 1800);
     } catch (err) {
       const apiError = err as ApiError;
       setFormError(
         apiError.message ||
-          'Token de recuperação inválido ou expirado. Solicite um novo link de redefinição.'
+          'Link de recuperação inválido ou expirado. Solicite um novo link de redefinição.'
       );
     }
   };
@@ -633,6 +659,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                   <UserPlus className="h-5 w-5" aria-hidden="true" />
                 ) : mode === 'forgot-password' ? (
                   <KeyRound className="h-5 w-5" aria-hidden="true" />
+                ) : mode === 'reset-password' ? (
+                  <KeyRound className="h-5 w-5" aria-hidden="true" />
                 ) : mode === 'verify-email' ? (
                   verifySuccessMessage ? (
                     <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
@@ -652,6 +680,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                     ? 'Criar Conta de Estudante'
                     : mode === 'forgot-password'
                     ? 'Recuperar Minha Senha'
+                    : mode === 'reset-password'
+                    ? 'Redefinir Minha Senha'
                     : mode === 'verify-email'
                     ? (verifySuccessMessage ? 'E-mail Confirmado!' : 'Confirmação de E-mail')
                     : 'Acessar Minha Conta'}
@@ -660,7 +690,9 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                   {mode === 'register'
                     ? 'Salve seu progresso e conecte sua pontuação TRI'
                     : mode === 'forgot-password'
-                    ? 'Redefina o acesso à sua conta de estudante'
+                    ? 'Enviaremos um link seguro para você redefinir seu acesso'
+                    : mode === 'reset-password'
+                    ? 'Defina uma nova senha segura para sua conta'
                     : mode === 'verify-email'
                     ? (verifySuccessMessage ? 'Sua conta de estudante está ativa' : 'Valide seu endereço de e-mail para ativar sua conta')
                     : 'Acesse seus simulados salvos e sua ofensiva de estudos'}
@@ -680,18 +712,21 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
           </div>
 
           {/* Mode Switch Tabs with Sliding Active Pill or Subheaders */}
-          {mode === 'forgot-password' ? (
+          {mode === 'forgot-password' || mode === 'reset-password' ? (
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 px-4 py-2.5 shrink-0">
               <button
                 type="button"
-                onClick={() => handleSwitchMode('login')}
+                onClick={() => {
+                  clearResetTokenFromUrl();
+                  handleSwitchMode('login');
+                }}
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-primary hover:underline cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded"
               >
                 <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>Voltar ao Login</span>
               </button>
               <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                Recuperação de Acesso
+                {mode === 'reset-password' ? 'Redefinição de Senha' : 'Recuperação de Acesso'}
               </span>
             </div>
           ) : mode === 'verify-email' ? (
@@ -1147,181 +1182,256 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             {/* FORGOT PASSWORD MODE FORM */}
             {mode === 'forgot-password' && !isSuccess && (
               <div className={`space-y-4 ${hasSwitchedMode ? 'animate-tab-from-right' : ''}`}>
-                {/* Information Callout */}
-                <div className="p-3.5 rounded-brand bg-blue-50/70 dark:bg-blue-950/30 border border-blue-500/20 text-slate-800 dark:text-slate-200 flex items-start gap-2.5">
-                  <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" aria-hidden="true" />
-                  <div className="text-xs leading-relaxed">
-                    <strong className="text-blue-800 dark:text-blue-300">
-                      Recuperação de Acesso:
-                    </strong>{' '}
-                    {hasResetToken
-                      ? 'Informe o token recebido por e-mail e escolha uma nova senha com no mínimo 8 caracteres.'
-                      : 'Informe seu e-mail cadastrado para enviarmos um token e instruções de redefinição de senha.'}
-                  </div>
-                </div>
-
-                {/* Success alert message for forgot password */}
-                {forgotSuccessMessage && (
-                  <div
-                    role="status"
-                    aria-live="polite"
-                    className="p-3.5 rounded-brand bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/40 text-emerald-900 dark:text-emerald-100 flex items-start gap-2.5 text-xs sm:text-sm animate-in fade-in"
-                  >
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" aria-hidden="true" />
-                    <div className="space-y-1">
-                      <p className="font-semibold">{forgotSuccessMessage}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Back to Email Request if on Token Input */}
-                {hasResetToken && (
-                  <div className="flex items-center justify-between text-xs pt-1">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setHasResetToken(false);
-                        setFormError(null);
-                        setForgotSuccessMessage(null);
-                      }}
-                      className="text-brand-primary font-semibold hover:underline cursor-pointer"
-                    >
-                      ← Não recebeu o token? Solicitar novo e-mail
-                    </button>
-                  </div>
-                )}
-
-                {!hasResetToken ? (
-                  <form onSubmit={handleForgotPasswordSubmit} className="space-y-4" noValidate>
-                    <div className="space-y-1">
-                      <label
-                        htmlFor="forgot-email"
-                        className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
-                      >
-                        E-mail do Estudante <span className="text-rose-500">*</span>
-                      </label>
-                      <input
-                        id="forgot-email"
-                        name="email"
-                        type="email"
-                        autoComplete="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="seu.email@escola.gov.br"
-                        className="w-full px-3.5 py-2.5 text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary"
-                      />
-                    </div>
-
-                    <div className="pt-2">
-                      <Button
-                        type="submit"
-                        variant="primary"
-                        size="md"
-                        className="w-full"
-                        disabled={forgotPasswordMutation.isPending}
-                        isLoading={forgotPasswordMutation.isPending}
-                      >
-                        <Mail className="h-4 w-4 mr-2" aria-hidden="true" />
-                        Enviar Instruções de Recuperação
-                      </Button>
-                    </div>
-                  </form>
-                ) : (
-                  <form onSubmit={handleResetPasswordSubmit} className="space-y-4" noValidate>
-                    {/* Token */}
-                    <div className="space-y-1">
-                      <label
-                        htmlFor="reset-token"
-                        className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
-                      >
-                        Token / Código de Recuperação (6 dígitos) <span className="text-rose-500">*</span>
-                      </label>
-                      <input
-                        id="reset-token"
-                        name="token"
-                        type="text"
-                        required
-                        value={resetToken}
-                        onChange={(e) => setResetToken(e.target.value)}
-                        placeholder="Ex: 849201"
-                        className="w-full px-3.5 py-2.5 text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary font-mono tracking-wider"
-                      />
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Informe o código de 6 dígitos enviado para seu e-mail.
-                      </p>
-                    </div>
-
-                    {/* New Password */}
-                    <div className="space-y-1">
-                      <label
-                        htmlFor="reset-new-password"
-                        className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
-                      >
-                        Nova Senha <span className="text-rose-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <input
-                          id="reset-new-password"
-                          name="new-password"
-                          type={showNewPassword ? 'text' : 'password'}
-                          autoComplete="new-password"
-                          required
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          placeholder="Mínimo 8 caracteres"
-                          className="w-full px-3.5 py-2.5 text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary pr-10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowNewPassword(!showNewPassword)}
-                          className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                          aria-label={showNewPassword ? 'Ocultar nova senha' : 'Exibir nova senha'}
-                        >
-                          {showNewPassword ? (
-                            <EyeOff className="h-4 w-4" aria-hidden="true" />
-                          ) : (
-                            <Eye className="h-4 w-4" aria-hidden="true" />
-                          )}
-                        </button>
+                {forgotSuccessMessage ? (
+                  <div className="space-y-5 py-2 text-center animate-in fade-in zoom-in-95 duration-300">
+                    <div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
+                      <div className="absolute inset-0 rounded-full bg-emerald-500/20 dark:bg-emerald-500/30 animate-ping opacity-60" />
+                      <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-xl shadow-emerald-500/25">
+                        <Mail className="h-8 w-8 sm:h-10 sm:w-10 stroke-[2.5]" aria-hidden="true" />
                       </div>
                     </div>
 
-                    {/* Confirm New Password */}
-                    <div className="space-y-1">
-                      <label
-                        htmlFor="reset-confirm-password"
-                        className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
-                      >
-                        Confirmar Nova Senha <span className="text-rose-500">*</span>
-                      </label>
-                      <input
-                        id="reset-confirm-password"
-                        name="confirm-password"
-                        type={showNewPassword ? 'text' : 'password'}
-                        autoComplete="new-password"
-                        required
-                        value={confirmNewPassword}
-                        onChange={(e) => setConfirmNewPassword(e.target.value)}
-                        placeholder="Repita a nova senha"
-                        className="w-full px-3.5 py-2.5 text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary"
-                      />
+                    <div className="space-y-2">
+                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                        Link de Recuperação Enviado!
+                      </h3>
+                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-sm mx-auto leading-relaxed">
+                        Enviamos um link seguro de recuperação para <strong className="text-slate-900 dark:text-white">{email.trim()}</strong>. Acesse sua caixa de entrada e clique no link para cadastrar sua nova senha.
+                      </p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 pt-1">
+                        Não se esqueça de checar sua pasta de spam ou lixo eletrônico.
+                      </p>
                     </div>
 
                     <div className="pt-2">
                       <Button
-                        type="submit"
+                        type="button"
                         variant="primary"
                         size="md"
                         className="w-full"
-                        disabled={resetPasswordMutation.isPending}
-                        isLoading={resetPasswordMutation.isPending}
+                        onClick={() => handleSwitchMode('login')}
                       >
-                        <KeyRound className="h-4 w-4 mr-2" aria-hidden="true" />
-                        Redefinir Minha Senha
+                        <LogIn className="h-4 w-4 mr-2" aria-hidden="true" />
+                        Ir para o Login
                       </Button>
                     </div>
-                  </form>
+                  </div>
+                ) : (
+                  <>
+                    {/* Information Callout */}
+                    <div className="p-3.5 rounded-brand bg-blue-50/70 dark:bg-blue-950/30 border border-blue-500/20 text-slate-800 dark:text-slate-200 flex items-start gap-2.5">
+                      <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" aria-hidden="true" />
+                      <div className="text-xs leading-relaxed">
+                        <strong className="text-blue-800 dark:text-blue-300">
+                          Recuperação de Acesso:
+                        </strong>{' '}
+                        Informe seu e-mail cadastrado para enviarmos um link seguro de redefinição de senha.
+                      </div>
+                    </div>
+
+                    <form onSubmit={handleForgotPasswordSubmit} className="space-y-4" noValidate>
+                      <div className="space-y-1">
+                        <label
+                          htmlFor="forgot-email"
+                          className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                        >
+                          E-mail do Estudante <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          id="forgot-email"
+                          name="email"
+                          type="email"
+                          autoComplete="email"
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="seu.email@escola.gov.br"
+                          className="w-full px-3.5 py-2.5 text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                        />
+                      </div>
+
+                      <div className="pt-2">
+                        <Button
+                          type="submit"
+                          variant="primary"
+                          size="md"
+                          className="w-full"
+                          disabled={forgotPasswordMutation.isPending}
+                          isLoading={forgotPasswordMutation.isPending}
+                        >
+                          <Mail className="h-4 w-4 mr-2" aria-hidden="true" />
+                          Enviar Link de Recuperação
+                        </Button>
+                      </div>
+                    </form>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* RESET PASSWORD MODE FORM */}
+            {mode === 'reset-password' && !isSuccess && (
+              <div className={`space-y-4 ${hasSwitchedMode ? 'animate-tab-from-right' : ''}`}>
+                {resetSuccessMessage ? (
+                  <div className="space-y-5 py-2 text-center animate-in fade-in zoom-in-95 duration-300">
+                    <div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
+                      <div className="absolute inset-0 rounded-full bg-emerald-500/20 dark:bg-emerald-500/30 animate-ping opacity-60" />
+                      <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-xl shadow-emerald-500/25">
+                        <CheckCircle2 className="h-8 w-8 sm:h-10 sm:w-10 stroke-[2.5]" aria-hidden="true" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                        Senha Redefinida com Sucesso!
+                      </h3>
+                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-sm mx-auto leading-relaxed">
+                        Sua senha de acesso foi atualizada com sucesso. Você já pode entrar com sua nova senha.
+                      </p>
+                    </div>
+
+                    <div className="pt-2">
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size="md"
+                        className="w-full"
+                        onClick={() => {
+                          clearResetTokenFromUrl();
+                          handleSwitchMode('login');
+                        }}
+                      >
+                        <LogIn className="h-4 w-4 mr-2" aria-hidden="true" />
+                        Acessar Minha Conta
+                      </Button>
+                    </div>
+                  </div>
+                ) : !resetToken.trim() ? (
+                  <div className="space-y-4 py-2">
+                    <div className="p-3.5 rounded-brand bg-amber-50 dark:bg-amber-950/30 border border-amber-500/20 text-slate-800 dark:text-slate-200 flex items-start gap-2.5">
+                      <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" aria-hidden="true" />
+                      <div className="text-xs leading-relaxed">
+                        <strong className="text-amber-800 dark:text-amber-300">
+                          Link de Recuperação Ausente ou Inválido:
+                        </strong>{' '}
+                        Nenhum token seguro foi encontrado na URL. Para cadastrar uma nova senha, solicite um novo link de recuperação para seu e-mail.
+                      </div>
+                    </div>
+
+                    <div className="pt-2">
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size="md"
+                        className="w-full"
+                        onClick={() => handleSwitchMode('forgot-password')}
+                      >
+                        <Mail className="h-4 w-4 mr-2" aria-hidden="true" />
+                        Solicitar Link de Recuperação
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Information Callout */}
+                    <div className="p-3.5 rounded-brand bg-blue-50/70 dark:bg-blue-950/30 border border-blue-500/20 text-slate-800 dark:text-slate-200 flex items-start gap-2.5">
+                      <KeyRound className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" aria-hidden="true" />
+                      <div className="text-xs leading-relaxed">
+                        <strong className="text-blue-800 dark:text-blue-300">
+                          Redefinição de Senha:
+                        </strong>{' '}
+                        Escolha uma nova senha de acesso com no mínimo 8 caracteres.
+                      </div>
+                    </div>
+
+                    <form onSubmit={handleResetPasswordSubmit} className="space-y-4" noValidate>
+                      {/* Nova Senha */}
+                      <div className="space-y-1">
+                        <label
+                          htmlFor="reset-new-password"
+                          className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                        >
+                          Nova Senha (mín. 8) <span className="text-rose-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            id="reset-new-password"
+                            name="newPassword"
+                            type={showNewPassword ? 'text' : 'password'}
+                            autoComplete="new-password"
+                            required
+                            minLength={8}
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="••••••••"
+                            className="w-full px-3.5 py-2.5 text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                            aria-label={showNewPassword ? 'Ocultar nova senha' : 'Exibir nova senha'}
+                          >
+                            {showNewPassword ? (
+                              <EyeOff className="h-4 w-4" aria-hidden="true" />
+                            ) : (
+                              <Eye className="h-4 w-4" aria-hidden="true" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Confirmar Nova Senha */}
+                      <div className="space-y-1">
+                        <label
+                          htmlFor="reset-confirm-password"
+                          className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                        >
+                          Confirmar Nova Senha <span className="text-rose-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            id="reset-confirm-password"
+                            name="confirmPassword"
+                            type={showConfirmNewPassword ? 'text' : 'password'}
+                            autoComplete="new-password"
+                            required
+                            minLength={8}
+                            value={confirmNewPassword}
+                            onChange={(e) => setConfirmNewPassword(e.target.value)}
+                            placeholder="••••••••"
+                            className="w-full px-3.5 py-2.5 text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
+                            className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                            aria-label={showConfirmNewPassword ? 'Ocultar confirmação de senha' : 'Exibir confirmação de senha'}
+                          >
+                            {showConfirmNewPassword ? (
+                              <EyeOff className="h-4 w-4" aria-hidden="true" />
+                            ) : (
+                              <Eye className="h-4 w-4" aria-hidden="true" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="pt-2">
+                        <Button
+                          type="submit"
+                          variant="primary"
+                          size="md"
+                          className="w-full"
+                          disabled={resetPasswordMutation.isPending}
+                          isLoading={resetPasswordMutation.isPending}
+                        >
+                          <KeyRound className="h-4 w-4 mr-2" aria-hidden="true" />
+                          Redefinir Minha Senha
+                        </Button>
+                      </div>
+                    </form>
+                  </>
                 )}
               </div>
             )}
