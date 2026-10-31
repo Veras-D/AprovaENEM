@@ -1323,17 +1323,6 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                     </div>
                   </form>
                 )}
-
-                <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                  <button
-                    type="button"
-                    onClick={() => handleSwitchMode('login')}
-                    className="inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-brand-primary dark:hover:text-brand-primary font-semibold cursor-pointer"
-                  >
-                    <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-                    <span>Lembrou da senha? Entrar agora</span>
-                  </button>
-                </div>
               </div>
             )}
 
