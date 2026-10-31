@@ -14,6 +14,7 @@ import com.aprovaenem.auth.domain.port.out.PasswordEncoderPort;
 import com.aprovaenem.auth.domain.port.out.TokenProviderPort;
 import com.aprovaenem.auth.domain.port.out.UserRepositoryPort;
 import com.aprovaenem.common.events.EmailVerificationRequestedEvent;
+import com.aprovaenem.common.events.PasswordResetRequestedEvent;
 import com.aprovaenem.common.events.UserDeletedEvent;
 import com.aprovaenem.common.events.UserRegisteredEvent;
 import com.aprovaenem.common.exception.BusinessException;
@@ -302,7 +303,7 @@ public class AuthService implements AuthUseCase {
         }
 
         User user = userOpt.get();
-        String resetToken = UUID.randomUUID().toString().replace("-", "");
+        String resetToken = String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
         Instant now = Instant.now();
         Instant expiresAt = now.plus(24, ChronoUnit.HOURS);
 
@@ -311,7 +312,22 @@ public class AuthService implements AuthUseCase {
         user.setUpdatedAt(now);
 
         userRepository.save(user);
-        log.info("Password reset token generated for user [{}]", user.getId());
+
+        publishOutboxEvent(
+                "USER",
+                user.getId(),
+                "PasswordResetRequestedEvent",
+                PasswordResetRequestedEvent.builder()
+                        .userId(user.getId())
+                        .email(user.getEmail())
+                        .fullName(user.getFullName())
+                        .resetToken(resetToken)
+                        .expiresAt(expiresAt)
+                        .occurredAt(now)
+                        .build()
+        );
+
+        log.info("Password reset token generated and event published for user [{}]", user.getId());
         return true;
     }
 

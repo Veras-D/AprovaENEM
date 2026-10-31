@@ -2,6 +2,7 @@ package com.aprovaenem.notification.infrastructure.adapter.in.messaging;
 
 import com.aprovaenem.common.events.DailyGoalReminderEvent;
 import com.aprovaenem.common.events.EmailVerificationRequestedEvent;
+import com.aprovaenem.common.events.PasswordResetRequestedEvent;
 import com.aprovaenem.common.events.UserDeletedEvent;
 import com.aprovaenem.notification.application.port.out.EmailDeliveryException;
 import com.aprovaenem.notification.application.port.out.EmailSenderPort;
@@ -185,6 +186,78 @@ class NotificationEventListenerTest {
 
         NotificationLogEntity saved = captor.getValue();
         assertThat(saved.getBody()).contains("Olá Estudante!");
+    }
+
+    @Test
+    @DisplayName("Should handle PasswordResetRequestedEvent and save EMAIL notification entity")
+    void shouldHandlePasswordReset() {
+        UUID userId = UUID.randomUUID();
+        PasswordResetRequestedEvent event = PasswordResetRequestedEvent.builder()
+                .userId(userId)
+                .email("aluno@enem.com.br")
+                .fullName("Carlos Silva")
+                .resetToken("849201")
+                .build();
+
+        listener.handlePasswordReset(event);
+
+        ArgumentCaptor<NotificationLogEntity> captor = ArgumentCaptor.forClass(NotificationLogEntity.class);
+        verify(notificationLogRepository).save(captor.capture());
+
+        NotificationLogEntity saved = captor.getValue();
+        assertThat(saved.getUserId()).isEqualTo(userId);
+        assertThat(saved.getChannel()).isEqualTo("EMAIL");
+        assertThat(saved.getTemplateCode()).isEqualTo("PASSWORD_RESET");
+        assertThat(saved.getTitle()).contains("Recuperação de Senha");
+        assertThat(saved.getBody()).contains("Carlos Silva");
+        assertThat(saved.getBody()).doesNotContain("849201");
+        assertThat(saved.getStatus()).isEqualTo("SENT");
+
+        ArgumentCaptor<String> htmlBody = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> fallbackText = ArgumentCaptor.forClass(String.class);
+        verify(emailSender).sendHtml(
+                eq("aluno@enem.com.br"),
+                eq("Recuperação de Senha — AprovaENEM"),
+                htmlBody.capture(),
+                fallbackText.capture()
+        );
+        assertThat(htmlBody.getValue()).contains("Carlos Silva").contains("849201");
+        assertThat(fallbackText.getValue()).contains("Carlos Silva").contains("849201");
+    }
+
+    @Test
+    @DisplayName("Should mark PASSWORD_RESET EMAIL log FAILED when SMTP delivery throws exception")
+    void shouldMarkPasswordResetFailedWhenDeliveryThrowsException() {
+        doThrow(new EmailDeliveryException("smtp down", new RuntimeException("connection refused")))
+                .when(emailSender).sendHtml(any(), any(), any(), any());
+
+        listener.handlePasswordReset(PasswordResetRequestedEvent.builder()
+                .userId(UUID.randomUUID())
+                .email("aluno@enem.com.br")
+                .fullName("Carlos Silva")
+                .resetToken("849201")
+                .build());
+
+        ArgumentCaptor<NotificationLogEntity> captor = ArgumentCaptor.forClass(NotificationLogEntity.class);
+        verify(notificationLogRepository).save(captor.capture());
+        NotificationLogEntity saved = captor.getValue();
+        assertThat(saved.getStatus()).isEqualTo("FAILED");
+        assertThat(saved.getSentAt()).isNull();
+        assertThat(saved.getBody()).contains("Não conseguimos enviar");
+    }
+
+    @Test
+    @DisplayName("Should ignore PasswordResetRequestedEvent when resetToken is null or blank")
+    void shouldIgnorePasswordResetWhenTokenMissing() {
+        listener.handlePasswordReset(PasswordResetRequestedEvent.builder()
+                .userId(UUID.randomUUID())
+                .email("aluno@enem.com.br")
+                .fullName("Carlos Silva")
+                .resetToken(null)
+                .build());
+
+        verifyNoInteractions(notificationLogRepository);
+        verifyNoInteractions(emailSender);
     }
 
     @Test

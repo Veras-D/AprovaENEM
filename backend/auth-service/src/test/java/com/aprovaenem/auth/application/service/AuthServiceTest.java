@@ -441,9 +441,10 @@ class AuthServiceTest {
         boolean dispatched = authService.forgotPassword("Student@Escola.Gov.BR ");
 
         assertThat(dispatched).isTrue();
-        assertThat(existingUser.getPasswordResetToken()).isNotNull().hasSize(32);
+        assertThat(existingUser.getPasswordResetToken()).isNotNull().hasSize(6).matches("\\d{6}");
         assertThat(existingUser.getPasswordResetExpiresAt()).isAfter(Instant.now());
         verify(userRepository).save(existingUser);
+        verify(outboxRepository).save(any());
     }
 
     @Test

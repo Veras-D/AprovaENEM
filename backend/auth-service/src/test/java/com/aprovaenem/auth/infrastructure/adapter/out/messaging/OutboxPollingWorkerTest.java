@@ -52,7 +52,7 @@ class OutboxPollingWorkerTest {
     }
 
     @Test
-    @DisplayName("Should publish UserRegisteredEvent and EmailVerificationRequestedEvent and mark published")
+    @DisplayName("Should publish UserRegisteredEvent, EmailVerificationRequestedEvent and PasswordResetRequestedEvent and mark published")
     void shouldPublishAndMarkPublished() {
         UUID id1 = UUID.randomUUID();
         UUID id2 = UUID.randomUUID();
@@ -99,7 +99,18 @@ class OutboxPollingWorkerTest {
                 .createdAt(Instant.now())
                 .build();
 
-        when(outboxRepository.findPendingEventsWithLock(50)).thenReturn(List.of(event1, event2, event3, event4));
+        UUID id5 = UUID.randomUUID();
+        OutboxEvent event5 = OutboxEvent.builder()
+                .id(id5)
+                .aggregateType("USER")
+                .aggregateId(UUID.randomUUID())
+                .eventType("PasswordResetRequestedEvent")
+                .payload("{\"userId\": \"789\", \"resetToken\": \"849201\"}")
+                .status("PENDING")
+                .createdAt(Instant.now())
+                .build();
+
+        when(outboxRepository.findPendingEventsWithLock(50)).thenReturn(List.of(event1, event2, event3, event4, event5));
 
         worker.processOutboxEvents();
 
@@ -116,6 +127,13 @@ class OutboxPollingWorkerTest {
                 any(org.springframework.amqp.core.Message.class)
         );
         verify(outboxRepository).markPublished(id2);
+
+        verify(rabbitTemplate).send(
+                eq(RabbitMQConfig.AUTH_EXCHANGE),
+                eq(RabbitMQConfig.PASSWORD_RESET_ROUTING_KEY),
+                any(org.springframework.amqp.core.Message.class)
+        );
+        verify(outboxRepository).markPublished(id5);
 
         verify(rabbitTemplate).send(
                 eq(RabbitMQConfig.AUTH_EXCHANGE),

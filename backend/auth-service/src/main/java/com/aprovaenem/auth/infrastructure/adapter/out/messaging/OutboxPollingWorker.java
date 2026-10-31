@@ -61,6 +61,8 @@ public class OutboxPollingWorker {
             return RabbitMQConfig.USER_REGISTERED_ROUTING_KEY;
         } else if ("EmailVerificationRequestedEvent".equals(eventType)) {
             return RabbitMQConfig.EMAIL_VERIFICATION_ROUTING_KEY;
+        } else if ("PasswordResetRequestedEvent".equals(eventType)) {
+            return RabbitMQConfig.PASSWORD_RESET_ROUTING_KEY;
         } else if ("UserDeletedEvent".equals(eventType)) {
             return RabbitMQConfig.USER_DELETED_ROUTING_KEY;
         }

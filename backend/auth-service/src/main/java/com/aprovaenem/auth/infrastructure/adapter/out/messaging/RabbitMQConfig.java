@@ -14,6 +14,7 @@ public class RabbitMQConfig {
     public static final String AUTH_EXCHANGE = "auth.events";
     public static final String USER_REGISTERED_ROUTING_KEY = "user.registered";
     public static final String EMAIL_VERIFICATION_ROUTING_KEY = "auth.email_verification";
+    public static final String PASSWORD_RESET_ROUTING_KEY = "auth.password_reset";
     public static final String USER_DELETED_ROUTING_KEY = "user.deleted";
 
     public static final String NOTIFICATION_EXCHANGE = "notification.events";

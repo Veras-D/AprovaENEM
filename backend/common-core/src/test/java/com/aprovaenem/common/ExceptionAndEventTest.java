@@ -2,6 +2,7 @@ package com.aprovaenem.common;
 
 import com.aprovaenem.common.events.DailyGoalReminderEvent;
 import com.aprovaenem.common.events.EmailVerificationRequestedEvent;
+import com.aprovaenem.common.events.PasswordResetRequestedEvent;
 import com.aprovaenem.common.events.UserRegisteredEvent;
 import com.aprovaenem.common.exception.BusinessException;
 import com.aprovaenem.common.exception.ResourceNotFoundException;
@@ -95,6 +96,27 @@ class ExceptionAndEventTest {
         assertThat(event.getUserId()).isEqualTo(userId);
         assertThat(event.getEmail()).isEqualTo("student@escola.gov.br");
         assertThat(event.getVerificationToken()).isEqualTo("token-abc");
+        assertThat(event.getOccurredAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Should construct and inspect PasswordResetRequestedEvent")
+    void shouldConstructPasswordResetRequestedEvent() {
+        UUID userId = UUID.randomUUID();
+        java.time.Instant expiresAt = java.time.Instant.now().plusSeconds(86400);
+        PasswordResetRequestedEvent event = PasswordResetRequestedEvent.builder()
+                .userId(userId)
+                .email("student@escola.gov.br")
+                .fullName("Estudante ENEM")
+                .resetToken("849201")
+                .expiresAt(expiresAt)
+                .build();
+
+        assertThat(event.getUserId()).isEqualTo(userId);
+        assertThat(event.getEmail()).isEqualTo("student@escola.gov.br");
+        assertThat(event.getFullName()).isEqualTo("Estudante ENEM");
+        assertThat(event.getResetToken()).isEqualTo("849201");
+        assertThat(event.getExpiresAt()).isEqualTo(expiresAt);
         assertThat(event.getOccurredAt()).isNotNull();
     }
 
