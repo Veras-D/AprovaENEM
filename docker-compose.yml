@@ -55,6 +55,7 @@ services:
       retries: 3
       start_period: 10s
     volumes:
+      - ./frontend/dist:/usr/share/nginx/html:ro
       - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - exam-assets-data:/usr/share/nginx/html/assets/questions:ro
     depends_on:
