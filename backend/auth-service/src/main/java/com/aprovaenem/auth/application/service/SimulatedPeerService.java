@@ -15,6 +15,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.IsoFields;
@@ -37,6 +38,11 @@ public class SimulatedPeerService {
     private final LeaderboardRedisPort redisLeaderboardPort;
 
     private static final ZoneId BRT_ZONE = ZoneId.of("America/Sao_Paulo");
+    private Clock clock = Clock.system(BRT_ZONE);
+
+    void setClock(Clock clock) {
+        this.clock = clock;
+    }
 
     /**
      * Ensures all simulated study peers are present in Redis weekly leaderboards
@@ -45,7 +51,7 @@ public class SimulatedPeerService {
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
     public void syncSimulatedPeersToRedis() {
-        LocalDate today = LocalDate.now(BRT_ZONE);
+        LocalDate today = LocalDate.now(clock);
         int weekNumber = today.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
         int year = today.get(IsoFields.WEEK_BASED_YEAR);
 
@@ -109,7 +115,7 @@ public class SimulatedPeerService {
      */
     @Transactional
     public int simulateStudyTick() {
-        LocalDate today = LocalDate.now(BRT_ZONE);
+        LocalDate today = LocalDate.now(clock);
         int weekNumber = today.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
         int year = today.get(IsoFields.WEEK_BASED_YEAR);
 
@@ -142,7 +148,9 @@ public class SimulatedPeerService {
             // Update user gamification profile
             profile.setCurrentXp(profile.getCurrentXp() + sessionXp);
             profile.setCurrentLevel((profile.getCurrentXp() / 200) + 1);
-            profile.setDailyQuestionsCompleted(profile.getDailyQuestionsCompleted() + questionsSolved);
+
+            // Update streak and daily progress dynamically
+            updateBotStreakAndDailyProgress(profile, today, questionsSolved);
             profile.setLastActivityDate(today);
             gamificationRepository.saveProfile(profile);
 
@@ -167,6 +175,31 @@ public class SimulatedPeerService {
         }
 
         return activeStudents;
+    }
+
+    void updateBotStreakAndDailyProgress(UserGamificationProfile profile, LocalDate today, int questionsSolved) {
+        LocalDate lastDate = profile.getLastActivityDate();
+        if (lastDate == null) {
+            profile.setStreakDays(1);
+            profile.setDailyQuestionsCompleted(questionsSolved);
+        } else if (lastDate.equals(today)) {
+            // Already studied today: accumulate questions, streak stays unchanged
+            profile.setDailyQuestionsCompleted(profile.getDailyQuestionsCompleted() + questionsSolved);
+        } else if (lastDate.equals(today.minusDays(1))) {
+            // Consecutive study day: increment streak by 1
+            profile.setStreakDays(profile.getStreakDays() + 1);
+            profile.setDailyQuestionsCompleted(questionsSolved);
+        } else {
+            // Missed days: check emergency freeze shield or start new streak at 1
+            if (profile.getStreakFreezeAvailable() > 0 && lastDate.equals(today.minusDays(2))) {
+                profile.setStreakFreezeAvailable(profile.getStreakFreezeAvailable() - 1);
+                profile.setStreakDays(profile.getStreakDays() + 1);
+            } else {
+                profile.setStreakDays(1);
+            }
+            profile.setDailyQuestionsCompleted(questionsSolved);
+        }
+        profile.setLongestStreakDays(Math.max(profile.getLongestStreakDays(), profile.getStreakDays()));
     }
 
     private int getParticipationChance(LeagueTier tier) {

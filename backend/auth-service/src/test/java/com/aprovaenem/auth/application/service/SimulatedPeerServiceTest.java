@@ -14,6 +14,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -175,5 +179,156 @@ class SimulatedPeerServiceTest {
         assertThat(totalStudied).isGreaterThan(0);
         verify(gamificationRepository, atLeastOnce()).saveProfile(profile);
         verify(gamificationRepository, atLeastOnce()).saveWeeklyLeaderboard(board);
+    }
+
+    @Test
+    @DisplayName("Should initialize streak to 1 when bot studies for the very first time")
+    void shouldInitializeStreakWhenFirstStudy() {
+        LocalDate today = LocalDate.of(2026, 11, 1);
+        UserGamificationProfile profile = UserGamificationProfile.builder()
+                .userId(UUID.randomUUID())
+                .streakDays(0)
+                .longestStreakDays(0)
+                .lastActivityDate(null)
+                .build();
+
+        simulatedPeerService.updateBotStreakAndDailyProgress(profile, today, 8);
+
+        assertThat(profile.getStreakDays()).isEqualTo(1);
+        assertThat(profile.getLongestStreakDays()).isEqualTo(1);
+        assertThat(profile.getDailyQuestionsCompleted()).isEqualTo(8);
+    }
+
+    @Test
+    @DisplayName("Should increment streak by 1 on consecutive study day")
+    void shouldIncrementStreakOnConsecutiveDay() {
+        LocalDate today = LocalDate.of(2026, 11, 1);
+        UserGamificationProfile profile = UserGamificationProfile.builder()
+                .userId(UUID.randomUUID())
+                .streakDays(3)
+                .longestStreakDays(3)
+                .lastActivityDate(today.minusDays(1))
+                .dailyQuestionsCompleted(5)
+                .build();
+
+        simulatedPeerService.updateBotStreakAndDailyProgress(profile, today, 6);
+
+        assertThat(profile.getStreakDays()).isEqualTo(4);
+        assertThat(profile.getLongestStreakDays()).isEqualTo(4);
+        assertThat(profile.getDailyQuestionsCompleted()).isEqualTo(6);
+    }
+
+    @Test
+    @DisplayName("Should accumulate daily questions without incrementing streak twice on the same day")
+    void shouldAccumulateQuestionsWithoutDoubleIncrementOnSameDay() {
+        LocalDate today = LocalDate.of(2026, 11, 1);
+        UserGamificationProfile profile = UserGamificationProfile.builder()
+                .userId(UUID.randomUUID())
+                .streakDays(4)
+                .longestStreakDays(4)
+                .lastActivityDate(today)
+                .dailyQuestionsCompleted(5)
+                .build();
+
+        simulatedPeerService.updateBotStreakAndDailyProgress(profile, today, 3);
+
+        assertThat(profile.getStreakDays()).isEqualTo(4);
+        assertThat(profile.getLongestStreakDays()).isEqualTo(4);
+        assertThat(profile.getDailyQuestionsCompleted()).isEqualTo(8);
+    }
+
+    @Test
+    @DisplayName("Should consume streak freeze and continue streak when bot misses exactly one day")
+    void shouldConsumeStreakFreezeWhenMissedOneDay() {
+        LocalDate today = LocalDate.of(2026, 11, 2);
+        UserGamificationProfile profile = UserGamificationProfile.builder()
+                .userId(UUID.randomUUID())
+                .streakDays(5)
+                .longestStreakDays(5)
+                .streakFreezeAvailable(1)
+                .lastActivityDate(today.minusDays(2)) // Missed Nov 1st
+                .dailyQuestionsCompleted(7)
+                .build();
+
+        simulatedPeerService.updateBotStreakAndDailyProgress(profile, today, 4);
+
+        assertThat(profile.getStreakDays()).isEqualTo(6);
+        assertThat(profile.getLongestStreakDays()).isEqualTo(6);
+        assertThat(profile.getStreakFreezeAvailable()).isEqualTo(0);
+        assertThat(profile.getDailyQuestionsCompleted()).isEqualTo(4);
+    }
+
+    @Test
+    @DisplayName("Should reset streak to 1 when bot missed days without freeze shield, preserving longestStreakDays")
+    void shouldResetStreakToOneWhenMissedWithoutFreeze() {
+        LocalDate today = LocalDate.of(2026, 11, 5);
+        UserGamificationProfile profile = UserGamificationProfile.builder()
+                .userId(UUID.randomUUID())
+                .streakDays(7)
+                .longestStreakDays(10)
+                .streakFreezeAvailable(0)
+                .lastActivityDate(today.minusDays(4))
+                .dailyQuestionsCompleted(10)
+                .build();
+
+        simulatedPeerService.updateBotStreakAndDailyProgress(profile, today, 5);
+
+        assertThat(profile.getStreakDays()).isEqualTo(1);
+        assertThat(profile.getLongestStreakDays()).isEqualTo(10); // Preserved
+        assertThat(profile.getDailyQuestionsCompleted()).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("Should update bot streak during simulateStudyTick execution")
+    void shouldUpdateStreakDuringSimulateStudyTick() {
+        LocalDate today = LocalDate.of(2026, 11, 1);
+        Clock fixedClock = Clock.fixed(
+                today.atTime(14, 0).atZone(ZoneId.of("America/Sao_Paulo")).toInstant(),
+                ZoneId.of("America/Sao_Paulo")
+        );
+        simulatedPeerService.setClock(fixedClock);
+
+        UUID diamondBotId = UUID.randomUUID();
+        User botUser = User.builder()
+                .id(diamondBotId)
+                .email("clara.mendes@simulado.enem.br")
+                .fullName("Clara Mendes")
+                .isBot(true)
+                .build();
+
+        UserGamificationProfile profile = UserGamificationProfile.builder()
+                .userId(diamondBotId)
+                .currentLeague(LeagueTier.DIAMOND)
+                .currentXp(5000)
+                .currentLevel(15)
+                .streakDays(3)
+                .longestStreakDays(3)
+                .lastActivityDate(today.minusDays(1))
+                .dailyQuestionsCompleted(4)
+                .build();
+
+        WeeklyLeaderboard board = WeeklyLeaderboard.builder()
+                .userId(diamondBotId)
+                .weekNumber(44)
+                .year(2026)
+                .leagueTier(LeagueTier.DIAMOND)
+                .weeklyXp(1200)
+                .questionsSolved(70)
+                .build();
+
+        when(userRepository.findSimulatedBots()).thenReturn(List.of(botUser));
+        when(gamificationRepository.findProfileByUserId(diamondBotId)).thenReturn(Optional.of(profile));
+        when(gamificationRepository.findWeeklyLeaderboard(eq(diamondBotId), anyInt(), anyInt()))
+                .thenReturn(Optional.of(board));
+
+        int participated = 0;
+        for (int i = 0; i < 10 && participated == 0; i++) {
+            participated = simulatedPeerService.simulateStudyTick();
+        }
+
+        assertThat(participated).isGreaterThan(0);
+        assertThat(profile.getStreakDays()).isEqualTo(4);
+        assertThat(profile.getLongestStreakDays()).isEqualTo(4);
+        assertThat(profile.getLastActivityDate()).isEqualTo(today);
     }
 }
