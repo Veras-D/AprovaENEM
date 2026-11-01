@@ -114,27 +114,21 @@ describe('InstitutionalDashboard Component - Security & Role Guards', () => {
     expect(screen.getByText('39')).toBeInTheDocument(); // Active
   });
 
-  it('invokes onNavigate to return to student portal when clicking return button in coordinator view', () => {
+  it('does NOT render return to student portal button in coordinator view', () => {
     useAuthStore.setState({
       token: 'mock-coord-token',
       user: MOCK_COORDINATOR_USER,
       isAuthenticated: true,
     });
 
-    const onNavigateMock = vi.fn();
-
     renderWithProviders(
       <InstitutionalDashboard
         cohortData={MOCK_COHORT_DIAGNOSTICS}
-        onNavigate={onNavigateMock}
+        onNavigate={vi.fn()}
       />
     );
 
-    const backButton = screen.getByRole('button', { name: /Voltar ao Portal do Aluno/i });
-    expect(backButton).toBeInTheDocument();
-
-    fireEvent.click(backButton);
-    expect(onNavigateMock).toHaveBeenCalledWith('home');
+    expect(screen.queryByRole('button', { name: /Voltar ao Portal do Aluno/i })).not.toBeInTheDocument();
   });
 
   it('authenticates coordinator and unlocks dashboard upon form submission', async () => {

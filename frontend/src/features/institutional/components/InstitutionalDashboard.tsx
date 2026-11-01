@@ -312,18 +312,6 @@ export const InstitutionalDashboard: React.FC<InstitutionalDashboardProps> = ({
             </p>
           </div>
         </div>
-
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => onNavigate?.('home')}
-          className="self-start sm:self-auto flex items-center gap-1.5 text-xs font-semibold cursor-pointer border-slate-300 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-          <GraduationCap className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
-          <span>Voltar ao Portal do Aluno</span>
-        </Button>
       </div>
 
       {/* Main Cohort View (rendered ONLY when authorized) */}

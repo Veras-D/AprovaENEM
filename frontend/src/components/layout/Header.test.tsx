@@ -179,7 +179,7 @@ describe('Header component', () => {
     expect(handleLogout).toHaveBeenCalledTimes(1);
   });
 
-  it('should render Painel da Coordenação badge and Portal do Aluno return button when activeSection is institutional and user is coordinator', () => {
+  it('should render Painel da Coordenação badge and NOT student return button when activeSection is institutional and user is coordinator', () => {
     useAuthStore.setState({
       user: {
         id: 'usr-coord',
@@ -192,18 +192,12 @@ describe('Header component', () => {
       isAuthenticated: true,
     });
 
-    const handleNavigate = vi.fn();
     renderWithClient(
-      <Header onOpenDrawer={vi.fn()} activeSection="institutional" onNavigate={handleNavigate} />
+      <Header onOpenDrawer={vi.fn()} activeSection="institutional" onNavigate={vi.fn()} />
     );
 
     expect(screen.getByText('Painel da Coordenação')).toBeInTheDocument();
-
-    const returnBtn = screen.getByRole('button', { name: /Portal do Aluno/i });
-    expect(returnBtn).toBeInTheDocument();
-
-    fireEvent.click(returnBtn);
-    expect(handleNavigate).toHaveBeenCalledWith('home');
+    expect(screen.queryByRole('button', { name: /Portal do Aluno/i })).not.toBeInTheDocument();
   });
 
   it('should NOT render Painel da Coordenação button for unauthenticated users', () => {

@@ -134,7 +134,6 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
     { id: 'cohort-radar', label: 'Radar Comparativo', icon: TrendingUp, isAnchor: true },
     { id: 'cohort-areas', label: 'Tópicos Críticos por Área', icon: Award, isAnchor: true },
     { id: 'cohort-distractors', label: 'Análise de Distratores', icon: HelpCircle, isAnchor: true },
-    { id: 'home', label: 'Ir para Portal do Aluno', icon: GraduationCap, isAnchor: false },
   ];
 
   const gateNavItems = [

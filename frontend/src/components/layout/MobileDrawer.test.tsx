@@ -292,7 +292,7 @@ describe('MobileDrawer component', () => {
     expect(screen.getByText('Radar Comparativo')).toBeInTheDocument();
     expect(screen.getByText('Tópicos Críticos por Área')).toBeInTheDocument();
     expect(screen.getByText('Análise de Distratores')).toBeInTheDocument();
-    expect(screen.getByText('Ir para Portal do Aluno')).toBeInTheDocument();
+    expect(screen.queryByText('Ir para Portal do Aluno')).not.toBeInTheDocument();
     expect(screen.getByText('Coordenador')).toBeInTheDocument();
 
     expect(screen.queryByText('Praticar Questões')).not.toBeInTheDocument();

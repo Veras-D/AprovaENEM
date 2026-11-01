@@ -220,17 +220,19 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Action Controls: Portal Switcher, Theme Toggle & Auth/Guest Indicator */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {isInstitutional ? (
-            <button
-              type="button"
-              onClick={() => onNavigate?.('home')}
-              aria-label="Voltar ao Portal do Aluno"
-              className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors cursor-pointer shadow-2xs whitespace-nowrap"
-              title="Voltar ao Portal do Aluno"
-            >
-              <ArrowLeft className="h-3.5 w-3.5 text-slate-400 shrink-0" aria-hidden="true" />
-              <GraduationCap className="h-3.5 w-3.5 text-brand-primary shrink-0" aria-hidden="true" />
-              <span className="hidden sm:inline">Voltar ao Aluno</span>
-            </button>
+            !isCoordinator ? (
+              <button
+                type="button"
+                onClick={() => onNavigate?.('home')}
+                aria-label="Voltar ao Portal do Aluno"
+                className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors cursor-pointer shadow-2xs whitespace-nowrap"
+                title="Voltar ao Portal do Aluno"
+              >
+                <ArrowLeft className="h-3.5 w-3.5 text-slate-400 shrink-0" aria-hidden="true" />
+                <GraduationCap className="h-3.5 w-3.5 text-brand-primary shrink-0" aria-hidden="true" />
+                <span className="hidden sm:inline">Voltar ao Aluno</span>
+              </button>
+            ) : null
           ) : isCoordinator ? (
             <button
               type="button"
