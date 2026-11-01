@@ -206,7 +206,7 @@ describe('Gamification & Diagnostic Dashboard E2E', () => {
     cy.get('button').contains(/Acessar Painel da Coordenação/i).should('be.visible');
 
     // Sensitive cohort metrics must NOT be leaked
-    cy.contains('Painel Institucional da Turma').should('not.exist');
+    cy.contains(/Painel Institucional/i).should('not.exist');
     cy.contains('Comparativo de Desempenho da Turma').should('not.exist');
   });
 
@@ -231,7 +231,7 @@ describe('Gamification & Diagnostic Dashboard E2E', () => {
 
     // Verify Coordinator Header & Cohort View
     cy.contains(/Painel da Coordenação Pedagógica/i).should('be.visible');
-    cy.contains(/Painel Institucional da Turma/i).should('be.visible');
+    cy.contains(/Painel Institucional/i).should('be.visible');
     cy.contains(/Comparativo de Desempenho da Turma/i).should('be.visible');
 
     // Verify Cohort KPIs
