@@ -34,6 +34,117 @@ const SCHOOL_TYPE_OPTIONS = [
   { value: 'PRIVATE_REGULAR', label: 'Escola Particular' },
 ] as const;
 
+interface PasswordStrengthResult {
+  hasMinLength: boolean;
+  isPasswordStrongEnough: boolean;
+  fillPercent: number;
+  strengthConfig: {
+    label: string;
+    colorClass: string;
+    textClass: string;
+  };
+}
+
+function computePasswordStrength(pwd: string): PasswordStrengthResult {
+  const hasMinLength = pwd.length >= 8;
+  const hasLowercase = /[a-z]/.test(pwd);
+  const hasUppercase = /[A-Z]/.test(pwd);
+  const hasNumber = /\d/.test(pwd);
+  const hasSpecialChar = /[^A-Za-z0-9]/.test(pwd);
+
+  const criteriaScore =
+    (hasMinLength ? 1 : 0) +
+    (hasLowercase ? 1 : 0) +
+    (hasUppercase ? 1 : 0) +
+    (hasNumber ? 1 : 0) +
+    (hasSpecialChar ? 1 : 0);
+
+  const isPasswordStrongEnough =
+    hasMinLength && hasLowercase && hasUppercase && hasNumber && hasSpecialChar;
+
+  const lengthTo8 = Math.min(8, pwd.length) / 8;
+  const extraLength = Math.min(8, Math.max(0, pwd.length - 8)) / 8;
+  const uniqueRatio = Math.min(1, new Set(pwd).size / 12);
+  const extraUpper = (pwd.match(/[A-Z]/g)?.length ?? 0) >= 2 ? 1 : 0;
+  const extraNumber = (pwd.match(/\d/g)?.length ?? 0) >= 2 ? 1 : 0;
+  const extraSpecial = (pwd.match(/[^A-Za-z0-9]/g)?.length ?? 0) >= 2 ? 1 : 0;
+
+  const fillPercent = (() => {
+    if (pwd.length === 0) return 0;
+    if (!isPasswordStrongEnough) {
+      return Math.round(
+        lengthTo8 * 14 +
+          extraLength * 6 +
+          (hasLowercase ? 6.5 : 0) +
+          (hasUppercase ? 6.5 : 0) +
+          (hasNumber ? 6.5 : 0) +
+          (hasSpecialChar ? 6.5 : 0)
+      );
+    }
+    return Math.min(
+      100,
+      Math.round(
+        50 +
+          extraLength * 32 +
+          uniqueRatio * 8 +
+          extraUpper * 3 +
+          extraNumber * 3 +
+          extraSpecial * 4
+      )
+    );
+  })();
+
+  const strengthConfig = (() => {
+    if (pwd.length === 0) {
+      return {
+        label: 'Digite sua senha',
+        colorClass: 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.25)]',
+        textClass: 'text-slate-500 dark:text-slate-400',
+      };
+    }
+    if (!isPasswordStrongEnough) {
+      if (criteriaScore <= 2) {
+        return {
+          label: 'Muito Fraca',
+          colorClass: 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.35)]',
+          textClass: 'text-rose-600 dark:text-rose-400',
+        };
+      }
+      return {
+        label: criteriaScore === 4 ? 'Incompleta (falta 1 requisito)' : 'Fraca (faltam requisitos)',
+        colorClass: 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.35)]',
+        textClass: 'text-amber-600 dark:text-amber-400',
+      };
+    }
+    if (fillPercent < 66) {
+      return {
+        label: 'Razoável (Mínimo aceito)',
+        colorClass: 'bg-sky-500 shadow-[0_0_10px_rgba(14,165,233,0.35)]',
+        textClass: 'text-sky-600 dark:text-sky-400',
+      };
+    }
+    if (fillPercent < 86) {
+      return {
+        label: 'Boa',
+        colorClass: 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.35)]',
+        textClass: 'text-emerald-600 dark:text-emerald-400',
+      };
+    }
+    return {
+      label: 'Forte e Segura',
+      colorClass: 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.45)]',
+      textClass: 'text-emerald-600 dark:text-emerald-400',
+    };
+  })();
+
+  return {
+    hasMinLength,
+    isPasswordStrongEnough,
+    fillPercent,
+    strengthConfig,
+  };
+}
+
 export interface RegisterModalProps {
   readonly isOpen: boolean;
   readonly onClose: () => void;
@@ -166,96 +277,12 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     };
   }, [shouldRender, hasSwitchedMode, mode, formError, isSuccess]);
 
-  const hasMinLength = password.length >= 8;
-  const hasLowercase = /[a-z]/.test(password);
-  const hasUppercase = /[A-Z]/.test(password);
-  const hasNumber = /\d/.test(password);
-  const hasSpecialChar = /[^A-Za-z0-9]/.test(password);
+  const regStrength = computePasswordStrength(password);
+  const resetStrength = computePasswordStrength(newPassword);
 
-  const criteriaScore =
-    (hasMinLength ? 1 : 0) +
-    (hasLowercase ? 1 : 0) +
-    (hasUppercase ? 1 : 0) +
-    (hasNumber ? 1 : 0) +
-    (hasSpecialChar ? 1 : 0);
-
-  const isPasswordStrongEnough =
-    hasMinLength && hasLowercase && hasUppercase && hasNumber && hasSpecialChar;
-
-  const lengthTo8 = Math.min(8, password.length) / 8;
-  const extraLength = Math.min(8, Math.max(0, password.length - 8)) / 8;
-  const uniqueRatio = Math.min(1, new Set(password).size / 12);
-  const extraUpper = (password.match(/[A-Z]/g)?.length ?? 0) >= 2 ? 1 : 0;
-  const extraNumber = (password.match(/\d/g)?.length ?? 0) >= 2 ? 1 : 0;
-  const extraSpecial = (password.match(/[^A-Za-z0-9]/g)?.length ?? 0) >= 2 ? 1 : 0;
-
-  const fillPercent = (() => {
-    if (password.length === 0) return 0;
-    if (!isPasswordStrongEnough) {
-      return Math.round(
-        lengthTo8 * 14 +
-          extraLength * 6 +
-          (hasLowercase ? 6.5 : 0) +
-          (hasUppercase ? 6.5 : 0) +
-          (hasNumber ? 6.5 : 0) +
-          (hasSpecialChar ? 6.5 : 0)
-      );
-    }
-    return Math.min(
-      100,
-      Math.round(
-        50 +
-          extraLength * 32 +
-          uniqueRatio * 8 +
-          extraUpper * 3 +
-          extraNumber * 3 +
-          extraSpecial * 4
-      )
-    );
-  })();
-
-  const strengthConfig = (() => {
-    if (password.length === 0) {
-      return {
-        label: 'Digite sua senha',
-        colorClass: 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.25)]',
-        textClass: 'text-slate-500 dark:text-slate-400',
-      };
-    }
-    if (!isPasswordStrongEnough) {
-      if (criteriaScore <= 2) {
-        return {
-          label: 'Muito Fraca',
-          colorClass: 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.35)]',
-          textClass: 'text-rose-600 dark:text-rose-400',
-        };
-      }
-      return {
-        label: criteriaScore === 4 ? 'Incompleta (falta 1 requisito)' : 'Fraca (faltam requisitos)',
-        colorClass: 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.35)]',
-        textClass: 'text-amber-600 dark:text-amber-400',
-      };
-    }
-    if (fillPercent < 66) {
-      return {
-        label: 'Razoável (Mínimo aceito)',
-        colorClass: 'bg-sky-500 shadow-[0_0_10px_rgba(14,165,233,0.35)]',
-        textClass: 'text-sky-600 dark:text-sky-400',
-      };
-    }
-    if (fillPercent < 86) {
-      return {
-        label: 'Boa',
-        colorClass: 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.35)]',
-        textClass: 'text-emerald-600 dark:text-emerald-400',
-      };
-    }
-    return {
-      label: 'Forte e Segura',
-      colorClass: 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.45)]',
-      textClass: 'text-emerald-600 dark:text-emerald-400',
-    };
-  })();
+  const isPasswordStrongEnough = regStrength.isPasswordStrongEnough;
+  const fillPercent = regStrength.fillPercent;
+  const strengthConfig = regStrength.strengthConfig;
 
   // Reset form when opening or closing modal
   useEffect(() => {
@@ -536,8 +563,15 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       return;
     }
 
+    if (!resetStrength.isPasswordStrongEnough) {
+      setFormError(
+        'A senha deve conter pelo menos uma letra maiúscula, uma minúscula, um número e um caractere especial.'
+      );
+      return;
+    }
+
     if (newPassword !== confirmNewPassword) {
-      setFormError('As senhas não coincidem. Digite a mesma senha nos dois campos.');
+      setFormError('As senhas informadas não coincidem. Verifique a confirmação de senha.');
       return;
     }
 
@@ -1345,75 +1379,112 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                     </div>
 
                     <form onSubmit={handleResetPasswordSubmit} className="space-y-4" noValidate>
-                      {/* Nova Senha */}
-                      <div className="space-y-1">
-                        <label
-                          htmlFor="reset-new-password"
-                          className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
-                        >
-                          Nova Senha (mín. 8) <span className="text-rose-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <input
-                            id="reset-new-password"
-                            name="newPassword"
-                            type={showNewPassword ? 'text' : 'password'}
-                            autoComplete="new-password"
-                            required
-                            minLength={8}
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            placeholder="••••••••"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary pr-10"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowNewPassword(!showNewPassword)}
-                            className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                            aria-label={showNewPassword ? 'Ocultar nova senha' : 'Exibir nova senha'}
-                          >
-                            {showNewPassword ? (
-                              <EyeOff className="h-4 w-4" aria-hidden="true" />
-                            ) : (
-                              <Eye className="h-4 w-4" aria-hidden="true" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
+                      {/* Password & Confirm Password in 2-Column Grid matching Register mode */}
+                      <div className="space-y-2.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label
+                              htmlFor="reset-new-password"
+                              className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                            >
+                              Senha Segura (mín. 8) <span className="text-rose-500">*</span>
+                            </label>
+                            <div className="relative">
+                              <input
+                                id="reset-new-password"
+                                name="newPassword"
+                                type={showNewPassword ? 'text' : 'password'}
+                                autoComplete="new-password"
+                                required
+                                minLength={8}
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                placeholder="••••••••"
+                                className="w-full px-3.5 py-2.5 text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary pr-10"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                aria-label={showNewPassword ? 'Ocultar senha' : 'Exibir senha'}
+                              >
+                                {showNewPassword ? (
+                                  <EyeOff className="h-4 w-4" aria-hidden="true" />
+                                ) : (
+                                  <Eye className="h-4 w-4" aria-hidden="true" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
 
-                      {/* Confirmar Nova Senha */}
-                      <div className="space-y-1">
-                        <label
-                          htmlFor="reset-confirm-password"
-                          className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                          <div className="space-y-1">
+                            <label
+                              htmlFor="reset-confirm-password"
+                              className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                            >
+                              Confirmar Senha <span className="text-rose-500">*</span>
+                            </label>
+                            <div className="relative">
+                              <input
+                                id="reset-confirm-password"
+                                name="confirmPassword"
+                                type={showConfirmNewPassword ? 'text' : 'password'}
+                                autoComplete="new-password"
+                                required
+                                minLength={8}
+                                value={confirmNewPassword}
+                                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                                placeholder="••••••••"
+                                className="w-full px-3.5 py-2.5 text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary pr-10"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
+                                className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                aria-label={showConfirmNewPassword ? 'Ocultar confirmação de senha' : 'Exibir confirmação de senha'}
+                              >
+                                {showConfirmNewPassword ? (
+                                  <EyeOff className="h-4 w-4" aria-hidden="true" />
+                                ) : (
+                                  <Eye className="h-4 w-4" aria-hidden="true" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Password Strength Meter Bar */}
+                        <div
+                          className="space-y-1.5 pt-0.5"
+                          aria-live="polite"
                         >
-                          Confirmar Nova Senha <span className="text-rose-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <input
-                            id="reset-confirm-password"
-                            name="confirmPassword"
-                            type={showConfirmNewPassword ? 'text' : 'password'}
-                            autoComplete="new-password"
-                            required
-                            minLength={8}
-                            value={confirmNewPassword}
-                            onChange={(e) => setConfirmNewPassword(e.target.value)}
-                            placeholder="••••••••"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary pr-10"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
-                            className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                            aria-label={showConfirmNewPassword ? 'Ocultar confirmação de senha' : 'Exibir confirmação de senha'}
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="font-semibold text-slate-600 dark:text-slate-300">
+                              Força da senha:
+                            </span>
+                            <span
+                              className={`font-bold transition-colors duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${resetStrength.strengthConfig.textClass}`}
+                            >
+                              {resetStrength.strengthConfig.label}
+                            </span>
+                          </div>
+
+                          {/* Fluid Continuous Progress Bar */}
+                          <div
+                            className="relative h-2 w-full rounded-full bg-slate-200/85 dark:bg-slate-800 overflow-hidden"
+                            role="progressbar"
+                            aria-label="Indicador de força da senha"
+                            aria-valuenow={resetStrength.fillPercent}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
                           >
-                            {showConfirmNewPassword ? (
-                              <EyeOff className="h-4 w-4" aria-hidden="true" />
-                            ) : (
-                              <Eye className="h-4 w-4" aria-hidden="true" />
-                            )}
-                          </button>
+                            <div
+                              style={{ width: `${resetStrength.fillPercent}%` }}
+                              className={`relative h-full rounded-full transition-[width,background-color,box-shadow,opacity] duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] after:absolute after:inset-0 after:rounded-full after:bg-gradient-to-b after:from-white/25 after:to-transparent ${
+                                resetStrength.strengthConfig.colorClass
+                              } ${resetStrength.fillPercent > 0 ? 'opacity-100' : 'opacity-0'}`}
+                            />
+                          </div>
                         </div>
                       </div>
 

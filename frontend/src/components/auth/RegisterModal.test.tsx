@@ -340,25 +340,38 @@ describe('RegisterModal Component', () => {
 
     renderWithProviders(<RegisterModal isOpen={true} onClose={handleClose} initialMode="reset-password" />);
 
-    expect(screen.getByLabelText(/^Nova Senha/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Confirmar Nova Senha/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Senha Segura \(mín\. 8\)/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Confirmar Senha/i)).toBeInTheDocument();
+    expect(screen.getByText(/Força da senha:/i)).toBeInTheDocument();
 
     const submitBtn = screen.getByRole('button', { name: /Redefinir Minha Senha/i });
 
+    // Weak password check
+    fireEvent.change(screen.getByLabelText(/Senha Segura \(mín\. 8\)/i), { target: { value: 'short' } });
+    fireEvent.change(screen.getByLabelText(/Confirmar Senha/i), { target: { value: 'short' } });
+    fireEvent.click(submitBtn);
+    expect(screen.getByText(/A nova senha deve conter no mínimo 8 caracteres/i)).toBeInTheDocument();
+
+    // Missing complexity
+    fireEvent.change(screen.getByLabelText(/Senha Segura \(mín\. 8\)/i), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByLabelText(/Confirmar Senha/i), { target: { value: 'password123' } });
+    fireEvent.click(submitBtn);
+    expect(screen.getByText(/A senha deve conter pelo menos uma letra maiúscula/i)).toBeInTheDocument();
+
     // Mismatched passwords
-    fireEvent.change(screen.getByLabelText(/Nova Senha \(mín\. 8\)/i), { target: { value: 'StrongPass@2026' } });
-    fireEvent.change(screen.getByLabelText(/Confirmar Nova Senha/i), { target: { value: 'DifferentPass@2026' } });
+    fireEvent.change(screen.getByLabelText(/Senha Segura \(mín\. 8\)/i), { target: { value: 'StrongPass@2026' } });
+    fireEvent.change(screen.getByLabelText(/Confirmar Senha/i), { target: { value: 'DifferentPass@2026' } });
     fireEvent.click(submitBtn);
 
-    expect(screen.getByText(/As senhas não coincidem/i)).toBeInTheDocument();
+    expect(screen.getByText(/As senhas informadas não coincidem/i)).toBeInTheDocument();
 
     // Toggle password visibility
-    const toggleNewPassBtn = screen.getByLabelText(/Exibir nova senha/i);
+    const toggleNewPassBtn = screen.getByLabelText(/Exibir senha/i);
     fireEvent.click(toggleNewPassBtn);
-    expect(screen.getByLabelText(/Ocultar nova senha/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Ocultar senha/i)).toBeInTheDocument();
 
     // Fix confirmation password
-    fireEvent.change(screen.getByLabelText(/Confirmar Nova Senha/i), { target: { value: 'StrongPass@2026' } });
+    fireEvent.change(screen.getByLabelText(/Confirmar Senha/i), { target: { value: 'StrongPass@2026' } });
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
