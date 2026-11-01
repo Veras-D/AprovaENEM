@@ -20,6 +20,7 @@ public class GamificationProfileResponse {
     private int xpNextLevel;
     private double levelProgressPercentage;
     private int streakDays;
+    private int longestStreakDays;
     private int streakFreezeAvailable;
     private DailyGoalDto dailyGoal;
     private String currentLeague;

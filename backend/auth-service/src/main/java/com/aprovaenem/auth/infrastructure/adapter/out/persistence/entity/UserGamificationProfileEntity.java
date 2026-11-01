@@ -43,6 +43,10 @@ public class UserGamificationProfileEntity {
     @Builder.Default
     private int streakDays = 0;
 
+    @Column(name = "longest_streak_days", nullable = false)
+    @Builder.Default
+    private int longestStreakDays = 0;
+
     @Column(name = "streak_freeze_available", nullable = false)
     @Builder.Default
     private int streakFreezeAvailable = 1;

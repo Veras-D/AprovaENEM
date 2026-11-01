@@ -25,6 +25,8 @@ public class UserGamificationProfile {
     @Builder.Default
     private int streakDays = 0;
     @Builder.Default
+    private int longestStreakDays = 0;
+    @Builder.Default
     private int streakFreezeAvailable = 1;
     private LocalDate lastActivityDate;
     @Builder.Default

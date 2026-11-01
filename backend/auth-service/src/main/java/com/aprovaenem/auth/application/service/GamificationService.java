@@ -23,6 +23,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -48,6 +49,11 @@ public class GamificationService implements GamificationUseCase {
     private final UserRepositoryPort userRepository;
 
     private static final ZoneId BRT_ZONE = ZoneId.of("America/Sao_Paulo");
+    private Clock clock = Clock.system(BRT_ZONE);
+
+    public void setClock(Clock clock) {
+        this.clock = clock;
+    }
 
     @Override
     @Transactional
@@ -61,7 +67,7 @@ public class GamificationService implements GamificationUseCase {
     public GamificationProfileResponse getProfileResponse(UUID userId) {
         processPendingWeeklyResets();
         UserGamificationProfile profile = getProfile(userId);
-        LocalDate today = LocalDate.now(BRT_ZONE);
+        LocalDate today = LocalDate.now(clock);
         int weekNumber = today.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
         int year = today.get(IsoFields.WEEK_BASED_YEAR);
 
@@ -117,6 +123,7 @@ public class GamificationService implements GamificationUseCase {
                 .xpNextLevel(profile.getXpNextLevel())
                 .levelProgressPercentage(profile.getLevelProgressPercentage())
                 .streakDays(streakDays)
+                .longestStreakDays(Math.max(profile.getLongestStreakDays(), streakDays))
                 .streakFreezeAvailable(streakFreeze)
                 .dailyGoal(dailyGoalDto)
                 .currentLeague(currentLeague)
@@ -142,7 +149,7 @@ public class GamificationService implements GamificationUseCase {
     @Transactional
     public UserGamificationProfile awardXpForActivity(UUID userId, int questionsSolved, int correctCount, boolean sessionCompleted) {
         UserGamificationProfile profile = getProfile(userId);
-        LocalDate today = LocalDate.now(BRT_ZONE);
+        LocalDate today = LocalDate.now(clock);
         Instant now = Instant.now();
 
         // 1. XP Calculation (+10 per correct answer, +50 per completed session)
@@ -185,6 +192,7 @@ public class GamificationService implements GamificationUseCase {
         } else {
             handleMissedDays(profile, today, lastDate, questionsSolved, userId);
         }
+        profile.setLongestStreakDays(Math.max(profile.getLongestStreakDays(), profile.getStreakDays()));
     }
 
     private void handleMissedDays(UserGamificationProfile profile, LocalDate today, LocalDate lastDate, int questionsSolved, UUID userId) {
@@ -272,7 +280,7 @@ public class GamificationService implements GamificationUseCase {
     @Transactional
     public WeeklyLeaderboardResponse getWeeklyLeaderboard(UUID currentUserId, LeagueTier leagueTier, int page, int size) {
         processPendingWeeklyResets();
-        LocalDate today = LocalDate.now(BRT_ZONE);
+        LocalDate today = LocalDate.now(clock);
         int weekNumber = today.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
         int year = today.get(IsoFields.WEEK_BASED_YEAR);
 
@@ -404,7 +412,7 @@ public class GamificationService implements GamificationUseCase {
         List<UserGamificationProfile> pendingProfiles = gamificationRepository.findPendingStudyReminderProfiles();
         int count = 0;
 
-        LocalDate today = LocalDate.now(BRT_ZONE);
+        LocalDate today = LocalDate.now(clock);
         for (UserGamificationProfile profile : pendingProfiles) {
             Optional<User> userOpt = userRepository.findById(profile.getUserId());
             if (userOpt.isPresent()) {
@@ -440,7 +448,7 @@ public class GamificationService implements GamificationUseCase {
     @Scheduled(cron = "59 59 23 * * SUN", zone = "America/Sao_Paulo")
     @Transactional
     public void performWeeklyLeagueReset() {
-        LocalDate today = LocalDate.now(BRT_ZONE);
+        LocalDate today = LocalDate.now(clock);
         int weekNumber = today.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
         int year = today.get(IsoFields.WEEK_BASED_YEAR);
 
@@ -452,7 +460,7 @@ public class GamificationService implements GamificationUseCase {
     @Override
     @Transactional
     public void processPendingWeeklyResets() {
-        LocalDate today = LocalDate.now(BRT_ZONE);
+        LocalDate today = LocalDate.now(clock);
         int currentWeekNumber = today.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
         int currentYear = today.get(IsoFields.WEEK_BASED_YEAR);
 
@@ -551,6 +559,7 @@ public class GamificationService implements GamificationUseCase {
                 .currentXp(0)
                 .currentLeague(LeagueTier.BRONZE)
                 .streakDays(0)
+                .longestStreakDays(0)
                 .streakFreezeAvailable(1)
                 .lastActivityDate(null)
                 .dailyGoalQuestions(5)

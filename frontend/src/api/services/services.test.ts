@@ -269,6 +269,21 @@ describe('API Services', () => {
       expect(profile.dailyGoalTarget).toBe(5);
       expect(Number.isNaN(profile.dailyGoalProgress)).toBe(false);
     });
+
+    it('should preserve longestStreakDays from backend even when currentStreakDays is zero', async () => {
+      vi.spyOn(apiClient, 'get').mockResolvedValueOnce({
+        data: {
+          userId: 'usr-streak-4',
+          currentStreakDays: 0,
+          longestStreakDays: 4,
+        },
+      });
+
+      const profile = await gamificationService.getGamificationProfile();
+
+      expect(profile.currentStreakDays).toBe(0);
+      expect(profile.longestStreakDays).toBe(4);
+    });
   });
 
   describe('tenantService', () => {

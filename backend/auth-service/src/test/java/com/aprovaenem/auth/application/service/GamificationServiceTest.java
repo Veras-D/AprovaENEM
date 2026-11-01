@@ -13,6 +13,7 @@ import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.BadgesResponse;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.GamificationProfileResponse;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.WeeklyLeaderboardResponse;
 import com.aprovaenem.common.events.DailyGoalReminderEvent;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.ZSetOperations;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -61,6 +63,12 @@ class GamificationServiceTest {
     private GamificationService gamificationService;
 
     private static final ZoneId BRT_ZONE = ZoneId.of("America/Sao_Paulo");
+    private static final Clock FIXED_CLOCK = Clock.fixed(Instant.parse("2026-10-25T12:00:00Z"), BRT_ZONE);
+
+    @BeforeEach
+    void setUp() {
+        gamificationService.setClock(FIXED_CLOCK);
+    }
 
     @Test
     @DisplayName("Should create default initial profile when user has no gamification profile yet")
@@ -116,13 +124,15 @@ class GamificationServiceTest {
         assertThat(response.getDailyGoal().getTargetQuestions()).isEqualTo(15);
         assertThat(response.getDailyGoal().getCompletedQuestions()).isEqualTo(10);
         assertThat(response.getDailyGoal().isCompleted()).isFalse();
+        assertThat(response.getStreakDays()).isEqualTo(5);
+        assertThat(response.getLongestStreakDays()).isEqualTo(5);
     }
 
     @Test
     @DisplayName("Should reset daily goal completed questions to 0 when profile is requested on a new calendar day")
     void shouldResetDailyGoalCompletedQuestionsOnNewDay() {
         UUID userId = UUID.randomUUID();
-        LocalDate today = LocalDate.now(BRT_ZONE);
+        LocalDate today = LocalDate.now(FIXED_CLOCK);
         LocalDate yesterday = today.minusDays(1);
 
         UserGamificationProfile profile = UserGamificationProfile.builder()
@@ -151,7 +161,7 @@ class GamificationServiceTest {
     @DisplayName("Should recharge emergency streak freeze back to 1 on a new calendar month")
     void shouldRechargeStreakFreezeOnNewMonth() {
         UUID userId = UUID.randomUUID();
-        LocalDate today = LocalDate.now(BRT_ZONE);
+        LocalDate today = LocalDate.now(FIXED_CLOCK);
         LocalDate lastMonth = today.minusMonths(1);
 
         UserGamificationProfile profile = UserGamificationProfile.builder()
@@ -173,12 +183,13 @@ class GamificationServiceTest {
     @DisplayName("Should reset expired streak to 0 on profile load when missed yesterday and no streak freeze available")
     void shouldResetExpiredStreakToZeroWhenProfileLoadedAndNoFreeze() {
         UUID userId = UUID.randomUUID();
-        LocalDate today = LocalDate.now(BRT_ZONE);
+        LocalDate today = LocalDate.now(FIXED_CLOCK);
         LocalDate threeDaysAgo = today.minusDays(3);
 
         UserGamificationProfile profile = UserGamificationProfile.builder()
                 .userId(userId)
                 .streakDays(7)
+                .longestStreakDays(7)
                 .streakFreezeAvailable(0)
                 .dailyGoalQuestions(10)
                 .dailyQuestionsCompleted(5)
@@ -192,7 +203,9 @@ class GamificationServiceTest {
         GamificationProfileResponse response = gamificationService.getProfileResponse(userId);
 
         assertThat(response.getStreakDays()).isZero();
+        assertThat(response.getLongestStreakDays()).isEqualTo(7);
         assertThat(profile.getStreakDays()).isZero();
+        assertThat(profile.getLongestStreakDays()).isEqualTo(7);
         verify(gamificationRepository).saveProfile(profile);
     }
 
@@ -200,7 +213,7 @@ class GamificationServiceTest {
     @DisplayName("Should preserve streak on profile load when missed day but freeze shield is available")
     void shouldPreserveStreakWhenMissedDayAndFreezeShieldAvailable() {
         UUID userId = UUID.randomUUID();
-        LocalDate today = LocalDate.now(BRT_ZONE);
+        LocalDate today = LocalDate.now(FIXED_CLOCK);
         LocalDate twoDaysAgo = today.minusDays(2);
 
         UserGamificationProfile profile = UserGamificationProfile.builder()
@@ -246,7 +259,7 @@ class GamificationServiceTest {
     @DisplayName("Should award XP, increment consecutive streak, award daily goal bonus, and unlock badges")
     void shouldAwardXpConsecutiveDayAndUnlockBadges() {
         UUID userId = UUID.randomUUID();
-        LocalDate today = LocalDate.now(BRT_ZONE);
+        LocalDate today = LocalDate.now(FIXED_CLOCK);
         LocalDate yesterday = today.minusDays(1);
 
         UserGamificationProfile profile = UserGamificationProfile.builder()
@@ -285,7 +298,7 @@ class GamificationServiceTest {
     @DisplayName("Should consume streak freeze when student missed a day but had freeze available")
     void shouldConsumeStreakFreezeWhenMissedDay() {
         UUID userId = UUID.randomUUID();
-        LocalDate today = LocalDate.now(BRT_ZONE);
+        LocalDate today = LocalDate.now(FIXED_CLOCK);
         LocalDate threeDaysAgo = today.minusDays(3);
 
         UserGamificationProfile profile = UserGamificationProfile.builder()
@@ -316,7 +329,7 @@ class GamificationServiceTest {
     @DisplayName("Should reset streak to 1 when student missed a day and has no streak freeze available")
     void shouldResetStreakWhenNoFreezeAvailable() {
         UUID userId = UUID.randomUUID();
-        LocalDate today = LocalDate.now(BRT_ZONE);
+        LocalDate today = LocalDate.now(FIXED_CLOCK);
         LocalDate twoDaysAgo = today.minusDays(2);
 
         UserGamificationProfile profile = UserGamificationProfile.builder()
@@ -485,7 +498,7 @@ class GamificationServiceTest {
     @DisplayName("Should initialize streak to 1 when last activity date is null")
     void shouldInitializeStreakWhenLastActivityDateIsNull() {
         UUID userId = UUID.randomUUID();
-        LocalDate today = LocalDate.now(BRT_ZONE);
+        LocalDate today = LocalDate.now(FIXED_CLOCK);
 
         UserGamificationProfile profile = UserGamificationProfile.builder()
                 .userId(userId)
@@ -515,7 +528,7 @@ class GamificationServiceTest {
     @DisplayName("Should accumulate questions completed when activity occurs on the same day")
     void shouldAccumulateQuestionsCompletedSameDay() {
         UUID userId = UUID.randomUUID();
-        LocalDate today = LocalDate.now(BRT_ZONE);
+        LocalDate today = LocalDate.now(FIXED_CLOCK);
 
         UserGamificationProfile profile = UserGamificationProfile.builder()
                 .userId(userId)
@@ -545,7 +558,7 @@ class GamificationServiceTest {
     @DisplayName("Should unlock LEVEL_10 badge when student reaches level 10 and not re-award goal bonus if already reached")
     void shouldUnlockLevel10BadgeAndSkipDailyGoalBonusIfAlreadyReached() {
         UUID userId = UUID.randomUUID();
-        LocalDate today = LocalDate.now(BRT_ZONE);
+        LocalDate today = LocalDate.now(FIXED_CLOCK);
 
         UserGamificationProfile profile = UserGamificationProfile.builder()
                 .userId(userId)

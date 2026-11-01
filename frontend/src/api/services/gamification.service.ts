@@ -32,7 +32,11 @@ const DEFAULT_DAILY_GOAL_TARGET = 5;
 
 let activityQueue: Promise<void> = Promise.resolve();
 
-function toNonNegativeInt(value: number | undefined, fallback = 0): number {
+function toNonNegativeInt(value: number | string | null | undefined, fallback = 0): number {
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value, 10);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+  }
   return typeof value === 'number' && Number.isFinite(value) && value >= 0
     ? Math.floor(value)
     : fallback;
@@ -72,13 +76,32 @@ function normalizeGamificationProfile(raw: RawGamificationProfile): Gamification
     unlockedBadges.add('MARATONISTA_QUESTOES_BRONZE');
   }
 
+  const storedLongest =
+    typeof localStorage !== 'undefined'
+      ? toNonNegativeInt(
+          (raw.userId && localStorage.getItem(`aprovaenem_longest_streak_${raw.userId}`)) ||
+            localStorage.getItem('aprovaenem_longest_streak')
+        )
+      : 0;
+  const longestStreakDays = Math.max(
+    currentStreakDays,
+    toNonNegativeInt(raw.longestStreakDays),
+    storedLongest
+  );
+  if (typeof localStorage !== 'undefined' && longestStreakDays > 0) {
+    if (raw.userId) {
+      localStorage.setItem(`aprovaenem_longest_streak_${raw.userId}`, String(longestStreakDays));
+    }
+    localStorage.setItem('aprovaenem_longest_streak', String(longestStreakDays));
+  }
+
   return {
     userId: raw.userId ?? '',
     currentXp: toNonNegativeInt(raw.currentXp),
     level: Math.max(1, toNonNegativeInt(raw.level, 1)),
     levelTitle: raw.levelTitle ?? 'Calouro Iniciante',
     currentStreakDays,
-    longestStreakDays: Math.max(currentStreakDays, toNonNegativeInt(raw.longestStreakDays)),
+    longestStreakDays,
     streakFreezeAvailable:
       typeof raw.streakFreezeAvailable === 'boolean'
         ? raw.streakFreezeAvailable
