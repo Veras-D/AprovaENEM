@@ -24,12 +24,12 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import {
   getAreaMetadata,
-  MASTERY_CONFIGS,
+  getMasteryConfig,
   NATIONAL_ENEM_BASELINE,
   MASTERY_TARGET_THRESHOLD,
   transformRadarDataForChart,
 } from '../diagnostic-utils';
-import type { DiagnosticReportDto, DiagnosticRadarAreaDto, MasteryLevel } from '@/api/types';
+import type { DiagnosticReportDto, DiagnosticRadarAreaDto } from '@/api/types';
 
 export interface StudentDiagnosticRadarProps {
   readonly report: DiagnosticReportDto;
@@ -245,7 +245,7 @@ export const StudentDiagnosticRadar: React.FC<StudentDiagnosticRadarProps> = ({
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {chartData.map((row) => {
-                    const statusConfig = MASTERY_CONFIGS[row.masteryLevel as MasteryLevel];
+                    const statusConfig = getMasteryConfig(row.masteryLevel, row.score);
                     return (
                       <tr key={row.areaKey} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
                         <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
@@ -358,7 +358,7 @@ export const StudentDiagnosticRadar: React.FC<StudentDiagnosticRadarProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {chartData.map((area) => {
             const meta = getAreaMetadata(area.areaKey);
-            const statusConfig = MASTERY_CONFIGS[area.masteryLevel as MasteryLevel];
+            const statusConfig = getMasteryConfig(area.masteryLevel, area.score);
             return (
               <div
                 key={area.areaKey}

@@ -101,12 +101,12 @@ public class InstitutionalDiagnosticsRepositoryAdapter implements InstitutionalD
             }
 
             String status;
-            if (avgScore >= 75.0) {
+            if (avgScore >= 70.0) {
                 status = "MASTERED";
-            } else if (avgScore >= 60.0) {
+            } else if (avgScore >= 50.0) {
                 status = "ATTENTION_NEEDED";
             } else {
-                status = "DEVELOPING";
+                status = "CRITICAL";
             }
 
             String topWeakTopic = weakestTopics.getOrDefault(areaCode, DEFAULT_WEAK_TOPICS.get(areaCode));

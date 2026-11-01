@@ -12,6 +12,7 @@ import {
   selectDailyPracticeQuestions,
   ENEM_AREAS,
   MASTERY_CONFIGS,
+  getMasteryConfig,
   NATIONAL_ENEM_BASELINE,
   MASTERY_TARGET_THRESHOLD,
 } from './diagnostic-utils';
@@ -72,6 +73,25 @@ describe('diagnostic-utils', () => {
       expect(MASTERY_CONFIGS.MASTERED.label).toBe('Domínio Consolidado');
       expect(MASTERY_CONFIGS.ATTENTION_NEEDED.label).toBe('Requer Atenção');
       expect(MASTERY_CONFIGS.CRITICAL.label).toBe('Prioridade Crítica');
+    });
+  });
+
+  describe('getMasteryConfig', () => {
+    it('returns matching configuration for valid status string', () => {
+      expect(getMasteryConfig('MASTERED').label).toBe('Domínio Consolidado');
+      expect(getMasteryConfig('ATTENTION_NEEDED').label).toBe('Requer Atenção');
+      expect(getMasteryConfig('CRITICAL').label).toBe('Prioridade Crítica');
+    });
+
+    it('gracefully handles DEVELOPING or lowercase status', () => {
+      expect(getMasteryConfig('DEVELOPING').label).toBe('Prioridade Crítica');
+      expect(getMasteryConfig('mastered').label).toBe('Domínio Consolidado');
+    });
+
+    it('falls back to score percentage or CRITICAL when status is unknown or undefined', () => {
+      expect(getMasteryConfig(undefined, 85).label).toBe('Domínio Consolidado');
+      expect(getMasteryConfig('UNKNOWN', 65).label).toBe('Requer Atenção');
+      expect(getMasteryConfig(undefined, undefined).label).toBe('Prioridade Crítica');
     });
   });
 

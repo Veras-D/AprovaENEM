@@ -27,7 +27,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import {
   getAreaMetadata,
-  MASTERY_CONFIGS,
+  getMasteryConfig,
   NATIONAL_ENEM_BASELINE,
   MASTERY_TARGET_THRESHOLD,
 } from '../diagnostic-utils';
@@ -36,7 +36,6 @@ import { MOCK_COHORT_DIAGNOSTICS } from '@/api/mocks/mock-data';
 import type {
   InstitutionalCohortDiagnosticResponse,
   InstitutionalAreaBreakdown,
-  MasteryLevel,
 } from '@/api/types';
 
 export interface InstitutionalCohortViewProps {
@@ -288,7 +287,7 @@ export const InstitutionalCohortView: React.FC<InstitutionalCohortViewProps> = (
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {chartData.map((row) => {
-                    const statusConfig = MASTERY_CONFIGS[row.status as MasteryLevel];
+                    const statusConfig = getMasteryConfig(row.status, row.averageScore);
                     return (
                       <tr key={row.areaKey} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
                         <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
@@ -381,7 +380,7 @@ export const InstitutionalCohortView: React.FC<InstitutionalCohortViewProps> = (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {cohort.areasBreakdown.map((area: InstitutionalAreaBreakdown) => {
             const meta = getAreaMetadata(area.subjectArea);
-            const statusConfig = MASTERY_CONFIGS[area.status];
+            const statusConfig = getMasteryConfig(area.status, area.averageScorePercentage);
             return (
               <div
                 key={area.subjectArea}

@@ -132,6 +132,22 @@ export const MASTERY_CONFIGS: Record<MasteryLevel, MasteryConfig> = {
   },
 };
 
+export function getMasteryConfig(status?: string, scorePercentage?: number): MasteryConfig {
+  if (status) {
+    const normalized = status.toUpperCase();
+    if (normalized in MASTERY_CONFIGS) {
+      return MASTERY_CONFIGS[normalized as MasteryLevel];
+    }
+    if (normalized === 'DEVELOPING') {
+      return MASTERY_CONFIGS.CRITICAL;
+    }
+  }
+  if (scorePercentage !== undefined && !Number.isNaN(scorePercentage)) {
+    return MASTERY_CONFIGS[calculateMasteryLevel(scorePercentage)];
+  }
+  return MASTERY_CONFIGS.CRITICAL;
+}
+
 export function formatScore(score: number): string {
   return `${Math.round(score)}%`;
 }

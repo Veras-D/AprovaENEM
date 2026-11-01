@@ -95,4 +95,22 @@ describe('InstitutionalCohortView Component', () => {
     expect(screen.queryByLabelText(/Selecionar turma/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   });
+
+  it('safely renders when status is unknown or DEVELOPING without crashing', () => {
+    const customData = {
+      ...MOCK_COHORT_DIAGNOSTICS,
+      areasBreakdown: [
+        {
+          subjectArea: 'MATHEMATICS',
+          areaName: 'Matemática e suas Tecnologias',
+          averageScorePercentage: 45.0,
+          status: 'DEVELOPING' as unknown as import('@/api/types').MasteryLevel,
+          topWeakTopic: 'Probabilidade',
+        },
+      ],
+    };
+
+    expect(() => renderWithProviders(<InstitutionalCohortView cohortData={customData} />)).not.toThrow();
+    expect(screen.getByText('Prioridade Crítica')).toBeInTheDocument();
+  });
 });
