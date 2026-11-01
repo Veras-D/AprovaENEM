@@ -91,7 +91,7 @@ describe('InstitutionalDashboard Component - Security & Role Guards', () => {
     expect(screen.getByText(/Lucas Estudante/i)).toBeInTheDocument();
 
     // MUST NOT leak cohort metrics to students
-    expect(screen.queryByText('Painel Institucional da Turma')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Painel Institucional/i)).not.toBeInTheDocument();
     expect(screen.queryByText('42')).not.toBeInTheDocument();
   });
 
@@ -109,7 +109,8 @@ describe('InstitutionalDashboard Component - Security & Role Guards', () => {
     // Coordinator view is rendered
     expect(screen.getByText('Painel da Coordenação Pedagógica')).toBeInTheDocument();
     expect(screen.getByText(/Coordenador: Profª. Helena Ramos/i)).toBeInTheDocument();
-    expect(screen.getByText('Painel Institucional da Turma')).toBeInTheDocument();
+    expect(screen.getByText('Painel Institucional — Diagnóstico Geral da Escola')).toBeInTheDocument();
+    expect(screen.getByText('3º Ano EM — Visão Geral')).toBeInTheDocument();
     expect(screen.getByText('42')).toBeInTheDocument(); // Enrolled
     expect(screen.getByText('39')).toBeInTheDocument(); // Active
   });
@@ -151,7 +152,7 @@ describe('InstitutionalDashboard Component - Security & Role Guards', () => {
     fireEvent.click(screen.getByRole('button', { name: /Acessar Painel da Coordenação/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('Painel Institucional da Turma')).toBeInTheDocument();
+      expect(screen.getByText('Painel Institucional — Diagnóstico Geral da Escola')).toBeInTheDocument();
       expect(screen.getByText('42')).toBeInTheDocument();
     });
   });

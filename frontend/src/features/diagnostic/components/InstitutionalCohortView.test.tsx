@@ -21,7 +21,8 @@ describe('InstitutionalCohortView Component', () => {
   it('renders institutional cohort header and 4 KPI metric cards', () => {
     renderWithProviders(<InstitutionalCohortView cohortData={MOCK_COHORT_DIAGNOSTICS} />);
 
-    expect(screen.getByText('Painel Institucional da Turma')).toBeInTheDocument();
+    expect(screen.getByText('Painel Institucional — Diagnóstico Geral da Escola')).toBeInTheDocument();
+    expect(screen.getByText('3º Ano EM — Visão Geral')).toBeInTheDocument();
     expect(screen.queryByText('B2B White-Label')).not.toBeInTheDocument();
 
     // KPI cards
@@ -79,13 +80,10 @@ describe('InstitutionalCohortView Component', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 
-  it('allows switching cohorts via dropdown selector', () => {
+  it('renders unified school view without cohort dropdown selector', () => {
     renderWithProviders(<InstitutionalCohortView cohortData={MOCK_COHORT_DIAGNOSTICS} />);
 
-    const select = screen.getByLabelText(/Selecionar turma/i);
-    expect(select).toBeInTheDocument();
-
-    fireEvent.change(select, { target: { value: 'cohort-eng-2026' } });
-    expect((select as HTMLSelectElement).value).toBe('cohort-eng-2026');
+    expect(screen.queryByLabelText(/Selecionar turma/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   });
 });

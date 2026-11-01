@@ -25,7 +25,6 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Select } from '@/components/ui/Select';
 import {
   getAreaMetadata,
   MASTERY_CONFIGS,
@@ -47,24 +46,15 @@ export interface InstitutionalCohortViewProps {
   readonly onExportReport?: () => void;
 }
 
-const AVAILABLE_COHORTS = [
-  { id: 'cohort-med-2026', name: '3º Ano EM - Turma Medicina' },
-  { id: 'cohort-eng-2026', name: '3º Ano EM - Turma Engenharia' },
-  { id: 'cohort-hum-2026', name: '3º Ano EM - Turma Humanidades' },
-];
-
 export const InstitutionalCohortView: React.FC<InstitutionalCohortViewProps> = ({
   cohortId: propCohortId,
   cohortData: propData,
   className = '',
   onExportReport,
 }) => {
-  const [selectedCohortId, setSelectedCohortId] = useState<string>(
-    propCohortId || AVAILABLE_COHORTS[0]!.id
-  );
   const [showTableView, setShowTableView] = useState<boolean>(false);
 
-  const cohortQuery = useCohortDiagnosticsQuery(selectedCohortId);
+  const cohortQuery = useCohortDiagnosticsQuery(propCohortId || 'cohort-general');
   const cohort: InstitutionalCohortDiagnosticResponse =
     propData || cohortQuery.data || MOCK_COHORT_DIAGNOSTICS;
 
@@ -103,8 +93,11 @@ export const InstitutionalCohortView: React.FC<InstitutionalCohortViewProps> = (
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-slate-100">
-                Painel Institucional da Turma
+                Painel Institucional — Diagnóstico Geral da Escola
               </h2>
+              <Badge variant="outline" className="bg-brand-primary/10 text-brand-primary border-brand-primary/30 text-xs font-semibold">
+                3º Ano EM — Visão Geral
+              </Badge>
             </div>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
               Mapeamento de proficiência coletiva, lacunas de aprendizagem e distratores recorrentes.
@@ -112,24 +105,9 @@ export const InstitutionalCohortView: React.FC<InstitutionalCohortViewProps> = (
           </div>
         </div>
 
-        {/* Cohort Selector & Export Action */}
-        <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-          <label htmlFor="cohort-select" className="sr-only">
-            Selecionar turma
-          </label>
-          <Select
-            id="cohort-select"
-            value={selectedCohortId}
-            onChange={(val) => setSelectedCohortId(val)}
-            options={AVAILABLE_COHORTS.map((c) => ({
-              value: c.id,
-              label: c.name,
-            }))}
-            size="sm"
-            className="min-w-[180px]"
-          />
-
-          {onExportReport && (
+        {/* Export Action */}
+        {onExportReport && (
+          <div className="flex items-center gap-3">
             <Button
               type="button"
               variant="outline"
@@ -141,8 +119,8 @@ export const InstitutionalCohortView: React.FC<InstitutionalCohortViewProps> = (
               <Download className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
               Exportar Relatório
             </Button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* 4 KPI Metrics Summary Cards */}
