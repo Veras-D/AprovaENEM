@@ -4,6 +4,7 @@ import { render, screen, fireEvent, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { InstitutionalCohortView } from './InstitutionalCohortView';
 import { MOCK_COHORT_DIAGNOSTICS } from '@/api/mocks/mock-data';
+import type { MasteryLevel } from '@/api/types';
 
 describe('InstitutionalCohortView Component', () => {
   let queryClient: QueryClient;
@@ -104,7 +105,7 @@ describe('InstitutionalCohortView Component', () => {
           subjectArea: 'MATHEMATICS',
           areaName: 'Matemática e suas Tecnologias',
           averageScorePercentage: 45.0,
-          status: 'DEVELOPING' as unknown as import('@/api/types').MasteryLevel,
+          status: 'DEVELOPING' as unknown as MasteryLevel,
           topWeakTopic: 'Probabilidade',
         },
       ],
