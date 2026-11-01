@@ -29,6 +29,7 @@ public interface SpringDataPracticeSessionRepository extends JpaRepository<Pract
     @Query("SELECT COUNT(p) FROM PracticeSessionEntity p WHERE p.status = 'COMPLETED'")
     long countCompletedSessions();
 
-    @Query("SELECT AVG(CAST(p.correctCount AS double) / CAST(p.totalQuestions AS double) * 100.0) FROM PracticeSessionEntity p WHERE p.status = 'COMPLETED' AND p.totalQuestions > 0")
+    @Query("SELECT AVG(CAST(p.correctCount AS double) / CAST(p.totalQuestions AS double) * 100.0) "
+            + "FROM PracticeSessionEntity p WHERE p.status = 'COMPLETED' AND p.totalQuestions > 0")
     Double calculateOverallAverageScorePercentage();
 }

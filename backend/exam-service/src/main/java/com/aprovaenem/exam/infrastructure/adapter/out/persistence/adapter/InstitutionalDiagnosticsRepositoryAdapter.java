@@ -133,7 +133,9 @@ public class InstitutionalDiagnosticsRepositoryAdapter implements InstitutionalD
         List<InstitutionalDistractorPitfall> result = new ArrayList<>();
         int count = 0;
         for (Object[] row : rows) {
-            if (count >= limit) break;
+            if (count >= limit) {
+                break;
+            }
             String questionId = String.valueOf(row[0]);
             int itemNumber = ((Number) row[1]).intValue();
             String correctOption = String.valueOf(row[2]);
@@ -167,7 +169,8 @@ public class InstitutionalDiagnosticsRepositoryAdapter implements InstitutionalD
                         .correctOption("C")
                         .misleadingOption("B")
                         .failedPercentage(46.2)
-                        .pedagogicalExplanation("Confusão frequente entre aceleração centrípeta e aceleração tangencial decorrente da leitura desatenta do raio de curvatura.")
+                        .pedagogicalExplanation("Confusão frequente entre aceleração centrípeta e aceleração tangencial "
+                                + "decorrente da leitura desatenta do raio de curvatura.")
                         .build(),
                 InstitutionalDistractorPitfall.builder()
                         .questionId("77777777-8888-9999-aaaa-bbbbbbbbbbbb")
@@ -175,7 +178,8 @@ public class InstitutionalDiagnosticsRepositoryAdapter implements InstitutionalD
                         .correctOption("B")
                         .misleadingOption("A")
                         .failedPercentage(38.5)
-                        .pedagogicalExplanation("Não consideração do fator de 30 dias na multiplicação do consumo diário de energia elétrica em quilowatts-hora.")
+                        .pedagogicalExplanation("Não consideração do fator de 30 dias na multiplicação do consumo diário "
+                                + "de energia elétrica em quilowatts-hora.")
                         .build(),
                 InstitutionalDistractorPitfall.builder()
                         .questionId("99999999-aaaa-bbbb-cccc-dddddddddddd")
