@@ -26,6 +26,35 @@ import type { GamificationProfileDto } from '@/api/types';
 import type { ApiError } from '@/api/client';
 import type { LeagueTier } from '../leaderboard-utils';
 
+const LEAGUE_HEADER_BADGE_STYLES: Record<
+  LeagueTier,
+  {
+    badgeClass: string;
+    focusRing: string;
+  }
+> = {
+  BRONZE: {
+    badgeClass:
+      'bg-amber-600/10 hover:bg-amber-600/20 text-amber-800 dark:text-amber-300 border-amber-600/30',
+    focusRing: 'focus:ring-amber-500',
+  },
+  SILVER: {
+    badgeClass:
+      'bg-slate-200/80 hover:bg-slate-300/80 text-slate-800 dark:bg-slate-800/80 dark:hover:bg-slate-700/80 dark:text-slate-200 border-slate-300 dark:border-slate-600',
+    focusRing: 'focus:ring-slate-400',
+  },
+  GOLD: {
+    badgeClass:
+      'bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-500/30',
+    focusRing: 'focus:ring-amber-500',
+  },
+  DIAMOND: {
+    badgeClass:
+      'bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 border-cyan-500/30',
+    focusRing: 'focus:ring-cyan-500',
+  },
+};
+
 export interface GamificationDashboardProps {
   readonly profile?: GamificationProfileDto;
   readonly className?: string;
@@ -112,6 +141,9 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
   };
 
   const profile = propProfile || profileQuery.data || MOCK_GAMIFICATION_PROFILE;
+  const currentWeeklyLeague = ((profile.weeklyLeague || 'BRONZE').toUpperCase() as LeagueTier);
+  const leagueHeaderStyle =
+    LEAGUE_HEADER_BADGE_STYLES[currentWeeklyLeague] ?? LEAGUE_HEADER_BADGE_STYLES.BRONZE;
 
   const hasCompletedDiagnostic =
     isDiagnosticCompleted ||
@@ -395,11 +427,11 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
                 type="button"
                 onClick={() => setActiveTab('leaderboard')}
                 aria-label={`Ver classificação da Liga ${profile.weeklyLeague}`}
-                className="focus:outline-hidden focus:ring-2 focus:ring-amber-500 rounded-full cursor-pointer"
+                className={`focus:outline-hidden focus:ring-2 ${leagueHeaderStyle.focusRing} rounded-full cursor-pointer`}
               >
                 <Badge
                   variant="outline"
-                  className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-500/30 text-xs py-0.5 px-2 font-bold uppercase tracking-wider cursor-pointer transition-colors"
+                  className={`${leagueHeaderStyle.badgeClass} text-xs py-0.5 px-2 font-bold uppercase tracking-wider cursor-pointer transition-colors`}
                 >
                   Liga {profile.weeklyLeague}
                 </Badge>

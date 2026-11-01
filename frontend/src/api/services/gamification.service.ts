@@ -76,12 +76,12 @@ function normalizeGamificationProfile(raw: RawGamificationProfile): Gamification
     unlockedBadges.add('MARATONISTA_QUESTOES_BRONZE');
   }
 
+  const storageKey = raw.userId
+    ? `aprovaenem_longest_streak_${raw.userId}`
+    : 'aprovaenem_longest_streak';
   const storedLongest =
     typeof localStorage !== 'undefined'
-      ? toNonNegativeInt(
-          (raw.userId && localStorage.getItem(`aprovaenem_longest_streak_${raw.userId}`)) ||
-            localStorage.getItem('aprovaenem_longest_streak')
-        )
+      ? toNonNegativeInt(localStorage.getItem(storageKey))
       : 0;
   const longestStreakDays = Math.max(
     currentStreakDays,
@@ -89,10 +89,7 @@ function normalizeGamificationProfile(raw: RawGamificationProfile): Gamification
     storedLongest
   );
   if (typeof localStorage !== 'undefined' && longestStreakDays > 0) {
-    if (raw.userId) {
-      localStorage.setItem(`aprovaenem_longest_streak_${raw.userId}`, String(longestStreakDays));
-    }
-    localStorage.setItem('aprovaenem_longest_streak', String(longestStreakDays));
+    localStorage.setItem(storageKey, String(longestStreakDays));
   }
 
   return {

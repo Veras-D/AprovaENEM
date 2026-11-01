@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { apiClient } from '../client';
 import { examService } from './exam.service';
 import { tutorService } from './tutor.service';
@@ -23,6 +23,12 @@ import {
 } from '../mocks/mock-data';
 
 describe('API Services', () => {
+  beforeEach(() => {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.clear();
+    }
+    vi.clearAllMocks();
+  });
   describe('examService', () => {
     it('should query questions with filters', async () => {
       const getSpy = vi.spyOn(apiClient, 'get').mockResolvedValueOnce({ data: MOCK_PAGINATED_QUESTIONS });

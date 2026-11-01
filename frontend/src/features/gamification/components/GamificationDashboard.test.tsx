@@ -54,6 +54,16 @@ describe('GamificationDashboard Component', () => {
     expect(screen.getByText('Concluída!')).toBeInTheDocument();
   });
 
+  it('renders silver badge styles when user is in SILVER league', () => {
+    const silverProfile = { ...mockProfile, weeklyLeague: 'SILVER' as const };
+    renderWithProviders(<GamificationDashboard profile={silverProfile} />);
+
+    const badge = screen.getByText(/Liga SILVER/i);
+    expect(badge).toBeInTheDocument();
+    expect(badge.className).toContain('text-slate-800');
+    expect(badge.className).toContain('border-slate-300');
+  });
+
   it('does not render manual QA "Comemorar Nível" button in header', () => {
     renderWithProviders(<GamificationDashboard profile={mockProfile} />);
 
