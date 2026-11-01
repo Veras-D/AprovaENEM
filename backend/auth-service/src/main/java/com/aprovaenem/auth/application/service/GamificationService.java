@@ -28,6 +28,7 @@ import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.IsoFields;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
@@ -301,7 +302,7 @@ public class GamificationService implements GamificationUseCase {
 
         // Calculate next Sunday 23:59:59 BRT
         LocalDate nextSunday = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
-        String resetsAt = nextSunday.atTime(23, 59, 59).atZone(BRT_ZONE).toString();
+        String resetsAt = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(nextSunday.atTime(23, 59, 59).atZone(BRT_ZONE));
 
         long totalParticipants = redisLeaderboardPort.getTotalParticipants(year, weekNumber, targetTier);
         if (totalParticipants == 0) {

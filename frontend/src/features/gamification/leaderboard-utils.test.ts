@@ -112,6 +112,15 @@ describe('leaderboard-utils', () => {
       expect(remaining.isExpired).toBe(true);
       expect(remaining.formatted).toBe('00d 00h 00m');
     });
+
+    it('correctly handles Java ZonedDateTime strings with bracketed timezones', () => {
+      const now = new Date('2026-11-01T12:00:00Z');
+      const targetWithZone = '2026-11-01T23:59:59-03:00[America/Sao_Paulo]';
+
+      const remaining = calculateTimeRemaining(targetWithZone, now);
+      expect(remaining.isExpired).toBe(false);
+      expect(remaining.hours).toBeGreaterThan(0);
+    });
   });
 
   describe('getNextSundayReset', () => {
@@ -123,6 +132,17 @@ describe('leaderboard-utils', () => {
       expect(nextSunday.getUTCHours()).toBe(23);
       expect(nextSunday.getUTCMinutes()).toBe(59);
       expect(nextSunday.getTime()).toBeGreaterThan(thursday.getTime());
+    });
+
+    it('targets today at 23:59:59 when invoked on a Sunday morning instead of adding 7 days', () => {
+      const sundayMorning = new Date('2026-11-01T10:00:00Z');
+      const target = getNextSundayReset(sundayMorning);
+
+      expect(target.getUTCDay()).toBe(0);
+      expect(target.getUTCDate()).toBe(1); // Today (Nov 1st)
+      expect(target.getUTCHours()).toBe(23);
+      expect(target.getUTCMinutes()).toBe(59);
+      expect(target.getTime()).toBeGreaterThan(sundayMorning.getTime());
     });
   });
 });

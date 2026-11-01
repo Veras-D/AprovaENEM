@@ -163,7 +163,10 @@ export function calculateTimeRemaining(
   targetDateOrIso: string | Date,
   now: Date = new Date()
 ): TimeRemaining {
-  const target = typeof targetDateOrIso === 'string' ? new Date(targetDateOrIso) : targetDateOrIso;
+  const cleaned = typeof targetDateOrIso === 'string'
+    ? targetDateOrIso.replace(/\[.*\]$/, '')
+    : targetDateOrIso;
+  const target = typeof cleaned === 'string' ? new Date(cleaned) : cleaned;
   const diffMs = target.getTime() - now.getTime();
 
   if (isNaN(diffMs) || diffMs <= 0) {
@@ -205,10 +208,14 @@ export function getNextSundayReset(now: Date = new Date()): Date {
   const result = new Date(now.getTime());
   // Determine day of week (0 = Sunday, 1 = Monday, ...)
   const dayOfWeek = result.getUTCDay();
-  // Target next Sunday: if today is Sunday, check if 23:59 has passed
+  // Target upcoming Sunday: if today is Sunday, target today unless 23:59:59 has already passed
   let daysUntilSunday = (7 - dayOfWeek) % 7;
   if (daysUntilSunday === 0) {
-    daysUntilSunday = 7;
+    if (result.getUTCHours() >= 23 && result.getUTCMinutes() >= 59 && result.getUTCSeconds() >= 59) {
+      daysUntilSunday = 7;
+    } else {
+      daysUntilSunday = 0;
+    }
   }
   result.setUTCDate(result.getUTCDate() + daysUntilSunday);
   // Set to Sunday 23:59:59.999 UTC

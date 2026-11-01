@@ -135,19 +135,6 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
   // Reset target: default to next Sunday 23:59:59 BRT
   const defaultResetDate = useMemo(() => getNextSundayReset(), []);
 
-  // Compute countdown timer
-  const [timeRemaining, setTimeRemaining] = useState(() =>
-    calculateTimeRemaining(propData?.resetsAt || defaultResetDate.toISOString())
-  );
-
-  useEffect(() => {
-    const target = propData?.resetsAt || defaultResetDate.toISOString();
-    const interval = setInterval(() => {
-      setTimeRemaining(calculateTimeRemaining(target));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [propData?.resetsAt, defaultResetDate]);
-
   // Determine active league dataset for user's division
   const activeDataset: LeaderboardResponseDto = useMemo(() => {
     if (propData && (propData.league === userLeague || propData.leagueTier === userLeague)) {
@@ -163,6 +150,21 @@ export const WeeklyLeagueLeaderboard: React.FC<WeeklyLeagueLeaderboardProps> = (
     // Never fall back to sample students: while loading (or on error) show an honest empty board.
     return { resetsAt: defaultResetDate.toISOString(), entries: [] };
   }, [propData, leaderboardQuery.data, userLeague, defaultResetDate]);
+
+  const targetResetDate = propData?.resetsAt || activeDataset?.resetsAt || defaultResetDate.toISOString();
+
+  // Compute countdown timer
+  const [timeRemaining, setTimeRemaining] = useState(() =>
+    calculateTimeRemaining(targetResetDate)
+  );
+
+  useEffect(() => {
+    setTimeRemaining(calculateTimeRemaining(targetResetDate));
+    const interval = setInterval(() => {
+      setTimeRemaining(calculateTimeRemaining(targetResetDate));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [targetResetDate]);
 
   // Normalize entries: compute rank & isCurrentUser
   const entries = useMemo(() => {
