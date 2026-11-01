@@ -75,6 +75,15 @@ export const InstitutionalCohortView: React.FC<InstitutionalCohortViewProps> = (
     });
   }, [cohort.areasBreakdown]);
 
+  const sortedAreas = useMemo(() => {
+    return [...cohort.areasBreakdown].sort(
+      (a, b) => a.averageScorePercentage - b.averageScorePercentage
+    );
+  }, [cohort.areasBreakdown]);
+
+  const weakestArea = sortedAreas[0];
+  const strongestArea = sortedAreas[sortedAreas.length - 1];
+
   const scoreDeltaVsBaseline = (cohort.averageScorePercentage - NATIONAL_ENEM_BASELINE).toFixed(1);
   const isAboveBaseline = cohort.averageScorePercentage >= NATIONAL_ENEM_BASELINE;
 
@@ -315,22 +324,34 @@ export const InstitutionalCohortView: React.FC<InstitutionalCohortViewProps> = (
               Prioridades Pedagógicas da Coordenação
             </h4>
             <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-2">
-              <li className="flex items-start gap-2">
-                <span className="text-brand-primary font-bold">•</span>
-                <span>
-                  <strong>Reforço em Matemática:</strong> Turma com média de 68.2%, abaixo da meta de 70%. Concentrar intervenção em Funções Trigonométricas.
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-emerald-600 font-bold">•</span>
-                <span>
-                  <strong>Destaque em Humanas:</strong> Excelente desempenho de 82.4%, acima do percentil 80 estadual.
-                </span>
-              </li>
+              {weakestArea && (
+                <li className="flex items-start gap-2">
+                  <span className="text-brand-primary font-bold">•</span>
+                  <span>
+                    <strong>Reforço em {getAreaMetadata(weakestArea.subjectArea).name}:</strong>{' '}
+                    Média de {weakestArea.averageScorePercentage.toFixed(1)}%{' '}
+                    {weakestArea.averageScorePercentage < MASTERY_TARGET_THRESHOLD
+                      ? `(abaixo da meta de ${MASTERY_TARGET_THRESHOLD}%).`
+                      : '(dentro da meta institucional).'}
+                    {weakestArea.topWeakTopic && (
+                      <> Concentrar intervenção em {weakestArea.topWeakTopic}.</>
+                    )}
+                  </span>
+                </li>
+              )}
+              {strongestArea && (
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-600 font-bold">•</span>
+                  <span>
+                    <strong>Destaque em {getAreaMetadata(strongestArea.subjectArea).name}:</strong>{' '}
+                    Excelente desempenho de {strongestArea.averageScorePercentage.toFixed(1)}%, acima do percentil estadual.
+                  </span>
+                </li>
+              )}
               <li className="flex items-start gap-2">
                 <span className="text-indigo-600 font-bold">•</span>
                 <span>
-                  <strong>Engajamento Sólido:</strong> 92.8% dos matriculados já concluíram ao menos 3 simulados oficiais.
+                  <strong>Engajamento Sólido:</strong> {cohort.participationRate.toFixed(1)}% dos matriculados já concluíram simulados oficiais.
                 </span>
               </li>
             </ul>

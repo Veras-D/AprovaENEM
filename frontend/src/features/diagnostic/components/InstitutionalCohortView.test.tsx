@@ -32,6 +32,15 @@ describe('InstitutionalCohortView Component', () => {
     expect(screen.getByText('74.5%')).toBeInTheDocument();
   });
 
+  it('renders dynamic pedagogical priorities derived from cohort data', () => {
+    renderWithProviders(<InstitutionalCohortView cohortData={MOCK_COHORT_DIAGNOSTICS} />);
+
+    expect(screen.getByText('Prioridades Pedagógicas da Coordenação')).toBeInTheDocument();
+    expect(screen.getByText(/Reforço em Matemática e suas Tecnologias:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Destaque em Ciências Humanas e suas Tecnologias:/i)).toBeInTheDocument();
+    expect(screen.getByText(/92.8% dos matriculados já concluíram simulados oficiais/i)).toBeInTheDocument();
+  });
+
   it('renders distractor pitfalls panel with pedagogical explanations', () => {
     renderWithProviders(<InstitutionalCohortView cohortData={MOCK_COHORT_DIAGNOSTICS} />);
 

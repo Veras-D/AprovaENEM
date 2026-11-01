@@ -22,4 +22,13 @@ public interface SpringDataPracticeSessionRepository extends JpaRepository<Pract
     @Transactional
     @Query("UPDATE PracticeSessionEntity p SET p.userId = null WHERE p.userId = :userId")
     int anonymizeSessionsByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT COUNT(DISTINCT p.userId) FROM PracticeSessionEntity p WHERE p.userId IS NOT NULL AND p.status = 'COMPLETED'")
+    long countDistinctActiveStudents();
+
+    @Query("SELECT COUNT(p) FROM PracticeSessionEntity p WHERE p.status = 'COMPLETED'")
+    long countCompletedSessions();
+
+    @Query("SELECT AVG(CAST(p.correctCount AS double) / CAST(p.totalQuestions AS double) * 100.0) FROM PracticeSessionEntity p WHERE p.status = 'COMPLETED' AND p.totalQuestions > 0")
+    Double calculateOverallAverageScorePercentage();
 }
