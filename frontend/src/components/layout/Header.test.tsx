@@ -317,4 +317,38 @@ describe('Header component', () => {
     // Return button is present
     expect(screen.getByRole('button', { name: /Voltar ao Portal do Aluno/i })).toBeInTheDocument();
   });
+
+  it('should NOT render student notification bell when user is coordinator', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-coord',
+        email: 'coord@escola.gov.br',
+        name: 'Coordenador',
+        roles: ['ROLE_ADMIN'],
+        isEmailVerified: true,
+        createdAt: '2026-08-01T10:00:00Z',
+      },
+      isAuthenticated: true,
+    });
+
+    renderWithClient(<Header onOpenDrawer={vi.fn()} activeSection="institutional" />);
+    expect(screen.queryByRole('button', { name: /Notificações:/i })).not.toBeInTheDocument();
+  });
+
+  it('should render student notification bell when user is regular student', () => {
+    useAuthStore.setState({
+      user: {
+        id: 'usr-student',
+        email: 'aluno@escola.gov.br',
+        name: 'Aluno Estudioso',
+        roles: ['ROLE_STUDENT'],
+        isEmailVerified: true,
+        createdAt: '2026-08-01T10:00:00Z',
+      },
+      isAuthenticated: true,
+    });
+
+    renderWithClient(<Header onOpenDrawer={vi.fn()} activeSection="practice" />);
+    expect(screen.getByRole('button', { name: /Notificações:/i })).toBeInTheDocument();
+  });
 });

@@ -260,7 +260,9 @@ export const Header: React.FC<HeaderProps> = ({
           {/* User Auth or Guest Anonymous Session Indicator */}
           {isAuthenticated && user ? (
             <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-              <NotificationBell onNavigate={onNavigate} />
+              {!isCoordinator && !isInstitutional && (
+                <NotificationBell onNavigate={onNavigate} />
+              )}
               <button
                 type="button"
                 onClick={() => (onNavigate ? onNavigate('profile') : onOpenProfileModal?.())}
