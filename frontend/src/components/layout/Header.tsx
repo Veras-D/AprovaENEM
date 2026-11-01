@@ -15,10 +15,6 @@ import {
   LogOut,
   Building2,
   GraduationCap,
-  Users,
-  TrendingUp,
-  Award,
-  HelpCircle,
   ArrowLeft,
   type LucideIcon,
 } from 'lucide-react';
@@ -91,21 +87,11 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'practice', label: 'Praticar', icon: BookOpen, isAnchor: false },
   ];
 
-  const coordinatorNavLinks: readonly NavLinkItem[] = [
-    { id: 'cohort-overview', label: 'Turmas', fullLabel: 'Turmas & Métricas', icon: Users, isAnchor: true },
-    { id: 'cohort-radar', label: 'Radar', fullLabel: 'Radar Comparativo', icon: TrendingUp, isAnchor: true },
-    { id: 'cohort-areas', label: 'Tópicos', fullLabel: 'Tópicos Críticos', icon: Award, isAnchor: true },
-    { id: 'cohort-distractors', label: 'Distratores', fullLabel: 'Análise de Distratores', icon: HelpCircle, isAnchor: true },
-  ];
-
-  // In institutional mode, ONLY render cohort metric links if user is an authorized coordinator.
-  // Unauthenticated visitors and regular students on the login/403 gate see zero cohort links.
+  // In institutional mode, no anchor HUD links are rendered in the header bar.
   // In student mode, unauthenticated guests only see public exploratory actions (Início, Praticar).
   // Personalized features (Ranking, Diagnóstico) require authentication.
   const navLinks: readonly NavLinkItem[] = isInstitutional
-    ? isCoordinator
-      ? coordinatorNavLinks
-      : []
+    ? []
     : isAuthenticated
       ? studentNavLinks
       : guestNavLinks;
@@ -182,40 +168,40 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Desktop Navigation Links */}
-        <nav
-          className="hidden md:flex items-center gap-2 lg:gap-4 xl:gap-5 shrink-0"
-          aria-label={isInstitutional ? 'Navegação da Coordenação' : 'Navegação Principal'}
-        >
-          {navLinks.map((link) => {
-            const Icon = link.icon;
-            const isActive = !isInstitutional && activeSection === link.id;
+        {navLinks.length > 0 && (
+          <nav
+            className="hidden md:flex items-center gap-2 lg:gap-4 xl:gap-5 shrink-0"
+            aria-label="Navegação Principal"
+          >
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              const isActive = activeSection === link.id;
 
-            return (
-              <button
-                key={link.id}
-                type="button"
-                onClick={() => handleNavLinkClick(link)}
-                className={`inline-flex items-center gap-1.5 text-xs lg:text-sm font-medium transition-colors py-1 px-1.5 rounded-brand whitespace-nowrap ${
-                  isActive
-                    ? 'text-brand-primary font-bold border-b-2 border-brand-primary'
-                    : isInstitutional
-                      ? 'text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'
+              return (
+                <button
+                  key={link.id}
+                  type="button"
+                  onClick={() => handleNavLinkClick(link)}
+                  className={`inline-flex items-center gap-1.5 text-xs lg:text-sm font-medium transition-colors py-1 px-1.5 rounded-brand whitespace-nowrap ${
+                    isActive
+                      ? 'text-brand-primary font-bold border-b-2 border-brand-primary'
                       : 'text-slate-700 dark:text-slate-300 hover:text-brand-primary dark:hover:text-brand-primary'
-                }`}
-              >
-                <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                {link.fullLabel ? (
-                  <>
-                    <span className="hidden 2xl:inline">{link.fullLabel}</span>
-                    <span className="inline 2xl:hidden">{link.label}</span>
-                  </>
-                ) : (
-                  <span>{link.label}</span>
-                )}
-              </button>
-            );
-          })}
-        </nav>
+                  }`}
+                >
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {link.fullLabel ? (
+                    <>
+                      <span className="hidden 2xl:inline">{link.fullLabel}</span>
+                      <span className="inline 2xl:hidden">{link.label}</span>
+                    </>
+                  ) : (
+                    <span>{link.label}</span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        )}
 
         {/* Action Controls: Portal Switcher, Theme Toggle & Auth/Guest Indicator */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">

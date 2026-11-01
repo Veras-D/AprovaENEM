@@ -155,4 +155,60 @@ describe('InstitutionalDashboard Component - Security & Role Guards', () => {
       expect(screen.getByText('42')).toBeInTheDocument();
     });
   });
+
+  it('validates form inputs and displays error on invalid email or missing password', () => {
+    renderWithProviders(<InstitutionalDashboard cohortData={MOCK_COHORT_DIAGNOSTICS} />);
+
+    // Test invalid email
+    fireEvent.change(screen.getByLabelText(/E-mail Institucional/i), {
+      target: { value: 'invalid-email' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Acessar Painel da Coordenação/i }));
+    expect(screen.getByText('Informe um e-mail institucional válido.')).toBeInTheDocument();
+
+    // Test missing password
+    fireEvent.change(screen.getByLabelText(/E-mail Institucional/i), {
+      target: { value: 'valid@escola.gov.br' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Acessar Painel da Coordenação/i }));
+    expect(screen.getByText('Informe sua senha institucional.')).toBeInTheDocument();
+  });
+
+  it('displays API error message when coordinator login fails', async () => {
+    vi.spyOn(authService, 'login').mockRejectedValueOnce(new Error('Credenciais inválidas.'));
+
+    renderWithProviders(<InstitutionalDashboard cohortData={MOCK_COHORT_DIAGNOSTICS} />);
+
+    fireEvent.change(screen.getByLabelText(/E-mail Institucional/i), {
+      target: { value: 'coordenacao@escola.gov.br' },
+    });
+    fireEvent.change(screen.getByLabelText(/Senha Institucional/i), {
+      target: { value: 'WrongPassword!' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Acessar Painel da Coordenação/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Credenciais inválidas.')).toBeInTheDocument();
+    });
+  });
+
+  it('triggers onOpenAuthModal and clearAuth when clicking Entrar com Outra Conta in 403 gate', () => {
+    useAuthStore.setState({
+      token: 'mock-student-token',
+      user: MOCK_STUDENT_USER,
+      isAuthenticated: true,
+    });
+
+    const onOpenAuthModalMock = vi.fn();
+
+    renderWithProviders(
+      <InstitutionalDashboard
+        cohortData={MOCK_COHORT_DIAGNOSTICS}
+        onOpenAuthModal={onOpenAuthModalMock}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Entrar com Outra Conta/i }));
+    expect(onOpenAuthModalMock).toHaveBeenCalled();
+  });
 });
