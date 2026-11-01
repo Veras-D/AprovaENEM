@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -165,6 +166,50 @@ class NotificationServiceTest {
         assertThat(response.getUnreadCount()).isZero();
         assertThat(response.getNotifications()).hasSize(1);
         assertThat(response.getNotifications().get(0).getTitle()).isEqualTo("Bem-vindo!");
+    }
+
+    @Test
+    @DisplayName("Should exclude and purge PASSWORD_RESET notification logs from user feed")
+    void shouldExcludeAndCleanUpPasswordResetNotificationsFromFeed() {
+        UUID userId = UUID.randomUUID();
+        when(notificationLogRepository.countByUserId(userId)).thenReturn(2L);
+        when(notificationLogRepository.existsByUserIdAndTemplateCode(eq(userId), anyString())).thenReturn(true);
+
+        NotificationLogEntity validItem = NotificationLogEntity.builder()
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .channel("IN_APP")
+                .templateCode("DAILY_GOAL_REMINDER")
+                .title("Hora de Estudar!")
+                .body("Faltam 5 questões para bater sua meta diária.")
+                .status("SENT")
+                .sentAt(Instant.now())
+                .build();
+
+        NotificationLogEntity passwordResetItem = NotificationLogEntity.builder()
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .channel("EMAIL")
+                .templateCode("PASSWORD_RESET")
+                .title("Recuperação de Senha no AprovaENEM")
+                .body("Enviamos um link seguro...")
+                .status("SENT")
+                .sentAt(Instant.now())
+                .build();
+
+        when(notificationLogRepository.findByUserIdOrderByCreatedAtDesc(eq(userId), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(validItem, passwordResetItem)));
+        when(notificationLogRepository.countByUserIdAndStatus(userId, "SENT")).thenReturn(1L);
+
+        NotificationFeedResponse response = notificationService.getFeed(userId, "ALL", 0, 10);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getNotifications()).hasSize(1);
+        assertThat(response.getNotifications().get(0).getTemplateCode()).isEqualTo("DAILY_GOAL_REMINDER");
+        verify(notificationLogRepository).deleteAll(argThat(iterable -> {
+            List<NotificationLogEntity> list = (List<NotificationLogEntity>) iterable;
+            return list.size() == 1 && "PASSWORD_RESET".equals(list.get(0).getTemplateCode());
+        }));
     }
 
     @Test

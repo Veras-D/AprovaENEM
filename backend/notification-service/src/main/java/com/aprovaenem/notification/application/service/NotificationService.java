@@ -85,6 +85,7 @@ public class NotificationService {
         long unreadCount = notificationLogRepository.countByUserIdAndStatus(userId, "SENT");
 
         List<NotificationFeedResponse.NotificationItemDto> items = pageResult.getContent().stream()
+                .filter(n -> !"PASSWORD_RESET".equalsIgnoreCase(n.getTemplateCode()))
                 .map(n -> NotificationFeedResponse.NotificationItemDto.builder()
                         .id(n.getId())
                         .channel(n.getChannel())
@@ -273,13 +274,28 @@ public class NotificationService {
     private void deduplicateUserNotifications(UUID userId) {
         Page<NotificationLogEntity> all = notificationLogRepository.findByUserIdOrderByCreatedAtDesc(
                 userId, PageRequest.of(0, 100));
-        if (all == null || all.getContent().size() <= 1) {
+        if (all == null || all.getContent().isEmpty()) {
+            return;
+        }
+
+        List<NotificationLogEntity> passwordResets = all.getContent().stream()
+                .filter(e -> "PASSWORD_RESET".equalsIgnoreCase(e.getTemplateCode()))
+                .toList();
+        if (!passwordResets.isEmpty()) {
+            notificationLogRepository.deleteAll(passwordResets);
+            log.info("Cleaned up [{}] PASSWORD_RESET notification logs for user [{}]", passwordResets.size(), userId);
+        }
+
+        if (all.getContent().size() <= 1) {
             return;
         }
 
         Set<String> seenTemplates = new HashSet<>();
         List<NotificationLogEntity> duplicates = new ArrayList<>();
         for (NotificationLogEntity entity : all.getContent()) {
+            if ("PASSWORD_RESET".equalsIgnoreCase(entity.getTemplateCode())) {
+                continue;
+            }
             String key = entity.getTemplateCode();
             if ("DAILY_STREAK_REMINDER".equals(key) && entity.getSentAt() != null) {
                 key = key + "_" + entity.getSentAt().truncatedTo(ChronoUnit.DAYS);

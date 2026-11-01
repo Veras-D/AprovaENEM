@@ -452,4 +452,35 @@ describe('NotificationBell Component', () => {
 
     expect(screen.getByText(/Nível 10 Alcançado!/i)).toBeInTheDocument();
   });
+
+  it('filters out useless transactional PASSWORD_RESET notifications from the feed', () => {
+    queryClient.setQueryData(queryKeys.notifications.feed('ALL'), {
+      unreadCount: 1,
+      notifications: [
+        {
+          id: 'notif-valid',
+          templateCode: 'WELCOME',
+          title: 'Bem-vindo ao AprovaENEM! 🎓',
+          body: 'Sua jornada rumo à nota 1000 começou!',
+          status: 'SENT',
+          sentAt: new Date().toISOString(),
+        },
+        {
+          id: 'notif-pwd-reset',
+          templateCode: 'PASSWORD_RESET',
+          title: 'Recuperação de Senha no AprovaENEM',
+          body: 'Olá! Enviamos um link seguro para recuperação da sua senha...',
+          status: 'SENT',
+          sentAt: new Date().toISOString(),
+        },
+      ],
+    });
+
+    renderWithProviders(<NotificationBell />);
+    const bellBtn = screen.getByRole('button', { name: /Notificações:/i });
+    fireEvent.click(bellBtn);
+
+    expect(screen.getByText(/Bem-vindo ao AprovaENEM! 🎓/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Recuperação de Senha no AprovaENEM/i)).not.toBeInTheDocument();
+  });
 });

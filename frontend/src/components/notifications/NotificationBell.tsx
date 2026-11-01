@@ -420,6 +420,9 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       const backendItems: StudentNotification[] = [];
 
       for (const n of feedQuery.data.notifications) {
+        if (n.templateCode === 'PASSWORD_RESET') {
+          continue;
+        }
         const dedupKey = n.templateCode || n.title;
         if (backendTemplates.has(dedupKey)) {
           continue;
