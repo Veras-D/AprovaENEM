@@ -193,53 +193,12 @@ public class NotificationService {
     }
 
     private void seedDefaultInAppNotificationsIfEmpty(UUID userId) {
+        if (notificationLogRepository.countByUserId(userId) > 0) {
+            return;
+        }
+
         Instant now = Instant.now();
         List<NotificationLogEntity> defaultTemplates = List.of(
-                NotificationLogEntity.builder()
-                        .userId(userId)
-                        .channel("IN_APP")
-                        .templateCode("DAILY_GOAL_REMINDER")
-                        .title("Meta Diária de Estudos 🎯")
-                        .body("Mantenha o foco e resolva questões diariamente para consolidar sua preparação no ENEM!")
-                        .metadata("{\"category\":\"REMINDER\",\"iconName\":\"Target\",\"targetSection\":\"practice\",\"actionLabel\":\"Praticar Agora\"}")
-                        .status("SENT")
-                        .sentAt(now.minus(15, ChronoUnit.MINUTES))
-                        .createdAt(now.minus(15, ChronoUnit.MINUTES))
-                        .build(),
-                NotificationLogEntity.builder()
-                        .userId(userId)
-                        .channel("IN_APP")
-                        .templateCode("DAILY_STREAK_ACTIVE")
-                        .title("Ofensiva Diária Ativa 🔥")
-                        .body("Sua sequência de estudos está ativa! Pratique hoje para não perder o ritmo.")
-                        .metadata("{\"category\":\"REMINDER\",\"iconName\":\"Flame\",\"targetSection\":\"practice\",\"actionLabel\":\"Continuar Treino\"}")
-                        .status("SENT")
-                        .sentAt(now.minus(30, ChronoUnit.MINUTES))
-                        .createdAt(now.minus(30, ChronoUnit.MINUTES))
-                        .build(),
-                NotificationLogEntity.builder()
-                        .userId(userId)
-                        .channel("IN_APP")
-                        .templateCode("WEEKLY_LEAGUE_UPDATE")
-                        .title("Disputa Semanal da Liga ⚡")
-                        .body("A rodada semanal reinicia aos domingos às 23:59 BRT. Resolva simulados e suba no ranking!")
-                        .metadata("{\"category\":\"UPDATE\",\"iconName\":\"Clock\",\"targetSection\":\"leaderboard\",\"actionLabel\":\"Ver Classificação\"}")
-                        .status("SENT")
-                        .sentAt(now.minus(3, ChronoUnit.DAYS))
-                        .createdAt(now.minus(3, ChronoUnit.DAYS))
-                        .build(),
-                NotificationLogEntity.builder()
-                        .userId(userId)
-                        .channel("IN_APP")
-                        .templateCode("SOCRATIC_TUTOR_TIP")
-                        .title("Tutor IA Socrático Pedagógico ✨")
-                        .body("Travou em uma questão difícil? Abra o Tutor IA nas questões para pistas conceituais guiadas sem respostas prontas.")
-                        .metadata("{\"category\":\"UPDATE\",\"iconName\":\"Sparkles\","
-                                + "\"targetSection\":\"practice\",\"actionLabel\":\"Experimentar no Simulado\"}")
-                        .status("SENT")
-                        .sentAt(now.minus(4, ChronoUnit.DAYS))
-                        .createdAt(now.minus(4, ChronoUnit.DAYS))
-                        .build(),
                 NotificationLogEntity.builder()
                         .userId(userId)
                         .channel("IN_APP")
@@ -248,27 +207,13 @@ public class NotificationService {
                         .body("Você deu o pontapé inicial rumo à aprovação no ENEM. Explore o catálogo e realize o simulado diagnóstico!")
                         .metadata("{\"category\":\"ACHIEVEMENT\",\"iconName\":\"Trophy\",\"targetSection\":\"diagnostics\",\"actionLabel\":\"Ver Conquistas\"}")
                         .status("SENT")
-                        .sentAt(now.minus(5, ChronoUnit.DAYS))
-                        .createdAt(now.minus(5, ChronoUnit.DAYS))
+                        .sentAt(now)
+                        .createdAt(now)
                         .build()
         );
 
-        if (notificationLogRepository.countByUserId(userId) == 0) {
-            notificationLogRepository.saveAll(defaultTemplates);
-            log.info("Seeded [{}] default in-app notifications for user [{}]", defaultTemplates.size(), userId);
-            return;
-        }
-
-        List<NotificationLogEntity> missingSeeds = new ArrayList<>();
-        for (NotificationLogEntity seed : defaultTemplates) {
-            if (!notificationLogRepository.existsByUserIdAndTemplateCode(userId, seed.getTemplateCode())) {
-                missingSeeds.add(seed);
-            }
-        }
-        if (!missingSeeds.isEmpty()) {
-            notificationLogRepository.saveAll(missingSeeds);
-            log.info("Backfilled [{}] missing default in-app notifications for user [{}]", missingSeeds.size(), userId);
-        }
+        notificationLogRepository.saveAll(defaultTemplates);
+        log.info("Seeded initial welcome in-app notification for user [{}]", userId);
     }
 
     private void deduplicateUserNotifications(UUID userId) {

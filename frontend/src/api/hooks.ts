@@ -311,8 +311,9 @@ export function useDeleteAccountMutation() {
   return useMutation({
     mutationFn: () => authService.deleteAccount(),
     onSuccess: () => {
+      const currentUserId = useAuthStore.getState().user?.id;
       clearAuth();
-      useSessionStore.getState().clearSession();
+      useSessionStore.getState().clearSession(currentUserId);
       queryClient.removeQueries();
     },
   });

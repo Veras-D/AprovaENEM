@@ -145,12 +145,13 @@ export const GamificationDashboard: React.FC<GamificationDashboardProps> = ({
   const leagueHeaderStyle =
     LEAGUE_HEADER_BADGE_STYLES[currentWeeklyLeague] ?? LEAGUE_HEADER_BADGE_STYLES.BRONZE;
 
-  const hasCompletedDiagnostic =
-    isDiagnosticCompleted ||
-    Boolean(savedDiagnosticReport) ||
-    Boolean(diagnosticReport) ||
-    (typeof localStorage !== 'undefined' &&
-      localStorage.getItem('aprovaenem_diagnostic_completed') === 'true');
+  const hasCompletedDiagnostic = user?.id
+    ? isDiagnosticCompleted || Boolean(savedDiagnosticReport) || Boolean(diagnosticReport)
+    : isDiagnosticCompleted ||
+      Boolean(savedDiagnosticReport) ||
+      Boolean(diagnosticReport) ||
+      (typeof localStorage !== 'undefined' &&
+        localStorage.getItem('aprovaenem_diagnostic_completed') === 'true');
 
   const questionsSolvedToday = Math.max(
     profile.dailyGoalProgress,

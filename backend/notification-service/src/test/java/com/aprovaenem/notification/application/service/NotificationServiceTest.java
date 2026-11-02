@@ -113,7 +113,6 @@ class NotificationServiceTest {
     void shouldGetUnreadFeed() {
         UUID userId = UUID.randomUUID();
         when(notificationLogRepository.countByUserId(userId)).thenReturn(1L);
-        when(notificationLogRepository.existsByUserIdAndTemplateCode(eq(userId), anyString())).thenReturn(true);
         NotificationLogEntity item = NotificationLogEntity.builder()
                 .id(UUID.randomUUID())
                 .userId(userId)
@@ -145,7 +144,6 @@ class NotificationServiceTest {
     void shouldGetAllFeed() {
         UUID userId = UUID.randomUUID();
         when(notificationLogRepository.countByUserId(userId)).thenReturn(1L);
-        when(notificationLogRepository.existsByUserIdAndTemplateCode(eq(userId), anyString())).thenReturn(true);
         NotificationLogEntity item1 = NotificationLogEntity.builder()
                 .id(UUID.randomUUID())
                 .userId(userId)
@@ -173,7 +171,6 @@ class NotificationServiceTest {
     void shouldExcludeAndCleanUpPasswordResetNotificationsFromFeed() {
         UUID userId = UUID.randomUUID();
         when(notificationLogRepository.countByUserId(userId)).thenReturn(2L);
-        when(notificationLogRepository.existsByUserIdAndTemplateCode(eq(userId), anyString())).thenReturn(true);
 
         NotificationLogEntity validItem = NotificationLogEntity.builder()
                 .id(UUID.randomUUID())
@@ -286,7 +283,7 @@ class NotificationServiceTest {
         when(notificationLogRepository.countByUserId(userId)).thenReturn(0L);
         when(notificationLogRepository.findByUserIdOrderByCreatedAtDesc(eq(userId), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
-        when(notificationLogRepository.countByUserIdAndStatus(userId, "SENT")).thenReturn(5L);
+        when(notificationLogRepository.countByUserIdAndStatus(userId, "SENT")).thenReturn(1L);
 
         NotificationFeedResponse response = notificationService.getFeed(userId, "ALL", 0, 10);
 

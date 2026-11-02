@@ -65,9 +65,13 @@ function normalizeGamificationProfile(raw: RawGamificationProfile): Gamification
   if (currentStreakDays > 0 || dailyGoalProgress > 0) {
     unlockedBadges.add('PRIMEIRA_QUESTAO');
   }
+  const diagnosticCompletedKey = raw.userId
+    ? `aprovaenem_diagnostic_completed_${raw.userId}`
+    : 'aprovaenem_diagnostic_completed';
   if (
     typeof localStorage !== 'undefined' &&
-    localStorage.getItem('aprovaenem_diagnostic_completed') === 'true'
+    (localStorage.getItem(diagnosticCompletedKey) === 'true' ||
+      (!raw.userId && localStorage.getItem('aprovaenem_diagnostic_completed') === 'true'))
   ) {
     unlockedBadges.add('DIAGNOSTICO_COMPLETO');
   }

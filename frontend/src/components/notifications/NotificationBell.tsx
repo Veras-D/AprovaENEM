@@ -125,12 +125,13 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   const savedDiagnosticReport = useSessionStore((state) => state.savedDiagnosticReport);
   const diagnosticReport = useSessionStore((state) => state.diagnosticReport);
 
-  const hasCompletedDiagnostic =
-    isDiagnosticCompleted ||
-    Boolean(savedDiagnosticReport) ||
-    Boolean(diagnosticReport) ||
-    (typeof localStorage !== 'undefined' &&
-      localStorage.getItem('aprovaenem_diagnostic_completed') === 'true');
+  const hasCompletedDiagnostic = user?.id
+    ? isDiagnosticCompleted || Boolean(savedDiagnosticReport) || Boolean(diagnosticReport)
+    : isDiagnosticCompleted ||
+      Boolean(savedDiagnosticReport) ||
+      Boolean(diagnosticReport) ||
+      (typeof localStorage !== 'undefined' &&
+        localStorage.getItem('aprovaenem_diagnostic_completed') === 'true');
 
   // Seed diagnostic achievement in backend PostgreSQL database if completed
   useEffect(() => {

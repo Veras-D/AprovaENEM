@@ -79,7 +79,7 @@ export interface SessionState {
   readonly completeSession: (report?: DiagnosticReport | DiagnosticReportDto, targetPhase?: SessionPhase) => void;
   readonly setDiagnosticReport: (report: DiagnosticReport | DiagnosticReportDto) => void;
   readonly resetDiagnostic: () => void;
-  readonly clearSession: () => void;
+  readonly clearSession: (userId?: string) => void;
   readonly recordDiagnosticSeenQuestions: (ids: readonly string[]) => void;
   readonly migrateAnonymousProgress: (userId: string) => MigrationResult;
   readonly restoreUserDiagnostic: (userId: string) => Promise<DiagnosticReportDto | null>;
@@ -125,12 +125,10 @@ function getSavedDiagnosticCompleted(): boolean {
   if (typeof window === 'undefined') return false;
   const userId = getCurrentUserId();
   if (userId) {
-    if (
+    return (
       localStorage.getItem(STORAGE_KEY_USER_DIAG_COMPLETED_PREFIX + userId) === 'true' ||
       Boolean(localStorage.getItem(STORAGE_KEY_USER_DIAG_REPORT_PREFIX + userId))
-    ) {
-      return true;
-    }
+    );
   }
   return (
     localStorage.getItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED) === 'true' ||
@@ -144,9 +142,7 @@ function getSavedDiagnosticReport(): DiagnosticReportDto | null {
     const userId = getCurrentUserId();
     if (userId) {
       const userReport = localStorage.getItem(STORAGE_KEY_USER_DIAG_REPORT_PREFIX + userId);
-      if (userReport) {
-        return JSON.parse(userReport) as DiagnosticReportDto;
-      }
+      return userReport ? (JSON.parse(userReport) as DiagnosticReportDto) : null;
     }
     const raw = localStorage.getItem(STORAGE_KEY_DIAGNOSTIC_REPORT);
     return raw ? (JSON.parse(raw) as DiagnosticReportDto) : null;
@@ -427,12 +423,19 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     });
   },
 
-  clearSession: () => {
+  clearSession: (purgeUserId?: string) => {
     if (typeof localStorage !== 'undefined') {
       try {
         localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_SEEN);
         localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED);
         localStorage.removeItem(STORAGE_KEY_DIAGNOSTIC_REPORT);
+        localStorage.removeItem(STORAGE_KEY_MIGRATION);
+        localStorage.removeItem(STORAGE_KEY_ANON_SESSION);
+        if (purgeUserId) {
+          localStorage.removeItem(STORAGE_KEY_USER_DIAG_COMPLETED_PREFIX + purgeUserId);
+          localStorage.removeItem(STORAGE_KEY_USER_DIAG_REPORT_PREFIX + purgeUserId);
+          localStorage.removeItem(STORAGE_KEY_USER_SEEN_PREFIX + purgeUserId);
+        }
       } catch {
         // Storage quota
       }
