@@ -39,6 +39,7 @@ public class NotificationEventListener {
         log.info("Received DailyGoalReminderEvent for user [{}]", event.getUserId());
         Instant now = Instant.now();
         int remaining = Math.max(1, event.getTargetQuestions() - event.getQuestionsCompleted());
+        String name = event.getFullName() != null && !event.getFullName().isBlank() ? event.getFullName() : "Estudante";
 
         String title = "🔥 Proteja sua ofensiva!";
         String body = String.format(
@@ -69,6 +70,156 @@ public class NotificationEventListener {
 
         notificationLogRepository.save(entity);
         log.info("Persisted IN_APP reminder notification for user [{}]", event.getUserId());
+
+        if (event.getEmail() != null && !event.getEmail().isBlank()) {
+            String emailStatus = deliverDailyReminderEmail(event, name);
+            if (!"SKIPPED".equals(emailStatus)) {
+                NotificationLogEntity emailEntity = NotificationLogEntity.builder()
+                        .userId(event.getUserId())
+                        .channel("EMAIL")
+                        .templateCode("DAILY_STREAK_REMINDER")
+                        .title(title)
+                        .body(body)
+                        .metadata(metadataJson)
+                        .status(emailStatus)
+                        .sentAt("SENT".equals(emailStatus) ? now : null)
+                        .createdAt(now)
+                        .build();
+
+                notificationLogRepository.save(emailEntity);
+                log.info("Persisted EMAIL reminder notification log for user [{}] with status [{}]",
+                        event.getUserId(), emailStatus);
+            }
+        }
+    }
+
+    private String deliverDailyReminderEmail(DailyGoalReminderEvent event, String name) {
+        if (event.getEmail() == null || event.getEmail().isBlank()) {
+            log.warn("Skipping daily reminder email for user [{}]: missing recipient email", event.getUserId());
+            return "FAILED";
+        }
+        if (!isDeliverableRecipient(event.getEmail())) {
+            log.info("Skipping daily reminder email for user [{}] with mock or test recipient [{}]",
+                    event.getUserId(), event.getEmail());
+            return "SKIPPED";
+        }
+
+        int remaining = Math.max(1, event.getTargetQuestions() - event.getQuestionsCompleted());
+        int progressPct = event.getTargetQuestions() > 0
+                ? Math.min(100, (int) Math.round(((double) event.getQuestionsCompleted() * 100.0) / event.getTargetQuestions()))
+                : 0;
+
+        String subject = event.getStreakDays() > 0
+                ? String.format("🔥 Proteja sua ofensiva de %d dias no AprovaENEM!", event.getStreakDays())
+                : "🔥 Hora de praticar no AprovaENEM! Conquiste sua meta diária";
+
+        String practiceUrl = frontendUrl + "/?section=practice";
+        String profileUrl = frontendUrl + "/?section=profile";
+
+        String textFallback = String.format(
+                "Olá, %s!%n%n"
+                        + "🔥 Proteja sua ofensiva no AprovaENEM!%n"
+                        + "Você tem %d dia(s) de ofensiva ativa.%n"
+                        + "Hoje você completou %d de %d questões.%n"
+                        + "Faltam apenas %d questão(ões) para cumprir sua meta diária!%n%n"
+                        + "Pratique agora: %s%n",
+                name, event.getStreakDays(), event.getQuestionsCompleted(), event.getTargetQuestions(), remaining, practiceUrl);
+
+        String html = buildDailyReminderHtml(event, name, remaining, progressPct, practiceUrl, profileUrl);
+
+        try {
+            emailSender.sendHtml(event.getEmail(), subject, html, textFallback);
+            return "SENT";
+        } catch (EmailDeliveryException e) {
+            log.error("Could not deliver daily study reminder email to [{}]", event.getEmail(), e);
+            return "FAILED";
+        }
+    }
+
+    private String buildDailyReminderHtml(DailyGoalReminderEvent event, String name, int remaining,
+                                          int progressPct, String practiceUrl, String profileUrl) {
+        String streakLabel = event.getStreakDays() == 1 ? "Dia de Ofensiva" : "Dias de Ofensiva";
+        String streakMessage = event.getStreakDays() > 0
+                ? "Não deixe sua sequência zerar hoje! Pratique agora para manter o ritmo."
+                : "Comece hoje sua sequência de estudos rumo à nota 800+ no ENEM!";
+
+        String template = """
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🔥 Lembrete Diário AprovaENEM</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#0f172a;">
+  <div style="max-width:560px;margin:32px auto;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);">
+    <div style="background:linear-gradient(135deg,#ea580c 0%,#c2410c 100%);padding:28px 24px;text-align:center;color:#ffffff;">
+      <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.5px;">🔥 AprovaENEM</h1>
+      <p style="margin:4px 0 0 0;font-size:13px;opacity:0.9;">Lembrete Diário de Estudos & Ofensiva</p>
+    </div>
+    <div style="padding:32px 24px;">
+      <div style="font-size:18px;font-weight:700;margin-bottom:12px;color:#0f172a;">Olá, {{NAME}}!</div>
+      <p style="font-size:15px;line-height:1.6;color:#475569;margin-bottom:20px;">
+        Seu futuro no ENEM é construído um pouco a cada dia. Não deixe seu dia passar em branco!
+      </p>
+
+      <div style="background:linear-gradient(135deg,#fff7ed 0%,#ffedd5 100%);
+                  border:2px solid #fdba74;border-radius:16px;padding:20px;text-align:center;margin:24px 0;">
+        <div style="font-size:44px;line-height:1;margin-bottom:8px;">🔥</div>
+        <div style="font-size:32px;font-weight:800;color:#ea580c;letter-spacing:-0.5px;font-family:monospace;">
+          {{STREAK_DAYS}} {{STREAK_LABEL}}
+        </div>
+        <div style="font-size:13px;color:#9a3412;font-weight:600;margin-top:6px;">
+          {{STREAK_MESSAGE}}
+        </div>
+      </div>
+
+      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:14px;font-weight:700;color:#334155;">
+          <span>Meta Diária</span>
+          <span style="color:#ea580c;font-family:monospace;">{{QUESTIONS_COMPLETED}} / {{TARGET_QUESTIONS}} questões</span>
+        </div>
+        <div style="background-color:#e2e8f0;border-radius:9999px;height:12px;width:100%;overflow:hidden;margin-bottom:12px;">
+          <div style="background:linear-gradient(90deg,#f97316 0%,#ea580c 100%);
+                      height:100%;border-radius:9999px;width:{{PROGRESS_PERCENT}}%;"></div>
+        </div>
+        <div style="font-size:13px;color:#64748b;line-height:1.5;">
+          ⚡ <strong>Faltam apenas {{REMAINING}} questão(ões)</strong> para cumprir sua meta hoje e garantir seu bônus de consistência!
+        </div>
+      </div>
+
+      <div style="text-align:center;margin:32px 0 16px 0;">
+        <a href="{{PRACTICE_URL}}"
+           style="display:inline-block;background:linear-gradient(135deg,#f97316 0%,#ea580c 100%);
+                  color:#ffffff;text-decoration:none;font-size:16px;font-weight:800;padding:16px 36px;border-radius:12px;
+                  box-shadow:0 4px 14px rgba(234,88,12,0.35);text-transform:uppercase;letter-spacing:0.5px;">
+          🎯 Praticar Agora
+        </a>
+      </div>
+      <div style="text-align:center;font-size:12px;color:#94a3b8;margin-bottom:8px;">
+        Leva menos de 5 minutos para resolver questões com o Tutor IA Socrático.
+      </div>
+    </div>
+    <div style="padding:20px 24px;background-color:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;font-size:12px;color:#94a3b8;line-height:1.5;">
+      Você está recebendo este e-mail porque possui lembretes diários ativos no <strong>AprovaENEM</strong>.<br/>
+      Para gerenciar suas preferências, acesse seu <a href="{{PROFILE_URL}}" style="color:#64748b;text-decoration:underline;">perfil</a>.
+    </div>
+  </div>
+</body>
+</html>
+""";
+
+        return template
+                .replace("{{NAME}}", name)
+                .replace("{{STREAK_DAYS}}", String.valueOf(event.getStreakDays()))
+                .replace("{{STREAK_LABEL}}", streakLabel)
+                .replace("{{STREAK_MESSAGE}}", streakMessage)
+                .replace("{{QUESTIONS_COMPLETED}}", String.valueOf(event.getQuestionsCompleted()))
+                .replace("{{TARGET_QUESTIONS}}", String.valueOf(event.getTargetQuestions()))
+                .replace("{{PROGRESS_PERCENT}}", String.valueOf(progressPct))
+                .replace("{{REMAINING}}", String.valueOf(remaining))
+                .replace("{{PRACTICE_URL}}", practiceUrl)
+                .replace("{{PROFILE_URL}}", profileUrl);
     }
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_AUTH_QUEUE)
@@ -310,5 +461,18 @@ public class NotificationEventListener {
         } catch (JsonProcessingException e) {
             return "{}";
         }
+    }
+
+    private boolean isDeliverableRecipient(String email) {
+        if (email == null || email.isBlank()) {
+            return false;
+        }
+        String lower = email.trim().toLowerCase();
+        return !lower.endsWith("@simulado.enem.br")
+                && !lower.endsWith("@example.com")
+                && !lower.endsWith("@test.com")
+                && !lower.endsWith(".local")
+                && !lower.endsWith(".test")
+                && !lower.endsWith(".example");
     }
 }

@@ -11,6 +11,17 @@ import java.util.UUID;
 @Repository
 public interface SpringDataGamificationProfileRepository extends JpaRepository<UserGamificationProfileEntity, UUID> {
 
-    @Query("SELECT p FROM UserGamificationProfileEntity p WHERE p.optInReminders = true AND p.dailyQuestionsCompleted < p.dailyGoalQuestions")
+    @Query("""
+        SELECT p FROM UserGamificationProfileEntity p, UserEntity u
+        WHERE p.userId = u.id
+          AND u.isBot = false
+          AND p.optInReminders = true
+          AND p.dailyQuestionsCompleted < p.dailyGoalQuestions
+          AND u.email NOT LIKE '%@simulado.enem.br'
+          AND u.email NOT LIKE '%@example.com'
+          AND u.email NOT LIKE '%@test.com'
+          AND u.email NOT LIKE '%.local'
+          AND u.email NOT LIKE '%.test'
+    """)
     List<UserGamificationProfileEntity> findPendingStudyReminderProfiles();
 }

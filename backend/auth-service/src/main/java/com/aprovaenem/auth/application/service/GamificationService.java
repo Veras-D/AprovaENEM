@@ -418,6 +418,10 @@ public class GamificationService implements GamificationUseCase {
             Optional<User> userOpt = userRepository.findById(profile.getUserId());
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
+                if (user.isBot()) {
+                    continue;
+                }
+
                 DailyGoalReminderEvent event = DailyGoalReminderEvent.builder()
                         .userId(profile.getUserId())
                         .email(user.getEmail())

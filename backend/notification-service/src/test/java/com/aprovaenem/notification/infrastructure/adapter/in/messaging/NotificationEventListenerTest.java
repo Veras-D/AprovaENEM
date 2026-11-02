@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,6 +28,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -77,6 +79,112 @@ class NotificationEventListenerTest {
         assertThat(saved.getBody()).contains("4 questões");
         assertThat(saved.getStatus()).isEqualTo("SENT");
         assertThat(saved.getMetadata()).contains("\"streakDays\":7");
+        verifyNoInteractions(emailSender);
+    }
+
+    @Test
+    @DisplayName("Should deliver rich HTML email and save both IN_APP and EMAIL notifications when email is present")
+    void shouldDeliverDailyReminderEmailWhenEmailIsPresent() {
+        UUID userId = UUID.randomUUID();
+        DailyGoalReminderEvent event = DailyGoalReminderEvent.builder()
+                .userId(userId)
+                .email("aluno@enem.com.br")
+                .fullName("Maria Oliveira")
+                .streakDays(5)
+                .targetQuestions(10)
+                .questionsCompleted(7)
+                .build();
+
+        listener.handleDailyGoalReminder(event);
+
+        ArgumentCaptor<NotificationLogEntity> captor = ArgumentCaptor.forClass(NotificationLogEntity.class);
+        verify(notificationLogRepository, times(2)).save(captor.capture());
+
+        List<NotificationLogEntity> logs = captor.getAllValues();
+        NotificationLogEntity inAppLog = logs.stream()
+                .filter(l -> "IN_APP".equals(l.getChannel()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(inAppLog.getUserId()).isEqualTo(userId);
+        assertThat(inAppLog.getStatus()).isEqualTo("SENT");
+
+        NotificationLogEntity emailLog = logs.stream()
+                .filter(l -> "EMAIL".equals(l.getChannel()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(emailLog.getUserId()).isEqualTo(userId);
+        assertThat(emailLog.getStatus()).isEqualTo("SENT");
+        assertThat(emailLog.getTemplateCode()).isEqualTo("DAILY_STREAK_REMINDER");
+
+        ArgumentCaptor<String> toCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> subjectCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> htmlCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> textCaptor = ArgumentCaptor.forClass(String.class);
+
+        verify(emailSender).sendHtml(toCaptor.capture(), subjectCaptor.capture(), htmlCaptor.capture(), textCaptor.capture());
+        assertThat(toCaptor.getValue()).isEqualTo("aluno@enem.com.br");
+        assertThat(subjectCaptor.getValue()).contains("5 dias no AprovaENEM");
+        assertThat(htmlCaptor.getValue())
+                .contains("Maria Oliveira")
+                .contains("5 Dias de Ofensiva")
+                .contains("7 / 10 questões")
+                .contains("Faltam apenas 3 questão(ões)")
+                .contains("/?section=practice");
+        assertThat(textCaptor.getValue())
+                .contains("Maria Oliveira")
+                .contains("5 dia(s) de ofensiva");
+    }
+
+    @Test
+    @DisplayName("Should mark reminder EMAIL notification as FAILED when email delivery throws exception")
+    void shouldMarkDailyReminderEmailFailedWhenDeliveryThrows() {
+        UUID userId = UUID.randomUUID();
+        DailyGoalReminderEvent event = DailyGoalReminderEvent.builder()
+                .userId(userId)
+                .email("erro@enem.com.br")
+                .fullName("João Silva")
+                .streakDays(0)
+                .targetQuestions(5)
+                .questionsCompleted(1)
+                .build();
+
+        doThrow(new EmailDeliveryException("SMTP error", new RuntimeException("connection timed out")))
+                .when(emailSender).sendHtml(any(), any(), any(), any());
+
+        listener.handleDailyGoalReminder(event);
+
+        ArgumentCaptor<NotificationLogEntity> captor = ArgumentCaptor.forClass(NotificationLogEntity.class);
+        verify(notificationLogRepository, times(2)).save(captor.capture());
+
+        NotificationLogEntity emailLog = captor.getAllValues().stream()
+                .filter(l -> "EMAIL".equals(l.getChannel()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(emailLog.getStatus()).isEqualTo("FAILED");
+        assertThat(emailLog.getSentAt()).isNull();
+    }
+
+    @Test
+    @DisplayName("Should skip SMTP send and avoid saving EMAIL notification when recipient is a mock or simulated peer")
+    void shouldSkipSmtpSendWhenDailyGoalReminderHasSimulatedOrMockEmail() {
+        UUID userId = UUID.randomUUID();
+        DailyGoalReminderEvent event = DailyGoalReminderEvent.builder()
+                .userId(userId)
+                .email("juliana.brandao@simulado.enem.br")
+                .fullName("Juliana Brandão")
+                .streakDays(20)
+                .targetQuestions(10)
+                .questionsCompleted(5)
+                .build();
+
+        listener.handleDailyGoalReminder(event);
+
+        ArgumentCaptor<NotificationLogEntity> captor = ArgumentCaptor.forClass(NotificationLogEntity.class);
+        verify(notificationLogRepository, times(1)).save(captor.capture());
+
+        NotificationLogEntity saved = captor.getValue();
+        assertThat(saved.getChannel()).isEqualTo("IN_APP");
+        verifyNoInteractions(emailSender);
     }
 
     @Test

@@ -121,7 +121,7 @@ public class GamificationController {
     }
 
     @PostMapping("/reminders/trigger")
-    @PreAuthorize("hasAnyRole('STUDENT', 'PREMIUM_STUDENT')")
+    @PreAuthorize("hasAnyRole('STUDENT', 'PREMIUM_STUDENT', 'ADMIN', 'INSTITUTIONAL_ADMIN')")
     public ResponseEntity<Map<String, Object>> triggerStudyReminders() {
         int count = gamificationUseCase.triggerDailyStudyReminders();
         return ResponseEntity.ok(Map.of("dispatchedReminders", count));

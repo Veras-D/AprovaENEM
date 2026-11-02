@@ -272,4 +272,38 @@ class GamificationControllerWebMvcTest {
 
         verify(gamificationUseCase).awardXpForActivity(userId, 5, 4, true);
     }
+
+    @Test
+    @WithMockUser(username = "11111111-1111-1111-1111-111111111111", roles = "STUDENT")
+    @DisplayName("POST /api/v1/gamification/reminders/trigger should execute daily reminder sweep for student")
+    void shouldTriggerRemindersForStudent() throws Exception {
+        when(gamificationUseCase.triggerDailyStudyReminders()).thenReturn(3);
+
+        mockMvc.perform(post("/api/v1/gamification/reminders/trigger"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.dispatchedReminders", is(3)));
+
+        verify(gamificationUseCase).triggerDailyStudyReminders();
+    }
+
+    @Test
+    @WithMockUser(username = "22222222-2222-2222-2222-222222222222", roles = "ADMIN")
+    @DisplayName("POST /api/v1/gamification/reminders/trigger should execute daily reminder sweep for admin")
+    void shouldTriggerRemindersForAdmin() throws Exception {
+        when(gamificationUseCase.triggerDailyStudyReminders()).thenReturn(5);
+
+        mockMvc.perform(post("/api/v1/gamification/reminders/trigger"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.dispatchedReminders", is(5)));
+
+        verify(gamificationUseCase).triggerDailyStudyReminders();
+    }
+
+    @Test
+    @WithAnonymousUser
+    @DisplayName("POST /api/v1/gamification/reminders/trigger should return HTTP 401 when unauthenticated")
+    void shouldRejectRemindersTriggerWhenUnauthenticated() throws Exception {
+        mockMvc.perform(post("/api/v1/gamification/reminders/trigger"))
+                .andExpect(status().isUnauthorized());
+    }
 }

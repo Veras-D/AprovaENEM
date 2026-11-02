@@ -459,6 +459,34 @@ class GamificationServiceTest {
     }
 
     @Test
+    @DisplayName("Should skip simulated bots when dispatching daily study reminders")
+    void shouldSkipBotsWhenDispatchingDailyStudyReminders() {
+        UUID botId = UUID.randomUUID();
+        UserGamificationProfile botProfile = UserGamificationProfile.builder()
+                .userId(botId)
+                .streakDays(20)
+                .dailyQuestionsCompleted(0)
+                .dailyGoalQuestions(10)
+                .optInReminders(true)
+                .build();
+
+        User botUser = User.builder()
+                .id(botId)
+                .email("juliana.brandao@simulado.enem.br")
+                .fullName("Juliana Brandão")
+                .isBot(true)
+                .build();
+
+        when(gamificationRepository.findPendingStudyReminderProfiles()).thenReturn(List.of(botProfile));
+        when(userRepository.findById(botId)).thenReturn(Optional.of(botUser));
+
+        int count = gamificationService.triggerDailyStudyReminders();
+
+        assertThat(count).isZero();
+        verify(notificationPublisherPort, never()).publishStudyReminder(any());
+    }
+
+    @Test
     @DisplayName("Should perform Sunday weekly league reset and promote top 20% to Silver")
     void shouldPerformWeeklyLeagueReset() {
         UUID u1 = UUID.randomUUID();
