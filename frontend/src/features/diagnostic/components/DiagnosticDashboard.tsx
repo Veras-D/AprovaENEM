@@ -33,7 +33,13 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = ({
   onPracticeTopic,
   onOpenAuthModal,
 }) => {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
+  const isCoordinator = Boolean(
+    isAuthenticated &&
+      user?.roles?.some(
+        (role) => role === 'ROLE_ADMIN' || role === 'ROLE_INSTITUTIONAL_ADMIN'
+      )
+  );
   const loginMutation = useLoginMutation();
 
   // In-place Student Gate Form State
@@ -80,6 +86,30 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = ({
       );
     }
   };
+
+  // State 0: Coordinator / Admin -> Suppress student diagnostics and guide to Institutional Panel
+  if (isCoordinator) {
+    return (
+      <div
+        className={`max-w-xl mx-auto my-8 p-6 sm:p-8 rounded-brand border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm text-center space-y-6 ${className}`}
+        role="region"
+        aria-label="Acesso exclusivo à Área Pedagógica Institucional"
+        data-testid="coordinator-diagnostic-notice"
+      >
+        <div className="h-14 w-14 mx-auto rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20 shadow-xs">
+          <BarChart2 className="h-7 w-7" aria-hidden="true" />
+        </div>
+        <div className="space-y-1.5">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
+            Painel da Coordenação
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto">
+            Coordenadores e administradores pedagógicos acompanham o diagnóstico e desempenho coletivo das turmas no Painel Institucional.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // State 1: Unauthenticated -> Student Diagnostic Gate
   if (!isAuthenticated && !studentReport) {

@@ -10,6 +10,7 @@ import {
   Award,
   HelpCircle,
   GraduationCap,
+  Building2,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
 
@@ -48,6 +49,12 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     { id: 'diagnostics', label: 'Diagnóstico', icon: BarChart2, isAnchor: false },
   ];
 
+  const coordinatorMainItems = [
+    { id: 'home', label: 'Início', icon: Home, isAnchor: false },
+    { id: 'practice', label: 'Praticar', icon: BookOpen, isAnchor: false },
+    { id: 'institutional', label: 'Coordenação', icon: Building2, isAnchor: false },
+  ];
+
   const guestItems = [
     { id: 'home', label: 'Início', icon: Home, isAnchor: false },
     { id: 'practice', label: 'Praticar', icon: BookOpen, isAnchor: false },
@@ -69,7 +76,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       ? coordinatorItems
       : gateItems
     : isAuthenticated
-      ? studentItems
+      ? isCoordinator
+        ? coordinatorMainItems
+        : studentItems
       : guestItems;
 
   const handleItemClick = (item: (typeof items)[number]) => {

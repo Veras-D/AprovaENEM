@@ -113,4 +113,27 @@ describe('DiagnosticDashboard Component', () => {
     fireEvent.click(returnBtn);
     expect(onPracticeTopicMock).toHaveBeenCalledWith('');
   });
+
+  it('suppresses student diagnostic radar and displays institutional panel guidance when user is coordinator/admin', () => {
+    useAuthStore.setState({
+      token: 'jwt-coord',
+      user: {
+        id: '11111111-1111-1111-1111-111111111111',
+        email: 'admin@aprovaenem.com.br',
+        name: 'Administrador',
+        roles: ['ROLE_ADMIN'],
+        isEmailVerified: true,
+        createdAt: '2026-08-01T10:00:00Z',
+      },
+      isAuthenticated: true,
+    });
+
+    renderWithProviders(
+      <DiagnosticDashboard studentReport={MOCK_DIAGNOSTIC_REPORT} />
+    );
+
+    expect(screen.getByTestId('coordinator-diagnostic-notice')).toBeInTheDocument();
+    expect(screen.getByText('Painel da Coordenação')).toBeInTheDocument();
+    expect(screen.queryByText('Raio-X Diagnóstico de Habilidades')).not.toBeInTheDocument();
+  });
 });

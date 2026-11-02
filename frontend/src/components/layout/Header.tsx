@@ -82,6 +82,11 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'diagnostics', label: 'Diagnóstico', icon: BarChart2, isAnchor: false },
   ];
 
+  const coordinatorNavLinks: readonly NavLinkItem[] = [
+    { id: 'home', label: 'Início', icon: Home, isAnchor: false },
+    { id: 'practice', label: 'Praticar', icon: BookOpen, isAnchor: false },
+  ];
+
   const guestNavLinks: readonly NavLinkItem[] = [
     { id: 'home', label: 'Início', icon: Home, isAnchor: false },
     { id: 'practice', label: 'Praticar', icon: BookOpen, isAnchor: false },
@@ -89,11 +94,13 @@ export const Header: React.FC<HeaderProps> = ({
 
   // In institutional mode, no anchor HUD links are rendered in the header bar.
   // In student mode, unauthenticated guests only see public exploratory actions (Início, Praticar).
-  // Personalized features (Ranking, Diagnóstico) require authentication.
+  // Personalized features (Ranking, Diagnóstico) require authentication and are student-only.
   const navLinks: readonly NavLinkItem[] = isInstitutional
     ? []
     : isAuthenticated
-      ? studentNavLinks
+      ? isCoordinator
+        ? coordinatorNavLinks
+        : studentNavLinks
       : guestNavLinks;
 
   const handleNavLinkClick = (link: { id: string; isAnchor?: boolean }) => {

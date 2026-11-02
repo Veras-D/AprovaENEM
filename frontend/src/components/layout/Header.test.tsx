@@ -237,6 +237,8 @@ describe('Header component', () => {
 
     renderWithClient(<Header onOpenDrawer={vi.fn()} activeSection="practice" />);
     expect(screen.getByText('Painel da Coordenação')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Ranking$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Diagnóstico$/i })).not.toBeInTheDocument();
   });
 
   it('should NOT render navigation links or HUD in header when activeSection is institutional', () => {

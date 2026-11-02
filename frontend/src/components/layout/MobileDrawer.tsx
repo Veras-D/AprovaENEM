@@ -124,6 +124,11 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
     { id: 'diagnostics', label: 'Diagnóstico & Desempenho', icon: BarChart2, isAnchor: false },
   ];
 
+  const coordinatorMainNavItems = [
+    { id: 'home', label: 'Início', icon: Home, isAnchor: false },
+    { id: 'practice', label: 'Praticar Questões', icon: BookOpen, isAnchor: false },
+  ];
+
   const guestNavItems = [
     { id: 'home', label: 'Início', icon: Home, isAnchor: false },
     { id: 'practice', label: 'Praticar Questões', icon: BookOpen, isAnchor: false },
@@ -145,7 +150,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
       ? coordinatorNavItems
       : gateNavItems
     : [
-        ...(isAuthenticated ? studentNavItems : guestNavItems),
+        ...(isAuthenticated ? (isCoordinator ? coordinatorMainNavItems : studentNavItems) : guestNavItems),
         ...(isCoordinator
           ? [{ id: 'institutional', label: 'Painel da Coordenação', icon: Building2, isAnchor: false }]
           : []),

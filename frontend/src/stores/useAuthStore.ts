@@ -20,6 +20,15 @@ interface AuthState {
 const STORAGE_KEY_TOKEN = 'aprovaenem_auth_token';
 const STORAGE_KEY_USER = 'aprovaenem_auth_user';
 
+function isStudentUser(user: UserProfile | null | undefined): boolean {
+  if (!user) return false;
+  const isCoordOrAdmin = user.roles?.some(
+    (r) => r === 'ROLE_ADMIN' || r === 'ROLE_INSTITUTIONAL_ADMIN'
+  );
+  if (isCoordOrAdmin) return false;
+  return true;
+}
+
 export const useAuthStore = create<AuthState>((set) => {
   let initialToken: string | null = null;
   let initialUser: UserProfile | null = null;
@@ -30,7 +39,7 @@ export const useAuthStore = create<AuthState>((set) => {
     if (storedUser) {
       try {
         initialUser = JSON.parse(storedUser) as UserProfile;
-        if (initialUser?.id) {
+        if (initialUser?.id && isStudentUser(initialUser)) {
           void useSessionStore.getState().restoreUserDiagnostic(initialUser.id);
         }
       } catch {
@@ -48,7 +57,7 @@ export const useAuthStore = create<AuthState>((set) => {
     setAuth: (token: string, user: UserProfile) => {
       localStorage.setItem(STORAGE_KEY_TOKEN, token);
       localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
-      if (user?.id) {
+      if (user?.id && isStudentUser(user)) {
         useSessionStore.getState().migrateAnonymousProgress(user.id);
         void useSessionStore.getState().restoreUserDiagnostic(user.id);
       }
@@ -111,7 +120,7 @@ export const useAuthStore = create<AuthState>((set) => {
             localStorage.removeItem(STORAGE_KEY_USER);
           }
         }
-        if (user?.id) {
+        if (user?.id && isStudentUser(user)) {
           void useSessionStore.getState().restoreUserDiagnostic(user.id);
         }
         set({ token, user, isAuthenticated: Boolean(token) });

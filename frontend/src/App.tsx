@@ -43,14 +43,21 @@ const getInitialSection = (): SectionType => {
 export const App: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string>(getInitialSection);
   const { savedDiagnosticReport, diagnosticReport } = useSessionStore();
+  const user = useAuthStore((s) => s.user);
+  const isCoordinator = Boolean(
+    user?.roles?.some(
+      (role) => role === 'ROLE_ADMIN' || role === 'ROLE_INSTITUTIONAL_ADMIN'
+    )
+  );
 
   const studentDiagnostic = useMemo(() => {
+    if (isCoordinator) return undefined;
     if (savedDiagnosticReport) return savedDiagnosticReport;
     if (diagnosticReport && 'radar' in diagnosticReport && diagnosticReport.radar) {
       return diagnosticReport as DiagnosticReportDto;
     }
     return undefined;
-  }, [savedDiagnosticReport, diagnosticReport]);
+  }, [savedDiagnosticReport, diagnosticReport, isCoordinator]);
 
   useEffect(() => {
     void useTenantStore.getState().resolveAndApplyTenant();
@@ -97,6 +104,12 @@ export const App: React.FC = () => {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  useEffect(() => {
+    if (isCoordinator && (activeSection === 'leaderboard' || activeSection === 'diagnostics')) {
+      handleNavigate('institutional');
+    }
+  }, [isCoordinator, activeSection]);
 
   return (
     <QueryClientProvider client={queryClient}>
