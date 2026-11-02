@@ -80,4 +80,18 @@ describe('CourseSelector Component', () => {
 
     expect(handleChange).toHaveBeenCalled();
   });
+
+  it('highlights option on mouse enter with active hover styling', () => {
+    const handleChange = vi.fn();
+    render(<CourseSelector value="" onChange={handleChange} />);
+
+    const input = screen.getByRole('combobox');
+    fireEvent.focus(input);
+
+    const options = screen.getAllByRole('option');
+    expect(options.length).toBeGreaterThan(0);
+
+    fireEvent.mouseEnter(options[0]!);
+    expect(options[0]).toHaveClass('bg-slate-100');
+  });
 });
