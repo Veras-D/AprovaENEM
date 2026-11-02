@@ -1,6 +1,7 @@
 package com.aprovaenem.auth.application.service;
 
 import com.aprovaenem.auth.domain.model.AchievementBadge;
+import com.aprovaenem.auth.domain.model.LeagueTier;
 import com.aprovaenem.auth.domain.model.OutboxEvent;
 import com.aprovaenem.auth.domain.model.PasswordVerificationResult;
 import com.aprovaenem.auth.domain.model.SchoolType;
@@ -9,6 +10,7 @@ import com.aprovaenem.auth.domain.model.UserGamificationProfile;
 import com.aprovaenem.auth.domain.model.UserRole;
 import com.aprovaenem.auth.domain.port.in.AuthUseCase;
 import com.aprovaenem.auth.domain.port.out.GamificationRepositoryPort;
+import com.aprovaenem.auth.domain.port.out.LeaderboardRedisPort;
 import com.aprovaenem.auth.domain.port.out.OutboxRepositoryPort;
 import com.aprovaenem.auth.domain.port.out.PasswordEncoderPort;
 import com.aprovaenem.auth.domain.port.out.TokenProviderPort;
@@ -34,7 +36,9 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -52,6 +56,9 @@ class AuthServiceTest {
 
     @Mock
     private GamificationRepositoryPort gamificationRepository;
+
+    @Mock
+    private LeaderboardRedisPort redisLeaderboardPort;
 
     @Mock
     private PasswordEncoderPort passwordEncoder;
@@ -316,6 +323,9 @@ class AuthServiceTest {
         assertThat(outboxEvent.getPayload()).contains("Art. 18, VI da Lei 13.709/2018 (LGPD)");
 
         verify(userRepository).deleteById(userId);
+        for (LeagueTier tier : LeagueTier.values()) {
+            verify(redisLeaderboardPort).removeUserFromWeeklyLeaderboard(anyInt(), anyInt(), eq(tier), eq(userId));
+        }
     }
 
     @Test

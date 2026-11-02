@@ -27,6 +27,7 @@ import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.IsoFields;
@@ -214,7 +215,7 @@ public class GamificationService implements GamificationUseCase {
     }
 
     private boolean isNewCalendarMonth(LocalDate today, LocalDate lastDate) {
-        return lastDate != null && (today.getYear() > lastDate.getYear() || today.getMonthValue() > lastDate.getMonthValue());
+        return lastDate != null && YearMonth.from(today).isAfter(YearMonth.from(lastDate));
     }
 
     private boolean isStreakExpired(UserGamificationProfile profile, LocalDate today) {
@@ -286,20 +287,7 @@ public class GamificationService implements GamificationUseCase {
         int weekNumber = today.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
         int year = today.get(IsoFields.WEEK_BASED_YEAR);
 
-        LeagueTier targetTier = leagueTier;
-        if (targetTier == null) {
-            Optional<WeeklyLeaderboard> userBoard = currentUserId != null
-                    ? gamificationRepository.findWeeklyLeaderboard(currentUserId, weekNumber, year)
-                    : Optional.empty();
-            if (userBoard.isPresent()) {
-                targetTier = userBoard.get().getLeagueTier();
-            } else if (currentUserId != null) {
-                targetTier = getProfile(currentUserId).getCurrentLeague();
-            }
-            if (targetTier == null) {
-                targetTier = LeagueTier.BRONZE;
-            }
-        }
+        LeagueTier targetTier = resolveTargetTier(currentUserId, leagueTier, weekNumber, year);
 
         simulatedPeerService.ensureCohortActive(currentUserId, weekNumber, year, targetTier);
 
@@ -333,8 +321,15 @@ public class GamificationService implements GamificationUseCase {
             int score = tuple.getScore() != null ? tuple.getScore().intValue() : 0;
 
             Optional<User> userOpt = userRepository.findById(entryUserId);
-            String displayName = userOpt.map(User::getFullName).orElse("Estudante");
-            String avatarConfig = userOpt.map(User::getAvatarConfig).orElse(null);
+            if (userOpt.isEmpty()) {
+                // Orphaned user in Redis (account deleted under LGPD) - prune from Redis and skip
+                redisLeaderboardPort.removeUserFromWeeklyLeaderboard(year, weekNumber, targetTier, entryUserId);
+                totalParticipants = Math.max(0, totalParticipants - 1);
+                continue;
+            }
+            User entryUser = userOpt.get();
+            String displayName = entryUser.getFullName();
+            String avatarConfig = entryUser.getAvatarConfig();
 
             int streak = gamificationRepository.findProfileByUserId(entryUserId)
                     .map(p -> isStreakExpired(p, today) ? 0 : p.getStreakDays())
@@ -478,10 +473,9 @@ public class GamificationService implements GamificationUseCase {
         }
 
         Map<String, WeeklyLeaderboard> pastWeeks = new TreeMap<>();
+        int currentWeekCode = currentYear * 100 + currentWeekNumber;
         for (WeeklyLeaderboard board : unfinalized) {
-            boolean isPast = board.getYear() < currentYear
-                    || (board.getYear() == currentYear && board.getWeekNumber() < currentWeekNumber);
-            if (isPast) {
+            if (board.getYear() * 100 + board.getWeekNumber() < currentWeekCode) {
                 String key = String.format("%04d-%02d", board.getYear(), board.getWeekNumber());
                 pastWeeks.putIfAbsent(key, board);
             }
@@ -527,7 +521,7 @@ public class GamificationService implements GamificationUseCase {
                     newTier = tier.getNextTier();
                     log.info("Promoting user [{}] from [{}] to [{}] (Rank {}/{})",
                             board.getUserId(), tier, newTier, rank, total);
-                } else if (i >= demoteStartIndex && relegateCount > 0 && tier != LeagueTier.BRONZE) {
+                } else if (i >= demoteStartIndex && tier != LeagueTier.BRONZE) {
                     newTier = tier.getPreviousTier();
                     log.info("Demoting user [{}] from [{}] to [{}] (Rank {}/{})",
                             board.getUserId(), tier, newTier, rank, total);
@@ -558,6 +552,23 @@ public class GamificationService implements GamificationUseCase {
             }
             redisLeaderboardPort.clearWeeklyLeaderboard(year, weekNumber, tier);
         }
+    }
+
+    private LeagueTier resolveTargetTier(UUID currentUserId, LeagueTier leagueTier, int weekNumber, int year) {
+        if (leagueTier != null) {
+            return leagueTier;
+        }
+        if (currentUserId != null) {
+            Optional<WeeklyLeaderboard> userBoard = gamificationRepository.findWeeklyLeaderboard(currentUserId, weekNumber, year);
+            if (userBoard.isPresent()) {
+                return userBoard.get().getLeagueTier();
+            }
+            LeagueTier currentLeague = getProfile(currentUserId).getCurrentLeague();
+            if (currentLeague != null) {
+                return currentLeague;
+            }
+        }
+        return LeagueTier.BRONZE;
     }
 
     private UserGamificationProfile createInitialProfile(UUID userId) {

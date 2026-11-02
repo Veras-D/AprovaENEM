@@ -1,6 +1,7 @@
 package com.aprovaenem.auth.application.service;
 
 import com.aprovaenem.auth.domain.model.AchievementBadge;
+import com.aprovaenem.auth.domain.model.LeagueTier;
 import com.aprovaenem.auth.domain.model.OutboxEvent;
 import com.aprovaenem.auth.domain.model.PasswordVerificationResult;
 import com.aprovaenem.auth.domain.model.SchoolType;
@@ -9,6 +10,7 @@ import com.aprovaenem.auth.domain.model.UserGamificationProfile;
 import com.aprovaenem.auth.domain.model.UserRole;
 import com.aprovaenem.auth.domain.port.in.AuthUseCase;
 import com.aprovaenem.auth.domain.port.out.GamificationRepositoryPort;
+import com.aprovaenem.auth.domain.port.out.LeaderboardRedisPort;
 import com.aprovaenem.auth.domain.port.out.OutboxRepositoryPort;
 import com.aprovaenem.auth.domain.port.out.PasswordEncoderPort;
 import com.aprovaenem.auth.domain.port.out.TokenProviderPort;
@@ -28,7 +30,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.IsoFields;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -41,9 +46,12 @@ public class AuthService implements AuthUseCase {
     private final UserRepositoryPort userRepository;
     private final OutboxRepositoryPort outboxRepository;
     private final GamificationRepositoryPort gamificationRepository;
+    private final LeaderboardRedisPort redisLeaderboardPort;
     private final PasswordEncoderPort passwordEncoder;
     private final TokenProviderPort tokenProvider;
     private final ObjectMapper objectMapper;
+
+    private static final ZoneId BRT_ZONE = ZoneId.of("America/Sao_Paulo");
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
@@ -284,6 +292,14 @@ public class AuthService implements AuthUseCase {
                         .occurredAt(Instant.now())
                         .build()
         );
+
+        // Evict user from active Redis weekly leaderboards across all tiers
+        LocalDate today = LocalDate.now(BRT_ZONE);
+        int weekNumber = today.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
+        int year = today.get(IsoFields.WEEK_BASED_YEAR);
+        for (LeagueTier tier : LeagueTier.values()) {
+            redisLeaderboardPort.removeUserFromWeeklyLeaderboard(year, weekNumber, tier, user.getId());
+        }
 
         userRepository.deleteById(user.getId());
         log.info("LGPD Art. 18 Purge: User [{}] account and personal identifiers permanently deleted", userId);

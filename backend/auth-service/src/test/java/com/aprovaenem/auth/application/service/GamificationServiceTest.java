@@ -39,6 +39,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -649,7 +650,8 @@ class GamificationServiceTest {
         when(redisLeaderboardPort.getTopRanked(anyInt(), anyInt(), eq(LeagueTier.SILVER), eq(0L), eq(9L)))
                 .thenReturn(entries);
 
-        when(userRepository.findById(otherUserId)).thenReturn(Optional.empty()); // defaults to "Estudante"
+        User otherUser = User.builder().id(otherUserId).fullName("Estudante").build();
+        when(userRepository.findById(otherUserId)).thenReturn(Optional.of(otherUser));
         when(gamificationRepository.findProfileByUserId(otherUserId)).thenReturn(Optional.empty()); // defaults to 0 streak
 
         when(redisLeaderboardPort.getStudentRank(anyInt(), anyInt(), eq(LeagueTier.SILVER), eq(currentUserId)))
@@ -711,5 +713,35 @@ class GamificationServiceTest {
 
         assertThat(count).isZero();
         verify(notificationPublisherPort, never()).publishStudyReminder(any());
+    }
+
+    @Test
+    @DisplayName("Should prune orphaned deleted user from Redis and omit from leaderboard")
+    void shouldPruneOrphanedDeletedUserFromRedisAndOmitFromLeaderboard() {
+        UUID currentUserId = UUID.randomUUID();
+        UUID orphanedUserId = UUID.randomUUID();
+
+        when(redisLeaderboardPort.getTotalParticipants(anyInt(), anyInt(), eq(LeagueTier.BRONZE)))
+                .thenReturn(2L);
+
+        DefaultTypedTuple<String> validTuple = new DefaultTypedTuple<>(currentUserId.toString(), 100.0);
+        DefaultTypedTuple<String> orphanedTuple = new DefaultTypedTuple<>(orphanedUserId.toString(), 0.0);
+
+        when(redisLeaderboardPort.getTopRanked(anyInt(), anyInt(), eq(LeagueTier.BRONZE), eq(0L), eq(9L)))
+                .thenReturn(new LinkedHashSet<>(List.of(validTuple, orphanedTuple)));
+
+        User currentUser = User.builder()
+                .id(currentUserId)
+                .fullName("Active Student")
+                .build();
+        when(userRepository.findById(currentUserId)).thenReturn(Optional.of(currentUser));
+        when(userRepository.findById(orphanedUserId)).thenReturn(Optional.empty()); // Deleted user!
+
+        WeeklyLeaderboardResponse response = gamificationService.getWeeklyLeaderboard(currentUserId, LeagueTier.BRONZE, 0, 10);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getLeaderboard()).hasSize(1);
+        assertThat(response.getLeaderboard().get(0).getUserId()).isEqualTo(currentUserId);
+        verify(redisLeaderboardPort).removeUserFromWeeklyLeaderboard(anyInt(), anyInt(), eq(LeagueTier.BRONZE), eq(orphanedUserId));
     }
 }
