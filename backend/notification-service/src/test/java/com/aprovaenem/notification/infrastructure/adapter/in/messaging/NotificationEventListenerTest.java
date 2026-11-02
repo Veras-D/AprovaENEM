@@ -188,6 +188,23 @@ class NotificationEventListenerTest {
     }
 
     @Test
+    @DisplayName("Should skip SMTP send and avoid saving notification when email verification recipient is a mock domain or test user")
+    void shouldSkipSmtpSendWhenEmailVerificationHasMockRecipient() {
+        UUID userId = UUID.randomUUID();
+        EmailVerificationRequestedEvent event = EmailVerificationRequestedEvent.builder()
+                .userId(userId)
+                .email("student.1793647315460@escola.gov.br")
+                .fullName("Estudante Teste")
+                .verificationToken("123456")
+                .build();
+
+        listener.handleEmailVerification(event);
+
+        verifyNoInteractions(notificationLogRepository);
+        verifyNoInteractions(emailSender);
+    }
+
+    @Test
     @DisplayName("Should handle EmailVerificationRequestedEvent and save EMAIL notification entity")
     void shouldHandleEmailVerification() {
         UUID userId = UUID.randomUUID();
@@ -362,6 +379,20 @@ class NotificationEventListenerTest {
                 .email("aluno@enem.com.br")
                 .fullName("Carlos Silva")
                 .resetToken(null)
+                .build());
+
+        verifyNoInteractions(notificationLogRepository);
+        verifyNoInteractions(emailSender);
+    }
+
+    @Test
+    @DisplayName("Should skip SMTP send and avoid saving notification when password reset recipient is a mock domain or test user")
+    void shouldSkipSmtpSendWhenPasswordResetHasMockRecipient() {
+        listener.handlePasswordReset(PasswordResetRequestedEvent.builder()
+                .userId(UUID.randomUUID())
+                .email("test.user@escola.gov.br")
+                .fullName("Estudante Teste")
+                .resetToken("reset-token-123")
                 .build());
 
         verifyNoInteractions(notificationLogRepository);

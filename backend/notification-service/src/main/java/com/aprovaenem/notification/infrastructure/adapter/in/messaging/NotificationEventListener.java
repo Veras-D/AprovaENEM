@@ -244,32 +244,39 @@ public class NotificationEventListener {
         ));
 
         String status = deliverVerificationEmail(event, name);
-        String body = "SENT".equals(status)
-                ? String.format("Olá %s! Enviamos um e-mail de confirmação para ativar sua conta AprovaENEM. "
-                        + "Verifique sua caixa de entrada e informe o código recebido.", name)
-                : String.format("Olá %s! Não conseguimos enviar o e-mail de confirmação agora. "
-                        + "Acesse seu perfil e solicite o reenvio.", name);
+        if (!"SKIPPED".equals(status)) {
+            String body = "SENT".equals(status)
+                    ? String.format("Olá %s! Enviamos um e-mail de confirmação para ativar sua conta AprovaENEM. "
+                            + "Verifique sua caixa de entrada e informe o código recebido.", name)
+                    : String.format("Olá %s! Não conseguimos enviar o e-mail de confirmação agora. "
+                            + "Acesse seu perfil e solicite o reenvio.", name);
 
-        NotificationLogEntity entity = NotificationLogEntity.builder()
-                .userId(event.getUserId())
-                .channel("EMAIL")
-                .templateCode("EMAIL_VERIFICATION")
-                .title(title)
-                .body(body)
-                .metadata(metadataJson)
-                .status(status)
-                .sentAt("SENT".equals(status) ? now : null)
-                .createdAt(now)
-                .build();
+            NotificationLogEntity entity = NotificationLogEntity.builder()
+                    .userId(event.getUserId())
+                    .channel("EMAIL")
+                    .templateCode("EMAIL_VERIFICATION")
+                    .title(title)
+                    .body(body)
+                    .metadata(metadataJson)
+                    .status(status)
+                    .sentAt("SENT".equals(status) ? now : null)
+                    .createdAt(now)
+                    .build();
 
-        notificationLogRepository.save(entity);
-        log.info("Persisted EMAIL verification notification log for [{}] with status [{}]", event.getEmail(), status);
+            notificationLogRepository.save(entity);
+            log.info("Persisted EMAIL verification notification log for [{}] with status [{}]", event.getEmail(), status);
+        }
     }
 
     private String deliverVerificationEmail(EmailVerificationRequestedEvent event, String name) {
         if (event.getEmail() == null || event.getEmail().isBlank() || event.getVerificationToken() == null) {
             log.warn("Skipping verification email for user [{}]: missing recipient or token", event.getUserId());
             return "FAILED";
+        }
+        if (!isDeliverableRecipient(event.getEmail())) {
+            log.info("Skipping verification email for user [{}] with mock or test recipient [{}]",
+                    event.getUserId(), event.getEmail());
+            return "SKIPPED";
         }
 
         String textFallback = String.format(
@@ -354,31 +361,38 @@ public class NotificationEventListener {
         ));
 
         String status = deliverPasswordResetEmail(event, name);
-        String body = "SENT".equals(status)
-                ? String.format("Olá %s! Enviamos um link seguro para recuperação da sua senha AprovaENEM. "
-                        + "Verifique sua caixa de entrada e clique no link para cadastrar uma nova senha.", name)
-                : String.format("Olá %s! Não conseguimos enviar o e-mail de recuperação de senha agora.", name);
+        if (!"SKIPPED".equals(status)) {
+            String body = "SENT".equals(status)
+                    ? String.format("Olá %s! Enviamos um link seguro para recuperação da sua senha AprovaENEM. "
+                            + "Verifique sua caixa de entrada e clique no link para cadastrar uma nova senha.", name)
+                    : String.format("Olá %s! Não conseguimos enviar o e-mail de recuperação de senha agora.", name);
 
-        NotificationLogEntity entity = NotificationLogEntity.builder()
-                .userId(event.getUserId())
-                .channel("EMAIL")
-                .templateCode("PASSWORD_RESET")
-                .title(title)
-                .body(body)
-                .metadata(metadataJson)
-                .status(status)
-                .sentAt("SENT".equals(status) ? now : null)
-                .createdAt(now)
-                .build();
+            NotificationLogEntity entity = NotificationLogEntity.builder()
+                    .userId(event.getUserId())
+                    .channel("EMAIL")
+                    .templateCode("PASSWORD_RESET")
+                    .title(title)
+                    .body(body)
+                    .metadata(metadataJson)
+                    .status(status)
+                    .sentAt("SENT".equals(status) ? now : null)
+                    .createdAt(now)
+                    .build();
 
-        notificationLogRepository.save(entity);
-        log.info("Persisted EMAIL password reset notification log for [{}] with status [{}]", event.getEmail(), status);
+            notificationLogRepository.save(entity);
+            log.info("Persisted EMAIL password reset notification log for [{}] with status [{}]", event.getEmail(), status);
+        }
     }
 
     private String deliverPasswordResetEmail(PasswordResetRequestedEvent event, String name) {
         if (event.getEmail() == null || event.getEmail().isBlank() || event.getResetToken() == null) {
             log.warn("Skipping password reset email for user [{}]: missing recipient or token", event.getUserId());
             return "FAILED";
+        }
+        if (!isDeliverableRecipient(event.getEmail())) {
+            log.info("Skipping password reset email for user [{}] with mock or test recipient [{}]",
+                    event.getUserId(), event.getEmail());
+            return "SKIPPED";
         }
 
         String resetUrl = String.format("%s/?resetToken=%s", frontendUrl, event.getResetToken());
@@ -468,11 +482,38 @@ public class NotificationEventListener {
             return false;
         }
         String lower = email.trim().toLowerCase();
-        return !lower.endsWith("@simulado.enem.br")
-                && !lower.endsWith("@example.com")
-                && !lower.endsWith("@test.com")
-                && !lower.endsWith(".local")
-                && !lower.endsWith(".test")
-                && !lower.endsWith(".example");
+        int atIndex = lower.indexOf('@');
+        if (atIndex <= 0) {
+            return false;
+        }
+        String localPart = lower.substring(0, atIndex);
+        String domain = lower.substring(atIndex + 1);
+
+        if (localPart.startsWith("student.")
+                || localPart.startsWith("test.")
+                || localPart.startsWith("eval.")
+                || localPart.startsWith("fresh.")
+                || localPart.startsWith("burst.")
+                || localPart.startsWith("gamification.")
+                || localPart.startsWith("k6.")) {
+            return false;
+        }
+
+        return !domain.equals("simulado.enem.br")
+                && !domain.equals("escola.gov.br")
+                && !domain.equals("escola.sp.gov.br")
+                && !domain.equals("aprovaenem.com.br")
+                && !domain.equals("aprovaenem.local")
+                && !domain.equals("enem.br")
+                && !domain.equals("example.com")
+                && !domain.equals("example.org")
+                && !domain.equals("example.net")
+                && !domain.equals("test.com")
+                && !domain.equals("mailinator.com")
+                && !domain.endsWith(".local")
+                && !domain.endsWith(".test")
+                && !domain.endsWith(".example")
+                && !domain.endsWith(".invalid")
+                && !domain.endsWith(".localhost");
     }
 }
