@@ -123,6 +123,39 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     );
   }
 
+  if (!user.isEmailVerified) {
+    return (
+      <main className="max-w-4xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-amber-200 dark:border-amber-800 shadow-sm p-8 text-center max-w-lg mx-auto">
+          <div className="h-16 w-16 mx-auto rounded-full bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400 mb-4">
+            <AlertCircle className="h-8 w-8" aria-hidden="true" />
+          </div>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white">
+            Confirmação de E-mail Obrigatória
+          </h1>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+            A confirmação de e-mail é obrigatória para acessar o seu perfil e as funcionalidades da plataforma AprovaENEM. Por favor, confirme seu endereço de e-mail com o código de 6 dígitos enviado.
+          </p>
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+              <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" />
+              Confirmação Pendente
+            </span>
+          </div>
+          <div className="mt-6 flex justify-center">
+            <button
+              type="button"
+              onClick={() => openAuthModal('verify-email')}
+              className="py-2.5 px-6 rounded-brand font-semibold text-sm bg-brand-primary text-white hover:bg-brand-primary-hover transition-colors shadow-sm"
+            >
+              Confirmar Agora
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   const handleSaveAvatar = async (newConfig: AvatarConfig) => {
     updateUser({ avatarConfig: newConfig });
     try {

@@ -39,7 +39,12 @@ export const useAuthStore = create<AuthState>((set) => {
     if (storedUser) {
       try {
         initialUser = JSON.parse(storedUser) as UserProfile;
-        if (initialUser?.id && isStudentUser(initialUser)) {
+        if (initialUser && !initialUser.isEmailVerified) {
+          initialToken = null;
+          initialUser = null;
+          localStorage.removeItem(STORAGE_KEY_TOKEN);
+          localStorage.removeItem(STORAGE_KEY_USER);
+        } else if (initialUser?.id && isStudentUser(initialUser)) {
           void useSessionStore.getState().restoreUserDiagnostic(initialUser.id);
         }
       } catch {
@@ -120,10 +125,16 @@ export const useAuthStore = create<AuthState>((set) => {
             localStorage.removeItem(STORAGE_KEY_USER);
           }
         }
+        if (user && !user.isEmailVerified) {
+          localStorage.removeItem(STORAGE_KEY_TOKEN);
+          localStorage.removeItem(STORAGE_KEY_USER);
+          set({ token: null, user: null, isAuthenticated: false });
+          return;
+        }
         if (user?.id && isStudentUser(user)) {
           void useSessionStore.getState().restoreUserDiagnostic(user.id);
         }
-        set({ token, user, isAuthenticated: Boolean(token) });
+        set({ token, user, isAuthenticated: Boolean(token && user?.isEmailVerified !== false) });
       }
     },
   };

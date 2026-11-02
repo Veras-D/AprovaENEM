@@ -70,6 +70,7 @@ describe('TanStack Query Hooks', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    useAuthStore.getState().clearAuth();
   });
 
   it('useQuestionsQuery should fetch and return paginated questions', async () => {
@@ -245,17 +246,11 @@ describe('TanStack Query Hooks', () => {
     expect(tenantService.getTenantBranding).toHaveBeenCalledWith('colegio-bandeirantes');
   });
 
-  it('useLoginMutation and useRegisterMutation should authenticate and update auth store', async () => {
+  it('useLoginMutation should authenticate and useRegisterMutation should register without auto-authenticating', async () => {
     vi.spyOn(authService, 'login').mockResolvedValueOnce(MOCK_AUTH_LOGIN_RESPONSE);
     vi.spyOn(authService, 'register').mockResolvedValueOnce(MOCK_AUTH_LOGIN_RESPONSE);
 
     const wrapper = createWrapper();
-
-    const { result: loginResult } = renderHook(() => useLoginMutation(), { wrapper });
-    loginResult.current.mutate({ email: 'lucas@escola.gov.br', password: 'password123' });
-    await waitFor(() => expect(loginResult.current.isSuccess).toBe(true));
-    expect(useAuthStore.getState().token).toBe(MOCK_AUTH_LOGIN_RESPONSE.token);
-    expect(useAuthStore.getState().user?.email).toBe(MOCK_AUTH_LOGIN_RESPONSE.user.email);
 
     const { result: registerResult } = renderHook(() => useRegisterMutation(), { wrapper });
     registerResult.current.mutate({
@@ -264,6 +259,13 @@ describe('TanStack Query Hooks', () => {
       password: 'password123',
     });
     await waitFor(() => expect(registerResult.current.isSuccess).toBe(true));
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+
+    const { result: loginResult } = renderHook(() => useLoginMutation(), { wrapper });
+    loginResult.current.mutate({ email: 'lucas@escola.gov.br', password: 'password123' });
+    await waitFor(() => expect(loginResult.current.isSuccess).toBe(true));
+    expect(useAuthStore.getState().token).toBe(MOCK_AUTH_LOGIN_RESPONSE.token);
+    expect(useAuthStore.getState().user?.email).toBe(MOCK_AUTH_LOGIN_RESPONSE.user.email);
   });
 
   it('useForgotPasswordMutation and useResetPasswordMutation should trigger authService methods', async () => {

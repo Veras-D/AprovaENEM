@@ -497,4 +497,25 @@ describe('RegisterModal Component', () => {
     const loginPassword = screen.getByLabelText(/^Senha/i);
     expect(loginPassword).toHaveValue('');
   });
+
+  it('should redirect unverified users to verify-email mode when attempting to log in', async () => {
+    vi.spyOn(authService, 'login').mockResolvedValueOnce({
+      ...MOCK_AUTH_LOGIN_RESPONSE,
+      user: {
+        ...MOCK_AUTH_LOGIN_RESPONSE.user,
+        isEmailVerified: false,
+      },
+    });
+
+    renderWithProviders(<RegisterModal isOpen={true} onClose={handleClose} initialMode="login" />);
+
+    fireEvent.change(screen.getByLabelText(/E-mail do Estudante/i), { target: { value: 'unverified@escola.gov.br' } });
+    fireEvent.change(screen.getByLabelText(/^Senha/i), { target: { value: 'Password@123' } });
+    fireEvent.click(screen.getByRole('button', { name: /Entrar na Plataforma/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(/A confirmação de e-mail é obrigatória para acessar a plataforma/i);
+      expect(screen.getByText('Confirme seu E-mail')).toBeInTheDocument();
+    });
+  });
 });

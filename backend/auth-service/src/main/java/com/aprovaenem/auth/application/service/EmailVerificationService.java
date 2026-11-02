@@ -36,7 +36,7 @@ public class EmailVerificationService implements EmailVerificationUseCase {
 
     @Override
     @Transactional
-    public boolean verifyEmail(String token) {
+    public User verifyEmail(String token) {
         if (token == null || token.isBlank()) {
             throw new BusinessException("Verification token cannot be empty.");
         }
@@ -54,9 +54,9 @@ public class EmailVerificationService implements EmailVerificationUseCase {
         user.setEmailVerificationExpiresAt(null);
         user.setUpdatedAt(Instant.now());
 
-        userRepository.save(user);
-        log.info("Email verified successfully for user [{}]", user.getId());
-        return true;
+        User savedUser = userRepository.save(user);
+        log.info("Email verified successfully for user [{}]", savedUser.getId());
+        return savedUser;
     }
 
     @Override

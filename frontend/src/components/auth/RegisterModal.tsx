@@ -504,10 +504,24 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     }
 
     try {
-      await loginMutation.mutateAsync({
+      const res = await loginMutation.mutateAsync({
         email: email.trim().toLowerCase(),
         password,
       });
+
+      if (!res.user?.isEmailVerified) {
+        setVerifyEmailTarget(email.trim().toLowerCase());
+        if (contentInnerRef.current && contentInnerRef.current.offsetHeight > 0) {
+          setBodyHeight(contentInnerRef.current.offsetHeight);
+        }
+        setHasSwitchedMode(true);
+        setMode('verify-email');
+        setFormError(
+          'A confirmação de e-mail é obrigatória para acessar a plataforma. Digite o código de 6 dígitos enviado para seu e-mail.'
+        );
+        setPassword('');
+        return;
+      }
 
       setPassword('');
       setEmail('');
@@ -613,7 +627,11 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 
     try {
       const res = await verifyEmailMutation.mutateAsync(token);
-      setEmailVerified(true);
+      if (res.token && res.user) {
+        useAuthStore.getState().setAuth(res.token, res.user);
+      } else {
+        setEmailVerified(true);
+      }
       setVerifySuccessMessage(res.message || 'E-mail confirmado com sucesso!');
       setVerifyTokenInput('');
     } catch (err) {
@@ -1596,8 +1614,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                         </span>
                         .
                       </p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                        Verifique sua caixa de entrada e pasta de spam para validar sua conta do AprovaENEM.
+                      <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 p-2 rounded-brand border border-amber-300 dark:border-amber-800">
+                        A confirmação de e-mail é obrigatória para acessar a plataforma e seu perfil.
                       </p>
                     </div>
 

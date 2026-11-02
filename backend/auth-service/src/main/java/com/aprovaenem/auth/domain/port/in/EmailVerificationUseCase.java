@@ -1,8 +1,10 @@
 package com.aprovaenem.auth.domain.port.in;
 
+import com.aprovaenem.auth.domain.model.User;
+
 public interface EmailVerificationUseCase {
 
-    boolean verifyEmail(String token);
+    User verifyEmail(String token);
 
     boolean resendVerificationEmail(String email);
 }

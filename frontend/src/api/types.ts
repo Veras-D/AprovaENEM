@@ -3,7 +3,7 @@
  * Strictly typed interfaces matching AprovaENEM backend microservices contracts
  */
 
-import type { QuestionDifficulty, QuestionOptionLetter, KnowledgeArea, TimeAccommodationMode, AvatarConfig } from '@/types';
+import type { QuestionDifficulty, QuestionOptionLetter, KnowledgeArea, TimeAccommodationMode, AvatarConfig, UserProfile } from '@/types';
 
 export interface PaginatedResponse<T> {
   readonly content: readonly T[];
@@ -335,6 +335,10 @@ export interface VerifyEmailResponse {
   readonly message: string;
   readonly isEmailVerified: boolean;
   readonly verifiedAt?: string;
+  readonly token?: string;
+  readonly tokenType?: string;
+  readonly expiresInSeconds?: number;
+  readonly user?: UserProfile;
 }
 
 export interface ResendVerificationRequest {

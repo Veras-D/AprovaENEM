@@ -3,6 +3,7 @@ package com.aprovaenem.auth.infrastructure.adapter.in.web;
 import com.aprovaenem.auth.domain.model.User;
 import com.aprovaenem.auth.domain.port.in.AuthUseCase;
 import com.aprovaenem.auth.domain.port.in.EmailVerificationUseCase;
+import com.aprovaenem.auth.domain.port.out.TokenProviderPort;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.ForgotPasswordRequest;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.ForgotPasswordResponse;
 import com.aprovaenem.auth.infrastructure.adapter.in.web.dto.LoginRequest;
@@ -42,6 +43,7 @@ public class AuthController {
 
     private final AuthUseCase authUseCase;
     private final EmailVerificationUseCase emailVerificationUseCase;
+    private final TokenProviderPort tokenProvider;
 
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
@@ -174,12 +176,18 @@ public class AuthController {
 
     @PostMapping("/verify-email")
     public ResponseEntity<VerifyEmailResponse> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
-        emailVerificationUseCase.verifyEmail(request.getToken());
+        User user = emailVerificationUseCase.verifyEmail(request.getToken());
+        String token = tokenProvider.generateToken(user);
+        long expiresInSeconds = tokenProvider.getExpirationSeconds();
 
         VerifyEmailResponse response = VerifyEmailResponse.builder()
                 .message("Email address successfully verified. Your AprovaENEM account is now fully active.")
                 .isEmailVerified(true)
                 .verifiedAt(Instant.now())
+                .token(token)
+                .tokenType("Bearer")
+                .expiresInSeconds(expiresInSeconds)
+                .user(toUserResponse(user))
                 .build();
 
         return ResponseEntity.ok(response);

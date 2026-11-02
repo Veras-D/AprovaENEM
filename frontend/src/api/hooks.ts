@@ -182,23 +182,23 @@ export function useLoginMutation() {
   return useMutation({
     mutationFn: (req: AuthLoginRequest) => authService.login(req),
     onSuccess: (data) => {
-      setAuth(data.token, data.user);
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gamification.profile });
+      if (data.user?.isEmailVerified) {
+        setAuth(data.token, data.user);
+        queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
+        queryClient.invalidateQueries({ queryKey: queryKeys.gamification.profile });
+      }
     },
   });
 }
 
 export function useRegisterMutation() {
   const queryClient = useQueryClient();
-  const setAuth = useAuthStore((s) => s.setAuth);
 
   return useMutation({
     mutationFn: (req: AuthRegisterRequest) => authService.register(req),
-    onSuccess: (data) => {
-      setAuth(data.token, data.user);
+    onSuccess: () => {
+      // NOTE: Do not setAuth here as email verification is mandatory before platform access.
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gamification.profile });
     },
   });
 }
@@ -332,13 +332,19 @@ export function useResetPasswordMutation() {
 
 export function useVerifyEmailMutation() {
   const queryClient = useQueryClient();
+  const setAuth = useAuthStore((s) => s.setAuth);
   const setEmailVerified = useAuthStore((s) => s.setEmailVerified);
 
   return useMutation({
     mutationFn: (token: string) => authService.verifyEmail(token),
-    onSuccess: () => {
-      setEmailVerified(true);
+    onSuccess: (data) => {
+      if (data.token && data.user) {
+        setAuth(data.token, data.user);
+      } else {
+        setEmailVerified(true);
+      }
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gamification.profile });
     },
   });
 }

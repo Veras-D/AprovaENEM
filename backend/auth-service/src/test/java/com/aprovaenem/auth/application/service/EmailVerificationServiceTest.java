@@ -101,10 +101,12 @@ class EmailVerificationServiceTest {
                 .build();
 
         when(userRepository.findByEmailVerificationToken(token)).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).thenReturn(user);
 
-        boolean result = emailVerificationService.verifyEmail(token);
+        User result = emailVerificationService.verifyEmail(token);
 
-        assertThat(result).isTrue();
+        assertThat(result).isNotNull();
+        assertThat(result.isEmailVerified()).isTrue();
         assertThat(user.isEmailVerified()).isTrue();
         assertThat(user.getEmailVerificationToken()).isNull();
         assertThat(user.getEmailVerificationExpiresAt()).isNull();

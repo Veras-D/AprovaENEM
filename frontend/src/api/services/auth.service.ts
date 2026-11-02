@@ -222,8 +222,17 @@ export const authService = {
    * Target endpoint: POST /api/v1/auth/verify-email
    */
   async verifyEmail(token: string): Promise<VerifyEmailResponse> {
-    const response = await apiClient.post<VerifyEmailResponse>('/auth/verify-email', { token });
-    return response.data;
+    const response = await apiClient.post<RawBackendAuthPayload & VerifyEmailResponse>('/auth/verify-email', { token });
+    const data = response.data;
+    return {
+      message: data.message || 'Email address successfully verified.',
+      isEmailVerified: Boolean(data.isEmailVerified ?? data.emailVerified ?? true),
+      verifiedAt: data.verifiedAt,
+      token: data.token,
+      tokenType: data.tokenType,
+      expiresInSeconds: data.expiresInSeconds,
+      user: data.user ? normalizeUserProfile(data.user) : undefined,
+    };
   },
 
   /**

@@ -16,4 +16,8 @@ public class VerifyEmailResponse {
     private String message;
     private boolean isEmailVerified;
     private Instant verifiedAt;
+    private String token;
+    private String tokenType;
+    private Long expiresInSeconds;
+    private UserResponse user;
 }

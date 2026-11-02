@@ -1231,6 +1231,17 @@ export const MOCK_VERIFY_EMAIL_RESPONSE: VerifyEmailResponse = {
   message: 'E-mail confirmado com sucesso! Sua conta agora está plenamente ativa.',
   isEmailVerified: true,
   verifiedAt: '2026-10-25T01:00:00Z',
+  token: 'mock-jwt-bearer-token-12345',
+  tokenType: 'Bearer',
+  expiresInSeconds: 86400,
+  user: {
+    id: 'usr-123',
+    email: 'lucas.silva@escola.gov.br',
+    name: 'Lucas Silva',
+    roles: ['ROLE_STUDENT'],
+    isEmailVerified: true,
+    createdAt: '2026-09-01T10:00:00Z',
+  },
 };
 
 export const MOCK_RESEND_VERIFICATION_RESPONSE: ResendVerificationResponse = {

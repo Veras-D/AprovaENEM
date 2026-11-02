@@ -282,13 +282,26 @@ class AuthControllerWebMvcTest {
         VerifyEmailRequest request = new VerifyEmailRequest();
         request.setToken("valid-verification-token-123");
 
-        when(emailVerificationUseCase.verifyEmail(request.getToken())).thenReturn(true);
+        User user = User.builder()
+                .id(UUID.fromString("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"))
+                .email("student@escola.gov.br")
+                .fullName("Estudante Teste")
+                .role(UserRole.ROLE_STUDENT)
+                .schoolType(SchoolType.PUBLIC_SCHOOL)
+                .isEmailVerified(true)
+                .createdAt(Instant.now())
+                .build();
+
+        when(emailVerificationUseCase.verifyEmail(request.getToken())).thenReturn(user);
+        when(jwtTokenProvider.generateToken(user)).thenReturn("mock-jwt-token");
+        when(jwtTokenProvider.getExpirationSeconds()).thenReturn(86400L);
 
         mockMvc.perform(post("/api/v1/auth/verify-email")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.emailVerified", is(true)))
+                .andExpect(jsonPath("$.token", is("mock-jwt-token")))
                 .andExpect(jsonPath("$.message", containsString("Email address successfully verified")));
     }
 
