@@ -216,7 +216,7 @@ export const CourseSelector: React.FC<CourseSelectorProps> = ({
                 return (
                   <React.Fragment key={course.id}>
                     {showAreaHeader && (
-                      <div className="px-3 pt-2.5 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500 bg-slate-50/90 dark:bg-slate-800/90 sticky top-0 backdrop-blur-xs border-y border-slate-100 dark:border-slate-800/60 first:border-t-0 select-none">
+                      <div className="px-3 pt-3 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500 bg-slate-50/70 dark:bg-slate-800/50 border-y border-slate-100 dark:border-slate-800/60 first:border-t-0 first:pt-1.5 select-none">
                         {course.areaLabel}
                       </div>
                     )}
