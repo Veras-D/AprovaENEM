@@ -203,7 +203,9 @@ describe('Axe-Core Automated WCAG 2.1 Level AA Audit E2E', () => {
           })
         );
         win.localStorage.setItem('aprovaenem_diagnostic_completed', 'true');
+        win.localStorage.setItem('aprovaenem_diagnostic_completed_usr-student-1', 'true');
         win.localStorage.setItem('aprovaenem_diagnostic_report', JSON.stringify(MOCK_DIAGNOSTIC_REPORT));
+        win.localStorage.setItem('aprovaenem_diagnostic_report_usr-student-1', JSON.stringify(MOCK_DIAGNOSTIC_REPORT));
       },
     });
     cy.get('header nav, [aria-label*="Navegação móvel inferior" i]').contains(/Diagnóstico|Raio-X/i).click();

@@ -125,10 +125,12 @@ function getSavedDiagnosticCompleted(): boolean {
   if (typeof window === 'undefined') return false;
   const userId = getCurrentUserId();
   if (userId) {
-    return (
+    const userCompleted =
       localStorage.getItem(STORAGE_KEY_USER_DIAG_COMPLETED_PREFIX + userId) === 'true' ||
-      Boolean(localStorage.getItem(STORAGE_KEY_USER_DIAG_REPORT_PREFIX + userId))
-    );
+      Boolean(localStorage.getItem(STORAGE_KEY_USER_DIAG_REPORT_PREFIX + userId));
+    if (userCompleted) {
+      return true;
+    }
   }
   return (
     localStorage.getItem(STORAGE_KEY_DIAGNOSTIC_COMPLETED) === 'true' ||
@@ -142,7 +144,9 @@ function getSavedDiagnosticReport(): DiagnosticReportDto | null {
     const userId = getCurrentUserId();
     if (userId) {
       const userReport = localStorage.getItem(STORAGE_KEY_USER_DIAG_REPORT_PREFIX + userId);
-      return userReport ? (JSON.parse(userReport) as DiagnosticReportDto) : null;
+      if (userReport) {
+        return JSON.parse(userReport) as DiagnosticReportDto;
+      }
     }
     const raw = localStorage.getItem(STORAGE_KEY_DIAGNOSTIC_REPORT);
     return raw ? (JSON.parse(raw) as DiagnosticReportDto) : null;
