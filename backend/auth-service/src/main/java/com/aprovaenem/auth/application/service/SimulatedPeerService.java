@@ -3,6 +3,7 @@ package com.aprovaenem.auth.application.service;
 import com.aprovaenem.auth.domain.model.LeagueTier;
 import com.aprovaenem.auth.domain.model.User;
 import com.aprovaenem.auth.domain.model.UserGamificationProfile;
+import com.aprovaenem.auth.domain.model.UserRole;
 import com.aprovaenem.auth.domain.model.WeeklyLeaderboard;
 import com.aprovaenem.auth.domain.port.out.GamificationRepositoryPort;
 import com.aprovaenem.auth.domain.port.out.LeaderboardRedisPort;
@@ -21,6 +22,7 @@ import java.time.ZoneId;
 import java.time.temporal.IsoFields;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -93,6 +95,54 @@ public class SimulatedPeerService {
 
         log.info("Simulated peer synchronization complete: [{}] bots registered in Redis for Week [{}] Year [{}]",
                 syncedCount, weekNumber, year);
+    }
+
+    /**
+     * Enrolls an active student into the current week's leaderboard and Redis grid with starting 0 XP.
+     */
+    @Transactional
+    public void enrollStudentInActiveWeek(UUID userId, int weekNumber, int year, LeagueTier tier) {
+        if (userId == null || tier == null) {
+            return;
+        }
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            return;
+        }
+        User user = userOpt.get();
+        if (user.isBot() || user.getRole() == UserRole.ROLE_ADMIN) {
+            return;
+        }
+
+        WeeklyLeaderboard board = gamificationRepository.findWeeklyLeaderboard(userId, weekNumber, year)
+                .orElseGet(() -> {
+                    WeeklyLeaderboard newBoard = WeeklyLeaderboard.builder()
+                            .userId(userId)
+                            .weekNumber(weekNumber)
+                            .year(year)
+                            .leagueTier(tier)
+                            .weeklyXp(0)
+                            .questionsSolved(0)
+                            .build();
+                    WeeklyLeaderboard saved = gamificationRepository.saveWeeklyLeaderboard(newBoard);
+                    return saved != null ? saved : newBoard;
+                });
+
+        Double scoreInRedis = redisLeaderboardPort.getStudentScore(year, weekNumber, tier, userId);
+        if (scoreInRedis == null) {
+            redisLeaderboardPort.recordWeeklyScore(year, weekNumber, tier, userId, board.getWeeklyXp());
+        }
+    }
+
+    /**
+     * Ensures all cohort peers (bots and the current student) are active in Redis for the current week.
+     */
+    @Transactional
+    public void ensureCohortActive(UUID currentUserId, int weekNumber, int year, LeagueTier tier) {
+        syncSimulatedPeersToRedis();
+        if (currentUserId != null) {
+            enrollStudentInActiveWeek(currentUserId, weekNumber, year, tier);
+        }
     }
 
     /**

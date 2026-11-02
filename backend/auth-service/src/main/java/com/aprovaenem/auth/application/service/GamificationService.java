@@ -48,6 +48,7 @@ public class GamificationService implements GamificationUseCase {
     private final LeaderboardRedisPort redisLeaderboardPort;
     private final NotificationPublisherPort notificationPublisherPort;
     private final UserRepositoryPort userRepository;
+    private final SimulatedPeerService simulatedPeerService;
 
     private static final ZoneId BRT_ZONE = ZoneId.of("America/Sao_Paulo");
     private Clock clock = Clock.system(BRT_ZONE);
@@ -300,6 +301,8 @@ public class GamificationService implements GamificationUseCase {
             }
         }
 
+        simulatedPeerService.ensureCohortActive(currentUserId, weekNumber, year, targetTier);
+
         // Calculate next Sunday 23:59:59 BRT
         LocalDate nextSunday = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
         String resetsAt = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(nextSunday.atTime(23, 59, 59).atZone(BRT_ZONE));
@@ -489,6 +492,7 @@ public class GamificationService implements GamificationUseCase {
                     entry.getWeekNumber(), entry.getYear());
             processWeeklyResetForWeek(entry.getWeekNumber(), entry.getYear());
         }
+        simulatedPeerService.syncSimulatedPeersToRedis();
     }
 
     private void processWeeklyResetForWeek(int weekNumber, int year) {

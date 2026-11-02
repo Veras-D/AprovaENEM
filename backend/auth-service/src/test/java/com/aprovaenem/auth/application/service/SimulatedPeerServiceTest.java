@@ -3,6 +3,7 @@ package com.aprovaenem.auth.application.service;
 import com.aprovaenem.auth.domain.model.LeagueTier;
 import com.aprovaenem.auth.domain.model.User;
 import com.aprovaenem.auth.domain.model.UserGamificationProfile;
+import com.aprovaenem.auth.domain.model.UserRole;
 import com.aprovaenem.auth.domain.model.WeeklyLeaderboard;
 import com.aprovaenem.auth.domain.port.out.GamificationRepositoryPort;
 import com.aprovaenem.auth.domain.port.out.LeaderboardRedisPort;
@@ -330,5 +331,49 @@ class SimulatedPeerServiceTest {
         assertThat(profile.getStreakDays()).isEqualTo(4);
         assertThat(profile.getLongestStreakDays()).isEqualTo(4);
         assertThat(profile.getLastActivityDate()).isEqualTo(today);
+    }
+
+    @Test
+    @DisplayName("Should enroll student in active week with 0 XP in Redis and Postgres when starting new week")
+    void shouldEnrollActiveStudentWithZeroStartingXpInRedisAndPostgres() {
+        UUID studentId = UUID.randomUUID();
+        User student = User.builder()
+                .id(studentId)
+                .email("student@aprovaenem.com.br")
+                .fullName("Lucas Silva")
+                .role(UserRole.ROLE_STUDENT)
+                .isBot(false)
+                .build();
+
+        when(userRepository.findById(studentId)).thenReturn(Optional.of(student));
+        when(gamificationRepository.findWeeklyLeaderboard(studentId, 45, 2026)).thenReturn(Optional.empty());
+        when(gamificationRepository.saveWeeklyLeaderboard(any(WeeklyLeaderboard.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+        when(redisLeaderboardPort.getStudentScore(2026, 45, LeagueTier.BRONZE, studentId)).thenReturn(null);
+
+        simulatedPeerService.enrollStudentInActiveWeek(studentId, 45, 2026, LeagueTier.BRONZE);
+
+        verify(gamificationRepository).saveWeeklyLeaderboard(any(WeeklyLeaderboard.class));
+        verify(redisLeaderboardPort).recordWeeklyScore(2026, 45, LeagueTier.BRONZE, studentId, 0.0);
+    }
+
+    @Test
+    @DisplayName("Should skip enrolling user when user is admin or bot")
+    void shouldSkipEnrollingUserWhenAdminOrBot() {
+        UUID adminId = UUID.randomUUID();
+        User admin = User.builder()
+                .id(adminId)
+                .email("admin@aprovaenem.com.br")
+                .fullName("Admin")
+                .role(UserRole.ROLE_ADMIN)
+                .isBot(false)
+                .build();
+
+        when(userRepository.findById(adminId)).thenReturn(Optional.of(admin));
+
+        simulatedPeerService.enrollStudentInActiveWeek(adminId, 45, 2026, LeagueTier.BRONZE);
+
+        verify(gamificationRepository, never()).saveWeeklyLeaderboard(any(WeeklyLeaderboard.class));
+        verify(redisLeaderboardPort, never()).recordWeeklyScore(anyInt(), anyInt(), any(), any(), anyDouble());
     }
 }

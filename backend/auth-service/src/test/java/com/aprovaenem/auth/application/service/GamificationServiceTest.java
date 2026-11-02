@@ -59,6 +59,9 @@ class GamificationServiceTest {
     @Mock
     private UserRepositoryPort userRepository;
 
+    @Mock
+    private SimulatedPeerService simulatedPeerService;
+
     @InjectMocks
     private GamificationService gamificationService;
 
