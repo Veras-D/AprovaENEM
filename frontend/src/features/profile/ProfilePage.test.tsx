@@ -126,7 +126,7 @@ describe('ProfilePage Feature', () => {
     fireEvent.change(nameInput, { target: { value: 'Maria Clara Souza' } });
 
     // Open school type custom Select dropdown
-    const schoolSelectTrigger = screen.getByRole('combobox');
+    const schoolSelectTrigger = screen.getAllByRole('combobox')[0];
     fireEvent.click(schoolSelectTrigger);
 
     // Select private school option from custom accessible listbox

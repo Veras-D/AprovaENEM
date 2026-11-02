@@ -152,7 +152,11 @@ export function formatScore(score: number): string {
   return `${Math.round(score)}%`;
 }
 
-export function transformRadarDataForChart(areas: readonly DiagnosticRadarAreaDto[]) {
+export function transformRadarDataForChart(
+  areas: readonly DiagnosticRadarAreaDto[],
+  customTarget?: number
+) {
+  const targetThreshold = customTarget !== undefined ? customTarget : MASTERY_TARGET_THRESHOLD;
   return areas.map((a) => {
     const meta = getAreaMetadata(a.knowledgeArea);
     return {
@@ -160,7 +164,7 @@ export function transformRadarDataForChart(areas: readonly DiagnosticRadarAreaDt
       areaName: meta.shortName,
       fullName: meta.name,
       score: Math.round(a.scorePercentage),
-      target: MASTERY_TARGET_THRESHOLD,
+      target: targetThreshold,
       baseline: NATIONAL_ENEM_BASELINE,
       totalQuestions: a.totalQuestions,
       correctQuestions: a.correctQuestions,

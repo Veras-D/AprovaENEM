@@ -60,4 +60,20 @@ describe('StudentDiagnosticRadar Component', () => {
     fireEvent.click(topicBtn);
     expect(handlePracticeTopic).toHaveBeenCalledWith('Brasil Colônia');
   });
+
+  it('dynamically adapts mastery target and cutoff score based on targetDegree', () => {
+    render(
+      <StudentDiagnosticRadar
+        report={MOCK_DIAGNOSTIC_REPORT}
+        targetDegree="Medicina"
+      />
+    );
+
+    expect(screen.getByText(/Meta de Domínio \(Medicina\):/i)).toBeInTheDocument();
+    expect(screen.getByText(/≥ 85%/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/~805 pts/i).length).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getByText(/Focar nesta área é decisivo para alcançar a nota de corte de ~805 pts em Medicina/i)
+    ).toBeInTheDocument();
+  });
 });

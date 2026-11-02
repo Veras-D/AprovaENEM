@@ -19,9 +19,16 @@ import {
   Table as TableIcon,
   PieChart,
   ArrowRight,
+  Sparkles,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { useAuthStore } from '@/stores/useAuthStore';
+import {
+  findSisuCourse,
+  getTargetMasteryThreshold,
+  getCourseCutoffScore,
+} from '@/features/profile/sisu-courses';
 import {
   getAreaMetadata,
   getMasteryConfig,
@@ -35,14 +42,31 @@ export interface StudentDiagnosticRadarProps {
   readonly report: DiagnosticReportDto;
   readonly className?: string;
   readonly onPracticeTopic?: (topic: string) => void;
+  readonly targetDegree?: string;
 }
 
 export const StudentDiagnosticRadar: React.FC<StudentDiagnosticRadarProps> = ({
   report,
   className = '',
   onPracticeTopic,
+  targetDegree: propTargetDegree,
 }) => {
   const [showTableView, setShowTableView] = useState<boolean>(false);
+  const authUser = useAuthStore((s) => s.user);
+
+  const effectiveTargetDegree = propTargetDegree ?? authUser?.targetDegree;
+  const courseConfig = useMemo(
+    () => findSisuCourse(effectiveTargetDegree),
+    [effectiveTargetDegree]
+  );
+  const effectiveMasteryTarget = useMemo(
+    () => getTargetMasteryThreshold(effectiveTargetDegree),
+    [effectiveTargetDegree]
+  );
+  const effectiveCutoffScore = useMemo(
+    () => getCourseCutoffScore(effectiveTargetDegree),
+    [effectiveTargetDegree]
+  );
 
   const radarAreas: readonly DiagnosticRadarAreaDto[] = useMemo(() => {
     if (report.radar && report.radar.length > 0) {
@@ -89,7 +113,10 @@ export const StudentDiagnosticRadar: React.FC<StudentDiagnosticRadarProps> = ({
     ];
   }, [report.radar]);
 
-  const chartData = useMemo(() => transformRadarDataForChart(radarAreas), [radarAreas]);
+  const chartData = useMemo(
+    () => transformRadarDataForChart(radarAreas, effectiveMasteryTarget),
+    [radarAreas, effectiveMasteryTarget]
+  );
 
   // Identify highest and lowest areas
   const { strongestArea, weakestArea } = useMemo(() => {
@@ -314,7 +341,10 @@ export const StudentDiagnosticRadar: React.FC<StudentDiagnosticRadarProps> = ({
                 </div>
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-400 pl-10">
-                Seu score atual é de <strong className="text-amber-600 dark:text-amber-400 font-bold">{weakestArea.score}%</strong>. Focar nesta área elevará sensivelmente sua nota de corte no SISU.
+                Seu score atual é de <strong className="text-amber-600 dark:text-amber-400 font-bold">{weakestArea.score}%</strong>.
+                {courseConfig
+                  ? ` Focar nesta área é decisivo para alcançar a nota de corte de ~${effectiveCutoffScore} pts em ${courseConfig.name}.`
+                  : ' Focar nesta área elevará sensivelmente sua nota de corte no SISU.'}
                 {weakestArea.topWeakTopic && (
                   <span className="block mt-1 font-semibold text-amber-800 dark:text-amber-300">
                     Tópico crítico sugerido: {weakestArea.topWeakTopic}
@@ -325,13 +355,23 @@ export const StudentDiagnosticRadar: React.FC<StudentDiagnosticRadarProps> = ({
           )}
 
           {/* Target Score Summary Info */}
-          <div className="p-4 rounded-brand border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 space-y-2 animate-fade-up stagger-4">
+          <div className="p-4 rounded-brand border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 space-y-2.5 animate-fade-up stagger-4">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-600 dark:text-slate-400 font-medium">Meta de Domínio:</span>
+              <span className="text-slate-600 dark:text-slate-400 font-medium">
+                Meta de Domínio{courseConfig ? ` (${courseConfig.name})` : ''}:
+              </span>
               <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                ≥ {MASTERY_TARGET_THRESHOLD}%
+                ≥ {effectiveMasteryTarget}%
               </span>
             </div>
+            {courseConfig && (
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-600 dark:text-slate-400 font-medium">Nota de Corte SISU Estimada:</span>
+                <span className="font-mono font-bold text-amber-700 dark:text-amber-300">
+                  ~{effectiveCutoffScore} pts
+                </span>
+              </div>
+            )}
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-600 dark:text-slate-400 font-medium">Média Nacional ENEM:</span>
               <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
