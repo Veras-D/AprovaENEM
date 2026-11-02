@@ -1,10 +1,8 @@
 import React, { useState, useRef, useEffect, useId, useMemo } from 'react';
-import { Search, GraduationCap, ChevronDown, Check, X, Sparkles } from 'lucide-react';
+import { GraduationCap, ChevronDown, Check, X, Sparkles } from 'lucide-react';
 import {
   SISU_COURSES,
   findSisuCourse,
-  ACADEMIC_AREA_LABELS,
-  type AcademicArea,
   type SisuCourseConfig,
 } from '@/features/profile/sisu-courses';
 
@@ -119,7 +117,10 @@ export const CourseSelector: React.FC<CourseSelectorProps> = ({
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (highlightedIndex >= 0 && highlightedIndex < filteredCourses.length) {
-        handleSelectCourse(filteredCourses[highlightedIndex]);
+        const candidate = filteredCourses[highlightedIndex];
+        if (candidate) {
+          handleSelectCourse(candidate);
+        }
       } else {
         setIsOpen(false);
       }

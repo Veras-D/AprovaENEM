@@ -19,7 +19,6 @@ import {
   Table as TableIcon,
   PieChart,
   ArrowRight,
-  Sparkles,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -33,7 +32,6 @@ import {
   getAreaMetadata,
   getMasteryConfig,
   NATIONAL_ENEM_BASELINE,
-  MASTERY_TARGET_THRESHOLD,
   transformRadarDataForChart,
 } from '../diagnostic-utils';
 import type { DiagnosticReportDto, DiagnosticRadarAreaDto } from '@/api/types';
