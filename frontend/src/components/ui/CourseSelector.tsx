@@ -131,7 +131,7 @@ export const CourseSelector: React.FC<CourseSelectorProps> = ({
   };
 
   return (
-    <div ref={containerRef} className={`relative space-y-1.5 ${className}`}>
+    <div ref={containerRef} className={`relative space-y-1.5 ${isOpen ? 'z-40' : 'z-10'} ${className}`}>
       {label && (
         <label
           htmlFor={inputId}
@@ -162,7 +162,7 @@ export const CourseSelector: React.FC<CourseSelectorProps> = ({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           required={required}
-          className="w-full pl-9 pr-16 py-2.5 text-xs sm:text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary transition-colors"
+          className="w-full pl-9 pr-16 py-2.5 text-xs sm:text-sm rounded-brand border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary transition-colors shadow-xs"
         />
 
         <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center gap-1">
@@ -189,69 +189,82 @@ export const CourseSelector: React.FC<CourseSelectorProps> = ({
             />
           </button>
         </div>
+
+        {/* Autocomplete Dropdown Menu directly attached to input */}
+        {isOpen && (
+          <div
+            id={listboxId}
+            role="listbox"
+            aria-label="Cursos de graduação do SISU"
+            className="absolute z-50 left-0 right-0 top-full mt-1.5 max-h-60 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl py-1 focus:outline-none animate-in fade-in zoom-in-95 duration-100"
+          >
+            {filteredCourses.length === 0 ? (
+              <div className="p-3 text-center text-xs text-slate-500 dark:text-slate-400">
+                <p className="font-semibold text-slate-700 dark:text-slate-300">
+                  Curso customizado: &quot;{searchTerm}&quot;
+                </p>
+                <p className="mt-0.5 text-[11px]">
+                  Usaremos o padrão SISU (~700 pts / 70% de domínio) como meta inicial.
+                </p>
+              </div>
+            ) : (
+              filteredCourses.map((course, idx) => {
+                const isSelected = value.toLowerCase() === course.name.toLowerCase();
+                const isHighlighted = idx === highlightedIndex;
+                const showAreaHeader = idx === 0 || course.area !== filteredCourses[idx - 1]?.area;
+
+                return (
+                  <React.Fragment key={course.id}>
+                    {showAreaHeader && (
+                      <div className="px-3 pt-2.5 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500 bg-slate-50/90 dark:bg-slate-800/90 sticky top-0 backdrop-blur-xs border-y border-slate-100 dark:border-slate-800/60 first:border-t-0 select-none">
+                        {course.areaLabel}
+                      </div>
+                    )}
+                    <div
+                      role="option"
+                      aria-selected={isSelected}
+                      onClick={() => handleSelectCourse(course)}
+                      onMouseEnter={() => setHighlightedIndex(idx)}
+                      className={`px-3 py-2 cursor-pointer flex items-center justify-between text-xs sm:text-sm transition-colors select-none ${
+                        isHighlighted
+                          ? 'bg-brand-primary/10 dark:bg-brand-primary/20 text-brand-primary dark:text-brand-primary'
+                          : isSelected
+                          ? 'bg-slate-100 dark:bg-slate-800/80 font-semibold'
+                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                      }`}
+                    >
+                      <div className="min-w-0 pr-2">
+                        <span className="block font-medium truncate text-slate-900 dark:text-slate-100">
+                          {course.name}
+                        </span>
+                        <span className="block text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                          Foco: {course.primaryCompetency}
+                        </span>
+                      </div>
+
+                      <div className="shrink-0 flex items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold border ${
+                          course.averageCutoff >= 750
+                            ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/50'
+                            : course.averageCutoff >= 680
+                            ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50'
+                            : 'bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                        }`}>
+                          ~{course.averageCutoff} pts
+                        </span>
+                        {isSelected && <Check className="h-4 w-4 text-brand-primary shrink-0 stroke-[2.5]" />}
+                      </div>
+                    </div>
+                  </React.Fragment>
+                );
+              })
+            )}
+          </div>
+        )}
       </div>
 
       {hint && !matchedCourse && (
         <p className="text-[11px] text-slate-500 dark:text-slate-400">{hint}</p>
-      )}
-
-      {/* Autocomplete Dropdown Menu */}
-      {isOpen && (
-        <div
-          id={listboxId}
-          role="listbox"
-          aria-label="Cursos de graduação do SISU"
-          className="absolute z-50 mt-1 w-full max-h-64 overflow-y-auto rounded-brand border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg py-1 animate-fade-down"
-        >
-          {filteredCourses.length === 0 ? (
-            <div className="p-3 text-center text-xs text-slate-500 dark:text-slate-400">
-              <p className="font-semibold text-slate-700 dark:text-slate-300">
-                Curso customizado: &quot;{searchTerm}&quot;
-              </p>
-              <p className="mt-0.5 text-[11px]">
-                Usaremos o padrão SISU (~700 pts / 70% de domínio) como meta inicial.
-              </p>
-            </div>
-          ) : (
-            filteredCourses.map((course, idx) => {
-              const isSelected = value.toLowerCase() === course.name.toLowerCase();
-              const isHighlighted = idx === highlightedIndex;
-
-              return (
-                <div
-                  key={course.id}
-                  role="option"
-                  aria-selected={isSelected}
-                  onClick={() => handleSelectCourse(course)}
-                  onMouseEnter={() => setHighlightedIndex(idx)}
-                  className={`px-3 py-2 cursor-pointer flex items-center justify-between text-xs sm:text-sm transition-colors ${
-                    isHighlighted
-                      ? 'bg-brand-primary/10 dark:bg-brand-primary/20 text-brand-primary dark:text-brand-primary'
-                      : isSelected
-                      ? 'bg-slate-50 dark:bg-slate-800 font-semibold'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <div className="min-w-0 pr-2">
-                    <span className="block font-medium truncate text-slate-900 dark:text-slate-100">
-                      {course.name}
-                    </span>
-                    <span className="block text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                      {course.areaLabel} • Foco: {course.primaryCompetency}
-                    </span>
-                  </div>
-
-                  <div className="shrink-0 flex items-center gap-1.5">
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/50">
-                      ~{course.averageCutoff} pts
-                    </span>
-                    {isSelected && <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />}
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
       )}
 
       {/* Benchmark Badge Card */}

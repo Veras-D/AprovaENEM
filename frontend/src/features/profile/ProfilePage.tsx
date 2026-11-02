@@ -344,10 +344,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       </section>
 
       {/* Two-Column Responsive Grid: Academic Data & Daily Study Goals */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-up stagger-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-up stagger-3 relative z-20">
         {/* CARD: Personal & Academic Data */}
-        <section aria-labelledby="personal-data-heading">
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 h-full flex flex-col justify-between">
+        <section aria-labelledby="personal-data-heading" className="relative z-20">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 h-full flex flex-col justify-between relative z-20">
             <div>
               <div className="flex items-center gap-2 pb-4 border-b border-slate-100 dark:border-slate-800 mb-5">
                 <User className="h-5 w-5 text-brand-primary" aria-hidden="true" />
@@ -550,7 +550,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       {/* SECTION 2.5: Subscription Plan & Dev Mode Free Pro Upgrade */}
       <section
         aria-labelledby="subscription-plan-heading"
-        className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 animate-fade-up stagger-4"
+        className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 animate-fade-up stagger-4 relative z-10"
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800 mb-4">
           <div className="flex items-center gap-2.5">
