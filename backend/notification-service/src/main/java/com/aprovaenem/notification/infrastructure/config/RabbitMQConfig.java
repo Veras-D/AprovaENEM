@@ -21,6 +21,7 @@ public class RabbitMQConfig {
     public static final String NOTIFICATION_AUTH_QUEUE = "notification.auth.queue";
     public static final String NOTIFICATION_REMINDERS_QUEUE = "notification.reminders.queue";
     public static final String NOTIFICATION_PASSWORD_RESET_QUEUE = "notification.password_reset.queue";
+    public static final String NOTIFICATION_USER_REGISTERED_QUEUE = "notification.user_registered.queue";
 
     public static final String USER_REGISTERED_ROUTING_KEY = "user.registered";
     public static final String EMAIL_VERIFICATION_ROUTING_KEY = "auth.email_verification";
@@ -61,6 +62,11 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Queue notificationUserRegisteredQueue() {
+        return QueueBuilder.durable(NOTIFICATION_USER_REGISTERED_QUEUE).build();
+    }
+
+    @Bean
     public Binding bindingEmailVerification(Queue notificationAuthQueue, TopicExchange authExchange) {
         return BindingBuilder.bind(notificationAuthQueue).to(authExchange).with(EMAIL_VERIFICATION_ROUTING_KEY);
     }
@@ -68,6 +74,11 @@ public class RabbitMQConfig {
     @Bean
     public Binding bindingPasswordReset(Queue notificationPasswordResetQueue, TopicExchange authExchange) {
         return BindingBuilder.bind(notificationPasswordResetQueue).to(authExchange).with(PASSWORD_RESET_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding bindingUserRegistered(Queue notificationUserRegisteredQueue, TopicExchange authExchange) {
+        return BindingBuilder.bind(notificationUserRegisteredQueue).to(authExchange).with(USER_REGISTERED_ROUTING_KEY);
     }
 
     @Bean

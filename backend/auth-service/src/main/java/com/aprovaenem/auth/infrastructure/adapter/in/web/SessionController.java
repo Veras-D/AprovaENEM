@@ -7,11 +7,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -44,6 +49,28 @@ public class SessionController {
                 .isAnonymous(session.getClaimedByUserId() == null)
                 .expiresAt(session.getExpiresAt())
                 .message("Active session retrieved successfully.")
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/session/{sessionUuid}/claim")
+    public ResponseEntity<AnonymousSessionResponse> claimSession(
+            @PathVariable String sessionUuid,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        UUID userId = UUID.fromString(userDetails.getUsername());
+        sessionUseCase.claimSession(sessionUuid, userId);
+        AnonymousSession session = sessionUseCase.getSession(sessionUuid);
+
+        AnonymousSessionResponse response = AnonymousSessionResponse.builder()
+                .sessionId(session.getSessionUuid())
+                .isAnonymous(false)
+                .expiresAt(session.getExpiresAt())
+                .message("Session claimed successfully by user " + userId)
                 .build();
 
         return ResponseEntity.ok(response);

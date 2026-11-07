@@ -1,18 +1,21 @@
 package com.aprovaenem.exam.infrastructure.adapter.in.web;
 
+import com.aprovaenem.common.exception.AccessDeniedException;
+import com.aprovaenem.common.exception.ResourceNotFoundException;
 import com.aprovaenem.exam.domain.model.DifficultyLevel;
 import com.aprovaenem.exam.domain.model.PagedResult;
 import com.aprovaenem.exam.domain.model.Question;
 import com.aprovaenem.exam.domain.model.QuestionFilterCommand;
+import com.aprovaenem.exam.domain.model.QuestionResolution;
 import com.aprovaenem.exam.domain.model.QuestionStatus;
 import com.aprovaenem.exam.domain.port.in.QuestionCatalogUseCase;
 import com.aprovaenem.exam.infrastructure.adapter.in.web.dto.QuestionDetailResponse;
 import com.aprovaenem.exam.infrastructure.adapter.in.web.dto.QuestionListResponse;
 import com.aprovaenem.exam.infrastructure.adapter.in.web.dto.QuestionOptionDto;
+import com.aprovaenem.exam.infrastructure.adapter.in.web.dto.QuestionResolutionResponse;
 import com.aprovaenem.exam.infrastructure.adapter.in.web.dto.QuestionSummaryDto;
 import com.aprovaenem.exam.infrastructure.adapter.in.web.dto.UpdateQuestionStatusRequest;
 import jakarta.validation.Valid;
-import com.aprovaenem.common.exception.AccessDeniedException;
 import com.aprovaenem.exam.infrastructure.security.JwtTokenValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -74,6 +77,23 @@ public class QuestionCatalogController {
     public ResponseEntity<QuestionDetailResponse> getQuestionById(@PathVariable UUID id) {
         Question q = catalogUseCase.getQuestionById(id);
         return ResponseEntity.ok(toDetailDto(q));
+    }
+
+    @GetMapping("/{id}/resolution")
+    public ResponseEntity<QuestionResolutionResponse> getQuestionResolution(@PathVariable UUID id) {
+        Question q = catalogUseCase.getQuestionById(id);
+        QuestionResolution res = q.getResolution();
+        if (res == null) {
+            throw new ResourceNotFoundException("QuestionResolution", id);
+        }
+        return ResponseEntity.ok(QuestionResolutionResponse.builder()
+                .questionId(q.getId())
+                .correctOption(String.valueOf(q.getCorrectOption()))
+                .baseExplanation(res.getBaseExplanation())
+                .keyConcepts(res.getKeyConcepts())
+                .authorAttribution(res.getAuthorAttribution())
+                .attribution(res.getAuthorAttribution())
+                .build());
     }
 
     @PatchMapping("/{id}/status")

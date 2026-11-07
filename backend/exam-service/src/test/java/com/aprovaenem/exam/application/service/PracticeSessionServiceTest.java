@@ -158,6 +158,37 @@ class PracticeSessionServiceTest {
     }
 
     @Test
+    @DisplayName("Should auto-provision session and submit answer when session is not pre-registered")
+    void shouldAutoProvisionSessionAndSubmitAnswerWhenSessionNotFound() {
+        UUID sessionId = UUID.randomUUID();
+        UUID questionId = UUID.randomUUID();
+
+        Question question = new Question();
+        question.setId(questionId);
+        question.setCorrectOption('A');
+
+        when(sessionRepository.findById(sessionId)).thenReturn(Optional.empty());
+        when(sessionRepository.save(any(PracticeSession.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+        when(sessionRepository.existsAttempt(sessionId, questionId)).thenReturn(false);
+        when(questionRepository.findById(questionId)).thenReturn(Optional.of(question));
+        when(sessionRepository.saveAttempt(any(StudentAttempt.class)))
+                .thenAnswer(inv -> {
+                    StudentAttempt a = inv.getArgument(0);
+                    a.setId(UUID.randomUUID());
+                    return a;
+                });
+
+        SubmitAnswerCommand command = new SubmitAnswerCommand(sessionId, questionId, 'A', 25);
+        AttemptResult result = practiceSessionService.submitAnswer(command);
+
+        assertThat(result).isNotNull();
+        assertThat(result.isCorrect()).isTrue();
+        org.mockito.Mockito.verify(sessionRepository, org.mockito.Mockito.atLeastOnce()).save(any(PracticeSession.class));
+        verify(sessionRepository).saveAttempt(any(StudentAttempt.class));
+    }
+
+    @Test
     @DisplayName("Should submit an incorrect answer without incrementing correct count")
     void shouldSubmitIncorrectAnswer() {
         UUID sessionId = UUID.randomUUID();

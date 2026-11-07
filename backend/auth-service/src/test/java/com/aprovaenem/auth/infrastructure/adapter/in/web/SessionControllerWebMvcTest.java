@@ -15,17 +15,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -107,5 +110,41 @@ class SessionControllerWebMvcTest {
                 .andExpect(jsonPath("$.status", is(404)))
                 .andExpect(jsonPath("$.error", is("Not Found")))
                 .andExpect(jsonPath("$.message", is("Anonymous session not found with identifier: " + sessionUuid)));
+    }
+
+    @Test
+    @WithMockUser(username = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", roles = "STUDENT")
+    @DisplayName("PUT /api/v1/auth/session/{sessionUuid}/claim should link session to user when authenticated")
+    void shouldClaimSessionSuccessfullyWhenAuthenticated() throws Exception {
+        String sessionUuid = UUID.randomUUID().toString();
+        UUID userId = UUID.fromString("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11");
+        Instant expiresAt = Instant.now().plus(30, ChronoUnit.DAYS);
+
+        AnonymousSession claimedSession = AnonymousSession.builder()
+                .id(UUID.randomUUID())
+                .sessionUuid(sessionUuid)
+                .claimedByUserId(userId)
+                .ipHash("hash123")
+                .createdAt(Instant.now())
+                .lastActiveAt(Instant.now())
+                .expiresAt(expiresAt)
+                .build();
+
+        when(sessionUseCase.getSession(sessionUuid)).thenReturn(claimedSession);
+
+        mockMvc.perform(put("/api/v1/auth/session/" + sessionUuid + "/claim"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sessionId", is(sessionUuid)))
+                .andExpect(jsonPath("$.anonymous", is(false)))
+                .andExpect(jsonPath("$.message", containsString("Session claimed successfully")));
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/auth/session/{sessionUuid}/claim should return HTTP 401 when unauthenticated")
+    void shouldReturnUnauthorizedWhenClaimingSessionUnauthenticated() throws Exception {
+        String sessionUuid = UUID.randomUUID().toString();
+
+        mockMvc.perform(put("/api/v1/auth/session/" + sessionUuid + "/claim"))
+                .andExpect(status().isUnauthorized());
     }
 }

@@ -6,6 +6,7 @@ import com.aprovaenem.exam.domain.model.PagedResult;
 import com.aprovaenem.exam.domain.model.Question;
 import com.aprovaenem.exam.domain.model.QuestionFilterCommand;
 import com.aprovaenem.exam.domain.model.QuestionOption;
+import com.aprovaenem.exam.domain.model.QuestionResolution;
 import com.aprovaenem.exam.domain.model.QuestionStatus;
 import com.aprovaenem.exam.domain.port.in.QuestionCatalogUseCase;
 import com.aprovaenem.exam.infrastructure.adapter.in.web.dto.UpdateQuestionStatusRequest;
@@ -125,6 +126,45 @@ class QuestionCatalogControllerWebMvcTest {
                 .andExpect(jsonPath("$.status", is("ACTIVE")))
                 .andExpect(jsonPath("$.options", hasSize(2)))
                 .andExpect(jsonPath("$.options[0].isCorrect", nullValue()));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/questions/{id}/resolution should return HTTP 200 with step-by-step resolution")
+    void shouldGetQuestionResolutionSuccessfully() throws Exception {
+        UUID questionId = UUID.randomUUID();
+        Question q = createSampleQuestion(questionId);
+        QuestionResolution res = new QuestionResolution(
+                UUID.randomUUID(),
+                questionId,
+                "Como não há atrito, a energia mecânica se conserva: E = m*g*h",
+                "Conservação da Energia; Dinâmica",
+                "Prof. Carlos"
+        );
+        q.setResolution(res);
+
+        when(catalogUseCase.getQuestionById(questionId)).thenReturn(q);
+
+        mockMvc.perform(get("/api/v1/questions/" + questionId + "/resolution"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.questionId", is(questionId.toString())))
+                .andExpect(jsonPath("$.correctOption", is("B")))
+                .andExpect(jsonPath("$.baseExplanation", containsString("energia mecânica se conserva")))
+                .andExpect(jsonPath("$.keyConcepts", containsString("Conservação da Energia")))
+                .andExpect(jsonPath("$.attribution", is("Prof. Carlos")));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/questions/{id}/resolution when resolution is missing should return HTTP 404")
+    void shouldReturnNotFoundWhenResolutionDoesNotExist() throws Exception {
+        UUID questionId = UUID.randomUUID();
+        Question q = createSampleQuestion(questionId);
+        q.setResolution(null);
+
+        when(catalogUseCase.getQuestionById(questionId)).thenReturn(q);
+
+        mockMvc.perform(get("/api/v1/questions/" + questionId + "/resolution"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status", is(404)));
     }
 
     @Test

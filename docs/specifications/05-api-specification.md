@@ -139,7 +139,25 @@ Vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers
 
 ---
 
-### 2.3 Register Student Account (Optional)
+### 2.3 Claim Anonymous Session (Associate with Authenticated Account)
+* **Method**: `PUT`
+* **Path**: `/api/v1/auth/session/{sessionUuid}/claim`
+* **Security**: Bearer JWT (`Authorization: Bearer <token>`)
+* **Description**: Links guest study progress, answered questions, and diagnostic assessment data from an anonymous session to a newly registered or authenticated student account.
+
+#### Response `200 OK`
+```json
+{
+  "sessionId": "a8b9c0d1-e2f3-4a5b-6c7d-8e9f0a1b2c3d",
+  "isAnonymous": false,
+  "expiresAt": "2026-10-17T19:40:00Z",
+  "message": "Session successfully claimed and associated with account."
+}
+```
+
+---
+
+### 2.4 Register Student Account (Optional)
 * **Method**: `POST`
 * **Path**: `/api/v1/auth/register`
 * **Description**: Creates a registered account to persist diagnostic history across devices.

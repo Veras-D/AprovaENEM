@@ -73,7 +73,17 @@ public class PracticeSessionService implements PracticeSessionUseCase {
                 command.getSessionId(), command.getQuestionId(), command.getSelectedOption());
 
         PracticeSession session = sessionRepository.findById(command.getSessionId())
-                .orElseThrow(() -> new ResourceNotFoundException("Practice session", command.getSessionId()));
+                .orElseGet(() -> {
+                    log.info("Auto-provisioning missing practice session for id: {}", command.getSessionId());
+                    PracticeSession newSession = new PracticeSession(
+                            command.getSessionId(),
+                            null,
+                            command.getSessionId().toString(),
+                            SessionType.TOPIC_PRACTICE,
+                            10
+                    );
+                    return sessionRepository.save(newSession);
+                });
 
         if (!session.canAcceptAttempt()) {
             throw new BusinessException("Session is already closed or abandoned. No more attempts allowed.");
@@ -126,7 +136,17 @@ public class PracticeSessionService implements PracticeSessionUseCase {
         log.info("Completing practice session and calculating diagnostic report: {}", sessionId);
 
         PracticeSession session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Practice session", sessionId));
+                .orElseGet(() -> {
+                    log.info("Auto-provisioning missing practice session for completion: {}", sessionId);
+                    PracticeSession newSession = new PracticeSession(
+                            sessionId,
+                            null,
+                            sessionId.toString(),
+                            SessionType.TOPIC_PRACTICE,
+                            10
+                    );
+                    return sessionRepository.save(newSession);
+                });
 
         if (session.canAcceptAttempt()) {
             session.complete();

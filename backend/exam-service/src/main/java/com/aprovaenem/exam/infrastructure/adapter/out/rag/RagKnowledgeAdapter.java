@@ -7,14 +7,23 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class RagKnowledgeAdapter implements RagKnowledgePort {
+
+    private static final Set<String> STOP_WORDS = Set.of(
+            "como", "para", "onde", "qual", "quais", "quem", "porque", "sobre", "pelo",
+            "pela", "este", "esta", "esse", "essa", "isso", "com", "sem", "por", "que",
+            "uma", "mais", "dos", "das", "the", "and", "how", "what", "when", "with"
+    );
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -30,12 +39,20 @@ public class RagKnowledgeAdapter implements RagKnowledgePort {
                     "WHERE content ILIKE ? OR content ILIKE ? " +
                     "LIMIT ?";
 
-            String[] words = queryText.trim().split("\\s+");
-            String keyword = words.length > 0 ? "%" + words[0] + "%" : "%ENEM%";
-            String topicKeyword = "%";
-            if (queryText.toLowerCase().contains("chuveiro") || queryText.toLowerCase().contains("disjuntor") || queryText.toLowerCase().contains("corrente")) {
+            List<String> meaningfulWords = Arrays.stream(queryText.trim().replaceAll("[^a-zA-Z0-9À-ÿ\\s]", " ").split("\\s+"))
+                    .map(String::trim)
+                    .filter(w -> w.length() >= 3)
+                    .filter(w -> !STOP_WORDS.contains(w.toLowerCase(Locale.ROOT)))
+                    .toList();
+
+            String keyword = !meaningfulWords.isEmpty() ? "%" + meaningfulWords.get(0) + "%" : "%";
+            String topicKeyword = meaningfulWords.size() > 1 ? "%" + meaningfulWords.get(1) + "%" : keyword;
+
+            // Retain domain keyword boosting
+            String lowerQuery = queryText.toLowerCase(Locale.ROOT);
+            if (lowerQuery.contains("chuveiro") || lowerQuery.contains("disjuntor") || lowerQuery.contains("corrente")) {
                 topicKeyword = "%disjuntor%";
-            } else if (queryText.toLowerCase().contains("cilindro") || queryText.toLowerCase().contains("volume") || queryText.toLowerCase().contains("raio")) {
+            } else if (lowerQuery.contains("cilindro") || lowerQuery.contains("volume") || lowerQuery.contains("raio")) {
                 topicKeyword = "%cilindro%";
             }
 

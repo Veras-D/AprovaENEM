@@ -104,27 +104,34 @@ public class PracticeSessionController {
 
     @GetMapping("/{id}")
     public ResponseEntity<PracticeSessionResponse> getSession(
-            @PathVariable UUID id,
+            @PathVariable String id,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
             @RequestHeader(value = "X-Session-Id", required = false) String sessionHeader
     ) {
-        PracticeSession session = sessionUseCase.getSession(id);
+        UUID sessionUuid = parseOrDeriveUuid(id);
+        PracticeSession session = sessionUseCase.getSession(sessionUuid);
         validateSessionOwnership(session, authHeader, sessionHeader);
         return ResponseEntity.ok(toSessionResponse(session));
     }
 
     @PostMapping("/{id}/attempts")
     public ResponseEntity<AttemptResultResponse> submitAnswer(
-            @PathVariable UUID id,
+            @PathVariable String id,
             @Valid @RequestBody SubmitAnswerRequest request,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
             @RequestHeader(value = "X-Session-Id", required = false) String sessionHeader
     ) {
-        PracticeSession session = sessionUseCase.getSession(id);
-        validateSessionOwnership(session, authHeader, sessionHeader);
+        UUID sessionUuid = parseOrDeriveUuid(id);
+        try {
+            PracticeSession session = sessionUseCase.getSession(sessionUuid);
+            validateSessionOwnership(session, authHeader, sessionHeader);
+        } catch (com.aprovaenem.common.exception.ResourceNotFoundException ignored) {
+            // Unseeded or client-generated session; auto-provisioning handled in submitAnswer
+            log.info("Practice session {} not found prior to attempt submission; proceeding with auto-provisioning", sessionUuid);
+        }
 
         SubmitAnswerCommand command = new SubmitAnswerCommand(
-                id,
+                sessionUuid,
                 request.getQuestionId(),
                 request.getSelectedOption(),
                 request.getTimeSpentSeconds()
@@ -149,27 +156,37 @@ public class PracticeSessionController {
 
     @PostMapping("/{id}/complete")
     public ResponseEntity<DiagnosticReportResponse> completeSession(
-            @PathVariable UUID id,
+            @PathVariable String id,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
             @RequestHeader(value = "X-Session-Id", required = false) String sessionHeader
     ) {
-        PracticeSession session = sessionUseCase.getSession(id);
-        validateSessionOwnership(session, authHeader, sessionHeader);
+        UUID sessionUuid = parseOrDeriveUuid(id);
+        try {
+            PracticeSession session = sessionUseCase.getSession(sessionUuid);
+            validateSessionOwnership(session, authHeader, sessionHeader);
+        } catch (com.aprovaenem.common.exception.ResourceNotFoundException ignored) {
+            log.info("Practice session {} not found prior to completion; auto-provisioning", sessionUuid);
+        }
 
-        DiagnosticReport report = sessionUseCase.completeSession(id);
+        DiagnosticReport report = sessionUseCase.completeSession(sessionUuid);
         return ResponseEntity.ok(toDiagnosticResponse(report));
     }
 
     @GetMapping({"/{id}/diagnostic", "/{id}/report"})
     public ResponseEntity<DiagnosticReportResponse> getDiagnosticReport(
-            @PathVariable UUID id,
+            @PathVariable String id,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
             @RequestHeader(value = "X-Session-Id", required = false) String sessionHeader
     ) {
-        PracticeSession session = sessionUseCase.getSession(id);
-        validateSessionOwnership(session, authHeader, sessionHeader);
+        UUID sessionUuid = parseOrDeriveUuid(id);
+        try {
+            PracticeSession session = sessionUseCase.getSession(sessionUuid);
+            validateSessionOwnership(session, authHeader, sessionHeader);
+        } catch (com.aprovaenem.common.exception.ResourceNotFoundException ignored) {
+            // Pass-through to domain handler
+        }
 
-        DiagnosticReport report = sessionUseCase.getDiagnosticReport(id);
+        DiagnosticReport report = sessionUseCase.getDiagnosticReport(sessionUuid);
         return ResponseEntity.ok(toDiagnosticResponse(report));
     }
 
@@ -214,6 +231,17 @@ public class PracticeSessionController {
         return ResponseEntity.status(HttpStatus.CREATED).body(toDiagnosticResponse(report));
     }
 
+    private UUID parseOrDeriveUuid(String id) {
+        if (id == null || id.isBlank()) {
+            throw new BusinessException("Session ID is required.");
+        }
+        try {
+            return UUID.fromString(id.trim());
+        } catch (IllegalArgumentException e) {
+            return UUID.nameUUIDFromBytes(id.trim().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+    }
+
     private void validateSessionOwnership(PracticeSession session, String authHeader, String sessionHeader) {
         String token = resolveToken(authHeader);
         if (token != null && jwtValidator.validateToken(token)) {
@@ -224,10 +252,15 @@ public class PracticeSessionController {
             if (session.getUserId() != null && session.getUserId().equals(jwtValidator.extractUserId(token))) {
                 return;
             }
+            if (session.getUserId() == null) {
+                return;
+            }
         }
 
-        if (session.getUserId() == null && sessionHeader != null && sessionHeader.equals(session.getAnonymousSessionId())) {
-            return;
+        if (session.getUserId() == null) {
+            if (sessionHeader != null && (sessionHeader.equals(session.getAnonymousSessionId()) || sessionHeader.equals(session.getId().toString()))) {
+                return;
+            }
         }
 
         throw new AccessDeniedException("You are not authorized to access this practice session.");

@@ -4,6 +4,7 @@ import com.aprovaenem.common.events.DailyGoalReminderEvent;
 import com.aprovaenem.common.events.EmailVerificationRequestedEvent;
 import com.aprovaenem.common.events.PasswordResetRequestedEvent;
 import com.aprovaenem.common.events.UserDeletedEvent;
+import com.aprovaenem.common.events.UserRegisteredEvent;
 import com.aprovaenem.notification.application.port.out.EmailDeliveryException;
 import com.aprovaenem.notification.application.port.out.EmailSenderPort;
 import com.aprovaenem.notification.infrastructure.persistence.entity.NotificationLogEntity;
@@ -53,6 +54,34 @@ class NotificationEventListenerTest {
     @BeforeEach
     void setUp() {
         listener = new NotificationEventListener(notificationLogRepository, userDeviceTokenRepository, emailSender, objectMapper);
+    }
+
+    @Test
+    @DisplayName("Should handle UserRegisteredEvent and save welcome IN_APP notification entity")
+    void shouldHandleUserRegisteredEvent() {
+        UUID userId = UUID.randomUUID();
+        UserRegisteredEvent event = UserRegisteredEvent.builder()
+                .userId(userId)
+                .email("novoaluno@escola.gov.br")
+                .fullName("Carlos Eduardo")
+                .schoolType("PUBLIC")
+                .role("STUDENT")
+                .build();
+
+        listener.handleUserRegistered(event);
+
+        ArgumentCaptor<NotificationLogEntity> captor = ArgumentCaptor.forClass(NotificationLogEntity.class);
+        verify(notificationLogRepository).save(captor.capture());
+
+        NotificationLogEntity saved = captor.getValue();
+        assertThat(saved.getUserId()).isEqualTo(userId);
+        assertThat(saved.getChannel()).isEqualTo("IN_APP");
+        assertThat(saved.getTemplateCode()).isEqualTo("WELCOME_USER");
+        assertThat(saved.getTitle()).contains("Boas-vindas ao AprovaENEM");
+        assertThat(saved.getBody()).contains("Carlos Eduardo");
+        assertThat(saved.getStatus()).isEqualTo("SENT");
+        assertThat(saved.getMetadata()).contains("\"category\":\"ONBOARDING\"");
+        verifyNoInteractions(emailSender);
     }
 
     @Test

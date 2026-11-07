@@ -4,6 +4,7 @@ import com.aprovaenem.common.events.DailyGoalReminderEvent;
 import com.aprovaenem.common.events.EmailVerificationRequestedEvent;
 import com.aprovaenem.common.events.PasswordResetRequestedEvent;
 import com.aprovaenem.common.events.UserDeletedEvent;
+import com.aprovaenem.common.events.UserRegisteredEvent;
 import com.aprovaenem.notification.application.port.out.EmailDeliveryException;
 import com.aprovaenem.notification.application.port.out.EmailSenderPort;
 import com.aprovaenem.notification.infrastructure.config.RabbitMQConfig;
@@ -33,6 +34,40 @@ public class NotificationEventListener {
 
     @Value("${app.frontend.url:http://localhost}")
     private String frontendUrl = "http://localhost";
+
+    @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_USER_REGISTERED_QUEUE)
+    public void handleUserRegistered(UserRegisteredEvent event) {
+        log.info("Received UserRegisteredEvent for user [{}] ({})", event.getUserId(), event.getEmail());
+        Instant now = Instant.now();
+        String name = event.getFullName() != null && !event.getFullName().isBlank() ? event.getFullName() : "Estudante";
+
+        String title = "🎓 Boas-vindas ao AprovaENEM!";
+        String body = String.format("Olá, %s! Seu cadastro foi concluído com sucesso. Inicie seu Diagnóstico ou explore o Banco de Questões.", name);
+
+        String metadataJson = toJson(Map.of(
+                "category", "ONBOARDING",
+                "iconName", "GraduationCap",
+                "targetSection", "diagnostic",
+                "actionLabel", "Fazer Diagnóstico",
+                "userId", event.getUserId() != null ? event.getUserId().toString() : "",
+                "role", event.getRole() != null ? event.getRole() : "STUDENT"
+        ));
+
+        NotificationLogEntity inAppLog = NotificationLogEntity.builder()
+                .userId(event.getUserId())
+                .channel("IN_APP")
+                .templateCode("WELCOME_USER")
+                .title(title)
+                .body(body)
+                .metadata(metadataJson)
+                .status("SENT")
+                .sentAt(now)
+                .createdAt(now)
+                .build();
+
+        notificationLogRepository.save(inAppLog);
+        log.info("Persisted welcome notification for newly registered user [{}]", event.getUserId());
+    }
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_REMINDERS_QUEUE)
     public void handleDailyGoalReminder(DailyGoalReminderEvent event) {

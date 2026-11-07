@@ -201,6 +201,48 @@ class PracticeSessionControllerWebMvcTest {
     }
 
     @Test
+    @DisplayName("POST /api/v1/practice/sessions/{id}/attempts with non-UUID string should derive deterministic UUID and return HTTP 201")
+    void shouldSubmitAnswerWithStringSessionIdAndDeriveUuidSuccessfully() throws Exception {
+        String clientStringSessionId = "session-live-client-abc";
+        UUID derivedUuid = UUID.nameUUIDFromBytes(clientStringSessionId.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        UUID questionId = UUID.randomUUID();
+        UUID attemptId = UUID.randomUUID();
+
+        when(sessionUseCase.getSession(derivedUuid))
+                .thenThrow(new com.aprovaenem.common.exception.ResourceNotFoundException("Practice session", derivedUuid));
+
+        SubmitAnswerRequest request = SubmitAnswerRequest.builder()
+                .questionId(questionId)
+                .selectedOption('A')
+                .timeSpentSeconds(30)
+                .build();
+
+        AttemptResult result = new AttemptResult(
+                attemptId,
+                derivedUuid,
+                questionId,
+                'A',
+                true,
+                'A',
+                "Exemplo explicativo da questao.",
+                "Conceito",
+                "Professor"
+        );
+
+        when(sessionUseCase.submitAnswer(org.mockito.ArgumentMatchers.argThat(cmd ->
+                cmd.getSessionId().equals(derivedUuid) && cmd.getQuestionId().equals(questionId))))
+                .thenReturn(result);
+
+        mockMvc.perform(post("/api/v1/practice/sessions/" + clientStringSessionId + "/attempts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.attemptId", is(attemptId.toString())))
+                .andExpect(jsonPath("$.sessionId", is(derivedUuid.toString())))
+                .andExpect(jsonPath("$.correct", is(true)));
+    }
+
+    @Test
     @DisplayName("POST /api/v1/practice/sessions/{id}/complete should complete session and return HTTP 200 Diagnostic Report")
     void shouldCompleteSessionSuccessfully() throws Exception {
         UUID sessionId = UUID.randomUUID();
