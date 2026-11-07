@@ -78,7 +78,7 @@ public class AuthService implements AuthUseCase {
                 .passwordHash(passwordHash)
                 .fullName(fullName.trim())
                 .schoolType(schoolType != null ? schoolType : SchoolType.PUBLIC_SCHOOL)
-                .targetDegree(targetDegree)
+                .targetDegree(targetDegree != null ? targetDegree.trim() : null)
                 .role(UserRole.ROLE_STUDENT)
                 .isActive(true)
                 .isEmailVerified(false)

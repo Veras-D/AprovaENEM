@@ -129,6 +129,25 @@ class AuthControllerWebMvcTest {
     }
 
     @Test
+    @DisplayName("POST /api/v1/auth/register should return HTTP 400 when targetDegree exceeds 100 characters")
+    void shouldReturnBadRequestWhenRegistrationTargetDegreeExceedsLimit() throws Exception {
+        RegisterRequest request = new RegisterRequest();
+        request.setEmail("pedro.santos@escola.gov.br");
+        request.setPassword("Password123!");
+        request.setFullName("Pedro Santos");
+        request.setSchoolType(SchoolType.PUBLIC_SCHOOL);
+        request.setTargetDegree("A".repeat(101));
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status", is(400)))
+                .andExpect(jsonPath("$.error", is("Validation Failed")))
+                .andExpect(jsonPath("$.validationErrors[0].field", is("targetDegree")));
+    }
+
+    @Test
     @DisplayName("POST /api/v1/auth/login should return HTTP 200 OK with JWT token")
     void shouldLoginSuccessfully() throws Exception {
         UUID userId = UUID.randomUUID();

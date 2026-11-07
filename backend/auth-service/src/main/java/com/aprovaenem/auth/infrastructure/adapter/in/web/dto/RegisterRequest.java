@@ -29,5 +29,6 @@ public class RegisterRequest {
 
     private SchoolType schoolType;
 
+    @Size(max = 100, message = "Target degree cannot exceed 100 characters")
     private String targetDegree;
 }

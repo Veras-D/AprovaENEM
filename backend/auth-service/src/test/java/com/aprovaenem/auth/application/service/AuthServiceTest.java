@@ -107,6 +107,25 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("Should sanitize and trim targetDegree during registration")
+    void shouldTrimTargetDegreeDuringRegistration() {
+        String email = "carlos@escola.gov.br";
+        String rawPassword = "Password123!";
+        String fullName = " Carlos Silva ";
+        SchoolType schoolType = SchoolType.PUBLIC_SCHOOL;
+        String targetDegreeWithWhitespace = "  Engenharia Mecânica  ";
+
+        when(userRepository.existsByEmail(email)).thenReturn(false);
+        when(passwordEncoder.encode(rawPassword)).thenReturn("$2a$12$hashedPassword");
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        User registered = authService.register(email, rawPassword, fullName, schoolType, targetDegreeWithWhitespace);
+
+        assertThat(registered.getFullName()).isEqualTo("Carlos Silva");
+        assertThat(registered.getTargetDegree()).isEqualTo("Engenharia Mecânica");
+    }
+
+    @Test
     @DisplayName("Should throw BusinessException when registering an email that already exists")
     void shouldThrowExceptionWhenEmailAlreadyExists() {
         String email = "existing@escola.gov.br";
