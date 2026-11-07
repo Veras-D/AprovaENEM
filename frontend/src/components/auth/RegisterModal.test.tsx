@@ -422,7 +422,7 @@ describe('RegisterModal Component', () => {
       expect(screen.getByText(/E-mail confirmado com sucesso!/i)).toBeInTheDocument();
     });
 
-    expect(authService.verifyEmail).toHaveBeenCalledWith('tok-abc-xyz-456');
+    expect(authService.verifyEmail).toHaveBeenCalledWith('tok-abc-xyz-456', 'lucas@escola.gov.br');
   });
 
   it('should handle resending verification email in verify-email mode', async () => {

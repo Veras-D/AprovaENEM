@@ -18,6 +18,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -429,5 +430,22 @@ class PracticeSessionControllerWebMvcTest {
                 .andExpect(jsonPath("$.scorePercentage", is(85.0)))
                 .andExpect(jsonPath("$.radar[0].knowledgeArea", is("MT")))
                 .andExpect(jsonPath("$.radar[0].topWeakTopic", is("Geometria Espacial")));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/practice/sessions/{id} should return HTTP 403 when authenticated user accesses anonymous session without matching X-Session-Id")
+    void shouldReturnForbiddenWhenAuthenticatedUserAccessesOtherAnonymousSession() throws Exception {
+        UUID sessionId = UUID.randomUUID();
+        PracticeSession session = new PracticeSession(sessionId, null, "anon-original-owner", SessionType.TOPIC_PRACTICE, 10);
+        when(sessionUseCase.getSession(sessionId)).thenReturn(session);
+
+        String otherStudentToken = "student-token-attacker";
+        when(jwtValidator.validateToken(otherStudentToken)).thenReturn(true);
+        when(jwtValidator.extractRole(otherStudentToken)).thenReturn("ROLE_STUDENT");
+        when(jwtValidator.extractUserId(otherStudentToken)).thenReturn(UUID.randomUUID());
+
+        mockMvc.perform(get("/api/v1/practice/sessions/" + sessionId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + otherStudentToken))
+                .andExpect(status().isForbidden());
     }
 }

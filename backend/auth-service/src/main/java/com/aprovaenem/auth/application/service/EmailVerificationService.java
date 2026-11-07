@@ -37,13 +37,31 @@ public class EmailVerificationService implements EmailVerificationUseCase {
     @Override
     @Transactional
     public User verifyEmail(String token) {
+        return verifyEmail(token, null);
+    }
+
+    @Override
+    @Transactional
+    public User verifyEmail(String token, String email) {
         if (token == null || token.isBlank()) {
             throw new BusinessException("Verification token cannot be empty.");
         }
 
-        User user = userRepository.findByEmailVerificationToken(token.trim())
-                .orElseThrow(() -> new BusinessException(
-                        "The email verification token is invalid or has expired (24h TTL). Please request a new verification link."));
+        User user;
+        if (email != null && !email.isBlank()) {
+            user = userRepository.findByEmail(email.trim().toLowerCase())
+                    .orElseThrow(() -> new BusinessException(
+                            "The email verification token is invalid or has expired (24h TTL). Please request a new verification link."));
+
+            if (user.getEmailVerificationToken() == null || !user.getEmailVerificationToken().equals(token.trim())) {
+                throw new BusinessException(
+                        "The email verification token is invalid or has expired (24h TTL). Please request a new verification link.");
+            }
+        } else {
+            user = userRepository.findByEmailVerificationToken(token.trim())
+                    .orElseThrow(() -> new BusinessException(
+                            "The email verification token is invalid or has expired (24h TTL). Please request a new verification link."));
+        }
 
         if (user.getEmailVerificationExpiresAt() != null && Instant.now().isAfter(user.getEmailVerificationExpiresAt())) {
             throw new BusinessException("The email verification token is invalid or has expired (24h TTL). Please request a new verification link.");

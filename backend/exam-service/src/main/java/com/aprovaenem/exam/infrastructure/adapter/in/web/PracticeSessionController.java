@@ -252,9 +252,6 @@ public class PracticeSessionController {
             if (session.getUserId() != null && session.getUserId().equals(jwtValidator.extractUserId(token))) {
                 return;
             }
-            if (session.getUserId() == null) {
-                return;
-            }
         }
 
         if (session.getUserId() == null) {

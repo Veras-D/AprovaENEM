@@ -176,7 +176,7 @@ public class AuthController {
 
     @PostMapping("/verify-email")
     public ResponseEntity<VerifyEmailResponse> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
-        User user = emailVerificationUseCase.verifyEmail(request.getToken());
+        User user = emailVerificationUseCase.verifyEmail(request.getToken(), request.getEmail());
         String token = tokenProvider.generateToken(user);
         long expiresInSeconds = tokenProvider.getExpirationSeconds();
 

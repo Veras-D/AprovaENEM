@@ -114,4 +114,47 @@ class AnonymousSessionServiceTest {
         assertThat(session.getLastActiveAt()).isAfter(originalActive);
         verify(sessionRepository).save(session);
     }
+
+    @Test
+    @DisplayName("Should throw BusinessException when claiming an already claimed session with a different user")
+    void shouldThrowExceptionWhenClaimingAlreadyClaimedSession() {
+        String sessionUuid = UUID.randomUUID().toString();
+        UUID ownerId = UUID.randomUUID();
+        UUID attackerId = UUID.randomUUID();
+
+        AnonymousSession session = AnonymousSession.builder()
+                .sessionUuid(sessionUuid)
+                .claimedByUserId(ownerId)
+                .createdAt(Instant.now())
+                .lastActiveAt(Instant.now())
+                .expiresAt(Instant.now().plus(10, ChronoUnit.DAYS))
+                .build();
+
+        when(sessionRepository.findBySessionUuid(sessionUuid)).thenReturn(Optional.of(session));
+
+        assertThatThrownBy(() -> sessionService.claimSession(sessionUuid, attackerId))
+                .isInstanceOf(com.aprovaenem.common.exception.BusinessException.class)
+                .hasMessageContaining("already claimed by another user");
+    }
+
+    @Test
+    @DisplayName("Should allow re-claiming session if claimed by the exact same user")
+    void shouldAllowReClaimingBySameUser() {
+        String sessionUuid = UUID.randomUUID().toString();
+        UUID ownerId = UUID.randomUUID();
+
+        AnonymousSession session = AnonymousSession.builder()
+                .sessionUuid(sessionUuid)
+                .claimedByUserId(ownerId)
+                .createdAt(Instant.now())
+                .lastActiveAt(Instant.now())
+                .expiresAt(Instant.now().plus(10, ChronoUnit.DAYS))
+                .build();
+
+        when(sessionRepository.findBySessionUuid(sessionUuid)).thenReturn(Optional.of(session));
+
+        sessionService.claimSession(sessionUuid, ownerId);
+        assertThat(session.getClaimedByUserId()).isEqualTo(ownerId);
+        verify(sessionRepository).save(session);
+    }
 }

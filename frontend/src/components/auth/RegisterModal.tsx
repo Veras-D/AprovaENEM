@@ -627,7 +627,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     }
 
     try {
-      const res = await verifyEmailMutation.mutateAsync(token);
+      const targetEmail = verifyEmailTarget || email || authUser?.email;
+      const res = await verifyEmailMutation.mutateAsync({ token, email: targetEmail || undefined });
       if (res.token && res.user) {
         useAuthStore.getState().setAuth(res.token, res.user);
       } else {

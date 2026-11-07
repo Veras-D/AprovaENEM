@@ -19,6 +19,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -129,7 +130,7 @@ class QuestionCatalogControllerWebMvcTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/questions/{id}/resolution should return HTTP 200 with step-by-step resolution")
+    @DisplayName("GET /api/v1/questions/{id}/resolution should return HTTP 200 with step-by-step resolution when authenticated")
     void shouldGetQuestionResolutionSuccessfully() throws Exception {
         UUID questionId = UUID.randomUUID();
         Question q = createSampleQuestion(questionId);
@@ -142,9 +143,12 @@ class QuestionCatalogControllerWebMvcTest {
         );
         q.setResolution(res);
 
+        String token = "valid-student-jwt-token";
+        when(jwtValidator.validateToken(token)).thenReturn(true);
         when(catalogUseCase.getQuestionById(questionId)).thenReturn(q);
 
-        mockMvc.perform(get("/api/v1/questions/" + questionId + "/resolution"))
+        mockMvc.perform(get("/api/v1/questions/" + questionId + "/resolution")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.questionId", is(questionId.toString())))
                 .andExpect(jsonPath("$.correctOption", is("B")))
@@ -154,15 +158,27 @@ class QuestionCatalogControllerWebMvcTest {
     }
 
     @Test
+    @DisplayName("GET /api/v1/questions/{id}/resolution should return HTTP 403 when unauthenticated")
+    void shouldReturnForbiddenWhenResolutionRequestedUnauthenticated() throws Exception {
+        UUID questionId = UUID.randomUUID();
+
+        mockMvc.perform(get("/api/v1/questions/" + questionId + "/resolution"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @DisplayName("GET /api/v1/questions/{id}/resolution when resolution is missing should return HTTP 404")
     void shouldReturnNotFoundWhenResolutionDoesNotExist() throws Exception {
         UUID questionId = UUID.randomUUID();
         Question q = createSampleQuestion(questionId);
         q.setResolution(null);
 
+        String token = "valid-student-jwt-token";
+        when(jwtValidator.validateToken(token)).thenReturn(true);
         when(catalogUseCase.getQuestionById(questionId)).thenReturn(q);
 
-        mockMvc.perform(get("/api/v1/questions/" + questionId + "/resolution"))
+        mockMvc.perform(get("/api/v1/questions/" + questionId + "/resolution")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status", is(404)));
     }

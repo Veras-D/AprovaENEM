@@ -80,7 +80,11 @@ public class QuestionCatalogController {
     }
 
     @GetMapping("/{id}/resolution")
-    public ResponseEntity<QuestionResolutionResponse> getQuestionResolution(@PathVariable UUID id) {
+    public ResponseEntity<QuestionResolutionResponse> getQuestionResolution(
+            @PathVariable UUID id,
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader
+    ) {
+        validateResolutionAccess(authHeader);
         Question q = catalogUseCase.getQuestionById(id);
         QuestionResolution res = q.getResolution();
         if (res == null) {
@@ -94,6 +98,16 @@ public class QuestionCatalogController {
                 .authorAttribution(res.getAuthorAttribution())
                 .attribution(res.getAuthorAttribution())
                 .build());
+    }
+
+    private void validateResolutionAccess(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new AccessDeniedException("Authentication required to access question resolution explanations.");
+        }
+        String token = authHeader.substring(7).trim();
+        if (!jwtValidator.validateToken(token)) {
+            throw new AccessDeniedException("Invalid or expired authentication token.");
+        }
     }
 
     @PatchMapping("/{id}/status")

@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.HtmlUtils;
 
 import java.time.Instant;
 import java.util.Map;
@@ -245,7 +246,7 @@ public class NotificationEventListener {
 """;
 
         return template
-                .replace("{{NAME}}", name)
+                .replace("{{NAME}}", HtmlUtils.htmlEscape(name))
                 .replace("{{STREAK_DAYS}}", String.valueOf(event.getStreakDays()))
                 .replace("{{STREAK_LABEL}}", streakLabel)
                 .replace("{{STREAK_MESSAGE}}", streakMessage)
@@ -370,8 +371,8 @@ public class NotificationEventListener {
 </html>
 """;
         return template
-                .replace("{{NAME}}", name)
-                .replace("{{TOKEN}}", token);
+                .replace("{{NAME}}", HtmlUtils.htmlEscape(name))
+                .replace("{{TOKEN}}", HtmlUtils.htmlEscape(token));
     }
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_PASSWORD_RESET_QUEUE)
@@ -490,7 +491,7 @@ public class NotificationEventListener {
 </html>
 """;
         return template
-                .replace("{{NAME}}", name)
+                .replace("{{NAME}}", HtmlUtils.htmlEscape(name))
                 .replace("{{RESET_URL}}", resetUrl);
     }
 

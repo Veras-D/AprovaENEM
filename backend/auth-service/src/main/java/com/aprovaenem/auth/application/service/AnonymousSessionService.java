@@ -3,6 +3,7 @@ package com.aprovaenem.auth.application.service;
 import com.aprovaenem.auth.domain.model.AnonymousSession;
 import com.aprovaenem.auth.domain.port.in.AnonymousSessionUseCase;
 import com.aprovaenem.auth.domain.port.out.AnonymousSessionRepositoryPort;
+import com.aprovaenem.common.exception.BusinessException;
 import com.aprovaenem.common.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -53,6 +54,12 @@ public class AnonymousSessionService implements AnonymousSessionUseCase {
     @Transactional
     public void claimSession(String sessionUuid, UUID userId) {
         AnonymousSession session = getSession(sessionUuid);
+        if (session.getClaimedByUserId() != null && !session.getClaimedByUserId().equals(userId)) {
+            throw new BusinessException("Anonymous session is already claimed by another user.");
+        }
+        if (session.getExpiresAt() != null && Instant.now().isAfter(session.getExpiresAt())) {
+            throw new BusinessException("Anonymous session has expired.");
+        }
         session.setClaimedByUserId(userId);
         session.setLastActiveAt(Instant.now());
         sessionRepository.save(session);

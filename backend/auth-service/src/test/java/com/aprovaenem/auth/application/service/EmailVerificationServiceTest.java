@@ -114,6 +114,51 @@ class EmailVerificationServiceTest {
     }
 
     @Test
+    @DisplayName("Should successfully verify email with explicit email matching token")
+    void shouldVerifyEmailWithEmailBindingSuccessfully() {
+        String token = "654321";
+        String email = "target@escola.gov.br";
+        User user = User.builder()
+                .id(UUID.randomUUID())
+                .email(email)
+                .isEmailVerified(false)
+                .emailVerificationToken(token)
+                .emailVerificationExpiresAt(Instant.now().plus(2, ChronoUnit.HOURS))
+                .build();
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).thenReturn(user);
+
+        User result = emailVerificationService.verifyEmail(token, email);
+
+        assertThat(result).isNotNull();
+        assertThat(result.isEmailVerified()).isTrue();
+        assertThat(user.getEmailVerificationToken()).isNull();
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    @DisplayName("Should reject verification when token does not match provided user email")
+    void shouldRejectWhenTokenDoesNotMatchProvidedEmail() {
+        String email = "target@escola.gov.br";
+        User user = User.builder()
+                .id(UUID.randomUUID())
+                .email(email)
+                .isEmailVerified(false)
+                .emailVerificationToken("correct-token")
+                .emailVerificationExpiresAt(Instant.now().plus(2, ChronoUnit.HOURS))
+                .build();
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> emailVerificationService.verifyEmail("wrong-token", email))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("invalid or has expired");
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("Should return false when resending verification email with blank address")
     void shouldReturnFalseWhenResendEmailIsBlank() {
         boolean resultNull = emailVerificationService.resendVerificationEmail(null);

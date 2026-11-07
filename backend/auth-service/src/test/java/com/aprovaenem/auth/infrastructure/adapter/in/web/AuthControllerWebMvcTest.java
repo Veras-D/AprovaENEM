@@ -311,7 +311,7 @@ class AuthControllerWebMvcTest {
                 .createdAt(Instant.now())
                 .build();
 
-        when(emailVerificationUseCase.verifyEmail(request.getToken())).thenReturn(user);
+        when(emailVerificationUseCase.verifyEmail(request.getToken(), request.getEmail())).thenReturn(user);
         when(jwtTokenProvider.generateToken(user)).thenReturn("mock-jwt-token");
         when(jwtTokenProvider.getExpirationSeconds()).thenReturn(86400L);
 

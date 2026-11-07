@@ -337,7 +337,12 @@ export function useVerifyEmailMutation() {
   const setEmailVerified = useAuthStore((s) => s.setEmailVerified);
 
   return useMutation({
-    mutationFn: (token: string) => authService.verifyEmail(token),
+    mutationFn: (param: string | { token: string; email?: string }) => {
+      if (typeof param === 'string') {
+        return authService.verifyEmail(param);
+      }
+      return authService.verifyEmail(param.token, param.email);
+    },
     onSuccess: (data) => {
       if (data.token && data.user) {
         setAuth(data.token, data.user);

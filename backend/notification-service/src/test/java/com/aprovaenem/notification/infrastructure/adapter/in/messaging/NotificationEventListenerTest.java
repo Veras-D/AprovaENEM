@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -162,6 +163,27 @@ class NotificationEventListenerTest {
         assertThat(textCaptor.getValue())
                 .contains("Maria Oliveira")
                 .contains("5 dia(s) de ofensiva");
+    }
+
+    @Test
+    @DisplayName("Should HTML-escape malicious script payload in fullName when delivering verification email")
+    void shouldHtmlEscapeMaliciousScriptInFullName() {
+        UUID userId = UUID.randomUUID();
+        EmailVerificationRequestedEvent event = EmailVerificationRequestedEvent.builder()
+                .userId(userId)
+                .email("aluno@enem.com.br")
+                .fullName("<script>alert('xss')</script> João")
+                .verificationToken("123456")
+                .build();
+
+        listener.handleEmailVerification(event);
+
+        ArgumentCaptor<String> htmlCaptor = ArgumentCaptor.forClass(String.class);
+        verify(emailSender).sendHtml(eq("aluno@enem.com.br"), anyString(), htmlCaptor.capture(), anyString());
+
+        assertThat(htmlCaptor.getValue())
+                .doesNotContain("<script>alert('xss')</script>")
+                .contains("&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;");
     }
 
     @Test

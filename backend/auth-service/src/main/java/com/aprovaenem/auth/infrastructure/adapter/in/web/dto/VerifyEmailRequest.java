@@ -14,4 +14,6 @@ public class VerifyEmailRequest {
 
     @NotBlank(message = "Token is required")
     private String token;
+
+    private String email;
 }
