@@ -1,492 +1,607 @@
-# AprovaENEM — Client-Side Threat Model & Frontend Security Architecture Audit (JAM 2 / Sprint 6 — Stage 1)
+# AprovaENEM — Client-Side Threat Model & API Security Re-Audit Report (JAM 2 / Milestone 2 — Stage 1)
 
-**Document Reference**: `SEC-JAM2-STAGE1-CLIENT-THREAT-MODEL`  
-**Audit Target**: Frontend Single Page Application (`frontend/`) — React 18, TypeScript, Vite 5, Tailwind CSS, Zustand 5, TanStack Query 5, KaTeX 0.19  
-**Specification Framework**: OWASP Top 10 for Client-Side Web Applications / SPAs & OWASP API Security Top 10 (Client Consumer Vector)  
-**Regulatory Standard**: Brazilian General Data Protection Law (LGPD — Lei nº 13.709/2018) & WCAG 2.1 Level AA Accessibility  
-**Auditor**: Lead Client-Side Threat Modeler & Frontend Security Architect  
-**Status**: APPROVED / COMPLETED  
-**Date**: October 17, 2026  
+**Document Reference**: `SEC-JAM2-STAGE1-REAUDIT-2026-11`  
+**Audit Target**: Frontend SPA (`frontend/`) and Microservices API Boundary (`backend/auth-service`, `backend/exam-service`, `backend/notification-service`, `backend/frontend-api`)  
+**Specification Frameworks**: OWASP Top 10 (2021), OWASP API Security Top 10 (2023), OWASP Client-Side Top 10, CVSS v3.1  
+**Regulatory Standards**: Brazilian General Data Protection Law (LGPD — Lei nº 13.709/2018), ECA (Lei nº 8.069/1990 - Adolescent Privacy), WCAG 2.1 Level AA Accessibility  
+**Lead Auditor**: Lead Threat Modeler & Client-Side/API Security Auditor  
+**Date**: November 7, 2026  
+**Status**: COMPLETED / ACTION REQUIRED  
 
 ---
 
 ## 1. Executive Summary
 
-As part of **TASK-S6-06 (Multi-Stage Security & Integrity Audit Framework — JAM 2 / Milestone 2)**, an uncompromising, line-by-line static and architectural security review was conducted on the AprovaENEM Single Page Application (SPA). AprovaENEM is an educational platform architected to democratize access to the ENEM and SISU exams for Brazilian public school students.
+Following extensive monorepo feature additions and bug fixes (including the `/resolution` endpoint, anonymous session claiming, institutional diagnostics, dynamic RAG retrieval, free Dev-Mode Pro plan toggle, 6-digit numeric OTP email verification, and SISU Course Selector), a comprehensive **Stage 1 Security Re-Audit** was conducted.
 
-Because the user base largely relies on **shared public school computer labs, municipal telecenters, and low-cost mobile devices**, client-side defenses must be extraordinarily resilient against token hijacking, session bleeding between students, physical terminal snooping, cross-site scripting (XSS), and third-party script supply chain compromise.
+The AprovaENEM system is uniquely positioned as an open-access educational platform for Brazilian public school students. The operating environment heavily features **shared public computer terminals, municipal telecenters, school computer laboratories, and low-cost shared mobile devices**. This threat landscape elevates the severity of authentication flaws, session fixation, premature answer leakage, and adolescent privacy violations.
 
-### Client Security Posture Score: C- (71/100)
+### 1.1. Security Posture Score: C- (70/100)
 
-| Evaluation Domain | Weight | Assessed Grade | Score | Critical / High Vulnerabilities |
-| :--- | :---: | :---: | :---: | :---: |
-| **1. DOM-Based XSS & Markup Injection** | 25% | **B-** | 80/100 | 1 High (VLibras SRI missing), 1 Med (KaTeX DOMPurify missing) |
-| **2. Sensitive State & Token Lifecycle** | 25% | **D** | 55/100 | 1 Critical (`localStorage` JWT), 1 High (No Logout button) |
-| **3. Ingress Hardening & Headers** | 20% | **C** | 68/100 | 1 High (Missing CSP), 2 Med (X-XSS-Protection, Missing HSTS) |
-| **4. Multi-Tenant Ingress & Spoofing** | 15% | **B** | 82/100 | 1 Med (Query param tenant override), 1 Low (Cache quota) |
-| **5. Socratic AI & Business Flow Safety** | 10% | **B+** | 88/100 | 1 Med (Textarea unbounded input), 1 Low (Prompt echo) |
-| **6. LGPD Privacy & Student Telemetry** | 5% | **A-** | 92/100 | 1 High (Anonymous progress cross-over), Zero third-party trackers |
-| **Overall Weighted Score** | **100%** | **C-** | **71/100** | **1 Critical, 4 High, 5 Medium, 3 Low, 1 Informational** |
+```text
++-----------------------------------------------------------------------------------------+
+| DOMAIN                                | WEIGHT | GRADE | SCORE  | VULNERABILITIES       |
++-----------------------------------------------------------------------------------------+
+| 1. BOLA / IDOR & Endpoint Auth        | 25%    | D+    | 58/100 | 1 P0, 2 P1, 1 P2      |
+| 2. Anti-Cheating & Exam Integrity     | 20%    | C-    | 65/100 | 1 P0, 1 P2            |
+| 3. Auth, OTP Entropy & Session State  | 25%    | F     | 45/100 | 1 P0 (Critical), 2 P1 |
+| 4. LGPD Compliance & Adolescent Data  | 15%    | B-    | 80/100 | 2 P2, 1 P3            |
+| 5. DOM XSS & Client-Side Injections   | 15%    | B+    | 88/100 | 1 P1, 1 P2            |
++-----------------------------------------------------------------------------------------+
+| OVERALL WEIGHTED RE-AUDIT SCORE       | 100%   | C-    | 70/100 | 2 Crit, 5 High, 5 Med |
++-----------------------------------------------------------------------------------------+
+```
 
-### Key Architectural Strengths:
-1. **Zero Third-Party Commercial Trackers**: The codebase contains no invasive telemetry (no Google Analytics, Facebook Pixel, Hotjar, or third-party fingerprinting scripts), strictly respecting LGPD youth privacy.
-2. **Accessible LGPD Art. 18 Self-Service Erasure**: Comprehensive multi-step account erasure modal (`AccountErasureModal.tsx`) with type-to-confirm safeguards ("EXCLUIR") and thorough cache purging on completion.
-3. **Robust LaTeX Delimiter Tokenizer**: Custom parser (`latex-parser.ts`) specifically defends Brazilian currency notations (e.g., `R$ 15,00`) from being parsed as math formulas, eliminating math rendering edge cases.
-4. **Zero `console.log` Leakage**: Zero raw debug statements found across production frontend TypeScript sources.
+### 1.2. Key Findings Requiring Immediate P0 Intervention
 
-### Primary Threat Vectors Requiring Immediate Remediation:
-1. **Perpetual JWT & PII Storage in `localStorage` on Shared Public Computers**: High risk of account takeover and LGPD data breach in public school labs.
-2. **Absence of User Logout Mechanism in Frontend UI**: Students cannot terminate their authenticated session without deleting their account.
-3. **Unpinned Third-Party Script Execution (`VLibras`)**: Dynamic injection of external JavaScript from `vlibras.gov.br` without Subresource Integrity (SRI) or CSP allowlisting.
-4. **Complete Absence of Content-Security-Policy (CSP)**: The Nginx edge proxy provides no CSP directive, leaving the browser defenseless against script injection or data exfiltration.
-5. **Cross-Student Anonymous Session Migration Bleed**: Logging in automatically migrates prior anonymous exam attempts from `localStorage` into the newly logged-in account, contaminating student diagnostic metrics.
+1. **Global Account Hijacking via Parallel 6-Digit OTP Brute-Forcing (`POST /api/v1/auth/verify-email`)**:
+   The email verification endpoint accepts a 6-digit numeric OTP without requiring the user's email or identity. Due to an excessive 24-hour TTL, absence of failed attempt limits, and the issuance of a live JWT Bearer token upon any valid OTP collision, an attacker can brute-force numeric codes to systematically hijack newly registered student accounts and exfiltrate their PII.
+2. **Premature Answer & Resolution Disclosure (`GET /api/v1/questions/{id}/resolution`)**:
+   The new question resolution endpoint is completely unauthenticated and unconstrained by practice session state. Any student sitting for an active simulation can query question resolutions in advance, retrieving correct option letters and pedagogical explanations.
+3. **Session Re-Claim Overwrite & BOLA (`PUT /api/v1/auth/session/{sessionUuid}/claim`)**:
+   The anonymous session claim endpoint fails to verify if a session was already claimed by another user and lacks proof-of-possession checks, allowing authenticated attackers to reassign existing sessions and pollute diagnostic records.
+4. **Cross-Tenant BOLA in Institutional Diagnostics (`GET /api/v1/institutional/cohorts/{cohortId}/diagnostics`)**:
+   Coordinators from any school can view aggregated cohort diagnostics, student counts, and distractor pitfall statistics of other educational institutions because the service verifies only the `ROLE_INSTITUTIONAL_ADMIN` role without verifying institutional/tenant ownership.
 
 ---
 
-## 2. Threat Modeling & Client-Side Architecture Flowcharts
+## 2. Architecture Trust Boundaries & Attack Trees
+
+### 2.1. Trust Boundaries Diagram
 
 ```mermaid
 flowchart TD
-    subgraph ClientBrowser ["Student Browser / Public Terminal"]
-        User["Student in Public Computer Lab"]
-        
-        subgraph FrontendSPA ["React 18 SPA (Vite 5)"]
-            UI["UI Components (QuestionCard / SocraticDrawer)"]
-            KaTeX["KaTeX 0.19 (MathRenderer)"]
-            VLibrasWidget["VLibras 3D Avatar (External Script)"]
-            AuthStore["useAuthStore (Zustand)"]
-            SessionStore["useSessionStore (Zustand)"]
-            TenantStore["useTenantStore (Zustand)"]
-            AxiosClient["apiClient (Axios Interceptors)"]
-        end
-
-        subgraph BrowserStorage ["Browser Storage Engine"]
-            LS["localStorage<br/>• aprovaenem_auth_token (JWT)<br/>• aprovaenem_auth_user (PII)<br/>• aprovaenem_anon_session_id<br/>• aprovaenem_tenant_cache_*"]
-            MemStore["In-Memory React / Zustand State"]
-        end
+    subgraph PublicBoundary ["Untrusted Public Domain (School Labs & Telecenters)"]
+        BrowserAlice["Student Alice Browser (Public PC)"]
+        BrowserAttacker["Attacker Browser / Script"]
     end
 
-    subgraph ExternalServices ["External Infrastructure"]
-        GovBR["https://vlibras.gov.br<br/>(External JS Plugin / Dynamic Avatar)"]
-        BackendGateway["frontend-api (Edge BFF Gateway :8080)"]
+    subgraph EdgeBoundary ["Ingress & Perimeter Security (:80, :443)"]
+        Nginx["Nginx Reverse Proxy"]
+        BFF["frontend-api (Spring Cloud Gateway :8080)<br/>• Token Bucket Rate Limiter (60 req/min)<br/>• Header Scrubbing (X-User-Id)"]
     end
 
-    User -->|Interacts with UI| UI
-    UI --> KaTeX
-    UI --> VLibrasWidget
-    VLibrasWidget -.->|Dynamic Script Injection without SRI| GovBR
-    AuthStore <-->|Persistent Read/Write| LS
-    SessionStore <-->|Anonymous ID & Migration| LS
-    TenantStore <-->|Cached Branding Config| LS
-    
-    UI --> AxiosClient
-    AuthStore -->|Bearer Token Injection| AxiosClient
-    TenantStore -->|X-Tenant-Id Header Injection| AxiosClient
-    SessionStore -->|X-Session-Id Header Injection| AxiosClient
-    
-    AxiosClient -->|HTTPS REST API Requests| BackendGateway
+    subgraph ServiceMesh ["Internal Microservice Perimeter (Docker Network)"]
+        AuthSvc["auth-service (:8081)<br/>• JWT Provider & RBAC<br/>• OTP Verification Engine<br/>• Outbox Event Publisher"]
+        ExamSvc["exam-service (:8082)<br/>• Practice Session Engine<br/>• Question Catalog & Resolution<br/>• Institutional Diagnostics<br/>• Socratic AI Tutor"]
+        NotifSvc["notification-service (:8083)<br/>• RabbitMQ Listener<br/>• In-App & SMTP Engine"]
+    end
+
+    subgraph StateStorage ["State & Persistence Tier"]
+        PostgresAuth[("PostgreSQL (auth_db)")]
+        PostgresExam[("PostgreSQL (exam_db)")]
+        RedisState[("Redis Cluster :6379<br/>• Quotas & Rate Limits<br/>• Weekly Leaderboards")]
+        RabbitMQBroker["RabbitMQ 3.13 Exchange"]
+    end
+
+    BrowserAlice -->|HTTPS / WSS| Nginx
+    BrowserAttacker -->|Direct API Calls| Nginx
+    Nginx --> BFF
+    BFF --> AuthSvc
+    BFF --> ExamSvc
+    BFF --> NotifSvc
+
+    AuthSvc <--> PostgresAuth
+    ExamSvc <--> PostgresExam
+    AuthSvc <--> RedisState
+    ExamSvc <--> RedisState
+
+    AuthSvc -.->|Transactional Outbox| RabbitMQBroker
+    RabbitMQBroker -.-> NotifSvc
+    RabbitMQBroker -.-> ExamSvc
 ```
+
+---
+
+### 2.2. Attack Tree 1: Account Takeover via 6-Digit Email Verification Collision
+
+```mermaid
+flowchart TD
+    Root["Systematic Account Takeover & Token Harvesting"]
+    
+    Step1["Target Registration Stream"]
+    Step2["Parallel OTP Enumeration"]
+    Step3["Token Collision Exploitation"]
+    Step4["PII Exfiltration & Session Takeover"]
+    
+    Root --> Step1
+    Root --> Step2
+    Root --> Step3
+    Root --> Step4
+    
+    Step1 --> S1A["Students register via public portal"]
+    S1A --> S1B["6-digit numeric OTP generated (10^6 combinations)"]
+    S1B --> S1C["OTP stored with 24-hour excessive TTL"]
+    
+    Step2 --> S2A["Attacker sends POST /api/v1/auth/verify-email"]
+    S2A --> S2B["Body contains only {'token': 'XXXXXX'} (No user identifier)"]
+    S2B --> S2C["No account-level lockout or failed attempt counter"]
+    
+    Step3 --> S3A["Attacker iterates ~1,000-5,000 codes across unverified pool"]
+    S3A --> S3B["Database matches token to ANY pending student"]
+    
+    Step4 --> S4A["Endpoint returns 200 OK + Valid Bearer JWT"]
+    S4A --> S4B["Endpoint returns UserResponse with full student PII"]
+    S4B --> S4C["Attacker impersonates student on platform"]
+```
+
+---
+
+### 2.3. Attack Tree 2: Premature Answer Leakage & Cheating in Active Simulado
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Alice as Student Alice (Public Lab)
-    actor Bob as Student Bob (Next User)
-    participant Browser as Public Chrome Browser
-    participant LS as Browser localStorage
-    participant AuthStore as useAuthStore
-    participant API as BFF Gateway / backend
+    actor Student as Student (in Simulado / Practice)
+    participant Client as Frontend SPA / DevTools
+    participant Gateway as BFF Gateway (:8080)
+    participant ExamService as exam-service (:8082)
+    participant DB as exam_db (PostgreSQL)
 
-    Note over Alice, Browser: Alice logs into AprovaENEM in public library
-    Alice->>Browser: Enters credentials & logs in
-    Browser->>API: POST /api/v1/auth/login
-    API-->>Browser: 200 OK (JWT Token + UserProfile)
-    Browser->>AuthStore: setAuth(token, user)
-    AuthStore->>LS: setItem('aprovaenem_auth_token', token)
-    AuthStore->>LS: setItem('aprovaenem_auth_user', JSON.stringify(user))
-    Alice->>Browser: Finishes study session; closes browser tab
-    Note over Alice, LS: JWT & PII remain indefinitely in localStorage (NO LOGOUT BUTTON)
-
-    Note over Bob, Browser: Bob sits at the exact same public computer
-    Bob->>Browser: Opens aprovaenem.org
-    Browser->>AuthStore: syncAuthFromStorage()
-    AuthStore->>LS: getItem('aprovaenem_auth_token')
-    LS-->>AuthStore: Returns Alice's JWT Token & Profile!
-    AuthStore-->>Browser: isAuthenticated = true, user = Alice
-    Note over Bob, API: Bob is now authenticated as Alice without entering any password!
-    Bob->>API: GET /api/v1/users/me (Sends Alice's Bearer token)
-    API-->>Bob: Returns Alice's Private Diagnostic Report & Exam Data
+    Note over Student, Client: Student starts practice session with 10 questions
+    Client->>Gateway: POST /api/v1/practice/sessions
+    Gateway->>ExamService: startSession(command)
+    ExamService->>DB: Fetch 10 random questions
+    ExamService-->>Client: 201 Created (Session ID + Question IDs, isCorrect = null)
+    
+    Note over Student, Client: Student inspects question ID: d42e37dd-...
+    Student->>Client: Open Browser DevTools Network Tab / Curl
+    Client->>Gateway: GET /api/v1/questions/d42e37dd-.../resolution
+    Gateway->>ExamService: getQuestionResolution(UUID id)
+    
+    Note over ExamService: NO authentication check<br/>NO check if session is active<br/>NO check if student submitted attempt
+    
+    ExamService->>DB: SELECT * FROM questions WHERE id = ...
+    ExamService-->>Client: 200 OK { "correctOption": "C", "baseExplanation": "..." }
+    
+    Note over Student, Client: Student answers 'C' with 100% certainty!
+    Client->>Gateway: POST /api/v1/sessions/{id}/attempts (option: "C")
+    Gateway->>ExamService: submitAnswer(command)
+    ExamService-->>Client: 201 Created (isCorrect: true)
 ```
 
 ---
 
-## 3. Comprehensive OWASP Client-Side Assessment
+## 3. Detailed Threat & Vulnerability Findings
 
-### Domain 1: DOM-Based XSS & Unsafe Markup Injection
+### Domain 1: Broken Object Level Authorization (BOLA) & Access Control
 
-#### Finding 1.1: Dynamic Third-Party Script Injection Without Subresource Integrity (SRI)
-- **Severity**: **HIGH**
-- **OWASP Classification**: Client-Side A01: DOM-Based Cross-Site Scripting / A08: Software & Data Integrity Failures
-- **Code Reference**: [`VLibras.tsx`](frontend/src/components/accessibility/VLibras.tsx#L38-L47)
-- **Vulnerability Analysis**:
-  In [`VLibras.tsx`](frontend/src/components/accessibility/VLibras.tsx#L38-L47), the component dynamically loads the Brazilian Federal Government's sign language translation widget via:
-  ```typescript
-  if (!scriptElement) {
-    scriptElement = document.createElement('script');
-    scriptElement.id = scriptId;
-    scriptElement.src = 'https://vlibras.gov.br/app/vlibras-plugin.js';
-    scriptElement.async = true;
-    scriptElement.onload = initWidget;
-    document.body.appendChild(scriptElement);
+#### Finding 1.1: Institutional Cohort Diagnostics BOLA & Cross-Tenant Data Snooping
+- **Vulnerability ID**: `SEC-API-BOLA-01`
+- **Severity**: **HIGH** (CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N — Base Score: **7.1**)
+- **OWASP Classification**: OWASP API Security Top 10 (2023) — API1: Broken Object Level Authorization
+- **Code Reference**: `backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/in/web/InstitutionalDiagnosticsController.java`
+- **Vulnerability Mechanism**:
+  In lines 36–53:
+  ```java
+  @GetMapping("/{cohortId}/diagnostics")
+  public ResponseEntity<InstitutionalCohortDiagnosticResponse> getCohortDiagnostics(
+          @PathVariable("cohortId") String cohortId,
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader
+  ) {
+      validateCoordinatorAccess(authHeader);
+      InstitutionalCohortDiagnostics diagnostics = useCase.getCohortDiagnostics(cohortId);
+      return ResponseEntity.ok(toResponse(diagnostics));
+  }
+
+  private void validateCoordinatorAccess(String authHeader) {
+      ...
+      String role = jwtValidator.extractRole(token);
+      if (!"ROLE_ADMIN".equals(role) && !"ROLE_INSTITUTIONAL_ADMIN".equals(role)) {
+          throw new AccessDeniedException("Forbidden: coordinator or administrator role required.");
+      }
   }
   ```
-  The script element is injected without `integrity` (SRI hash) and without `crossOrigin="anonymous"`.
-  Any DNS hijacking, upstream content manipulation, BGP route leak, or CDN compromise of `vlibras.gov.br` allows an adversary to execute arbitrary JavaScript inside the AprovaENEM origin. This grants the attacker full access to student JWT tokens stored in `localStorage`, active sessions, and personal data.
+- **Root Cause**:
+  The security check validates only that the caller possesses `ROLE_INSTITUTIONAL_ADMIN`. It does **not** check whether the caller's tenant or school identifier matches the tenant of `{cohortId}`. A coordinator from School A can query any `{cohortId}` belonging to School B, exposing aggregate student metrics, enrolled counts, area breakdowns, and pedagogical weak points.
+- **Remediation Priority**: **P1 (High)**
 - **Remediation**:
-  1. Pin the `vlibras-plugin.js` bundle using Subresource Integrity (`integrity="sha384-..." crossOrigin="anonymous"`).
-  2. Implement an explicit `script-src https://vlibras.gov.br` directive in the Nginx Content-Security-Policy header.
-  3. Where feasible, vendor or proxy static accessibility assets via the project's own trusted CDN with integrity verification.
+  1. Extract the `tenantId` from the caller's JWT token via `jwtValidator.extractTenantId(token)`.
+  2. Pass `tenantId` and `callerUserId` into `useCase.getCohortDiagnostics(cohortId, tenantId)`.
+  3. Ensure the underlying repository filters cohorts by both `cohortId` and `tenantId`, rejecting cross-tenant requests with HTTP 403 Forbidden.
 
 ---
 
-#### Finding 1.2: Unsanitized HTML Output in KaTeX `dangerouslySetInnerHTML`
-- **Severity**: **MEDIUM**
-- **OWASP Classification**: Client-Side A01: DOM-Based Cross-Site Scripting
+#### Finding 1.2: Session Re-Claim Overwrite & Missing Proof-of-Possession in Anonymous Session Claim
+- **Vulnerability ID**: `SEC-API-BOLA-02`
+- **Severity**: **HIGH** (CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N — Base Score: **8.1**)
+- **OWASP Classification**: API1: Broken Object Level Authorization / API5: Broken Function Level Authorization
 - **Code References**:
-  - [`BlockMath.tsx`](frontend/src/components/math/BlockMath.tsx#L20-L48)
-  - [`InlineMath.tsx`](frontend/src/components/math/InlineMath.tsx#L18-L46)
-- **Vulnerability Analysis**:
-  In both [`BlockMath.tsx`](frontend/src/components/math/BlockMath.tsx#L47) and [`InlineMath.tsx`](frontend/src/components/math/InlineMath.tsx#L44), HTML generated by KaTeX is injected directly into the DOM using React's unescaped markup bypass:
-  ```tsx
-  dangerouslySetInnerHTML={{ __html: html }}
+  - `backend/auth-service/src/main/java/com/aprovaenem/auth/application/service/AnonymousSessionService.java#L54-L59`
+  - `backend/auth-service/src/main/java/com/aprovaenem/auth/infrastructure/adapter/in/web/SessionController.java#L57-L77`
+  - `backend/auth-service/src/main/java/com/aprovaenem/auth/infrastructure/adapter/out/security/SecurityConfig.java#L46`
+- **Vulnerability Mechanism**:
+  ```java
+  @Override
+  @Transactional
+  public void claimSession(String sessionUuid, UUID userId) {
+      AnonymousSession session = getSession(sessionUuid);
+      session.setClaimedByUserId(userId);
+      session.setLastActiveAt(Instant.now());
+      sessionRepository.save(session);
+  }
   ```
-  While KaTeX generally sanitizes output when untrusted commands are rejected, relying solely on KaTeX as an HTML sanitizer violates the defense-in-depth security principle. Past vulnerabilities in KaTeX (e.g., GHSA-wqq4-5wpv-mx2g, CVE-2024-28245) demonstrated that specially crafted LaTeX inputs can generate unescaped HTML elements or event handlers.
+- **Root Cause**:
+  1. **No Prior Claim Check**: The service does not check `if (session.getClaimedByUserId() != null && !session.getClaimedByUserId().equals(userId))`. If User A claimed `sessionUuid`, User B can call `PUT /api/v1/auth/session/{sessionUuid}/claim` to overwrite `claimedByUserId` with User B's ID.
+  2. **No Possession Proof**: The endpoint requires no proof that the claiming user originated the anonymous session (such as matching IP hash or supplying a one-time claiming secret issued during session creation).
+  3. **Security Filter Misconfiguration**: In `SecurityConfig.java`, `/api/v1/auth/session/**` is marked `permitAll()`, relying entirely on manual `@AuthenticationPrincipal UserDetails` checks inside the controller.
+- **Remediation Priority**: **P0 (Critical)**
 - **Remediation**:
-  1. Introduce `DOMPurify` (`dompurify` and `@types/dompurify`) into frontend dependencies.
-  2. Sanitize all KaTeX output before DOM injection:
-     ```typescript
-     import DOMPurify from 'dompurify';
-     ...
-     const sanitizedHtml = useMemo(() => {
-       const rawHtml = katex.renderToString(math, { ... });
-       return DOMPurify.sanitize(rawHtml, { USE_PROFILES: { html: true, mathMl: true } });
-     }, [math]);
+  1. Enforce that an already claimed session cannot be re-claimed:
+     ```java
+     if (session.getClaimedByUserId() != null && !session.getClaimedByUserId().equals(userId)) {
+         throw new ConflictException("Anonymous session has already been claimed by another account.");
+     }
      ```
+  2. Issue a cryptographically random `claimToken` upon `POST /api/v1/auth/session` and require this token in `PUT /api/v1/auth/session/{sessionUuid}/claim`.
+  3. Narrow `SecurityConfig.java` to `permitAll()` only on `POST /api/v1/auth/session` and `GET /api/v1/auth/session/{sessionUuid}`, requiring authenticated role for `/claim`.
 
 ---
 
-#### Finding 1.3: Missing Explicit `trust: false` in KaTeX Render Options
-- **Severity**: **LOW**
-- **OWASP Classification**: Client-Side A05: Security Misconfiguration
-- **Code References**:
-  - [`BlockMath.tsx`](frontend/src/components/math/BlockMath.tsx#L20-L25)
-  - [`InlineMath.tsx`](frontend/src/components/math/InlineMath.tsx#L18-L25)
-- **Vulnerability Analysis**:
-  The KaTeX invocation explicitly configures `displayMode`, `throwOnError: false`, `output: 'html'`, and `strict: 'ignore'`, but leaves `trust` unspecified. While the default in KaTeX 0.19 is `trust: false`, explicit configuration prevents inadvertent regression and defends against configuration overrides.
-- **Remediation**:
-  Add `trust: false` explicitly to all `katex.renderToString` calls.
-
----
-
-### Domain 2: Sensitive State & Token Lifecycle Management
-
-#### Finding 2.1: Long-Lived JWT & Sensitive PII Persisted in `localStorage` in Public Terminals
-- **Severity**: **CRITICAL**
-- **OWASP Classification**: Client-Side A02: Sensitive Data Exposure / Storage
-- **Code Reference**: [`useAuthStore.ts`](frontend/src/stores/useAuthStore.ts#L14-L46)
-- **Vulnerability Analysis**:
-  In [`useAuthStore.ts`](frontend/src/stores/useAuthStore.ts#L37-L42):
-  ```typescript
-  setAuth: (token: string, user: UserProfile) => {
-    localStorage.setItem(STORAGE_KEY_TOKEN, token);
-    localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
-    useSessionStore.getState().migrateAnonymousProgress(user.id);
-    set({ token, user, isAuthenticated: true });
+#### Finding 1.3: Anonymous Practice Session Authorization Bypass (`userId == null`)
+- **Vulnerability ID**: `SEC-API-BOLA-03`
+- **Severity**: **HIGH** (CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:L/A:N — Base Score: **7.1**)
+- **OWASP Classification**: API1: Broken Object Level Authorization
+- **Code Reference**: `backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/in/web/PracticeSessionController.java#L245-L267`
+- **Vulnerability Mechanism**:
+  ```java
+  private void validateSessionOwnership(PracticeSession session, String authHeader, String sessionHeader) {
+      String token = resolveToken(authHeader);
+      if (token != null && jwtValidator.validateToken(token)) {
+          String role = jwtValidator.extractRole(token);
+          if ("ROLE_ADMIN".equals(role)) {
+              return;
+          }
+          if (session.getUserId() != null && session.getUserId().equals(jwtValidator.extractUserId(token))) {
+              return;
+          }
+          if (session.getUserId() == null) {
+              return; // <-- CRITICAL VULNERABILITY: Any authenticated token bypasses ownership check!
+          }
+      }
+      ...
   }
   ```
-  1. **Persistence Across Reboots and Sessions**: Unlike `sessionStorage` (which clears when a browser tab closes) or in-memory state, `localStorage` persists indefinitely across browser restarts, power cycles, and new browser tabs.
-  2. **Threat Model of Target Demographic**: Brazilian public school students frequently access AprovaENEM on shared library computers or school computer labs where deep freeze or guest auto-wipe software is rarely configured.
-  3. **Universal Origin Exposure**: Any script running in the origin (including through XSS or third-party script compromise) has read access to the raw JWT token.
+- **Root Cause**:
+  When `session.getUserId() == null` (which is true for all guest sessions and for all sessions scrubbed following LGPD account deletion), any user with a valid JWT bypasses the ownership check. An authenticated attacker who knows or enumerates a guest `sessionId` can read the session, submit attempts, or complete the diagnostic report on behalf of the victim.
+- **Remediation Priority**: **P1 (High)**
 - **Remediation**:
-  1. **BFF HttpOnly Cookie Architecture (Recommended)**: Migrate authentication tokens to secure, `HttpOnly`, `SameSite=Strict`, `Secure` cookies issued by the Edge Gateway (`frontend-api`). The SPA JavaScript never reads or stores the raw JWT.
-  2. **SessionStorage / Memory Fallback**: If cookies are not yet implemented, provide an opt-in "Computador Público" (Shared/Public Computer) toggle on login that forces storage in `sessionStorage` or Zustand in-memory state with immediate expiration on tab closure.
+  When `session.getUserId() == null`, do not allow arbitrary JWTs to access the session. Require the matching `sessionHeader` (`X-Session-Id` matching `session.getAnonymousSessionId()`):
+  ```java
+  if (session.getUserId() == null) {
+      if (sessionHeader != null && sessionHeader.equals(session.getAnonymousSessionId())) {
+          return;
+      }
+      throw new AccessDeniedException("Anonymous session token mismatch.");
+  }
+  ```
 
 ---
 
-#### Finding 2.2: Complete Absence of an Accessible User Logout / Sign-Out Mechanism in UI
-- **Severity**: **HIGH**
-- **OWASP Classification**: Client-Side A02: Sensitive Data Exposure & Session Management
+#### Finding 1.4: Unrestricted Free Dev-Mode Pro Plan Upgrade & Coordinator Role Demotion
+- **Vulnerability ID**: `SEC-API-BFLA-01`
+- **Severity**: **MEDIUM** (CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:H/A:N — Base Score: **6.5**)
+- **OWASP Classification**: API5: Broken Function Level Authorization / API6: Unrestricted Access to Sensitive Business Flows
 - **Code References**:
-  - [`Header.tsx`](frontend/src/components/layout/Header.tsx#L112-L139)
-  - [`MobileDrawer.tsx`](frontend/src/components/layout/MobileDrawer.tsx#L125-L160)
-- **Vulnerability Analysis**:
-  Review of the entire UI navigation framework reveals that when `isAuthenticated` is true, both the desktop header ([`Header.tsx`](frontend/src/components/layout/Header.tsx#L112-L120)) and the mobile drawer ([`MobileDrawer.tsx`](frontend/src/components/layout/MobileDrawer.tsx#L125-L138)) render the user's name and avatar, but **provide no button or link to log out**.
-  The only available action that calls `clearAuth()` is [`AccountErasureModal.tsx`](frontend/src/components/legal/AccountErasureModal.tsx#L105-L121), which permanently deletes the student's entire account under LGPD!
-  A student finishing their session on a shared terminal cannot log out without opening developer tools to wipe storage or permanently destroying their account.
+  - `backend/auth-service/src/main/java/com/aprovaenem/auth/infrastructure/adapter/in/web/AuthController.java#L126-L141`
+  - `backend/auth-service/src/main/java/com/aprovaenem/auth/application/service/AuthService.java#L206-L217`
+- **Vulnerability Mechanism**:
+  ```java
+  @PutMapping("/me/plan")
+  public ResponseEntity<UserResponse> updatePlan(...) {
+      ...
+      boolean proEnabled = request == null || request.getPlan() == null
+              || !"FREE".equalsIgnoreCase(request.getPlan().trim());
+      AuthUseCase.AuthResult result = authUseCase.updatePlan(userId, proEnabled);
+      ...
+  }
+
+  // In AuthService:
+  if (user.getRole() != UserRole.ROLE_ADMIN) {
+      user.setRole(proEnabled ? UserRole.ROLE_PREMIUM_STUDENT : UserRole.ROLE_STUDENT);
+  }
+  ```
+- **Root Cause**:
+  1. The endpoint is exposed in all environments (production included) with zero billing/Pix verification, allowing any student to grant themselves `ROLE_PREMIUM_STUDENT` to bypass Socratic AI daily consultation quotas.
+  2. If a coordinator (`ROLE_INSTITUTIONAL_ADMIN`) calls this endpoint, their role is not `ROLE_ADMIN`, causing them to be inadvertently demoted to `ROLE_PREMIUM_STUDENT`, revoking institutional coordinator dashboard access.
+- **Remediation Priority**: **P1 (High)**
 - **Remediation**:
-  Add an explicit, accessible "Sair da Conta" (Logout) button to both `Header.tsx` (in a user menu dropdown) and `MobileDrawer.tsx`. Ensure the logout handler invokes:
+  1. Gate `/api/v1/auth/me/plan` behind a Spring `@Profile({"dev", "test"})` check or verify digital subscription entitlements.
+  2. Guard against coordinator role corruption: `if (user.getRole() == UserRole.ROLE_INSTITUTIONAL_ADMIN) throw new BusinessException("Coordinators cannot change student subscription plans.");`.
+
+---
+
+### Domain 2: Anti-Cheating & Exam Integrity
+
+#### Finding 2.1: Premature Answer & Resolution Disclosure During Active Simulado
+- **Vulnerability ID**: `SEC-EXAM-LEAK-01`
+- **Severity**: **HIGH** (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N — Base Score: **7.5**)
+- **OWASP Classification**: OWASP Top 10 (2021) — A01: Broken Access Control / Integrity Failures
+- **Code Reference**: `backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/in/web/QuestionCatalogController.java#L82-L97`
+- **Vulnerability Mechanism**:
+  ```java
+  @GetMapping("/{id}/resolution")
+  public ResponseEntity<QuestionResolutionResponse> getQuestionResolution(@PathVariable UUID id) {
+      Question q = catalogUseCase.getQuestionById(id);
+      QuestionResolution res = q.getResolution();
+      if (res == null) {
+          throw new ResourceNotFoundException("QuestionResolution", id);
+      }
+      return ResponseEntity.ok(QuestionResolutionResponse.builder()
+              .questionId(q.getId())
+              .correctOption(String.valueOf(q.getCorrectOption()))
+              .baseExplanation(res.getBaseExplanation())
+              .keyConcepts(res.getKeyConcepts())
+              .authorAttribution(res.getAuthorAttribution())
+              .attribution(res.getAuthorAttribution())
+              .build());
+  }
+  ```
+- **Root Cause**:
+  While `getQuestionById` strictly scrubs correct answers (`.isCorrect(null)`), `getQuestionResolution` exposes the raw `correctOption` ('A', 'B', 'C', 'D', 'E') and detailed resolution without authentication, without checking whether the requester is currently taking an exam containing this question, and without verifying that the question was already attempted.
+- **Impact**:
+  During timed official simulados or diagnostic sessions, students can fetch `/api/v1/questions/{id}/resolution` via browser extensions or network inspection tools to obtain guaranteed 100% scores, invalidating Item Response Theory (TRI) calibrations and competitive leaderboards.
+- **Remediation Priority**: **P0 (Critical)**
+- **Remediation**:
+  1. Gate access to `/api/v1/questions/{id}/resolution`: Require authentication and verify that either:
+     - The user is an administrator or teacher (`ROLE_ADMIN`, `ROLE_INSTITUTIONAL_ADMIN`).
+     - The user has already completed the exam session containing this question.
+     - The question has already been answered by the student in their current session.
+
+---
+
+### Domain 3: Authentication, OTP Entropy & Session Lifecycle
+
+#### Finding 3.1: Global Account Takeover via 6-Digit Email Verification OTP Collision
+- **Vulnerability ID**: `SEC-AUTH-OTP-01`
+- **Severity**: **CRITICAL** (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H — Base Score: **9.8**)
+- **OWASP Classification**: OWASP Top 10 (2021) — A07: Identification and Authentication Failures / API2: Broken Authentication
+- **Code Reference**: `backend/auth-service/src/main/java/com/aprovaenem/auth/application/service/EmailVerificationService.java#L33-L60`
+- **Vulnerability Mechanism**:
+  ```java
+  private String generateVerificationToken() {
+      return String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
+  }
+
+  @Override
+  @Transactional
+  public User verifyEmail(String token) {
+      User user = userRepository.findByEmailVerificationToken(token.trim())
+              .orElseThrow(() -> new BusinessException(...));
+
+      if (user.getEmailVerificationExpiresAt() != null && Instant.now().isAfter(user.getEmailVerificationExpiresAt())) {
+          throw new BusinessException(...);
+      }
+      user.setEmailVerified(true);
+      user.setEmailVerificationToken(null);
+      ...
+  }
+  ```
+  In `AuthController.java`:
+  ```java
+  @PostMapping("/verify-email")
+  public ResponseEntity<VerifyEmailResponse> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
+      User user = emailVerificationUseCase.verifyEmail(request.getToken());
+      String token = tokenProvider.generateToken(user);
+      ...
+      return ResponseEntity.ok(responseWithTokenAndUser);
+  }
+  ```
+- **Root Cause Analysis**:
+  1. **Low Entropy Space ($10^6$)**: 6-digit numeric tokens provide only $\log_2(1,000,000) \approx 19.93$ bits of entropy.
+  2. **Unbound Verification**: The client sends only `{"token": "123456"}` without email or user ID. The backend queries `findByEmailVerificationToken(token)`, matching *any* pending student.
+  3. **Excessive 24-Hour TTL**: Codes remain active for 86,400 seconds. If 500 students register over 24 hours, the probability of an arbitrary code colliding with an active registration is $500 / 1,000,000 = 1 / 2,000$. An attacker testing 2,000 codes will likely collide with a legitimate student.
+  4. **Immediate Full Session Grant**: Upon match, the controller generates a JWT token and returns the student's full profile, handing total account control to the attacker.
+  5. **No Failed Attempt Throttling**: There is no counter tracking failed verification attempts on the IP or account.
+- **Remediation Priority**: **P0 (Critical)**
+- **Remediation**:
+  1. Bind verification to the user's email: `POST /api/v1/auth/verify-email` must require `{"email": "...", "token": "..."}` and look up `findByEmailAndEmailVerificationToken`.
+  2. Reduce OTP validity window from 24 hours to 10–15 minutes.
+  3. Track failed attempts in Redis (max 5 failed attempts per email before invalidating the OTP and requiring resend).
+  4. Do **not** issue a live JWT upon verification; require the user to log in with their password.
+
+---
+
+#### Finding 3.2: Excessive 24-Hour TTL on Password Reset Tokens & Missing Rate Limiting on Forgot Password
+- **Vulnerability ID**: `SEC-AUTH-RESET-01`
+- **Severity**: **MEDIUM** (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N — Base Score: **5.3**)
+- **OWASP Classification**: API4: Unrestricted Resource Consumption
+- **Code Reference**: `backend/auth-service/src/main/java/com/aprovaenem/auth/application/service/AuthService.java#L324`
+- **Vulnerability Mechanism**:
+  Password reset tokens generated via `UUID.randomUUID().toString().replace("-", "")` have adequate entropy (128 bits), but remain valid for 24 hours (`now.plus(24, ChronoUnit.HOURS)`). Additionally, `/api/v1/auth/forgot-password` does not enforce per-email rate limiting, enabling email inbox bombing.
+- **Remediation Priority**: **P2 (Medium)**
+- **Remediation**:
+  1. Reduce password reset token TTL to 15–30 minutes.
+  2. Implement a 60-second cooldown per target email address in Redis before allowing a new reset dispatch.
+
+---
+
+#### Finding 3.3: Insecure Persistent JWT Storage in `localStorage` in Public School Computer Labs
+- **Vulnerability ID**: `SEC-FE-STATE-01`
+- **Severity**: **HIGH** (CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:N — Base Score: **7.1**)
+- **OWASP Classification**: Client-Side A02: Sensitive Data Exposure / Storage
+- **Code Reference**: `frontend/src/stores/useAuthStore.ts#L62-L70`
+- **Vulnerability Mechanism**:
+  `useAuthStore` stores `aprovaenem_auth_token` and `aprovaenem_auth_user` in `localStorage`. If a student in a public school computer lab or telecenter closes the browser window without clicking "Sair", the token and PII remain on disk. The next student opening the browser is automatically logged in via `syncAuthFromStorage()`.
+- **Remediation Priority**: **P1 (High)**
+- **Remediation**:
+  1. Provide a "Computador Público" (Shared Terminal) checkbox on the login modal that defaults to `sessionStorage` (cleared immediately upon tab closure).
+  2. Implement an idle session timer (e.g., 15 minutes of inactivity) that automatically calls `clearAuth()`.
+  3. Long term: Transition to `HttpOnly`, `SameSite=Strict` cookies issued by `frontend-api`.
+
+---
+
+#### Finding 3.4: Incomplete Data Scrubbing on Shared Terminal Logout
+- **Vulnerability ID**: `SEC-FE-STATE-02`
+- **Severity**: **MEDIUM** (CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N — Base Score: **4.4**)
+- **OWASP Classification**: Client-Side A02: Sensitive Data Exposure
+- **Code Reference**: `frontend/src/stores/useSessionStore.ts#L430-L446`
+- **Vulnerability Mechanism**:
+  When `clearSession()` is invoked during logout without `purgeUserId`, it leaves:
+  `aprovaenem_user_diagnostic_report_${userId}`,
+  `aprovaenem_user_seen_ids_${userId}`, and
+  `aprovaenem_avatar_${userId}` in `localStorage`.
+- **Remediation Priority**: **P2 (Medium)**
+- **Remediation**:
+  When logging out on shared terminals, purge all cached student diagnostic keys from `localStorage` or scope them to `sessionStorage`.
+
+---
+
+### Domain 4: LGPD Compliance & Adolescent Privacy
+
+#### Finding 4.1: Broken Client-Side File Portability Trigger in `ProfilePage.tsx`
+- **Vulnerability ID**: `SEC-LGPD-PORT-01`
+- **Severity**: **MEDIUM** (CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:U/C:N/I:L/A:N — Base Score: **3.5**)
+- **Regulatory Standard**: Brazilian LGPD (Lei nº 13.709/2018) Art. 18, V (Data Portability)
+- **Code Reference**: `frontend/src/features/profile/ProfilePage.tsx#L222-L228`
+- **Vulnerability Mechanism**:
   ```typescript
-  const handleLogout = () => {
-    useAuthStore.getState().clearAuth();
-    useSessionStore.getState().clearSession();
-    queryClient.clear();
+  const handleExportData = async () => {
+    try {
+      await exportUserDataMutation.mutateAsync();
+    } catch {
+      // mutation handles fallback
+    }
   };
   ```
+- **Root Cause**:
+  While `TermsAndPrivacyModal.tsx` correctly creates a `Blob` and triggers a browser file download (`URL.createObjectURL(blob)`), `ProfilePage.tsx` invokes `exportUserDataMutation.mutateAsync()` but does nothing with the returned data. Clicking "Baixar Meus Dados (JSON)" issues the network request, but never initiates a file download on the student's browser.
+- **Remediation Priority**: **P2 (Medium)**
+- **Remediation**:
+  Update `handleExportData` in `ProfilePage.tsx` to serialize the payload, create an Object URL Blob, and trigger a download anchor element (`a.download = 'aprovaenem-meus-dados.json'`).
 
 ---
 
-#### Finding 2.3: Incomplete State & Cache Cleanup on Session Termination
-- **Severity**: **MEDIUM**
-- **OWASP Classification**: Client-Side A02: Sensitive Data Exposure
-- **Code References**:
-  - [`useAuthStore.ts`](frontend/src/stores/useAuthStore.ts#L43-L47)
-  - [`client.ts`](frontend/src/api/client.ts#L68-L72)
-- **Vulnerability Analysis**:
-  When `clearAuth()` is invoked or when a 401 Unauthorized response triggers `clearAuth()` in [`client.ts`](frontend/src/api/client.ts#L70), the following data remains intact:
-  1. `useSessionStore` memory: The previous user's `activeSession`, `attempts`, `selectedAnswers`, and `diagnosticReport` remain in Zustand memory until the page is forcibly refreshed.
-  2. TanStack Query cache: Query cache items (such as `/gamification/profile`, `/diagnostic/reports`, and `/practice-sessions/{id}`) remain in React Query memory.
-  3. `aprovaenem_anon_session_id`: Stored in `localStorage` and never rotated.
-- **Remediation**:
-  Centralize all logout and 401 teardown logic in an atomic session cleanup coordinator that resets `useAuthStore`, `useSessionStore`, rotates the anonymous session ID, and executes `queryClient.clear()`.
-
----
-
-### Domain 3: Ingress Hardening & Security Misconfiguration
-
-#### Finding 3.1: Complete Absence of Content-Security-Policy (CSP) in Frontend Edge
-- **Severity**: **HIGH**
-- **OWASP Classification**: Client-Side A05: Security Misconfiguration / A01: Injection
-- **Code Reference**: [`frontend/nginx.conf`](frontend/nginx.conf#L75-L80)
-- **Vulnerability Analysis**:
-  In [`frontend/nginx.conf`](frontend/nginx.conf#L75-L80), the edge proxy defines `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, and `Referrer-Policy: strict-origin-when-cross-origin`, but **omits `Content-Security-Policy` entirely**.
-  Without a CSP:
-  - There are no restrictions on external script sources (an injected `<script>` tag can execute code from any remote host).
-  - There are no restrictions on network exfiltration endpoints (`connect-src` is unconstrained).
-  - Object, iframe, and worker creation are completely unrestricted.
-- **Remediation**:
-  Inject a strict Content-Security-Policy header into `frontend/nginx.conf`:
-  ```nginx
-  add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://vlibras.gov.br; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' https://vlibras.gov.br http://frontend_api; frame-src 'self' https://vlibras.gov.br; object-src 'none'; base-uri 'self'; form-action 'self';" always;
+#### Finding 4.2: Email HTML Injection via Unsanitized `fullName` in Notification Worker
+- **Vulnerability ID**: `SEC-NOTIF-HTML-01`
+- **Severity**: **MEDIUM** (CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N — Base Score: **5.4**)
+- **OWASP Classification**: OWASP Top 10 (2021) — A03: Injection
+- **Code Reference**: `backend/notification-service/src/main/java/com/aprovaenem/notification/infrastructure/adapter/in/messaging/NotificationEventListener.java#L247-L258, L372-L375`
+- **Vulnerability Mechanism**:
+  ```java
+  String html = buildVerificationHtml(name, event.getVerificationToken());
+  ...
+  return template
+          .replace("{{NAME}}", name)
+          .replace("{{TOKEN}}", token);
   ```
-
----
-
-#### Finding 3.2: Deprecated & Hazardous `X-XSS-Protection` Header
-- **Severity**: **MEDIUM**
-- **OWASP Classification**: Client-Side A05: Security Misconfiguration
-- **Code References**: [`frontend/nginx.conf`](frontend/nginx.conf#L78, L108, L124, L138)
-- **Vulnerability Analysis**:
-  The Nginx configuration declares:
-  ```nginx
-  add_header X-XSS-Protection "1; mode=block" always;
-  ```
-  Across modern browsers, `X-XSS-Protection: 1; mode=block` is officially deprecated by W3C and MDN. In legacy Chromium and WebKit implementations, this setting introduced side-channel vulnerabilities (auditor bypasses) and client-side denial of service by selectively blocking legitimate script execution.
+- **Root Cause**:
+  In `RegisterRequest.java`, `fullName` is validated only with `@Size(min = 2, max = 150)`. In `NotificationEventListener`, `name` is substituted directly into the raw HTML email template using string replacement without HTML entity escaping. An attacker registering with `<a href="https://phish.evil">Clique aqui</a>` can inject arbitrary HTML markup and deceptive hyperlinks into transactional emails sent to other users or coordinators.
+- **Remediation Priority**: **P2 (Medium)**
 - **Remediation**:
-  Replace `add_header X-XSS-Protection "1; mode=block"` with `add_header X-XSS-Protection "0" always;` or remove it entirely in favor of `Content-Security-Policy`.
+  Sanitize `name` with `org.springframework.web.util.HtmlUtils.htmlEscape(name)` before template substitution, or validate that `fullName` matches `^[a-zA-ZÀ-ÿ\s.'-]+$`.
 
 ---
 
-#### Finding 3.3: Missing Strict-Transport-Security (HSTS)
-- **Severity**: **MEDIUM**
-- **OWASP Classification**: Client-Side A05: Security Misconfiguration / Sensitive Communication
-- **Code Reference**: [`frontend/nginx.conf`](frontend/nginx.conf#L57-L80)
-- **Vulnerability Analysis**:
-  The Nginx configuration listens only on HTTP port 80 and emits no `Strict-Transport-Security` header. While local development runs on HTTP, production deployment behind Nginx without HSTS leaves students vulnerable to SSL-stripping attacks when accessing the platform over unsecured public Wi-Fi networks.
-- **Remediation**:
-  Ensure production ingress emits:
-  ```nginx
-  add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
-  ```
-
----
-
-#### Finding 3.4: Missing Permissions-Policy Header
-- **Severity**: **LOW**
-- **OWASP Classification**: Client-Side A05: Security Misconfiguration
-- **Code Reference**: [`frontend/nginx.conf`](frontend/nginx.conf#L75-L80)
-- **Vulnerability Analysis**:
-  No `Permissions-Policy` header is configured. As an educational testing platform, AprovaENEM does not require camera, microphone, geolocation, or payment APIs.
-- **Remediation**:
-  Add `add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()" always;` to Nginx configurations.
-
----
-
-### Domain 4: Multi-Tenant Ingress & Header Spoofing Defenses
-
-#### Finding 4.1: Client-Side Tenant Identifier Override via URL Query Parameters
-- **Severity**: **MEDIUM**
-- **OWASP Classification**: Client-Side A01: Injection / Multi-Tenancy Spoofing
-- **Code References**:
-  - [`resolver.ts`](frontend/src/tenants/resolver.ts#L48-L53)
-  - [`client.ts`](frontend/src/api/client.ts#L50-L53)
-- **Vulnerability Analysis**:
-  In [`resolver.ts`](frontend/src/tenants/resolver.ts#L48-L53), the highest priority resolution tier (Tier 1a) extracts the tenant slug directly from the URL search query:
-  ```typescript
-  const queryParams = new URLSearchParams(search);
-  const queryTenant = queryParams.get('tenant')?.trim();
-  if (queryTenant) {
-    return { tier: 'query', identifier: queryTenant };
-  }
-  ```
-  This tenant slug is subsequently attached to all outbound API calls via Axios interceptor:
-  ```typescript
-  config.headers.set('X-Tenant-Id', currentTenant.slug);
-  ```
-  If an attacker distributes a link with `?tenant=institution-b`, the student's browser sends `X-Tenant-Id: institution-b`. If the backend gateway or microservice relies on the client-supplied `X-Tenant-Id` header rather than authenticating the tenant from the user's validated JWT claims or TLS SNI hostname, this enables multi-tenant cross-partition data queries or metric pollution.
-- **Remediation**:
-  1. The backend must strictly validate that the user's JWT grants access to the specified `X-Tenant-Id`.
-  2. For public unauthenticated routes, restrict `?tenant=` resolution to a strictly validated allowlist of known slugs (matching `TENANT_PRESETS`).
-
----
-
-#### Finding 4.2: Unbounded LocalStorage Tenant Cache Pollution
-- **Severity**: **LOW**
-- **OWASP Classification**: Client-Side A04: Resource Consumption / Denial of Service
-- **Code Reference**: [`resolver.ts`](frontend/src/tenants/resolver.ts#L143, L163)
-- **Vulnerability Analysis**:
-  Every resolved remote tenant configuration is written to `localStorage` under `aprovaenem_tenant_cache_${normalizedId}` with a 24-hour TTL, but without an LRU eviction cap. A scripted crawler or malicious link campaign could generate thousands of random tenant identifiers, filling the browser's 5MB `localStorage` quota and triggering unhandled `QuotaExceededError` exceptions during legitimate exam sessions.
-- **Remediation**:
-  Implement an LRU cache limit (e.g., maximum 10 cached tenants) that removes the oldest tenant entries before writing new ones.
-
----
-
-### Domain 5: Socratic AI Client-Side Threat Model & Business Flow Logic
-
-#### Finding 5.1: Missing Client-Side Input Length Constraints on Socratic AI Prompts
-- **Severity**: **MEDIUM**
-- **OWASP Classification**: Client-Side A04: Unrestricted Resource Consumption & DoS
-- **Code Reference**: [`SocraticTutorDrawer.tsx`](frontend/src/features/practice/components/SocraticTutorDrawer.tsx#L473-L487)
-- **Vulnerability Analysis**:
-  In [`SocraticTutorDrawer.tsx`](frontend/src/features/practice/components/SocraticTutorDrawer.tsx#L473-L487), the `<textarea>` has **no `maxLength` attribute**:
-  ```tsx
-  <textarea
-    ref={textareaRef}
-    value={inputMessage}
-    onChange={(e) => setInputMessage(e.target.value)}
-    onKeyDown={handleKeyDown}
-    placeholder="Digite sua dúvida sobre o conceito ou fórmula..."
-    rows={2}
-    disabled={askMutation.isPending || isTurnQuotaExhausted}
-    className="..."
-    aria-label="Pergunta para o Tutor Socrático"
-  />
-  ```
-  Furthermore, `handleSendMessage()` only checks `if (!text || askMutation.isPending) return;`.
-  A user or paste script can insert a multi-megabyte payload into the field. This causes severe main-thread lag in the React reconciliation tree and transmits massive payloads to the backend Socratic AI controller (`/api/v1/socratic-tutor/{questionId}/ask`), leading to unnecessary network saturation.
-- **Remediation**:
-  1. Add `maxLength={1000}` to the `<textarea>`.
-  2. Implement client-side character count and validation indicator (e.g., "350 / 1000 caracteres").
-  3. Reject payloads exceeding 1,000 characters before calling `askMutation.mutate()`.
-
----
-
-#### Finding 5.2: Socratic AI Fallback / Prompt Echo in Chat Bubbles
-- **Severity**: **LOW**
-- **OWASP Classification**: LLM Application Security / Client-Side Injection
-- **Code Reference**: [`SocraticMessageBubble.tsx`](frontend/src/features/practice/components/SocraticMessageBubble.tsx#L40, L89)
-- **Vulnerability Analysis**:
-  AI tutor messages and student questions are rendered directly via `<MathRenderer content={message.content} />`. If an adversary crafts an adversarial prompt that causes the LLM to echo unescaped markup, `MathRenderer` will parse inline LaTeX tokens. While KaTeX does not execute scripts when `trust: false`, deeply nested or pathological formulas could cause client-side rendering slowdowns (ReDoS or layout thrashing).
-- **Remediation**:
-  Add bounding box overflow styling (`max-h-[600px] overflow-y-auto`) and token parsing safety limits to ensure that oversized AI responses do not break the drawer layout.
-
----
-
-### Domain 6: LGPD Privacy, PII Exposure & Telemetry
-
-#### Finding 6.1: Cross-Student Anonymous Session Migration Bleed
-- **Severity**: **HIGH**
-- **OWASP Classification**: Privacy & Data Integrity Violation (LGPD Art. 6, V — Data Quality)
-- **Code References**:
-  - [`useSessionStore.ts`](frontend/src/stores/useSessionStore.ts#L275-L308)
-  - [`useAuthStore.ts`](frontend/src/stores/useAuthStore.ts#L40)
-- **Vulnerability Analysis**:
-  In [`useAuthStore.ts`](frontend/src/stores/useAuthStore.ts#L40), upon successful login:
-  ```typescript
-  useSessionStore.getState().migrateAnonymousProgress(user.id);
-  ```
-  In [`useSessionStore.ts`](frontend/src/stores/useSessionStore.ts#L275-L290), `migrateAnonymousProgress` binds whatever anonymous exam attempts, scores, and answered questions are currently stored in `attempts` to `user.id`.
-  In a public school computer lab:
-  1. Student Alice uses the terminal as an anonymous guest and attempts 15 questions, scoring 40%.
-  2. Alice walks away.
-  3. Student Bob sits at the same computer and logs into his authenticated account.
-  4. Alice's 15 anonymous attempts and low scores are automatically merged into Bob's official profile, permanently corrupting Bob's diagnostic report and Item Response Theory (TRI) parameters.
-- **Remediation**:
-  Prompt the user with an explicit confirmation dialog before migrating anonymous data:
-  *"Detectamos um simulado não salvo neste navegador. Deseja importá-lo para sua conta?"* If rejected, purge the anonymous session data before finalizing the login flow.
-
----
-
-#### Finding 6.2: Commendation — Privacy-Preserving Architecture & Zero Third-Party Telemetry
-- **Severity**: **INFORMATIONAL**
-- **OWASP Classification**: Best Practice Compliance
+#### Finding 4.3: Residual Access to Anonymized Post-Erasure Exam Sessions
+- **Vulnerability ID**: `SEC-LGPD-ERASURE-01`
+- **Severity**: **LOW** (CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N — Base Score: **3.1**)
+- **Regulatory Standard**: Brazilian LGPD Art. 18, VI & Art. 16, II
+- **Code Reference**: `backend/exam-service/src/main/java/com/aprovaenem/exam/infrastructure/adapter/in/messaging/ExamEventListener.java#L23`
 - **Audit Observation**:
-  The AprovaENEM frontend demonstrates exemplary privacy engineering:
-  - Zero commercial tracking pixels (Meta, TikTok, Google Analytics) are embedded.
-  - Zero telemetry beacons or third-party error trackers that could harvest student PII.
-  - No `console.log` statements in production bundles.
-  - LGPD Article 18 self-service data erasure is fully implemented with strict confirmation challenges.
+  When a student requests account deletion, `ExamEventListener` anonymizes practice sessions by setting `userId = null` to retain aggregate TRI statistical validity under LGPD Art. 16, II. However, because `validateSessionOwnership` permits any authenticated user to access sessions where `userId == null`, anyone with the old session UUID can still inspect the answers and diagnostic report.
+- **Remediation Priority**: **P3 (Low)**
+- **Remediation**:
+  Mark anonymized sessions with a status flag `STATUS = 'ANONYMIZED_PURGED'` and reject direct session retrieval.
 
 ---
 
-## 4. Consolidated Findings & Severity Matrix
+### Domain 5: DOM XSS & Client-Side Injection Sinks
 
-| ID | Severity | Category | Vulnerability Summary | Target File & Lines |
-| :---: | :---: | :---: | :--- | :--- |
-| **SEC-FE-01** | **CRITICAL** | A02: State/Token | Long-Lived JWT & PII in `localStorage` on shared public computers | [`useAuthStore.ts#L14-L46`](frontend/src/stores/useAuthStore.ts#L14-L46) |
-| **SEC-FE-02** | **HIGH** | A02: State/Token | Complete absence of user logout / sign-out button in UI | [`Header.tsx#L112-L139`](frontend/src/components/layout/Header.tsx#L112-L139), [`MobileDrawer.tsx#L125-L160`](frontend/src/components/layout/MobileDrawer.tsx#L125-L160) |
-| **SEC-FE-03** | **HIGH** | A01: DOM XSS | Dynamic external script injection (`VLibras`) without SRI | [`VLibras.tsx#L38-L47`](frontend/src/components/accessibility/VLibras.tsx#L38-L47) |
-| **SEC-FE-04** | **HIGH** | A05: Config | Complete absence of Content-Security-Policy (CSP) in edge proxy | [`nginx.conf#L75-L80`](frontend/frontend/nginx.conf#L75-L80) |
-| **SEC-FE-05** | **HIGH** | LGPD / Privacy | Cross-student anonymous session migration data bleed | [`useSessionStore.ts#L275-L308`](frontend/src/stores/useSessionStore.ts#L275-L308), [`useAuthStore.ts#L40`](frontend/src/stores/useAuthStore.ts#L40) |
-| **SEC-FE-06** | **MEDIUM** | A01: DOM XSS | KaTeX `dangerouslySetInnerHTML` output rendered without DOMPurify | [`BlockMath.tsx#L47`](frontend/src/components/math/BlockMath.tsx#L47), [`InlineMath.tsx#L44`](frontend/src/components/math/InlineMath.tsx#L44) |
-| **SEC-FE-07** | **MEDIUM** | A05: Config | Deprecated `X-XSS-Protection: 1; mode=block` header injected | [`nginx.conf#L78, L108, L124, L138`](frontend/nginx.conf#L78) |
-| **SEC-FE-08** | **MEDIUM** | A05: Config | Missing Strict-Transport-Security (HSTS) in Nginx | [`nginx.conf#L57-L80`](frontend/nginx.conf#L57-L80) |
-| **SEC-FE-09** | **MEDIUM** | Multi-Tenancy | Client-side tenant override via unvalidated URL query parameters | [`resolver.ts#L48-L53`](frontend/src/tenants/resolver.ts#L48-L53), [`client.ts#L50-L53`](frontend/src/api/client.ts#L50-L53) |
-| **SEC-FE-10** | **MEDIUM** | Socratic AI | Textarea missing `maxLength` and client-side size validation | [`SocraticTutorDrawer.tsx#L473-L487`](frontend/src/features/practice/components/SocraticTutorDrawer.tsx#L473-L487) |
-| **SEC-FE-11** | **LOW** | A01: DOM XSS | Missing explicit `trust: false` in KaTeX render configuration | [`BlockMath.tsx#L20-L25`](frontend/src/components/math/BlockMath.tsx#L20-L25), [`InlineMath.tsx#L18-L25`](frontend/src/components/math/InlineMath.tsx#L18-L25) |
-| **SEC-FE-12** | **LOW** | Multi-Tenancy | Unbounded LocalStorage tenant cache allows storage quota DoS | [`resolver.ts#L143, L163`](frontend/src/tenants/resolver.ts#L143) |
-| **SEC-FE-13** | **LOW** | A05: Config | Missing `Permissions-Policy` header in Nginx configuration | [`nginx.conf#L75-L80`](frontend/nginx.conf#L75-L80) |
-| **SEC-FE-14** | **INFO** | LGPD / Privacy | Privacy-preserving telemetry architecture with zero commercial trackers | Monorepo-wide frontend codebase |
+#### Finding 5.1: KaTeX `dangerouslySetInnerHTML` Lacks Secondary DOMPurify Sanitization
+- **Vulnerability ID**: `SEC-FE-XSS-01`
+- **Severity**: **MEDIUM** (CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:L/A:N — Base Score: **5.3**)
+- **OWASP Classification**: Client-Side A01: DOM-Based Cross-Site Scripting
+- **Code References**:
+  - `frontend/src/components/math/BlockMath.tsx#L50`
+  - `frontend/src/components/math/InlineMath.tsx#L47`
+- **Vulnerability Analysis**:
+  Both components configure KaTeX with `trust: false`, `maxSize: 25`, and `maxExpand: 100`, which mitigates standard command execution. However, KaTeX output is injected directly via `dangerouslySetInnerHTML={{ __html: html }}` without passing through `DOMPurify`. Defense-in-depth requires secondary DOM purification to safeguard against KaTeX parser bypasses.
+- **Remediation Priority**: **P2 (Medium)**
+- **Remediation**:
+  Wrap KaTeX output in `DOMPurify.sanitize(html, { USE_PROFILES: { html: true, mathMl: true } })`.
 
 ---
 
-## 5. Actionable Remediation Roadmap
+#### Finding 5.2: Dynamic Script Injection (`VLibras.tsx`) Without Subresource Integrity (SRI)
+- **Vulnerability ID**: `SEC-FE-SRI-01`
+- **Severity**: **HIGH** (CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:H/I:H/A:N — Base Score: **7.5**)
+- **OWASP Classification**: Client-Side A08: Software & Data Integrity Failures
+- **Code Reference**: `frontend/src/components/accessibility/VLibras.tsx#L38-L47`
+- **Vulnerability Analysis**:
+  Dynamic injection of `https://vlibras.gov.br/app/vlibras-plugin.js` occurs without Subresource Integrity (`integrity="sha384-..."`) and without `crossOrigin="anonymous"`. Any supply chain compromise of the external Brazilian government host enables arbitrary code execution in the student's browser context.
+- **Remediation Priority**: **P1 (High)**
+- **Remediation**:
+  Pin the VLibras asset with SRI or vendor and proxy the accessibility bundle from AprovaENEM's trusted CDN.
+
+---
+
+#### Finding 5.3: Client-Side Component Review: `CourseSelector.tsx`, `ProfilePage.tsx`, `NotificationCenterModal.tsx`
+- **Status**: **VERIFIED SAFE / CLEAN ✅**
+- **OWASP Classification**: Secure Coding Standard Compliance
+- **Audit Findings**:
+  1. `CourseSelector.tsx`: Renders course names, area labels, and match counts via standard React JSX text nodes. No `dangerouslySetInnerHTML`, `eval`, or unsanitized attributes.
+  2. `NotificationCenterModal.tsx`: Uses strict Lucide icon dictionaries and maps title, timestamp, and message safely through React JSX interpolation.
+  3. `markdown-parser.tsx`: Sanitizes image and link URLs with `isSafeUrl()` (restricting protocols to `https://`, `http://`, `/`, `./`, and `data:image/`).
+
+---
+
+## 4. Consolidated Remediation Matrix & Prioritized Roadmap
+
+| Finding ID | Vulnerability Summary | OWASP / Standard | CVSS v3.1 | Priority | Target File(s) |
+| :--- | :--- | :--- | :---: | :---: | :--- |
+| **SEC-AUTH-OTP-01** | Account takeover via 6-digit OTP birthday brute force | API2: Broken Auth | **9.8** (Crit) | **P0** | `EmailVerificationService.java`<br/>`AuthController.java` |
+| **SEC-EXAM-LEAK-01** | Premature exam resolution and answer disclosure | A01: Broken Access | **7.5** (High) | **P0** | `QuestionCatalogController.java` |
+| **SEC-API-BOLA-02** | Session re-claim overwrite and missing possession proof | API1: BOLA | **8.1** (High) | **P0** | `AnonymousSessionService.java`<br/>`SessionController.java` |
+| **SEC-API-BOLA-01** | Institutional cohort diagnostics cross-tenant snooping | API1: BOLA | **7.1** (High) | **P1** | `InstitutionalDiagnosticsController.java` |
+| **SEC-API-BOLA-03** | Practice session auth bypass on `userId == null` | API1: BOLA | **7.1** (High) | **P1** | `PracticeSessionController.java` |
+| **SEC-API-BFLA-01** | Dev-Mode Pro plan toggle bypass & coordinator demotion | API5: BFLA | **6.5** (Med) | **P1** | `AuthController.java`<br/>`AuthService.java` |
+| **SEC-FE-STATE-01** | Long-lived JWT & PII in `localStorage` on shared PCs | A02: Sensitive Data | **7.1** (High) | **P1** | `useAuthStore.ts` |
+| **SEC-FE-SRI-01** | Unpinned external script injection (`VLibras`) | A08: Integrity | **7.5** (High) | **P1** | `VLibras.tsx` |
+| **SEC-NOTIF-HTML-01**| Email HTML injection via unsanitized `fullName` | A03: Injection | **5.4** (Med) | **P2** | `NotificationEventListener.java` |
+| **SEC-LGPD-PORT-01** | Broken data portability file download in Profile page | LGPD Art. 18, V | **3.5** (Med) | **P2** | `ProfilePage.tsx` |
+| **SEC-AUTH-RESET-01**| 24h excessive TTL & no cooldown on password reset | API4: Resource | **5.3** (Med) | **P2** | `AuthService.java` |
+| **SEC-FE-XSS-01**    | KaTeX output rendered without secondary DOMPurify | A01: DOM XSS | **5.3** (Med) | **P2** | `BlockMath.tsx`<br/>`InlineMath.tsx` |
+| **SEC-FE-STATE-02**  | Residual user diagnostic reports in `localStorage` | A02: Sensitive Data | **4.4** (Med) | **P2** | `useSessionStore.ts` |
+| **SEC-LGPD-ERASURE-01**| Anonymized sessions queryable if UUID is known | LGPD Art. 16, II | **3.1** (Low) | **P3** | `ExamEventListener.java` |
+
+---
+
+## 5. Remediation Roadmap
 
 ```mermaid
 flowchart TD
-    subgraph SprintA ["Immediate Priority (Sprint 6 Hotfixes)"]
-        A1["SEC-FE-02: Add accessible Logout button to Header & MobileDrawer"]
-        A2["SEC-FE-04 & 07: Add strict CSP, remove X-XSS-Protection in Nginx"]
-        A3["SEC-FE-03: Pin VLibras with Subresource Integrity or vendor script"]
-        A4["SEC-FE-10: Add maxLength=1000 & character counter to Socratic textarea"]
+    subgraph SprintHotfix ["Phase 1: Critical Immediate Hotfixes (P0)"]
+        H1["SEC-AUTH-OTP-01: Bind OTP to email + 15 min TTL + Lockout"]
+        H2["SEC-EXAM-LEAK-01: Gate /resolution behind session completion / admin role"]
+        H3["SEC-API-BOLA-02: Block re-claiming of already claimed anonymous sessions"]
     end
 
-    subgraph SprintB ["Secondary Hardening (Pre-Production Milestone)"]
-        B1["SEC-FE-01: Implement HttpOnly SameSite=Strict cookies via BFF Gateway"]
-        B2["SEC-FE-06 & 11: Add DOMPurify to KaTeX & lock trust: false"]
-        B3["SEC-FE-05: Add confirmation modal before migrating anonymous sessions"]
-        B4["SEC-FE-09: Restrict query tenant overrides to validated preset slugs"]
+    subgraph SprintHardening ["Phase 2: High Priority Hardening (P1)"]
+        P1["SEC-API-BOLA-01: Enforce tenantId match in Institutional Diagnostics"]
+        P2["SEC-API-BOLA-03: Restrict userId == null session access to matching sessionHeader"]
+        P3["SEC-API-BFLA-01: Restrict /me/plan to dev profile & protect coordinator role"]
+        P4["SEC-FE-STATE-01: Add Public Terminal toggle & idle session timeout"]
+        P5["SEC-FE-SRI-01: Add SRI hash to VLibras script injection"]
     end
 
-    subgraph SprintC ["Tertiary Optimizations"]
-        C1["SEC-FE-08 & 13: Enforce HSTS and Permissions-Policy in production ingress"]
-        C2["SEC-FE-12: Implement LRU cap for cached tenant brandings in localStorage"]
+    subgraph SprintCompliance ["Phase 3: Medium & Compliance Polish (P2 / P3)"]
+        C1["SEC-NOTIF-HTML-01: HtmlUtils.htmlEscape fullName in notification templates"]
+        C2["SEC-LGPD-PORT-01: Trigger Blob file download in ProfilePage.tsx"]
+        C3["SEC-AUTH-RESET-01: Reduce password reset TTL to 30 min + rate limiting"]
+        C4["SEC-FE-XSS-01: Add DOMPurify to BlockMath and InlineMath"]
+        C5["SEC-FE-STATE-02: Flush user diagnostics from localStorage on logout"]
     end
 
-    SprintA --> SprintB --> SprintC
+    SprintHotfix --> SprintHardening --> SprintCompliance
 ```
-
-### Immediate Concrete Actions (Sprint 6 Phase 2 Remediation):
-1. **Implement UI Logout Button**: Update [`Header.tsx`](frontend/src/components/layout/Header.tsx) and [`MobileDrawer.tsx`](frontend/src/components/layout/MobileDrawer.tsx) with a prominent "Sair" button invoking `useAuthStore.getState().clearAuth()`, `useSessionStore.getState().clearSession()`, and `queryClient.clear()`.
-2. **Add Content-Security-Policy & Deprecate `X-XSS-Protection`**: Update [`frontend/nginx.conf`](frontend/nginx.conf) with the standardized CSP directives and remove obsolete XSS protection headers.
-3. **Subresource Integrity for VLibras**: Update [`VLibras.tsx`](frontend/src/components/accessibility/VLibras.tsx) with SRI hash verification or load the verified asset from the platform bundle.
-4. **Input Bounding in Socratic Tutor**: Update [`SocraticTutorDrawer.tsx`](frontend/src/features/practice/components/SocraticTutorDrawer.tsx) to enforce `maxLength={1000}` on user prompts.
-5. **DOMPurify Integration**: Install `dompurify` and wrap KaTeX output in [`BlockMath.tsx`](frontend/src/components/math/BlockMath.tsx) and [`InlineMath.tsx`](frontend/src/components/math/InlineMath.tsx).
 
 ---
 
-## 6. Sign-off & Milestone Status
+## 6. Audit Conclusion & Next Steps
 
-- **Stage**: JAM 2 / Sprint 6 — Stage 1 (Frontend SPA Threat Model & Client-Side Security Review)
-- **Status**: **STAGE 1 COMPLETED ✅**
-- **Report Location**: [`docs/audit/jam2-stage1-client-threat-model.md`](docs/audit/jam2-stage1-client-threat-model.md)
-- **Next Milestone Step**: Proceed to **Stage 2 (Automated Supply Chain & Dependency Security Scanning — Trivy & Gitleaks)**.
+Stage 1 re-audit has pinpointed three critical vulnerabilities (`SEC-AUTH-OTP-01`, `SEC-EXAM-LEAK-01`, `SEC-API-BOLA-02`) and four high-severity authorization and session defects that must be resolved prior to production launch.
+
+- **Status**: **STAGE 1 RE-AUDIT COMPLETED**
+- **Primary Report**: `docs/audit/jam2-stage1-client-threat-model.md`
+- **Next Stage**: Proceed to **Stage 2 (Static Analysis, Dependency Supply Chain & Gitleaks / Trivy Audit)** once Phase 1 hotfixes are triaged.
