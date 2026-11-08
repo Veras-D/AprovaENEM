@@ -151,9 +151,21 @@ Vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers
   "sessionId": "a8b9c0d1-e2f3-4a5b-6c7d-8e9f0a1b2c3d",
   "isAnonymous": false,
   "expiresAt": "2026-10-17T19:40:00Z",
-  "message": "Session successfully claimed and associated with account."
+  "message": "Session claimed successfully by user 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
 }
 ```
+
+#### Error Response `400 Bad Request` (Session Expired or Claim Conflict)
+```json
+{
+  "type": "https://aprovaenem.org/errors/BUSINESS_VALIDATION_ERROR",
+  "title": "Business Validation Error",
+  "status": 400,
+  "detail": "Anonymous session is already claimed by another user.",
+  "timestamp": "2026-09-18T10:05:00Z"
+}
+```
+*(Also returns `400 Bad Request` with detail `"Anonymous session has expired."` if the session's 30-day TTL has lapsed).*
 
 ---
 
@@ -305,21 +317,36 @@ Vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers
 ### 2.8 Verify Student Email
 * **Method**: `POST`
 * **Path**: `/api/v1/auth/verify-email`
-* **Description**: Verifies the student's email address using the single-use token delivered via the Transactional Outbox and `notification-service`.
+* **Description**: Verifies the student's email address using the 6-digit numeric OTP (or token) bound to the registered email address delivered via the Transactional Outbox and `notification-service`.
 
 #### Request Body
 ```json
 {
-  "token": "4f9a8b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9"
+  "token": "492817",
+  "email": "lucas.silva@escola.ma.gov.br"
 }
 ```
+*(The `email` field is strongly recommended to bind OTP verification to the target account, preventing OTP swapping).*
 
 #### Response `200 OK`
 ```json
 {
   "message": "Email address successfully verified. Your AprovaENEM account is now fully active.",
   "isEmailVerified": true,
-  "verifiedAt": "2026-09-18T14:35:00Z"
+  "verifiedAt": "2026-09-18T14:35:00Z",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "tokenType": "Bearer",
+  "expiresInSeconds": 86400,
+  "user": {
+    "id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+    "email": "lucas.silva@escola.ma.gov.br",
+    "fullName": "Lucas Silva",
+    "schoolType": "PUBLIC_SCHOOL",
+    "targetDegree": "Computer Science",
+    "role": "ROLE_STUDENT",
+    "isEmailVerified": true,
+    "createdAt": "2026-09-18T10:00:00Z"
+  }
 }
 ```
 
@@ -511,6 +538,12 @@ Returns the question statement, status, and options A–E.
 
 ## 4. Practice Session & Grading Endpoints (`exam-service`)
 
+> [!IMPORTANT]
+> **Strict BOLA / Broken Object Level Authorization Safeguards**:
+> All practice session access endpoints (`GET /sessions/{id}`, `POST /sessions/{id}/attempts`, `POST /sessions/{id}/complete`, `GET /sessions/{id}/diagnostic`) enforce multi-tenant authorization:
+> - **Guest Sessions (`userId == null`)**: Strictly require the `X-Session-Id` header matching the session's anonymous ID (or `ROLE_ADMIN`). Calling with mismatched or omitted session identifiers returns HTTP `403 Forbidden`.
+> - **Authenticated Sessions (`userId != null`)**: Strictly require `Authorization: Bearer <token>` whose subject matches the session's owner (or `ROLE_ADMIN`). Caller cannot inspect or tamper with another student's session.
+
 ### 4.1 Start Practice Session (Generate Quiz)
 * **Method**: `POST`
 * **Path**: `/api/v1/sessions`
@@ -630,24 +663,32 @@ Returns the question statement, status, and options A–E.
 
 ### 5.1 Curated Question Resolution Delivery
 > [!NOTE]
-> **Anti-Cheating Architectural Design**: Question resolutions (`question_resolutions`) are securely encapsulated inside the `AttemptResultResponse` payload delivered upon submitting an answer attempt (`POST /api/v1/sessions/{sessionId}/attempts`). This guarantees students cannot view explanations or correct options prior to attempting the question. For administrative verification and post-session review:
+> **Anti-Cheating Architectural Design**: Question resolutions (`question_resolutions`) are securely encapsulated inside the `AttemptResultResponse` payload delivered upon submitting an answer attempt (`POST /api/v1/sessions/{sessionId}/attempts`). Direct resolution lookup via `GET /api/v1/questions/{id}/resolution` is strictly protected by JWT authentication to prevent automated scraping and pre-answer leakage.
 
 * **Method**: `GET`
 * **Path**: `/api/v1/questions/{id}/resolution`
+* **Headers**: `Authorization: Bearer <token>` (**Required**: `ROLE_STUDENT`, `ROLE_PREMIUM_STUDENT`, or `ROLE_ADMIN`)
 
 #### Response `200 OK`
 ```json
 {
   "questionId": "77777777-8888-9999-aaaa-bbbbbbbbbbbb",
   "correctOption": "B",
-  "baseExplanation": "Pela fórmula da potência elétrica, $I = P / V = 5500 / 220 = 25\\text{ A}$...",
-  "distractorAnalysis": {
-    "A": "Incorreta: 15 A subdimensionaria o circuito, causando desarmes contínuos.",
-    "C": "Incorreta: 40 A superdimensionaria o condutor, gerando risco de sobreaquecimento.",
-    "D": "Incorreta: 20 A é inferior aos 25 A exigidos pelo chuveiro.",
-    "E": "Incorreta: 60 A deixaria a instalação sem proteção contra sobrecorrente."
-  },
-  "attribution": "INEP Official Pedagogical Matrix"
+  "baseExplanation": "Pela fórmula da potência elétrica, $I = P / V = 5500 / 220 = 25\\text{ A}$. O disjuntor deve ser escolhido com valor comercial imediatamente superior à corrente nominal para evitar desarmes intempestivos, logo o disjuntor de 30 A é a opção correta.",
+  "keyConcepts": "Potência Elétrica, Lei de Joule, Dimensionamento de Circuitos",
+  "authorAttribution": "INEP Official Guidelines / Open Educational Resource",
+  "attribution": "INEP Official Guidelines / Open Educational Resource"
+}
+```
+
+#### Error Response `403 Forbidden` (Unauthenticated or Missing Token)
+```json
+{
+  "type": "https://aprovaenem.org/errors/AUTHENTICATION_REQUIRED",
+  "title": "Access Denied",
+  "status": 403,
+  "detail": "Authentication required to access question resolutions directly.",
+  "timestamp": "2026-09-18T10:15:00Z"
 }
 ```
 

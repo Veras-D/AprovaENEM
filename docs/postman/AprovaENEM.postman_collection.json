@@ -280,6 +280,48 @@
           ]
         },
         {
+          "name": "Claim Anonymous Session (PUT /api/v1/auth/session/:id/claim)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/session/{{sessionId}}/claim",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "session",
+                "{{sessionId}}",
+                "claim"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Session claimed flag is set', function () {",
+                  "    pm.expect(json.isAnonymous).to.eql(false);",
+                  "    pm.expect(json.sessionId).to.eql(pm.environment.get('sessionId'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
           "name": "Export Personal Data (GET /api/v1/auth/export - LGPD Art. 18)",
           "request": {
             "method": "GET",
@@ -387,7 +429,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"token\": \"invalid-token-12345\"\n}"
+              "raw": "{\n  \"token\": \"invalid-token-12345\",\n  \"email\": \"{{studentEmail}}\"\n}"
             }
           },
           "event": [
@@ -539,6 +581,47 @@
                   "    pm.expect(json.statement).to.be.a('string');",
                   "    pm.expect(json.options).to.have.lengthOf(5);",
                   "    json.options.forEach(opt => pm.expect(opt.isCorrect).to.be.null);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Question Resolution (GET /api/v1/questions/:id/resolution)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/questions/{{questionId}}/resolution",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "questions",
+                "{{questionId}}",
+                "resolution"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Contains correctOption and explanation', function () {",
+                  "    pm.expect(json.correctOption).to.be.a('string');",
+                  "    pm.expect(json.baseExplanation).to.be.a('string');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1482,6 +1565,37 @@
                 "exec": [
                   "pm.test('Status code is 401 Unauthorized', function () {",
                   "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resolution Access Denied (GET /api/v1/questions/:id/resolution without Token)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/questions/{{questionId}}/resolution",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "questions",
+                "{{questionId}}",
+                "resolution"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 403 Forbidden', function () {",
+                  "    pm.response.to.have.status(403);",
                   "});"
                 ],
                 "type": "text/javascript"

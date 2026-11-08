@@ -67,7 +67,8 @@ classDiagram
         +UUID id
         +UUID questionId
         +string baseExplanation
-        +string conceptsTested
+        +string keyConcepts
+        +string authorAttribution
     }
 
     class PracticeSession {
@@ -117,6 +118,8 @@ classDiagram
         +boolean isEmailVerified
         +string emailVerificationToken
         +timestamp emailVerificationExpiresAt
+        +string avatarConfig
+        +boolean isBot
         +timestamp createdAt
         +timestamp updatedAt
     }
@@ -134,7 +137,9 @@ classDiagram
         +UUID userId
         +int currentLevel
         +int currentXp
+        +string currentLeague
         +int streakDays
+        +int longestStreakDays
         +int streakFreezeAvailable
         +date lastActivityDate
         +int dailyGoalQuestions
@@ -359,6 +364,8 @@ erDiagram
         timestamp email_verification_expires_at
         varchar password_reset_token
         timestamp password_reset_expires_at
+        text avatar_config
+        boolean is_bot
         timestamp created_at
         timestamp updated_at
     }
@@ -376,7 +383,9 @@ erDiagram
         uuid user_id PK,FK
         int current_level
         int current_xp
+        varchar current_league
         int streak_days
+        int longest_streak_days
         int streak_freeze_available
         date last_activity_date
         int daily_goal_questions
@@ -469,12 +478,15 @@ CREATE TABLE users (
     email_verification_expires_at TIMESTAMP WITH TIME ZONE,
     password_reset_token VARCHAR(255),
     password_reset_expires_at TIMESTAMP WITH TIME ZONE,
+    avatar_config TEXT,
+    is_bot BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_users_email_verification ON users(email_verification_token) WHERE email_verification_token IS NOT NULL;
 CREATE INDEX idx_users_password_reset ON users(password_reset_token) WHERE password_reset_token IS NOT NULL;
+CREATE INDEX idx_users_is_bot ON users(is_bot);
 
 -- Transactional Outbox Pattern Table (Ensures Dual-Write Consistency to RabbitMQ)
 CREATE TABLE outbox_events (
@@ -511,9 +523,10 @@ CREATE TABLE user_gamification_profiles (
     current_xp INT NOT NULL DEFAULT 0,
     current_league VARCHAR(20) NOT NULL DEFAULT 'BRONZE', -- BRONZE, SILVER, GOLD, DIAMOND
     streak_days INT NOT NULL DEFAULT 0,
+    longest_streak_days INT NOT NULL DEFAULT 0,
     streak_freeze_available INT NOT NULL DEFAULT 1, -- 1 emergency streak freeze per month
     last_activity_date DATE,
-    daily_goal_questions INT NOT NULL DEFAULT 10,
+    daily_goal_questions INT NOT NULL DEFAULT 5,
     daily_questions_completed INT NOT NULL DEFAULT 0,
     daily_goal_reached_at TIMESTAMP WITH TIME ZONE,
     opt_in_reminders BOOLEAN NOT NULL DEFAULT TRUE,

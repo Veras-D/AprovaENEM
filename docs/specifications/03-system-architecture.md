@@ -1290,6 +1290,16 @@ flowchart TD
    - **In-App Notification Feed**: Real-time badge unlocks and system announcements.
 2. **Quiet Hours & Notification Preferences**: Respects student sleep schedules (no push alerts between 22:00 and 07:00 unless explicitly requested) and honours opt-out preferences stored in `user_gamification_profiles`.
 
+#### 2. RabbitMQ Message Topology & Event Routing
+
+| Exchange Name | Exchange Type | Queue Name | Routing Key | Consuming Listener & Purpose |
+| :--- | :--- | :--- | :--- | :--- |
+| **`auth.events`** | `topic` (durable) | `notification.auth.queue` | `auth.email_verification` | `NotificationEventListener`: Dispatches 6-digit verification OTP email with 24h TTL. |
+| **`auth.events`** | `topic` (durable) | `notification.password_reset.queue` | `auth.password_reset` | `NotificationEventListener`: Dispatches secure password reset token email. |
+| **`auth.events`** | `topic` (durable) | `notification.user_registered.queue` | `user.registered` | `NotificationEventListener`: Welcome in-app notification feed generation. |
+| **`auth.events`** | `topic` (durable) | `notification.lgpd.queue` | `user.deleted` | `NotificationEventListener`: LGPD Art. 18 right to erasure (purges student notification data). |
+| **`notification.events`** | `topic` (durable) | `notification.reminders.queue` | `notification.reminder.study` | `NotificationEventListener`: Dispatches streak preservation & daily study push reminders. |
+
 #### 3. Transactional Outbox Pattern & Email Confirmation Workflow
 
 To prevent the **dual-write problem** (where a database commit succeeds but the RabbitMQ message publish fails, or vice versa), all asynchronous domain events (such as `UserRegisteredEvent`) strictly employ the **Transactional Outbox Pattern**:
@@ -1324,20 +1334,20 @@ sequenceDiagram
 
     Broker->>NotifSvc: Deliver UserRegisteredEvent
     activate NotifSvc
-    NotifSvc->>NotifSvc: Render verification email template (pt-BR)
-    NotifSvc->>EmailGateway: Dispatch confirmation email with token link
+    NotifSvc->>NotifSvc: Render verification email template (pt-BR) with 6-digit OTP
+    NotifSvc->>EmailGateway: Dispatch confirmation email with token
     EmailGateway-->>Student: Deliver "Confirme seu e-mail no AprovaENEM"
     deactivate NotifSvc
 
-    Student->>AuthAPI: POST /api/v1/auth/verify-email (token)
-    AuthAPI->>AuthDB: UPDATE users SET is_email_verified = true WHERE email_verification_token = '...'
-    AuthAPI-->>Student: 200 OK (Email Verified)
+    Student->>AuthAPI: POST /api/v1/auth/verify-email (token, email)
+    AuthAPI->>AuthDB: Validate OTP against email and UPDATE users SET is_email_verified = true
+    AuthAPI-->>Student: 200 OK (Email Verified, JWT Token, UserProfile)
 ```
 
 1. **Guaranteed Delivery (At-Least-Once)**: The `outbox_events` record is written in the exact same database transaction as the new `users` record. If the database transaction rolls back, no event is ever published.
 2. **Concurrency-Safe Dequeuing**: The outbox worker uses `SELECT ... FOR UPDATE SKIP LOCKED` so multiple instances of `auth-service` can poll concurrently without lock contention or duplicate publishing.
 3. **Idempotent Consumption**: Downstream listeners in `notification-service` maintain an event deduplication ledger to ensure that even if an event is redelivered, students never receive duplicate verification emails.
-4. **Token Security**: Email verification tokens are cryptographically secure 256-bit random hex strings with a 24-hour expiration window (`email_verification_expires_at`).
+4. **Token Security**: Email verification utilizes cryptographically generated 6-digit numeric OTP tokens (or secure random verification tokens) strictly bound to the user's registered email address with a 24-hour expiration window (`email_verification_expires_at`). Requests validate both OTP and user email to prevent cross-account token substitution or brute-force OTP swapping.
 
 ---
 
