@@ -21,6 +21,18 @@ async function generatePdf() {
   });
 
   console.log('✅ Presentation PDF generated successfully at:', pdfPath);
+
+  console.log('📸 Generating slide previews in docs/presentation/previews...');
+  const slides = await page.locator('.slide').all();
+  for (let i = 0; i < slides.length; i++) {
+    await page.evaluate((idx) => {
+      window.showSlide(idx + 1);
+    }, i);
+    await page.waitForTimeout(300);
+    await slides[i].screenshot({ path: path.resolve(`docs/presentation/previews/slide-${i + 1}.png`) });
+  }
+  console.log(`✅ Saved ${slides.length} slide preview images.`);
+
   await browser.close();
 }
 
