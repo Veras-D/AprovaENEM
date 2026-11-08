@@ -101,6 +101,9 @@
       visibility: hidden;
       pointer-events: none;
       z-index: 1;
+      will-change: transform, opacity;
+      transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translate3d(90px, 0, 0) scale(0.98);
     }
 
     .slide.active {
@@ -108,19 +111,119 @@
       visibility: visible;
       pointer-events: auto;
       z-index: 10;
+      transform: translate3d(0, 0, 0) scale(1);
     }
 
-    .slide.exiting {
-      opacity: 1;
+    .slide.slide-out-left {
+      opacity: 0;
       visibility: visible;
       pointer-events: none;
       z-index: 8;
-      animation: slide-morph-fade-out 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      transform: translate3d(-100px, 0, 0) scale(0.96);
     }
 
-    @keyframes slide-morph-fade-out {
-      0% { opacity: 1; }
-      100% { opacity: 0; }
+    .slide.slide-out-right {
+      opacity: 0;
+      visibility: visible;
+      pointer-events: none;
+      z-index: 8;
+      transform: translate3d(100px, 0, 0) scale(0.96);
+    }
+
+    .slide.slide-in-from-left {
+      transform: translate3d(-90px, 0, 0) scale(0.98);
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .slide.slide-in-from-right {
+      transform: translate3d(90px, 0, 0) scale(0.98);
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    /* -------------------------------------------------------------
+       APPLE KEYNOTE STAGGERED CONTENT BUILD-IN
+       ------------------------------------------------------------- */
+    .slide.active .title-headline {
+      animation: keynote-fade-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
+    }
+
+    .slide.active .subtitle-lead {
+      animation: keynote-fade-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+    }
+
+    .slide.active .metric-hero-card,
+    .slide.active .lgpd-pillar-card,
+    .slide.active .hero-qr-card,
+    .slide.active .a11y-quadrant-card,
+    .slide.active .model-pillar-card,
+    .slide.active .stat-callout-card,
+    .slide.active .quote-callout-card,
+    .slide.active .solution-pillar-card,
+    .slide.active .browser-frame,
+    .slide.active .hero-preview-frame,
+    .slide.active .practice-preview-frame,
+    .slide.active .socratic-chat-frame,
+    .slide.active .tri-radar-frame,
+    .slide.active .arch-blueprint-frame,
+    .slide.active .repo-banner {
+      animation: keynote-card-up 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .slide.active .metric-hero-card:nth-child(1),
+    .slide.active .lgpd-pillar-card:nth-child(1),
+    .slide.active .hero-qr-card:nth-child(1),
+    .slide.active .a11y-quadrant-card:nth-child(1),
+    .slide.active .model-pillar-card:nth-child(1) {
+      animation-delay: 0.15s;
+    }
+
+    .slide.active .metric-hero-card:nth-child(2),
+    .slide.active .lgpd-pillar-card:nth-child(2),
+    .slide.active .hero-qr-card:nth-child(2),
+    .slide.active .a11y-quadrant-card:nth-child(2),
+    .slide.active .model-pillar-card:nth-child(2) {
+      animation-delay: 0.22s;
+    }
+
+    .slide.active .metric-hero-card:nth-child(3),
+    .slide.active .lgpd-pillar-card:nth-child(3),
+    .slide.active .hero-qr-card:nth-child(3),
+    .slide.active .a11y-quadrant-card:nth-child(3) {
+      animation-delay: 0.29s;
+    }
+
+    .slide.active .metric-hero-card:nth-child(4),
+    .slide.active .a11y-quadrant-card:nth-child(4) {
+      animation-delay: 0.36s;
+    }
+
+    .slide.active .hero-qr-meta-bar,
+    .slide.active .repo-banner {
+      animation-delay: 0.36s;
+    }
+
+    @keyframes keynote-fade-up {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, 18px, 0);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+    }
+
+    @keyframes keynote-card-up {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, 24px, 0) scale(0.985);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+      }
     }
 
     @media print {
@@ -2296,135 +2399,30 @@
         const isForward = newIndex > oldIndex;
         isTransitioning = true;
 
-        const cardSelectors = [
-          '.metric-hero-card',
-          '.lgpd-pillar-card',
-          '.hero-qr-card',
-          '.contact-bento-card',
-          '.a11y-quadrant-card',
-          '.model-pillar-card',
-          '.stat-callout-card',
-          '.quote-callout-card',
-          '.solution-pillar-card',
-          '.socratic-pillar-card',
-          '.tri-pillar-card'
-        ].join(', ');
+        // Clear previous state classes
+        slides.forEach(s => s.classList.remove('slide-in-from-left', 'slide-in-from-right', 'slide-out-left', 'slide-out-right'));
 
-        const frameSelectors = [
-          '.browser-frame',
-          '.hero-preview-frame',
-          '.practice-preview-frame',
-          '.socratic-chat-frame',
-          '.tri-radar-frame',
-          '.arch-blueprint-frame',
-          '.repo-banner'
-        ].join(', ');
+        // Prepare incoming slide initial position
+        newSlide.classList.add(isForward ? 'slide-in-from-right' : 'slide-in-from-left');
 
-        // Gather morph candidate pairs between oldSlide and newSlide
-        const pairs = [];
+        // Trigger reflow so browser applies initial transform
+        void newSlide.offsetWidth;
 
-        // 1. Category Pill Badge
-        const badgeOld = oldSlide.querySelector('.pill-badge');
-        const badgeNew = newSlide.querySelector('.pill-badge');
-        if (badgeOld && badgeNew) pairs.push({ from: badgeOld, to: badgeNew });
-
-        // 2. Title Headline
-        const headOld = oldSlide.querySelector('.title-headline');
-        const headNew = newSlide.querySelector('.title-headline');
-        if (headOld && headNew) pairs.push({ from: headOld, to: headNew });
-
-        // 3. Subtitle Lead
-        const subOld = oldSlide.querySelector('.subtitle-lead');
-        const subNew = newSlide.querySelector('.subtitle-lead');
-        if (subOld && subNew) pairs.push({ from: subOld, to: subNew });
-
-        // 4. Cards (sequential/positional matching)
-        const cardsOld = Array.from(oldSlide.querySelectorAll(cardSelectors));
-        const cardsNew = Array.from(newSlide.querySelectorAll(cardSelectors));
-        const minCards = Math.min(cardsOld.length, cardsNew.length);
-        for (let i = 0; i < minCards; i++) {
-          pairs.push({ from: cardsOld[i], to: cardsNew[i] });
-        }
-
-        // 5. Large Frames & Visual Mockups
-        const frameOld = oldSlide.querySelector(frameSelectors);
-        const frameNew = newSlide.querySelector(frameSelectors);
-        if (frameOld && frameNew) pairs.push({ from: frameOld, to: frameNew });
-
-        // Measure FIRST coordinates
-        const firstRects = pairs.map(p => p.from.getBoundingClientRect());
-
-        // Perform Slide Swap in DOM
+        // Animate outgoing slide away with depth
         oldSlide.classList.remove('active');
-        oldSlide.classList.add('exiting');
+        oldSlide.classList.add(isForward ? 'slide-out-left' : 'slide-out-right');
+
+        // Animate incoming slide into place
+        newSlide.classList.remove('slide-in-from-left', 'slide-in-from-right');
         newSlide.classList.add('active');
-
-        // Measure LAST coordinates
-        const lastRects = pairs.map(p => p.to.getBoundingClientRect());
-
-        // Play FLIP animations on matching elements
-        pairs.forEach((pair, idx) => {
-          const first = firstRects[idx];
-          const last = lastRects[idx];
-
-          if (last.width === 0 || last.height === 0 || first.width === 0 || first.height === 0) return;
-
-          const dx = first.left - last.left;
-          const dy = first.top - last.top;
-          const sx = first.width / last.width;
-          const sy = first.height / last.height;
-
-          if (Math.abs(dx) > 1 || Math.abs(dy) > 1 || Math.abs(sx - 1) > 0.02 || Math.abs(sy - 1) > 0.02) {
-            pair.to.animate([
-              {
-                transformOrigin: 'top left',
-                transform: `translate3d(${dx}px, ${dy}px, 0) scale(${sx}, ${sy})`,
-                opacity: 0.85
-              },
-              {
-                transformOrigin: 'top left',
-                transform: 'translate3d(0, 0, 0) scale(1, 1)',
-                opacity: 1
-              }
-            ], {
-              duration: 1150,
-              easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-              fill: 'both'
-            });
-          }
-        });
-
-        // Glide-in animation for unmatched elements on newSlide (smooth & cinematic)
-        const matchedNewSet = new Set(pairs.map(p => p.to));
-        const unmatchedNew = Array.from(newSlide.querySelectorAll(`${cardSelectors}, ${frameSelectors}`))
-          .filter(el => !matchedNewSet.has(el));
-
-        unmatchedNew.forEach((el, i) => {
-          const startX = isForward ? 90 : -90;
-          el.animate([
-            {
-              transform: `translate3d(${startX}px, 0, 0) scale(0.97)`,
-              opacity: 0
-            },
-            {
-              transform: 'translate3d(0, 0, 0) scale(1)',
-              opacity: 1
-            }
-          ], {
-            duration: 1050,
-            delay: 70 + i * 50,
-            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-            fill: 'both'
-          });
-        });
 
         currentIndex = newIndex;
         indicator.textContent = String(currentIndex + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
 
         setTimeout(() => {
-          oldSlide.classList.remove('exiting');
+          oldSlide.classList.remove('slide-out-left', 'slide-out-right');
           isTransitioning = false;
-        }, 1150);
+        }, 650);
       }
 
       window.showSlide = (num) => updateSlide(num - 1);
