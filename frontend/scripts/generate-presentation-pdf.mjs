@@ -5,7 +5,10 @@ import path from 'node:path';
 async function generatePdf() {
   console.log('🚀 Launching Chromium for Presentation PDF export...');
   const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage();
+  const page = await browser.newPage({
+    viewport: { width: 1920, height: 1080 },
+    deviceScaleFactor: 2,
+  });
 
   const htmlPath = path.resolve('docs/presentation/index.html');
   await page.goto('file://' + htmlPath, { waitUntil: 'networkidle' });
@@ -23,6 +26,10 @@ async function generatePdf() {
   console.log('✅ Presentation PDF generated successfully at:', pdfPath);
 
   console.log('📸 Generating slide previews in docs/presentation/previews...');
+  await page.evaluate(() => {
+    const nav = document.querySelector('.deck-nav');
+    if (nav) nav.style.display = 'none';
+  });
   const slides = await page.locator('.slide').all();
   for (let i = 0; i < slides.length; i++) {
     await page.evaluate((idx) => {
