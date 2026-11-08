@@ -131,14 +131,10 @@ async function run() {
 
     // 1.7 Swagger UI Portal (BFF Gateway OpenAPI)
     console.log('📸 Capturing swagger-ui-portal.png...');
+    await page.setViewportSize({ width: 1440, height: 1080 });
     await page.goto('http://localhost/swagger-ui.html', { waitUntil: 'networkidle' });
     await page.waitForTimeout(2000);
-    // Expand the first endpoint operation to showcase parameter and response schemas
-    const firstOp = page.locator('.opblock-summary').first();
-    if (await firstOp.isVisible()) {
-      await firstOp.click();
-      await page.waitForTimeout(800);
-    }
+    await page.waitForSelector('.opblock');
     await page.screenshot({
       path: path.join(OUT_DIR, 'swagger-ui-portal.png'),
       fullPage: false,
