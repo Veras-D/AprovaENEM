@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - docs(backlog): Tracked tasks `S6-07`, `S6-08`, and `S6-48` in [`docs/BACKLOG.md`](docs/BACKLOG.md) reflecting presentation deck delivery, showcase media kit generation, and comprehensive specification synchronization.
 
 ### Fixed
+- fix(showcase): Calibrated league participant cohort size in [`generate-showcase-media.mjs`](frontend/scripts/generate-showcase-media.mjs) so that strictly the top 20% (ranks 1 & 2) receive the green `Classificado` promotion badge, while remaining competitors (ranks 3+) correctly display the `Na Disputa` status in `gamification-leaderboard.png`.
 - fix(showcase): Captured authenticated student session in `diagnostic-radar-heatmaps.png` (eliminating guest registration notices, displaying live TRI proficiency calibration, and student header metrics).
 - fix(showcase): Captured active floating digital accessibility panel (`#accessibility-panel`) displaying text zoom, dyslexia fonts, contrast controls, and VLibras in `accessibility-features.png`.
 - fix(showcase): Intercepted weekly gamification leaderboard endpoint in [`generate-showcase-media.mjs`](frontend/scripts/generate-showcase-media.mjs) with simulated peer bots from migration `V8` (Lucas Furtado, Débora Vasconcellos, Yuri Takahashi, Yasmin Cerqueira, Bernardo Guimarães, Letícia Salgado) rendering active rankings and podium in `gamification-leaderboard.png`.
