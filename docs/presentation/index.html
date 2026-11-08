@@ -100,94 +100,27 @@
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
-      transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-      transform: translate3d(70px, 0, 0) scale(0.98);
-      will-change: transform, opacity;
+      z-index: 1;
     }
 
     .slide.active {
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
-      transform: translate3d(0, 0, 0) scale(1);
       z-index: 10;
     }
 
-    .slide.prev-slide {
-      opacity: 0;
-      visibility: hidden;
-      transform: translate3d(-70px, 0, 0) scale(0.98);
+    .slide.exiting {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: none;
+      z-index: 8;
+      animation: slide-morph-fade-out 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    .slide.next-slide {
-      opacity: 0;
-      visibility: hidden;
-      transform: translate3d(70px, 0, 0) scale(0.98);
-    }
-
-    /* -------------------------------------------------------------
-       POWERPOINT "MORPH" & CSS VIEW TRANSITIONS ENGINE
-       ------------------------------------------------------------- */
-    @view-transition {
-      navigation: auto;
-    }
-
-    /* Persistent Shared Elements morph smoothly across all slides */
-    .brand-group {
-      view-transition-name: deck-brand-morph;
-    }
-    .slide-footer {
-      view-transition-name: deck-footer-morph;
-    }
-    .deck-nav {
-      view-transition-name: deck-nav-morph;
-    }
-
-    ::view-transition-group(deck-brand-morph),
-    ::view-transition-group(deck-footer-morph),
-    ::view-transition-group(deck-nav-morph) {
-      animation-duration: 0.45s;
-      animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    ::view-transition-old(root),
-    ::view-transition-new(root) {
-      animation-duration: 0.45s;
-      animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    @keyframes morph-slide-out-left {
-      from { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
-      to { transform: translate3d(-80px, 0, 0) scale(0.96); opacity: 0; }
-    }
-
-    @keyframes morph-slide-in-right {
-      from { transform: translate3d(80px, 0, 0) scale(1.02); opacity: 0; }
-      to { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
-    }
-
-    @keyframes morph-slide-out-right {
-      from { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
-      to { transform: translate3d(80px, 0, 0) scale(0.96); opacity: 0; }
-    }
-
-    @keyframes morph-slide-in-left {
-      from { transform: translate3d(-80px, 0, 0) scale(1.02); opacity: 0; }
-      to { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
-    }
-
-    html[data-direction="forward"]::view-transition-old(root) {
-      animation: 0.42s cubic-bezier(0.16, 1, 0.3, 1) both morph-slide-out-left;
-    }
-    html[data-direction="forward"]::view-transition-new(root) {
-      animation: 0.42s cubic-bezier(0.16, 1, 0.3, 1) both morph-slide-in-right;
-    }
-
-    html[data-direction="backward"]::view-transition-old(root) {
-      animation: 0.42s cubic-bezier(0.16, 1, 0.3, 1) both morph-slide-out-right;
-    }
-    html[data-direction="backward"]::view-transition-new(root) {
-      animation: 0.42s cubic-bezier(0.16, 1, 0.3, 1) both morph-slide-in-left;
+    @keyframes slide-morph-fade-out {
+      0% { opacity: 1; }
+      100% { opacity: 0; }
     }
 
     @media print {
@@ -2349,34 +2282,149 @@
       window.addEventListener('DOMContentLoaded', scaleDeck);
       scaleDeck();
 
+      let isTransitioning = false;
+
       function updateSlide(index) {
         if (index < 0) index = 0;
         if (index >= slides.length) index = slides.length - 1;
-        if (index === currentIndex) return;
+        if (index === currentIndex || isTransitioning) return;
 
-        const isForward = index > currentIndex;
-        document.documentElement.setAttribute('data-direction', isForward ? 'forward' : 'backward');
+        const oldIndex = currentIndex;
+        const newIndex = index;
+        const oldSlide = slides[oldIndex];
+        const newSlide = slides[newIndex];
+        const isForward = newIndex > oldIndex;
+        isTransitioning = true;
 
-        const doTransition = () => {
-          slides.forEach((s, idx) => {
-            s.classList.remove('active', 'prev-slide', 'next-slide');
-            if (idx === index) {
-              s.classList.add('active');
-            } else if (idx < index) {
-              s.classList.add('prev-slide');
-            } else {
-              s.classList.add('next-slide');
-            }
-          });
-          currentIndex = index;
-          indicator.textContent = String(currentIndex + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
-        };
+        const cardSelectors = [
+          '.metric-hero-card',
+          '.lgpd-pillar-card',
+          '.hero-qr-card',
+          '.contact-bento-card',
+          '.a11y-quadrant-card',
+          '.model-pillar-card',
+          '.stat-callout-card',
+          '.quote-callout-card',
+          '.solution-pillar-card',
+          '.socratic-pillar-card',
+          '.tri-pillar-card'
+        ].join(', ');
 
-        if (document.startViewTransition) {
-          document.startViewTransition(doTransition);
-        } else {
-          doTransition();
+        const frameSelectors = [
+          '.browser-frame',
+          '.hero-preview-frame',
+          '.practice-preview-frame',
+          '.socratic-chat-frame',
+          '.tri-radar-frame',
+          '.arch-blueprint-frame',
+          '.repo-banner'
+        ].join(', ');
+
+        // Gather morph candidate pairs between oldSlide and newSlide
+        const pairs = [];
+
+        // 1. Category Pill Badge
+        const badgeOld = oldSlide.querySelector('.pill-badge');
+        const badgeNew = newSlide.querySelector('.pill-badge');
+        if (badgeOld && badgeNew) pairs.push({ from: badgeOld, to: badgeNew });
+
+        // 2. Title Headline
+        const headOld = oldSlide.querySelector('.title-headline');
+        const headNew = newSlide.querySelector('.title-headline');
+        if (headOld && headNew) pairs.push({ from: headOld, to: headNew });
+
+        // 3. Subtitle Lead
+        const subOld = oldSlide.querySelector('.subtitle-lead');
+        const subNew = newSlide.querySelector('.subtitle-lead');
+        if (subOld && subNew) pairs.push({ from: subOld, to: subNew });
+
+        // 4. Cards (sequential/positional matching)
+        const cardsOld = Array.from(oldSlide.querySelectorAll(cardSelectors));
+        const cardsNew = Array.from(newSlide.querySelectorAll(cardSelectors));
+        const minCards = Math.min(cardsOld.length, cardsNew.length);
+        for (let i = 0; i < minCards; i++) {
+          pairs.push({ from: cardsOld[i], to: cardsNew[i] });
         }
+
+        // 5. Large Frames & Visual Mockups
+        const frameOld = oldSlide.querySelector(frameSelectors);
+        const frameNew = newSlide.querySelector(frameSelectors);
+        if (frameOld && frameNew) pairs.push({ from: frameOld, to: frameNew });
+
+        // Measure FIRST coordinates
+        const firstRects = pairs.map(p => p.from.getBoundingClientRect());
+
+        // Perform Slide Swap in DOM
+        oldSlide.classList.remove('active');
+        oldSlide.classList.add('exiting');
+        newSlide.classList.add('active');
+
+        // Measure LAST coordinates
+        const lastRects = pairs.map(p => p.to.getBoundingClientRect());
+
+        // Play FLIP animations on matching elements
+        pairs.forEach((pair, idx) => {
+          const first = firstRects[idx];
+          const last = lastRects[idx];
+
+          if (last.width === 0 || last.height === 0 || first.width === 0 || first.height === 0) return;
+
+          const dx = first.left - last.left;
+          const dy = first.top - last.top;
+          const sx = first.width / last.width;
+          const sy = first.height / last.height;
+
+          if (Math.abs(dx) > 1 || Math.abs(dy) > 1 || Math.abs(sx - 1) > 0.02 || Math.abs(sy - 1) > 0.02) {
+            pair.to.animate([
+              {
+                transformOrigin: 'top left',
+                transform: `translate3d(${dx}px, ${dy}px, 0) scale(${sx}, ${sy})`,
+                opacity: 0.8
+              },
+              {
+                transformOrigin: 'top left',
+                transform: 'translate3d(0, 0, 0) scale(1, 1)',
+                opacity: 1
+              }
+            ], {
+              duration: 520,
+              easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+              fill: 'both'
+            });
+          }
+        });
+
+        // Glide-in animation for unmatched elements on newSlide
+        const matchedNewSet = new Set(pairs.map(p => p.to));
+        const unmatchedNew = Array.from(newSlide.querySelectorAll(`${cardSelectors}, ${frameSelectors}`))
+          .filter(el => !matchedNewSet.has(el));
+
+        unmatchedNew.forEach((el, i) => {
+          const startX = isForward ? 80 : -80;
+          el.animate([
+            {
+              transform: `translate3d(${startX}px, 0, 0) scale(0.96)`,
+              opacity: 0
+            },
+            {
+              transform: 'translate3d(0, 0, 0) scale(1)',
+              opacity: 1
+            }
+          ], {
+            duration: 500,
+            delay: 40 + i * 40,
+            easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+            fill: 'both'
+          });
+        });
+
+        currentIndex = newIndex;
+        indicator.textContent = String(currentIndex + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+
+        setTimeout(() => {
+          oldSlide.classList.remove('exiting');
+          isTransitioning = false;
+        }, 520);
       }
 
       window.showSlide = (num) => updateSlide(num - 1);
