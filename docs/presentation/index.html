@@ -959,6 +959,134 @@
     }
 
     /* -------------------------------------------------------------
+       SLIDE 11: CONNECT & CONTACT (QR CODES)
+       ------------------------------------------------------------- */
+    .qr-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 36px;
+      align-items: stretch;
+      flex: 1;
+      margin-bottom: 32px;
+    }
+
+    .qr-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 36px 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      justify-content: space-between;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+    }
+
+    .qr-card.gh {
+      border-color: rgba(124, 58, 237, 0.25);
+      background: radial-gradient(circle at top, rgba(124, 58, 237, 0.08), transparent 70%), var(--card-bg);
+    }
+
+    .qr-card.gh:hover {
+      border-color: rgba(124, 58, 237, 0.6);
+      box-shadow: 0 12px 36px -8px rgba(124, 58, 237, 0.3);
+      transform: translateY(-3px);
+    }
+
+    .qr-card.li {
+      border-color: rgba(10, 102, 194, 0.3);
+      background: radial-gradient(circle at top, rgba(10, 102, 194, 0.08), transparent 70%), var(--card-bg);
+    }
+
+    .qr-card.li:hover {
+      border-color: rgba(10, 102, 194, 0.65);
+      box-shadow: 0 12px 36px -8px rgba(10, 102, 194, 0.3);
+      transform: translateY(-3px);
+    }
+
+    .qr-card.web {
+      border-color: rgba(16, 185, 129, 0.25);
+      background: radial-gradient(circle at top, rgba(16, 185, 129, 0.08), transparent 70%), var(--card-bg);
+    }
+
+    .qr-card.web:hover {
+      border-color: rgba(16, 185, 129, 0.6);
+      box-shadow: 0 12px 36px -8px rgba(16, 185, 129, 0.3);
+      transform: translateY(-3px);
+    }
+
+    .qr-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      margin-bottom: 20px;
+    }
+
+    .qr-badge.gh {
+      background: rgba(255, 255, 255, 0.06);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .qr-badge.li {
+      background: rgba(10, 102, 194, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(10, 102, 194, 0.3);
+    }
+
+    .qr-badge.web {
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--accent-emerald);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .qr-frame {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qr-frame img {
+      width: 180px;
+      height: 180px;
+      display: block;
+    }
+
+    .qr-link-url {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 8px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .qr-link-url:hover {
+      color: var(--accent-cyan);
+    }
+
+    .qr-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      max-width: 280px;
+    }
+
+    /* -------------------------------------------------------------
        INTERACTIVE DECK CONTROLLER (FOR SCREEN VIEWING ONLY)
        ------------------------------------------------------------- */
     .deck-nav {
@@ -1016,7 +1144,7 @@
       <div class="header-tags">
         <span class="tag-item">Java 21 LTS / React 18</span>
         <span class="tag-item">Licença MIT</span>
-        <span class="tag-item">01 / 10</span>
+        <span class="tag-item">01 / 11</span>
       </div>
     </header>
 
@@ -1081,7 +1209,7 @@
       </div>
       <div class="header-tags">
         <span class="tag-item">Realidade Brasileira</span>
-        <span class="tag-item">02 / 10</span>
+        <span class="tag-item">02 / 11</span>
       </div>
     </header>
 
@@ -1139,7 +1267,7 @@
       </div>
       <div class="header-tags">
         <span class="tag-item">Ecossistema Aberto</span>
-        <span class="tag-item">03 / 10</span>
+        <span class="tag-item">03 / 11</span>
       </div>
     </header>
 
@@ -1209,7 +1337,7 @@
       </div>
       <div class="header-tags">
         <span class="tag-item">Gemini 1.5 Flash</span>
-        <span class="tag-item">04 / 10</span>
+        <span class="tag-item">04 / 11</span>
       </div>
     </header>
 
@@ -1280,7 +1408,7 @@
       </div>
       <div class="header-tags">
         <span class="tag-item">Teoria de Resposta ao Item</span>
-        <span class="tag-item">05 / 10</span>
+        <span class="tag-item">05 / 11</span>
       </div>
     </header>
 
@@ -1341,7 +1469,7 @@
       </div>
       <div class="header-tags">
         <span class="tag-item">WCAG 2.1 Nível AA</span>
-        <span class="tag-item">06 / 10</span>
+        <span class="tag-item">06 / 11</span>
       </div>
     </header>
 
@@ -1411,7 +1539,7 @@
       </div>
       <div class="header-tags">
         <span class="tag-item">B2C Social & B2B Gov</span>
-        <span class="tag-item">07 / 10</span>
+        <span class="tag-item">07 / 11</span>
       </div>
     </header>
 
@@ -1480,7 +1608,7 @@
       <div class="header-tags">
         <span class="tag-item">Java 21 / Spring Boot 3</span>
         <span class="tag-item">Docker Compose</span>
-        <span class="tag-item">08 / 10</span>
+        <span class="tag-item">08 / 11</span>
       </div>
     </header>
 
@@ -1598,7 +1726,7 @@
       </div>
       <div class="header-tags">
         <span class="tag-item">Lei nº 13.709/2018</span>
-        <span class="tag-item">09 / 10</span>
+        <span class="tag-item">09 / 11</span>
       </div>
     </header>
 
@@ -1657,7 +1785,7 @@
       </div>
       <div class="header-tags">
         <span class="tag-item">Recode Pro 2026</span>
-        <span class="tag-item">10 / 10</span>
+        <span class="tag-item">10 / 11</span>
       </div>
     </header>
 
@@ -1712,13 +1840,94 @@
     </footer>
   </section>
 
+  <!-- =============================================================
+       SLIDE 11: CONNECT & CONTACT (QR CODES)
+       ============================================================= -->
+  <section class="slide" id="slide-11">
+    <header class="slide-header">
+      <div class="brand-group">
+        <span class="brand-title">AprovaENEM</span>
+        <span class="pill-badge emerald">Conecte-se & Portfólio</span>
+      </div>
+      <div class="header-tags">
+        <span class="tag-item">Vivi Veras</span>
+        <span class="tag-item">Recode Pro 2026</span>
+        <span class="tag-item">11 / 11</span>
+      </div>
+    </header>
+
+    <div>
+      <h2 class="title-headline">
+        Construindo o Futuro da <span class="accent-cyan">Educação Pública</span>
+      </h2>
+      <p class="subtitle-lead">
+        Acesse os canais de contato, repositório open-source com arquitetura hexagonal e o portfólio completo de engenharia.
+      </p>
+    </div>
+
+    <div class="qr-cards-grid">
+      <!-- Card 1: GitHub -->
+      <div class="qr-card gh">
+        <div>
+          <span class="qr-badge gh">GitHub • @Veras-D</span>
+          <div class="qr-frame">
+            <img src="images/qr-github.svg" alt="QR Code GitHub Veras-D">
+          </div>
+          <a href="https://github.com/Veras-D" target="_blank" rel="noopener noreferrer" class="qr-link-url">
+            github.com/Veras-D ↗
+          </a>
+        </div>
+        <p class="qr-desc">
+          Repositório com 14 microsserviços, testes integrados e arquitetura orientada a eventos.
+        </p>
+      </div>
+
+      <!-- Card 2: LinkedIn -->
+      <div class="qr-card li">
+        <div>
+          <span class="qr-badge li">LinkedIn • /in/veras-d</span>
+          <div class="qr-frame">
+            <img src="images/qr-linkedin.svg" alt="QR Code LinkedIn Veras-D">
+          </div>
+          <a href="https://www.linkedin.com/in/veras-d/" target="_blank" rel="noopener noreferrer" class="qr-link-url">
+            linkedin.com/in/veras-d ↗
+          </a>
+        </div>
+        <p class="qr-desc">
+          Conexão profissional, artigos técnicos e trajetória de desenvolvimento de software.
+        </p>
+      </div>
+
+      <!-- Card 3: Portfolio & Web App -->
+      <div class="qr-card web">
+        <div>
+          <span class="qr-badge web">Portfólio • veras-app</span>
+          <div class="qr-frame">
+            <img src="images/qr-portfolio.svg" alt="QR Code Portfólio Veras">
+          </div>
+          <a href="https://veras-app.netlify.app/" target="_blank" rel="noopener noreferrer" class="qr-link-url">
+            veras-app.netlify.app ↗
+          </a>
+        </div>
+        <p class="qr-desc">
+          Portfólio interativo de projetos, demonstrações de engenharia e contato direto.
+        </p>
+      </div>
+    </div>
+
+    <footer class="slide-footer">
+      <span>Vivi Veras — Engenharia de Software Full-Stack (Java 21 • React • Cloud)</span>
+      <span>dveras2310@gmail.com &nbsp;•&nbsp; Brasil</span>
+    </footer>
+  </section>
+
     </div><!-- /#deck-stage -->
   </div><!-- /#deck-container -->
 
   <!-- Interactive Slide Controller for screen viewing -->
   <nav class="deck-nav" aria-label="Navegação da Apresentação">
     <button id="prevBtn" title="Slide Anterior (←)">←</button>
-    <span id="slideIndicator">01 / 10</span>
+    <span id="slideIndicator">01 / 11</span>
     <button id="nextBtn" title="Próximo Slide (→)">→</button>
     <button id="fullscreenBtn" title="Modo Apresentação / Tela Cheia (F)">⛶</button>
   </nav>
