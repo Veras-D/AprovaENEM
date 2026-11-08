@@ -78,27 +78,57 @@ async function run() {
       window.localStorage.setItem(
         'aprovaenem_diagnostic_report',
         JSON.stringify({
-          score: 742,
-          proficiencyLevel: 'Avançado',
-          radarData: [
-            { area: 'Matemática', score: 780, target: 700, fullMark: 1000 },
-            { area: 'Ciências da Natureza', score: 690, target: 700, fullMark: 1000 },
-            { area: 'Ciências Humanas', score: 760, target: 700, fullMark: 1000 },
-            { area: 'Linguagens e Códigos', score: 720, target: 700, fullMark: 1000 },
+          id: 'diag-demo-2026',
+          sessionId: 'sess-demo-2026',
+          studentName: 'Estudante Demo',
+          scorePercentage: 78.0,
+          topicBreakdown: {},
+          recommendedTopics: ['Circuitos Elétricos', 'Geometria Espacial'],
+          radar: [
+            {
+              knowledgeArea: 'MT',
+              areaName: 'Matemática e suas Tecnologias',
+              scorePercentage: 82.0,
+              totalQuestions: 10,
+              correctQuestions: 8,
+              masteryLevel: 'MASTERED',
+              topWeakTopic: 'Análise Combinatória',
+            },
+            {
+              knowledgeArea: 'CN',
+              areaName: 'Ciências da Natureza e suas Tecnologias',
+              scorePercentage: 70.0,
+              totalQuestions: 10,
+              correctQuestions: 7,
+              masteryLevel: 'MASTERED',
+              topWeakTopic: 'Circuitos Elétricos',
+            },
+            {
+              knowledgeArea: 'CH',
+              areaName: 'Ciências Humanas e suas Tecnologias',
+              scorePercentage: 80.0,
+              totalQuestions: 10,
+              correctQuestions: 8,
+              masteryLevel: 'MASTERED',
+              topWeakTopic: 'Filosofia Moderna',
+            },
+            {
+              knowledgeArea: 'LC',
+              areaName: 'Linguagens, Códigos e suas Tecnologias',
+              scorePercentage: 80.0,
+              totalQuestions: 10,
+              correctQuestions: 8,
+              masteryLevel: 'MASTERED',
+              topWeakTopic: 'Variação Linguística',
+            },
           ],
-          areas: {
-            MATHEMATICS: { accuracy: 78, status: 'MASTERED', correct: 18, total: 23 },
-            NATURAL_SCIENCES: { accuracy: 69, status: 'ATTENTION_NEEDED', correct: 15, total: 22 },
-            HUMAN_SCIENCES: { accuracy: 76, status: 'MASTERED', correct: 19, total: 25 },
-            LANGUAGES: { accuracy: 72, status: 'MASTERED', correct: 18, total: 25 },
-          },
-          recommendedActions: ['Focar em Circuitos Elétricos e Óptica Geométrica'],
+          generatedAt: new Date().toISOString(),
         })
       );
     });
-    await page.goto('http://localhost:5173/?section=diagnostic');
+    await page.goto('http://localhost:5173/?section=diagnostics');
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1200);
+    await page.waitForTimeout(1500);
     await page.screenshot({
       path: path.join(OUT_DIR, 'diagnostic-radar-heatmaps.png'),
       fullPage: false,
@@ -106,16 +136,86 @@ async function run() {
 
     // 1.5 Gamification & Weekly Leaderboard
     console.log('📸 Capturing gamification-leaderboard.png...');
-    await page.goto('http://localhost:5173/?section=ranking');
+    await desktopContext.route('**/api/v1/notifications**', async (r) =>
+      r.fulfill({ status: 200, contentType: 'application/json', body: '{"content":[],"unreadCount":6}' })
+    );
+    await desktopContext.route('**/api/v1/auth/me', async (r) =>
+      r.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'user-demo-1',
+          name: 'Estudante Demo',
+          email: 'aluno@aprovaenem.com.br',
+          roles: ['ROLE_STUDENT'],
+          isEmailVerified: true,
+        }),
+      })
+    );
+    await desktopContext.route('**/api/v1/sessions/diagnostic/latest**', async (r) =>
+      r.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
+    );
+    await desktopContext.route('**/api/v1/gamification/profile', async (r) =>
+      r.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          userId: 'user-demo-1',
+          level: 4,
+          levelTitle: 'Desbravador do ENEM',
+          currentXp: 1450,
+          currentStreakDays: 7,
+          longestStreakDays: 14,
+          streakFreezeAvailable: true,
+          dailyGoalTarget: 10,
+          dailyGoalProgress: 7,
+          weeklyLeague: 'GOLD',
+          unlockedBadges: ['PRIMEIRA_QUESTAO', 'DIAGNOSTICO_COMPLETO'],
+        }),
+      })
+    );
+
+    await page.evaluate(() => {
+      window.localStorage.setItem('aprovaenem_auth_token', 'mock-valid-token');
+      window.localStorage.setItem('aprovaenem_seen_badges', JSON.stringify(['PRIMEIRA_QUESTAO', 'DIAGNOSTICO_COMPLETO', 'ACESSIBILIDADE_TOTAL']));
+      window.localStorage.setItem(
+        'aprovaenem_auth_user',
+        JSON.stringify({
+          id: 'user-demo-1',
+          name: 'Estudante Demo',
+          email: 'aluno@aprovaenem.com.br',
+          roles: ['ROLE_STUDENT'],
+          isEmailVerified: true,
+        })
+      );
+    });
+
+    await page.goto('http://localhost:5173/?section=leaderboard');
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1200);
+    await page.waitForTimeout(1000);
+    const rankingTabBtn = page.locator('#tab-leaderboard').first();
+    if (await rankingTabBtn.isVisible()) {
+      await rankingTabBtn.click({ force: true });
+      await page.waitForTimeout(800);
+    }
     await page.screenshot({
       path: path.join(OUT_DIR, 'gamification-leaderboard.png'),
       fullPage: false,
     });
 
+    await page.evaluate(() => {
+      window.localStorage.removeItem('aprovaenem_auth_token');
+      window.localStorage.removeItem('aprovaenem_auth_user');
+      window.localStorage.removeItem('aprovaenem_seen_badges');
+    });
+
     // 1.6 Universal Digital Accessibility Features
     console.log('📸 Capturing accessibility-features.png...');
+    // Clear diagnostic state so practice card displays normally
+    await page.evaluate(() => {
+      window.localStorage.removeItem('aprovaenem_diagnostic_completed');
+      window.localStorage.removeItem('aprovaenem_diagnostic_report');
+    });
     await page.goto('http://localhost:5173/?section=practice');
     await page.waitForLoadState('networkidle');
     // Open accessibility settings or time accommodation modal
