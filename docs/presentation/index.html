@@ -49,7 +49,10 @@
       color: var(--text-primary);
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      overflow-x: hidden;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      user-select: none;
     }
 
     /* Print & Slide Container (Exact 16:9 - 1920x1080) */
@@ -58,23 +61,83 @@
       margin: 0;
     }
 
-    .slide {
+    #deck-container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000000;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #deck-stage {
       width: 1920px;
       height: 1080px;
       position: relative;
+      flex-shrink: 0;
+      transform-origin: center center;
+    }
+
+    .slide {
+      width: 1920px;
+      height: 1080px;
+      position: absolute;
+      top: 0;
+      left: 0;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       padding: 64px 80px;
       overflow: hidden;
-      page-break-after: always;
-      page-break-inside: avoid;
       background-color: var(--canvas-bg);
       background-image: 
         linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
       background-size: 32px 32px;
       color: var(--text-primary);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: scale(0.985);
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: scale(1);
+      z-index: 10;
+    }
+
+    @media print {
+      body {
+        overflow: visible !important;
+        width: auto !important;
+        height: auto !important;
+      }
+      #deck-container {
+        display: block !important;
+        overflow: visible !important;
+        width: 1920px !important;
+        height: auto !important;
+      }
+      #deck-stage {
+        transform: none !important;
+        width: 1920px !important;
+        height: auto !important;
+      }
+      .slide {
+        position: relative !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+        page-break-after: always !important;
+        page-break-inside: avoid !important;
+      }
+      .deck-nav { display: none !important; }
     }
 
     /* -------------------------------------------------------------
@@ -938,11 +1001,13 @@
   </style>
 </head>
 <body>
+  <div id="deck-container">
+    <div id="deck-stage">
 
   <!-- =============================================================
        SLIDE 1: HERO / COVER (UNIFIED BLUEPRINT THEME)
        ============================================================= -->
-  <section class="slide" id="slide-1">
+  <section class="slide active" id="slide-1">
     <header class="slide-header">
       <div class="brand-group">
         <span class="brand-title">AprovaENEM</span>
@@ -1647,39 +1712,85 @@
     </footer>
   </section>
 
+    </div><!-- /#deck-stage -->
+  </div><!-- /#deck-container -->
+
   <!-- Interactive Slide Controller for screen viewing -->
   <nav class="deck-nav" aria-label="Navegação da Apresentação">
     <button id="prevBtn" title="Slide Anterior (←)">←</button>
     <span id="slideIndicator">01 / 10</span>
     <button id="nextBtn" title="Próximo Slide (→)">→</button>
+    <button id="fullscreenBtn" title="Modo Apresentação / Tela Cheia (F)">⛶</button>
   </nav>
 
   <script>
     (function() {
+      const stage = document.getElementById('deck-stage');
+      const container = document.getElementById('deck-container');
       const slides = document.querySelectorAll('.slide');
       const prevBtn = document.getElementById('prevBtn');
       const nextBtn = document.getElementById('nextBtn');
+      const fullscreenBtn = document.getElementById('fullscreenBtn');
       const indicator = document.getElementById('slideIndicator');
+      const nav = document.querySelector('.deck-nav');
       let currentIndex = 0;
+      let idleTimeout;
+
+      // Auto-scale 1920x1080 stage to fit any screen resolution
+      function scaleDeck() {
+        if (!stage) return;
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const scale = Math.min(w / 1920, h / 1080);
+        stage.style.transform = `scale(${scale})`;
+      }
+
+      window.addEventListener('resize', scaleDeck);
+      window.addEventListener('DOMContentLoaded', scaleDeck);
+      scaleDeck();
 
       function updateSlide(index) {
         if (index < 0) index = 0;
         if (index >= slides.length) index = slides.length - 1;
+        slides[currentIndex].classList.remove('active');
         currentIndex = index;
-        slides[currentIndex].scrollIntoView({ behavior: 'smooth' });
+        slides[currentIndex].classList.add('active');
         indicator.textContent = String(currentIndex + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
       }
 
       window.showSlide = (num) => updateSlide(num - 1);
 
-      prevBtn.addEventListener('click', () => updateSlide(currentIndex - 1));
-      nextBtn.addEventListener('click', () => updateSlide(currentIndex + 1));
+      prevBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        updateSlide(currentIndex - 1);
+      });
 
+      nextBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        updateSlide(currentIndex + 1);
+      });
+
+      function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch((err) => {
+            console.warn('Fullscreen request failed:', err);
+          });
+        } else {
+          if (document.exitFullscreen) document.exitFullscreen();
+        }
+      }
+
+      fullscreenBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleFullscreen();
+      });
+
+      // Keyboard navigation
       window.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown' || e.key === 'Enter') {
           e.preventDefault();
           updateSlide(currentIndex + 1);
-        } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        } else if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'Backspace') {
           e.preventDefault();
           updateSlide(currentIndex - 1);
         } else if (e.key === 'Home') {
@@ -1688,8 +1799,44 @@
         } else if (e.key === 'End') {
           e.preventDefault();
           updateSlide(slides.length - 1);
+        } else if (e.key === 'f' || e.key === 'F') {
+          e.preventDefault();
+          toggleFullscreen();
+        } else if (e.key === 'Escape' && document.fullscreenElement) {
+          document.exitFullscreen();
         }
       });
+
+      // Stage click navigation (click right advances, click left recedes)
+      container.addEventListener('click', (e) => {
+        if (e.target.closest('a') || e.target.closest('button') || e.target.closest('.deck-nav')) return;
+        const xRatio = e.clientX / window.innerWidth;
+        if (xRatio > 0.65) {
+          updateSlide(currentIndex + 1);
+        } else if (xRatio < 0.35) {
+          updateSlide(currentIndex - 1);
+        }
+      });
+
+      // Double-click stage to toggle fullscreen
+      container.addEventListener('dblclick', (e) => {
+        if (e.target.closest('a') || e.target.closest('button') || e.target.closest('.deck-nav')) return;
+        toggleFullscreen();
+      });
+
+      // Fade out navigation controls when idle
+      function resetIdleTimer() {
+        if (nav) nav.style.opacity = '1';
+        clearTimeout(idleTimeout);
+        idleTimeout = setTimeout(() => {
+          if (nav && !nav.matches(':hover')) {
+            nav.style.opacity = '0.2';
+          }
+        }, 3000);
+      }
+
+      window.addEventListener('mousemove', resetIdleTimer);
+      resetIdleTimer();
     })();
   </script>
 </body>
