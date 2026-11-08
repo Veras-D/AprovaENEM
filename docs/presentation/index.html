@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     /* -------------------------------------------------------------
-       RESET & BASE TOKENS
+       RESET & BASE TOKENS (UNIFIED DARK BLUEPRINT CANVAS)
        ------------------------------------------------------------- */
     *, *::before, *::after {
       box-sizing: border-box;
@@ -18,41 +18,35 @@
     }
 
     :root {
-      /* Dark Blueprint Tokens (Slides 1, 8, 9, 10) - matching architecture_minimalist.png */
-      --dark-bg: #070a10;
-      --dark-surface: #0d121d;
-      --dark-surface-elevated: #111726;
-      --dark-border: rgba(255, 255, 255, 0.08);
-      --dark-border-subtle: rgba(255, 255, 255, 0.04);
-      --dark-text-primary: #f8fafc;
-      --dark-text-secondary: #94a3b8;
-      --dark-text-muted: #64748b;
+      /* Dark Blueprint Tokens (Matching architecture_minimalist.png) */
+      --canvas-bg: #070a10;
+      --card-bg: rgba(255, 255, 255, 0.02);
+      --card-bg-elevated: #0d121d;
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-border-subtle: rgba(255, 255, 255, 0.04);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
 
-      /* Light Paper Tokens (Slides 2, 3, 4, 5, 6, 7) - Apple / Stripe / Notion Keynote */
-      --light-bg: #f8fafc;
-      --light-surface: #ffffff;
-      --light-surface-subtle: #f1f5f9;
-      --light-border: #e2e8f0;
-      --light-border-subtle: #edf2f7;
-      --light-text-primary: #0f172a;
-      --light-text-secondary: #475569;
-      --light-text-muted: #64748b;
+      /* High-Luminance Focal Elements (Controlled White) */
+      --white-card-bg: #ffffff;
+      --white-card-border: #e2e8f0;
+      --white-card-text: #0f172a;
+      --white-card-desc: #475569;
 
       /* Shared Accent Palette */
-      --brand-blue: #2563eb;
-      --brand-blue-light: #38bdf8;
-      --brand-emerald: #10b981;
-      --brand-emerald-light: #34d399;
-      --brand-purple: #8b5cf6;
-      --brand-purple-light: #a855f7;
-      --brand-amber: #f59e0b;
-      --brand-rose: #f43f5e;
+      --accent-cyan: #38bdf8;
+      --accent-blue: #60a5fa;
+      --accent-emerald: #34d399;
+      --accent-purple: #a855f7;
+      --accent-amber: #f59e0b;
+      --accent-rose: #ef4444;
     }
 
     html, body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #000000;
-      color: var(--dark-text-primary);
+      color: var(--text-primary);
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       overflow-x: hidden;
@@ -75,28 +69,12 @@
       overflow: hidden;
       page-break-after: always;
       page-break-inside: avoid;
-    }
-
-    /* -------------------------------------------------------------
-       THEME VARIANTS (DARK BLUEPRINT vs LIGHT PAPER)
-       ------------------------------------------------------------- */
-    /* Dark Blueprint Theme (Matching architecture_minimalist.png) */
-    .slide-dark {
-      background-color: var(--dark-bg);
+      background-color: var(--canvas-bg);
       background-image: 
         linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
       background-size: 32px 32px;
-      color: var(--dark-text-primary);
-    }
-
-    /* Light Paper Theme (Clean Apple / Stripe / Notion Keynote) */
-    .slide-light {
-      background-color: var(--light-bg);
-      background-image: 
-        radial-gradient(circle at top right, rgba(37, 99, 235, 0.04), transparent 600px),
-        radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.03), transparent 600px);
-      color: var(--light-text-primary);
+      color: var(--text-primary);
     }
 
     /* -------------------------------------------------------------
@@ -119,14 +97,7 @@
       font-size: 26px;
       font-weight: 800;
       letter-spacing: -0.03em;
-    }
-
-    .slide-dark .brand-title {
       color: #ffffff;
-    }
-
-    .slide-light .brand-title {
-      color: #0f172a;
     }
 
     .pill-badge {
@@ -140,36 +111,27 @@
       letter-spacing: 0.05em;
       text-transform: uppercase;
       font-family: 'JetBrains Mono', monospace;
-    }
-
-    .slide-dark .pill-badge {
       background: rgba(56, 189, 248, 0.1);
-      color: var(--brand-blue-light);
+      color: var(--accent-cyan);
       border: 1px solid rgba(56, 189, 248, 0.25);
-    }
-
-    .slide-light .pill-badge {
-      background: rgba(37, 99, 235, 0.08);
-      color: var(--brand-blue);
-      border: 1px solid rgba(37, 99, 235, 0.2);
     }
 
     .pill-badge.emerald {
       background: rgba(16, 185, 129, 0.1);
-      color: var(--brand-emerald-light);
+      color: var(--accent-emerald);
       border-color: rgba(16, 185, 129, 0.25);
-    }
-
-    .slide-light .pill-badge.emerald {
-      background: rgba(16, 185, 129, 0.08);
-      color: var(--brand-emerald);
-      border-color: rgba(16, 185, 129, 0.2);
     }
 
     .pill-badge.amber {
       background: rgba(245, 158, 11, 0.1);
-      color: #fbbf24;
+      color: var(--accent-amber);
       border-color: rgba(245, 158, 11, 0.25);
+    }
+
+    .pill-badge.rose {
+      background: rgba(239, 68, 68, 0.1);
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.25);
     }
 
     .header-tags {
@@ -183,19 +145,9 @@
     .tag-item {
       padding: 6px 14px;
       border-radius: 6px;
-    }
-
-    .slide-dark .tag-item {
       background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--dark-border);
-      color: var(--dark-text-secondary);
-    }
-
-    .slide-light .tag-item {
-      background: #ffffff;
-      border: 1px solid var(--light-border);
-      color: var(--light-text-secondary);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+      border: 1px solid var(--card-border);
+      color: var(--text-secondary);
     }
 
     .slide-footer {
@@ -203,18 +155,10 @@
       justify-content: space-between;
       align-items: center;
       padding-top: 24px;
+      border-top: 1px solid var(--card-border-subtle);
       font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
-    }
-
-    .slide-dark .slide-footer {
-      border-top: 1px solid var(--dark-border-subtle);
-      color: var(--dark-text-muted);
-    }
-
-    .slide-light .slide-footer {
-      border-top: 1px solid var(--light-border);
-      color: var(--light-text-muted);
+      color: var(--text-muted);
     }
 
     /* -------------------------------------------------------------
@@ -226,6 +170,7 @@
       letter-spacing: -0.035em;
       line-height: 1.1;
       margin-bottom: 12px;
+      color: #ffffff;
     }
 
     .subtitle-lead {
@@ -234,42 +179,26 @@
       font-weight: 400;
       max-width: 950px;
       margin-bottom: 32px;
-    }
-
-    .slide-dark .subtitle-lead {
-      color: var(--dark-text-secondary);
-    }
-
-    .slide-light .subtitle-lead {
-      color: var(--light-text-secondary);
+      color: var(--text-secondary);
     }
 
     .accent-cyan { color: #38bdf8 !important; }
-    .accent-blue { color: #2563eb !important; }
-    .accent-emerald { color: #10b981 !important; }
+    .accent-blue { color: #60a5fa !important; }
+    .accent-emerald { color: #34d399 !important; }
     .accent-amber { color: #f59e0b !important; }
     .accent-purple { color: #a855f7 !important; }
 
     /* -------------------------------------------------------------
-       BROWSER WINDOW MOCKUP CONTAINER
+       BROWSER WINDOW MOCKUP CONTAINER (CRISP WHITE APP SURFACE)
        ------------------------------------------------------------- */
     .browser-frame {
       border-radius: 12px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.12);
-    }
-
-    .slide-dark .browser-frame {
-      background: var(--dark-surface);
-      border: 1px solid var(--dark-border);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    }
-
-    .slide-light .browser-frame {
-      background: #ffffff;
-      border: 1px solid var(--light-border);
+      background: #0d121d;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
     }
 
     .browser-toolbar {
@@ -277,16 +206,8 @@
       align-items: center;
       gap: 12px;
       padding: 10px 16px;
-    }
-
-    .slide-dark .browser-toolbar {
       background: rgba(255, 255, 255, 0.02);
-      border-bottom: 1px solid var(--dark-border);
-    }
-
-    .slide-light .browser-toolbar {
-      background: #f1f5f9;
-      border-bottom: 1px solid var(--light-border);
+      border-bottom: 1px solid var(--card-border);
     }
 
     .traffic-dots {
@@ -314,18 +235,9 @@
       gap: 6px;
       flex: 1;
       max-width: 320px;
-    }
-
-    .slide-dark .browser-address {
-      background: rgba(0, 0, 0, 0.3);
+      background: rgba(0, 0, 0, 0.35);
       color: #94a3b8;
       border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .slide-light .browser-address {
-      background: #ffffff;
-      color: #64748b;
-      border: 1px solid #e2e8f0;
     }
 
     .browser-frame img {
@@ -335,7 +247,7 @@
     }
 
     /* -------------------------------------------------------------
-       SLIDE 1: HERO / COVER (DARK BLUEPRINT)
+       SLIDE 1: HERO / COVER
        ------------------------------------------------------------- */
     .hero-split-grid {
       display: grid;
@@ -360,8 +272,8 @@
 
     .hero-stat-card {
       padding: 16px 20px;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--dark-border);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
       border-radius: 8px;
     }
 
@@ -375,11 +287,11 @@
 
     .hero-stat-card .lbl {
       font-size: 12px;
-      color: var(--dark-text-muted);
+      color: var(--text-muted);
     }
 
     /* -------------------------------------------------------------
-       SLIDE 2: THE PROBLEM (LIGHT PAPER)
+       SLIDE 2: THE PROBLEM (CRISP WHITE STAT CARD FOCAL POINT)
        ------------------------------------------------------------- */
     .problem-grid {
       display: grid;
@@ -389,12 +301,13 @@
       flex: 1;
     }
 
+    /* Controlled High-Luminance Card */
     .big-stat-box {
       background: #ffffff;
-      border: 1px solid var(--light-border);
+      border: 1px solid var(--white-card-border);
       border-radius: 16px;
       padding: 48px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
 
     .massive-number {
@@ -404,6 +317,7 @@
       color: #dc2626;
       line-height: 1;
       margin-bottom: 12px;
+      font-family: 'JetBrains Mono', monospace;
     }
 
     .stat-caption {
@@ -426,29 +340,28 @@
     }
 
     .contrast-card {
-      background: #ffffff;
-      border: 1px solid var(--light-border);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
       border-left: 4px solid #ef4444;
       border-radius: 12px;
       padding: 24px 28px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
     }
 
     .contrast-card h4 {
       font-size: 18px;
       font-weight: 700;
-      color: #0f172a;
+      color: #ffffff;
       margin-bottom: 8px;
     }
 
     .contrast-card p {
       font-size: 14px;
-      color: #64748b;
+      color: var(--text-secondary);
       line-height: 1.5;
     }
 
     /* -------------------------------------------------------------
-       SLIDE 3: SOLUTION (LIGHT PAPER)
+       SLIDE 3: SOLUTION (DARK STEPS + WHITE BROWSER FRAME)
        ------------------------------------------------------------- */
     .solution-grid {
       display: grid;
@@ -474,28 +387,28 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 16px;
       font-weight: 700;
-      color: var(--brand-blue);
-      background: rgba(37, 99, 235, 0.08);
+      color: var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.1);
       padding: 8px 12px;
       border-radius: 8px;
-      border: 1px solid rgba(37, 99, 235, 0.2);
+      border: 1px solid rgba(56, 189, 248, 0.25);
     }
 
     .feature-content h4 {
       font-size: 18px;
       font-weight: 700;
-      color: #0f172a;
+      color: #ffffff;
       margin-bottom: 6px;
     }
 
     .feature-content p {
       font-size: 14px;
-      color: #64748b;
+      color: var(--text-secondary);
       line-height: 1.5;
     }
 
     /* -------------------------------------------------------------
-       SLIDE 4: SOCRATIC AI CHAT (LIGHT PAPER)
+       SLIDE 4: SOCRATIC AI CHAT
        ------------------------------------------------------------- */
     .socratic-grid {
       display: grid;
@@ -506,11 +419,10 @@
     }
 
     .chat-dialog-card {
-      background: #ffffff;
-      border: 1px solid var(--light-border);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
       border-radius: 16px;
       padding: 32px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
       display: flex;
       flex-direction: column;
       gap: 20px;
@@ -524,18 +436,18 @@
     }
 
     .chat-bubble.student {
-      background: #f1f5f9;
-      color: #334155;
+      background: #1e293b;
+      color: #e2e8f0;
       align-self: flex-start;
-      border: 1px solid #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.08);
       border-bottom-left-radius: 4px;
     }
 
     .chat-bubble.tutor {
-      background: #eff6ff;
-      color: #1e40af;
+      background: rgba(37, 99, 235, 0.18);
+      color: #93c5fd;
       align-self: flex-end;
-      border: 1px solid #bfdbfe;
+      border: 1px solid rgba(59, 130, 246, 0.35);
       border-bottom-right-radius: 4px;
     }
 
@@ -551,16 +463,19 @@
       font-family: 'JetBrains Mono', monospace;
     }
 
+    .chat-bubble.student .bubble-sender { color: #94a3b8; }
+    .chat-bubble.tutor .bubble-sender { color: #60a5fa; }
+
     .principles-box {
       margin-top: 24px;
       padding: 20px;
-      background: #f8fafc;
+      background: rgba(255, 255, 255, 0.02);
       border-radius: 10px;
-      border: 1px dashed #cbd5e1;
+      border: 1px dashed rgba(255, 255, 255, 0.12);
     }
 
     .principles-box strong {
-      color: #0f172a;
+      color: #ffffff;
       display: block;
       margin-bottom: 4px;
       font-size: 13px;
@@ -568,11 +483,11 @@
 
     .principles-box p {
       font-size: 13px;
-      color: #64748b;
+      color: var(--text-secondary);
     }
 
     /* -------------------------------------------------------------
-       SLIDE 5: TRI PSYCHOMETRICS (LIGHT PAPER)
+       SLIDE 5: TRI PSYCHOMETRICS
        ------------------------------------------------------------- */
     .tri-grid {
       display: grid;
@@ -589,17 +504,16 @@
     }
 
     .tri-item-card {
-      background: #ffffff;
-      border: 1px solid var(--light-border);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
       border-radius: 10px;
       padding: 20px 24px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
     }
 
     .tri-item-card h4 {
       font-size: 16px;
       font-weight: 700;
-      color: #0f172a;
+      color: #ffffff;
       display: flex;
       align-items: center;
       gap: 10px;
@@ -608,12 +522,12 @@
 
     .tri-item-card p {
       font-size: 13px;
-      color: #64748b;
+      color: var(--text-secondary);
       line-height: 1.5;
     }
 
     /* -------------------------------------------------------------
-       SLIDE 6: ACCESSIBILITY (LIGHT PAPER)
+       SLIDE 6: ACCESSIBILITY
        ------------------------------------------------------------- */
     .a11y-grid {
       display: grid;
@@ -630,18 +544,17 @@
     }
 
     .a11y-pillar-card {
-      background: #ffffff;
-      border: 1px solid var(--light-border);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
       border-radius: 12px;
       padding: 24px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     }
 
     .a11y-pillar-card .icon-label {
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
       font-weight: 700;
-      color: var(--brand-emerald);
+      color: var(--accent-emerald);
       text-transform: uppercase;
       margin-bottom: 8px;
     }
@@ -649,18 +562,18 @@
     .a11y-pillar-card h4 {
       font-size: 16px;
       font-weight: 700;
-      color: #0f172a;
+      color: #ffffff;
       margin-bottom: 6px;
     }
 
     .a11y-pillar-card p {
       font-size: 13px;
-      color: #64748b;
+      color: var(--text-secondary);
       line-height: 1.4;
     }
 
     /* -------------------------------------------------------------
-       SLIDE 7: DUAL-AUDIENCE SCALE (LIGHT PAPER)
+       SLIDE 7: DUAL-AUDIENCE SCALE
        ------------------------------------------------------------- */
     .dual-scale-grid {
       display: grid;
@@ -671,22 +584,21 @@
     }
 
     .scale-card {
-      background: #ffffff;
-      border: 1px solid var(--light-border);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
       border-radius: 16px;
       padding: 36px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
 
     .scale-card.primary {
-      border-top: 4px solid var(--brand-blue);
+      border-top: 4px solid var(--accent-cyan);
     }
 
     .scale-card.secondary {
-      border-top: 4px solid var(--brand-purple);
+      border-top: 4px solid var(--accent-purple);
     }
 
     .scale-header {
@@ -705,25 +617,27 @@
     }
 
     .scale-card.primary .scale-badge {
-      background: #eff6ff;
-      color: #2563eb;
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(56, 189, 248, 0.25);
     }
 
     .scale-card.secondary .scale-badge {
-      background: #faf5ff;
-      color: #7c3aed;
+      background: rgba(168, 85, 247, 0.12);
+      color: var(--accent-purple);
+      border: 1px solid rgba(168, 85, 247, 0.25);
     }
 
     .scale-header h3 {
       font-size: 24px;
       font-weight: 800;
-      color: #0f172a;
+      color: #ffffff;
       margin-bottom: 6px;
     }
 
     .scale-header p {
       font-size: 14px;
-      color: #64748b;
+      color: var(--text-secondary);
     }
 
     .scale-bullets {
@@ -736,19 +650,23 @@
 
     .scale-bullets li {
       font-size: 14px;
-      color: #334155;
+      color: #cbd5e1;
       line-height: 1.5;
       display: flex;
       gap: 10px;
     }
 
+    .scale-bullets li strong {
+      color: #ffffff;
+    }
+
     .scale-bullets li span.check {
-      color: var(--brand-emerald);
+      color: var(--accent-emerald);
       font-weight: 700;
     }
 
     /* -------------------------------------------------------------
-       SLIDE 8: ARCHITECTURE TOPOLOGY (DARK BLUEPRINT - MATCHING IMAGE)
+       SLIDE 8: ARCHITECTURE TOPOLOGY (MATCHING IMAGE)
        ------------------------------------------------------------- */
     .arch-container {
       display: flex;
@@ -789,7 +707,7 @@
 
     .tier-sidebar .t-desc {
       font-size: 11px;
-      color: var(--dark-text-muted);
+      color: var(--text-muted);
     }
 
     .tier-cards-grid {
@@ -799,8 +717,8 @@
     }
 
     .arch-box {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--dark-border);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
       border-radius: 8px;
       padding: 16px 20px;
       display: flex;
@@ -838,17 +756,17 @@
     .arch-port-tag {
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
-      color: var(--dark-text-muted);
+      color: var(--text-muted);
     }
 
     .arch-box-desc {
       font-size: 12px;
-      color: var(--dark-text-secondary);
+      color: var(--text-secondary);
       line-height: 1.4;
     }
 
     /* -------------------------------------------------------------
-       SLIDE 9: PRIVACY & LGPD (DARK BLUEPRINT)
+       SLIDE 9: PRIVACY & LGPD
        ------------------------------------------------------------- */
     .lgpd-grid {
       display: grid;
@@ -859,8 +777,8 @@
     }
 
     .lgpd-pillar-card {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--dark-border);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
       border-radius: 12px;
       padding: 32px 28px;
       display: flex;
@@ -885,7 +803,7 @@
 
     .lgpd-pillar-card p {
       font-size: 14px;
-      color: var(--dark-text-secondary);
+      color: var(--text-secondary);
       line-height: 1.5;
       margin-bottom: 24px;
     }
@@ -894,14 +812,14 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
       background: rgba(0, 0, 0, 0.4);
-      border: 1px solid var(--dark-border);
+      border: 1px solid var(--card-border);
       padding: 10px 14px;
       border-radius: 6px;
       color: #38bdf8;
     }
 
     /* -------------------------------------------------------------
-       SLIDE 10: METRICS & TRACTION (DARK BLUEPRINT)
+       SLIDE 10: METRICS & TRACTION
        ------------------------------------------------------------- */
     .traction-grid {
       display: grid;
@@ -911,8 +829,8 @@
     }
 
     .metric-hero-card {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--dark-border);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
       border-radius: 12px;
       padding: 36px 28px;
       text-align: center;
@@ -936,7 +854,7 @@
 
     .metric-sub {
       font-size: 12px;
-      color: var(--dark-text-muted);
+      color: var(--text-muted);
       line-height: 1.4;
     }
 
@@ -959,7 +877,7 @@
 
     .repo-info p {
       font-size: 13px;
-      color: var(--dark-text-secondary);
+      color: var(--text-secondary);
       font-family: 'JetBrains Mono', monospace;
     }
 
@@ -1022,9 +940,9 @@
 <body>
 
   <!-- =============================================================
-       SLIDE 1: HERO / COVER (DARK BLUEPRINT THEME)
+       SLIDE 1: HERO / COVER (UNIFIED BLUEPRINT THEME)
        ============================================================= -->
-  <section class="slide slide-dark" id="slide-1">
+  <section class="slide" id="slide-1">
     <header class="slide-header">
       <div class="brand-group">
         <span class="brand-title">AprovaENEM</span>
@@ -1088,13 +1006,13 @@
   </section>
 
   <!-- =============================================================
-       SLIDE 2: THE PROBLEM (LIGHT PAPER THEME)
+       SLIDE 2: THE PROBLEM (CRISP WHITE STAT CARD + DARK BLUEPRINT)
        ============================================================= -->
-  <section class="slide slide-light" id="slide-2">
+  <section class="slide" id="slide-2">
     <header class="slide-header">
       <div class="brand-group">
         <span class="brand-title">AprovaENEM</span>
-        <span class="pill-badge">O Desafio Social</span>
+        <span class="pill-badge rose">O Desafio Social</span>
       </div>
       <div class="header-tags">
         <span class="tag-item">Realidade Brasileira</span>
@@ -1104,7 +1022,7 @@
 
     <div>
       <h2 class="title-headline">
-        O Abismo na Preparação para o <span class="accent-blue">Ensino Superior</span>
+        O Abismo na Preparação para o <span class="accent-cyan">Ensino Superior</span>
       </h2>
       <p class="subtitle-lead">
         O ENEM define o futuro de milhões de jovens, mas a preparação de elite virou um privilégio restrito àqueles que podem pagar mensalidades proibitivas.
@@ -1112,6 +1030,7 @@
     </div>
 
     <div class="problem-grid">
+      <!-- High-Luminance White Card Focal Point -->
       <div class="big-stat-box">
         <div class="massive-number">R$ 1.200</div>
         <div class="stat-caption">Mensalidade Média de Cursinhos de Elite</div>
@@ -1145,9 +1064,9 @@
   </section>
 
   <!-- =============================================================
-       SLIDE 3: THE SOLUTION (LIGHT PAPER THEME)
+       SLIDE 3: THE SOLUTION (DARK STEPS + WHITE BROWSER FRAME)
        ============================================================= -->
-  <section class="slide slide-light" id="slide-3">
+  <section class="slide" id="slide-3">
     <header class="slide-header">
       <div class="brand-group">
         <span class="brand-title">AprovaENEM</span>
@@ -1161,7 +1080,7 @@
 
     <div>
       <h2 class="title-headline">
-        Preparação Completa, Inteligente e <span class="accent-blue">Sem Barreiras</span>
+        Preparação Completa, Inteligente e <span class="accent-cyan">Sem Barreiras</span>
       </h2>
       <p class="subtitle-lead">
         Uma plataforma moderna que entrega simulados oficiais comentados, inteligência artificial pedagógica e conformidade de acessibilidade para todo o Brasil.
@@ -1215,9 +1134,9 @@
   </section>
 
   <!-- =============================================================
-       SLIDE 4: SOCRATIC AI TUTOR (LIGHT PAPER THEME)
+       SLIDE 4: SOCRATIC AI TUTOR (DARK CHAT + WHITE DRAWER MOCKUP)
        ============================================================= -->
-  <section class="slide slide-light" id="slide-4">
+  <section class="slide" id="slide-4">
     <header class="slide-header">
       <div class="brand-group">
         <span class="brand-title">AprovaENEM</span>
@@ -1231,7 +1150,7 @@
 
     <div>
       <h2 class="title-headline">
-        Tutor Socrático: <span class="accent-blue">Ensinar a Pensar</span>, Não Dar Respostas
+        Tutor Socrático: <span class="accent-cyan">Ensinar a Pensar</span>, Não Dar Respostas
       </h2>
       <p class="subtitle-lead">
         Enquanto modelos convencionais entregam o gabarito pronto incentivando atalhos, nosso tutor socrático atua como um professor particular paciente.
@@ -1262,7 +1181,7 @@
 
         <div class="principles-box">
           <strong>Salvaguardas Pedagógicas Rígidas:</strong>
-          <p>O prompt de sistema bloqueia atalhos, recusa entregar a letra correta diretamente e valida se o aluno compreendeu o princípio físico ou conceitual.</p>
+          <p>O prompt de sistema bloqueia atalhos, recusa entregar a letra correta diretamente e valida se o aluno compreendeu o princípio conceitual.</p>
         </div>
       </div>
 
@@ -1286,9 +1205,9 @@
   </section>
 
   <!-- =============================================================
-       SLIDE 5: TRI PSYCHOMETRICS & DIAGNOSTICS (LIGHT PAPER THEME)
+       SLIDE 5: TRI PSYCHOMETRICS & DIAGNOSTICS (WHITE RADAR + DARK INSIGHTS)
        ============================================================= -->
-  <section class="slide slide-light" id="slide-5">
+  <section class="slide" id="slide-5">
     <header class="slide-header">
       <div class="brand-group">
         <span class="brand-title">AprovaENEM</span>
@@ -1302,7 +1221,7 @@
 
     <div>
       <h2 class="title-headline">
-        Raio-X de Habilidades: <span class="accent-blue">Diagnóstico Preciso</span> por Área
+        Raio-X de Habilidades: <span class="accent-cyan">Diagnóstico Preciso</span> por Área
       </h2>
       <p class="subtitle-lead">
         Mapeamento de proficiência pelas 4 áreas do conhecimento do ENEM com identificação imediata de tópicos fracos para direcionar o tempo de estudo.
@@ -1347,13 +1266,13 @@
   </section>
 
   <!-- =============================================================
-       SLIDE 6: ACCESSIBILITY (LIGHT PAPER THEME)
+       SLIDE 6: ACCESSIBILITY (WHITE PANEL + DARK PILLARS)
        ============================================================= -->
-  <section class="slide slide-light" id="slide-6">
+  <section class="slide" id="slide-6">
     <header class="slide-header">
       <div class="brand-group">
         <span class="brand-title">AprovaENEM</span>
-        <span class="pill-badge">Acessibilidade Total</span>
+        <span class="pill-badge emerald">Acessibilidade Total</span>
       </div>
       <div class="header-tags">
         <span class="tag-item">WCAG 2.1 Nível AA</span>
@@ -1417,9 +1336,9 @@
   </section>
 
   <!-- =============================================================
-       SLIDE 7: DUAL-AUDIENCE SCALE (LIGHT PAPER THEME)
+       SLIDE 7: DUAL-AUDIENCE SCALE (B2C & B2B WITH WHITE PREVIEWS)
        ============================================================= -->
-  <section class="slide slide-light" id="slide-7">
+  <section class="slide" id="slide-7">
     <header class="slide-header">
       <div class="brand-group">
         <span class="brand-title">AprovaENEM</span>
@@ -1433,7 +1352,7 @@
 
     <div>
       <h2 class="title-headline">
-        Do Estudante Autônomo às <span class="accent-blue">Redes Públicas de Ensino</span>
+        Do Estudante Autônomo às <span class="accent-cyan">Redes Públicas de Ensino</span>
       </h2>
       <p class="subtitle-lead">
         Um modelo arquitetural dual: gratuidade irrestrita para alunos individuais e infraestrutura multi-inquilino para escolas e secretarias de educação.
@@ -1485,9 +1404,9 @@
   </section>
 
   <!-- =============================================================
-       SLIDE 8: ARCHITECTURE TOPOLOGY (DARK BLUEPRINT - EXACT CLEAN MATCH)
+       SLIDE 8: ARCHITECTURE TOPOLOGY (MATCHING IMAGE)
        ============================================================= -->
-  <section class="slide slide-dark" id="slide-8">
+  <section class="slide" id="slide-8">
     <header class="slide-header">
       <div class="brand-group">
         <span class="brand-title">AprovaENEM</span>
@@ -1604,9 +1523,9 @@
   </section>
 
   <!-- =============================================================
-       SLIDE 9: PRIVACY & LGPD (DARK BLUEPRINT THEME)
+       SLIDE 9: PRIVACY & LGPD
        ============================================================= -->
-  <section class="slide slide-dark" id="slide-9">
+  <section class="slide" id="slide-9">
     <header class="slide-header">
       <div class="brand-group">
         <span class="brand-title">AprovaENEM</span>
@@ -1663,9 +1582,9 @@
   </section>
 
   <!-- =============================================================
-       SLIDE 10: TRACTION & CONCLUSION (DARK BLUEPRINT THEME)
+       SLIDE 10: TRACTION & CONCLUSION
        ============================================================= -->
-  <section class="slide slide-dark" id="slide-10">
+  <section class="slide" id="slide-10">
     <header class="slide-header">
       <div class="brand-group">
         <span class="brand-title">AprovaENEM</span>
