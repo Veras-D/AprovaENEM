@@ -7,12 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.6.21] - 2026-11-08
 
+### Added
+- docs(images): Generated and packaged the complete Visual Showcase Media Kit in `docs/images/` via automated Playwright headless browser scripts ([`generate-showcase-media.mjs`](frontend/scripts/generate-showcase-media.mjs)), including landing page hero banner (`frontend-hero-banner.png`), question practice interface with KaTeX & INEP resolution (`frontend-practice-card.png`), Socratic AI Tutor drawer (`socratic-ai-tutor-drawer.png`), diagnostic proficiency radar (`diagnostic-radar-heatmaps.png`), gamification & weekly league ladder (`gamification-leaderboard.png`), digital accessibility features (`accessibility-features.png`), mobile Pixel 5 viewport (`mobile-responsive-mockup.png`), BFF Swagger UI portal (`swagger-ui-portal.png`), Newman HTML Extra contract test dashboard (`newman-test-dashboard.png`), and architecture topology (`architecture-topology.png`).
+- docs(readme): Embedded platform showcase banner and Socratic AI interactive practice cards in [`README.md`](README.md).
+
 ### Changed
 - docs(spec): Synchronized [`04-data-modeling.md`](docs/specifications/04-data-modeling.md) with PostgreSQL DDL, adding `avatar_config` and `is_bot` to `users` table, `longest_streak_days` and `current_league` to `user_gamification_profiles` table, and aligning `QuestionResolution` domain and DDL definitions.
 - docs(spec): Synchronized [`05-api-specification.md`](docs/specifications/05-api-specification.md) with backend REST contracts, documenting BOLA guest session isolation (`X-Session-Id` header requirement), JWT authorization on `GET /api/v1/questions/{id}/resolution`, single-owner session claim validation errors (`400 Bad Request`), and email-bound verification payload schemas (`VerifyEmailResponse`).
 - docs(spec): Synchronized [`03-system-architecture.md`](docs/specifications/03-system-architecture.md) with complete RabbitMQ AMQP message topology (`auth.events` and `notification.events` exchanges, durable queues, and routing keys) and updated email verification architecture to reflect 6-digit numeric OTP tokens.
 - docs(postman): Updated Postman collection [`AprovaENEM.postman_collection.json`](docs/postman/AprovaENEM.postman_collection.json) with `PUT /api/v1/auth/session/:id/claim`, authenticated and unauthenticated test suites for `GET /api/v1/questions/:id/resolution`, and email-bound verification request payloads.
-- docs(backlog): Tracked task `S6-48` in [`docs/BACKLOG.md`](docs/BACKLOG.md) reflecting comprehensive specification and contract synchronization.
+- docs(backlog): Tracked tasks `S6-08` and `S6-48` in [`docs/BACKLOG.md`](docs/BACKLOG.md) reflecting showcase media kit generation and comprehensive specification synchronization.
 
 ## [0.6.20] - 2026-10-31
 
