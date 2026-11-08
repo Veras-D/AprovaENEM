@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - docs(postman): Updated Postman collection [`AprovaENEM.postman_collection.json`](docs/postman/AprovaENEM.postman_collection.json) with `PUT /api/v1/auth/session/:id/claim`, authenticated and unauthenticated test suites for `GET /api/v1/questions/:id/resolution`, and email-bound verification request payloads.
 - docs(backlog): Tracked tasks `S6-08` and `S6-48` in [`docs/BACKLOG.md`](docs/BACKLOG.md) reflecting showcase media kit generation and comprehensive specification synchronization.
 
+### Fixed
+- fix(showcase): Resolved Swagger UI portal route redirect in [`generate-showcase-media.mjs`](frontend/scripts/generate-showcase-media.mjs), navigating directly to `/swagger-ui.html` and expanding operations to capture complete OpenAPI schemas in `swagger-ui-portal.png`.
+
 ## [0.6.20] - 2026-10-31
 
 ### Added
