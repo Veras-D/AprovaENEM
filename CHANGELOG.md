@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - docs(backlog): Tracked tasks `S6-07`, `S6-08`, and `S6-48` in [`docs/BACKLOG.md`](docs/BACKLOG.md) reflecting presentation deck delivery, showcase media kit generation, and comprehensive specification synchronization.
 
 ### Fixed
+- fix(auth): Serialized both `isAnonymous` and `anonymous` properties on [`AnonymousSessionResponse.java`](backend/auth-service/src/main/java/com/aprovaenem/auth/infrastructure/adapter/in/web/dto/AnonymousSessionResponse.java) and updated Newman contract assertions in [`AprovaENEM.postman_collection.json`](docs/postman/AprovaENEM.postman_collection.json) to eliminate schema mismatch on `PUT /api/v1/auth/session/:id/claim`.
 - fix(showcase): Corrected mock data schema for diagnostic report in [`generate-showcase-media.mjs`](frontend/scripts/generate-showcase-media.mjs) with calibrated `DiagnosticReportDto` (`scorePercentage: 78.0`, populated `radar` array) resolving `~NaN` and `undefined%` in `diagnostic-radar-heatmaps.png`.
 - fix(showcase): Added authenticated student session and mock API intercepts in [`generate-showcase-media.mjs`](frontend/scripts/generate-showcase-media.mjs) to capture the active Gold League leaderboard and ranking podium in `gamification-leaderboard.png`.
 - fix(showcase): Resolved Swagger UI portal route redirect in [`generate-showcase-media.mjs`](frontend/scripts/generate-showcase-media.mjs), navigating directly to `/swagger-ui.html` and expanding operations to capture complete OpenAPI schemas in `swagger-ui-portal.png`.

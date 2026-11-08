@@ -1,5 +1,6 @@
 package com.aprovaenem.auth.infrastructure.adapter.in.web.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +15,15 @@ import java.time.Instant;
 public class AnonymousSessionResponse {
 
     private String sessionId;
+
+    @JsonProperty("isAnonymous")
     private boolean isAnonymous;
+
     private Instant expiresAt;
     private String message;
+
+    @JsonProperty("anonymous")
+    public boolean getAnonymous() {
+        return isAnonymous;
+    }
 }

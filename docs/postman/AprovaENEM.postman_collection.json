@@ -312,7 +312,7 @@
                   "});",
                   "const json = pm.response.json();",
                   "pm.test('Session claimed flag is set', function () {",
-                  "    pm.expect(json.isAnonymous).to.eql(false);",
+                  "    pm.expect(json.anonymous !== undefined ? json.anonymous : json.isAnonymous).to.eql(false);",
                   "    pm.expect(json.sessionId).to.eql(pm.environment.get('sessionId'));",
                   "});"
                 ],
