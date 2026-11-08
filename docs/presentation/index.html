@@ -100,16 +100,94 @@
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
-      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      transform: scale(0.985);
+      transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translate3d(70px, 0, 0) scale(0.98);
+      will-change: transform, opacity;
     }
 
     .slide.active {
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
-      transform: scale(1);
+      transform: translate3d(0, 0, 0) scale(1);
       z-index: 10;
+    }
+
+    .slide.prev-slide {
+      opacity: 0;
+      visibility: hidden;
+      transform: translate3d(-70px, 0, 0) scale(0.98);
+    }
+
+    .slide.next-slide {
+      opacity: 0;
+      visibility: hidden;
+      transform: translate3d(70px, 0, 0) scale(0.98);
+    }
+
+    /* -------------------------------------------------------------
+       POWERPOINT "MORPH" & CSS VIEW TRANSITIONS ENGINE
+       ------------------------------------------------------------- */
+    @view-transition {
+      navigation: auto;
+    }
+
+    /* Persistent Shared Elements morph smoothly across all slides */
+    .brand-group {
+      view-transition-name: deck-brand-morph;
+    }
+    .slide-footer {
+      view-transition-name: deck-footer-morph;
+    }
+    .deck-nav {
+      view-transition-name: deck-nav-morph;
+    }
+
+    ::view-transition-group(deck-brand-morph),
+    ::view-transition-group(deck-footer-morph),
+    ::view-transition-group(deck-nav-morph) {
+      animation-duration: 0.45s;
+      animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation-duration: 0.45s;
+      animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes morph-slide-out-left {
+      from { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+      to { transform: translate3d(-80px, 0, 0) scale(0.96); opacity: 0; }
+    }
+
+    @keyframes morph-slide-in-right {
+      from { transform: translate3d(80px, 0, 0) scale(1.02); opacity: 0; }
+      to { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+    }
+
+    @keyframes morph-slide-out-right {
+      from { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+      to { transform: translate3d(80px, 0, 0) scale(0.96); opacity: 0; }
+    }
+
+    @keyframes morph-slide-in-left {
+      from { transform: translate3d(-80px, 0, 0) scale(1.02); opacity: 0; }
+      to { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+    }
+
+    html[data-direction="forward"]::view-transition-old(root) {
+      animation: 0.42s cubic-bezier(0.16, 1, 0.3, 1) both morph-slide-out-left;
+    }
+    html[data-direction="forward"]::view-transition-new(root) {
+      animation: 0.42s cubic-bezier(0.16, 1, 0.3, 1) both morph-slide-in-right;
+    }
+
+    html[data-direction="backward"]::view-transition-old(root) {
+      animation: 0.42s cubic-bezier(0.16, 1, 0.3, 1) both morph-slide-out-right;
+    }
+    html[data-direction="backward"]::view-transition-new(root) {
+      animation: 0.42s cubic-bezier(0.16, 1, 0.3, 1) both morph-slide-in-left;
     }
 
     @media print {
@@ -834,41 +912,204 @@
     .lgpd-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 28px;
+      gap: 24px;
       align-items: stretch;
       flex: 1;
+      margin-bottom: 16px;
     }
 
     .lgpd-pillar-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 32px 28px;
+      border-radius: 14px;
+      padding: 24px 22px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .lgpd-pillar-card:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+      box-shadow: 0 10px 30px -10px rgba(56, 189, 248, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .lgpd-card-header {
+      margin-bottom: 14px;
     }
 
     .lgpd-law-badge {
+      display: inline-block;
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
       color: #38bdf8;
-      margin-bottom: 12px;
-      font-weight: 600;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      padding: 3px 10px;
+      border-radius: 9999px;
+      margin-bottom: 8px;
+      font-weight: 700;
     }
 
     .lgpd-pillar-card h3 {
-      font-size: 20px;
+      font-size: 19px;
       font-weight: 700;
       color: #ffffff;
-      margin-bottom: 12px;
+      margin-bottom: 6px;
+      line-height: 1.25;
     }
 
     .lgpd-pillar-card p {
-      font-size: 14px;
+      font-size: 12.5px;
       color: var(--text-secondary);
-      line-height: 1.5;
-      margin-bottom: 24px;
+      line-height: 1.45;
+      margin-bottom: 0;
+    }
+
+    /* Terminal Code Window for Card 1 */
+    .lgpd-code-box {
+      background: #090d16;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 14px 0;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+    }
+
+    .lgpd-code-header {
+      background: rgba(255, 255, 255, 0.04);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .code-dot.red { background: #ef4444; }
+    .code-dot.yellow { background: #f59e0b; }
+    .code-dot.green { background: #10b981; }
+
+    .code-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-left: 6px;
+    }
+
+    .lgpd-code-body {
+      padding: 10px 12px;
+      margin: 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      line-height: 1.4;
+      color: #e2e8f0;
+      overflow: hidden;
+    }
+
+    .token-key { color: #38bdf8; }
+    .token-str { color: #34d399; }
+    .token-num { color: #fbbf24; }
+
+    /* Flow Stepper for Card 2 */
+    .lgpd-flow-box {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 14px 0;
+    }
+
+    .lgpd-flow-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .step-num {
+      width: 20px;
+      height: 20px;
+      border-radius: 5px;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #f87171;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .step-info {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .step-info strong {
+      font-size: 11.5px;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .step-info span {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    /* Security Grid for Card 3 */
+    .lgpd-security-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 14px 0;
+    }
+
+    .security-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .security-icon {
+      font-size: 13px;
+      line-height: 1;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .security-item div {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .security-item strong {
+      font-size: 11.5px;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .security-item span {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      line-height: 1.35;
     }
 
     .endpoint-chip {
@@ -876,9 +1117,12 @@
       font-size: 12px;
       background: rgba(0, 0, 0, 0.4);
       border: 1px solid var(--card-border);
-      padding: 10px 14px;
+      padding: 9px 14px;
       border-radius: 6px;
       color: #38bdf8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
     /* -------------------------------------------------------------
@@ -1762,31 +2006,152 @@
     </div>
 
     <div class="lgpd-grid">
+      <!-- Pillar 1: Portabilidade -->
       <div class="lgpd-pillar-card">
         <div>
-          <div class="lgpd-law-badge">Artigo 18, Inciso V</div>
-          <h3>Portabilidade Total dos Dados</h3>
-          <p>O estudante pode exportar a qualquer momento todo o seu histórico em formato JSON estruturado aberto: simulados, notas TRI, histórico e badges.</p>
+          <div class="lgpd-card-header">
+            <span class="lgpd-law-badge">Artigo 18, Inciso V</span>
+            <h3>Portabilidade Total dos Dados</h3>
+            <p>O estudante pode exportar a qualquer momento todo o seu histórico em formato JSON aberto estruturado (RFC 8259), com interoperabilidade total.</p>
+          </div>
+
+          <div class="lgpd-code-box">
+            <div class="lgpd-code-header">
+              <span class="code-dot red"></span>
+              <span class="code-dot yellow"></span>
+              <span class="code-dot green"></span>
+              <span class="code-title">dados_estudante_export.json</span>
+            </div>
+            <pre class="lgpd-code-body"><code>{
+  <span class="token-key">"titularId"</span>: <span class="token-str">"usr_8f92c10a"</span>,
+  <span class="token-key">"dataExportacao"</span>: <span class="token-str">"2026-11-08T20:00:00Z"</span>,
+  <span class="token-key">"formato"</span>: <span class="token-str">"RFC-8259"</span>,
+  <span class="token-key">"conformidade"</span>: <span class="token-str">"LGPD Art. 18, V"</span>,
+  <span class="token-key">"scoreTRI"</span>: {
+    <span class="token-key">"matematica"</span>: <span class="token-num">748.2</span>,
+    <span class="token-key">"cienciasNatureza"</span>: <span class="token-num">682.0</span>,
+    <span class="token-key">"cienciasHumanas"</span>: <span class="token-num">715.4</span>,
+    <span class="token-key">"linguagens"</span>: <span class="token-num">690.8</span>
+  },
+  <span class="token-key">"historico"</span>: {
+    <span class="token-key">"simuladosRealizados"</span>: <span class="token-num">34</span>,
+    <span class="token-key">"ofensivaAtualDias"</span>: <span class="token-num">14</span>,
+    <span class="token-key">"maiorOfensivaDias"</span>: <span class="token-num">21</span>,
+    <span class="token-key">"badgesConquistadas"</span>: <span class="token-num">8</span>
+  }
+}</code></pre>
+          </div>
         </div>
-        <div class="endpoint-chip">GET /api/v1/auth/export</div>
+        <div class="endpoint-chip">
+          <span>GET /api/v1/auth/export</span>
+          <span style="color: #34d399; font-size: 11px;">✓ 200 OK • JSON RFC-8259</span>
+        </div>
       </div>
 
+      <!-- Pillar 2: Direito ao Esquecimento -->
       <div class="lgpd-pillar-card">
         <div>
-          <div class="lgpd-law-badge">Artigo 18, Inciso VI</div>
-          <h3>Direito ao Esquecimento Definitivo</h3>
-          <p>Exclusão irreversível e anonimização de todos os registros de conta em cascata, através de transações atômicas seguras no banco de dados.</p>
+          <div class="lgpd-card-header">
+            <span class="lgpd-law-badge" style="color: #f87171; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.25);">Artigo 18, Inciso VI</span>
+            <h3>Direito ao Esquecimento Definitivo</h3>
+            <p>Exclusão atômica irreversível e anonimização de todos os registros de conta, sessões e histórico de estudo em cascata estrita.</p>
+          </div>
+
+          <div class="lgpd-flow-box">
+            <div class="lgpd-flow-step">
+              <div class="step-num">01</div>
+              <div class="step-info">
+                <strong>Solicitação Autenticada</strong>
+                <span>Confirmação explícita de credenciais do titular</span>
+              </div>
+            </div>
+            <div class="lgpd-flow-step">
+              <div class="step-num">02</div>
+              <div class="step-info">
+                <strong>Transação Atômica (@Transactional)</strong>
+                <span>Isolamento ACID estrito no PostgreSQL 16</span>
+              </div>
+            </div>
+            <div class="lgpd-flow-step">
+              <div class="step-num">03</div>
+              <div class="step-info">
+                <strong>Exclusão em Cascata (ON DELETE CASCADE)</strong>
+                <span>Tentativas TRI, streaks, perfis e vetores pgvector</span>
+              </div>
+            </div>
+            <div class="lgpd-flow-step">
+              <div class="step-num">04</div>
+              <div class="step-info">
+                <strong>Revogação de Tokens & Expurgos</strong>
+                <span>Invalidade imediata no Redis e purga de logs PII</span>
+              </div>
+            </div>
+            <div class="lgpd-flow-step">
+              <div class="step-num">05</div>
+              <div class="step-info">
+                <strong>Emissão de Comprovante Criptográfico</strong>
+                <span>Hash SHA-256 de confirmação de expurgo sem rastros</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="endpoint-chip">DELETE /api/v1/auth/me</div>
+        <div class="endpoint-chip" style="color: #f87171; border-color: rgba(248, 113, 113, 0.35);">
+          <span>DELETE /api/v1/auth/me</span>
+          <span style="font-size: 11px;">Zero Órfãos no Banco</span>
+        </div>
       </div>
 
+      <!-- Pillar 3: Zero Rastreadores -->
       <div class="lgpd-pillar-card">
         <div>
-          <div class="lgpd-law-badge">Artigo 6º (Princípios)</div>
-          <h3>Zero Rastreadores & Sem Publicidade</h3>
-          <p>Sem cookies invasivos de terceiros, sem venda de comportamento e senhas protegidas com BCrypt (fator de custo 12).</p>
+          <div class="lgpd-card-header">
+            <span class="lgpd-law-badge" style="color: #34d399; background: rgba(52, 211, 153, 0.1); border-color: rgba(52, 211, 153, 0.25);">Artigo 6º (Princípios)</span>
+            <h3>Zero Rastreadores & Sem Publicidade</h3>
+            <p>Sem cookies invasivos de terceiros, sem venda de comportamento e proteção criptográfica integral de ponta a ponta.</p>
+          </div>
+
+          <div class="lgpd-security-grid">
+            <div class="security-item">
+              <div class="security-icon">🔒</div>
+              <div>
+                <strong>Criptografia BCrypt (Custo 12)</strong>
+                <span>Senhas com sal criptográfico e hashing lento anti-força bruta</span>
+              </div>
+            </div>
+            <div class="security-item">
+              <div class="security-icon">🚫</div>
+              <div>
+                <strong>Zero Ad Trackers ou Pixels</strong>
+                <span>Sem Google Analytics invasivo, Facebook Pixel ou SDKs terceiros</span>
+              </div>
+            </div>
+            <div class="security-item">
+              <div class="security-icon">🛡️</div>
+              <div>
+                <strong>TLS 1.3 & HSTS Forçado</strong>
+                <span>Tráfego criptografado sem vazamentos de telemetria em trânsito</span>
+              </div>
+            </div>
+            <div class="security-item">
+              <div class="security-icon">⚖️</div>
+              <div>
+                <strong>Finalidade Exclusiva & Minimização</strong>
+                <span>Tratamento estritamente pedagógico para o estudante (Art. 6º)</span>
+              </div>
+            </div>
+            <div class="security-item">
+              <div class="security-icon">📜</div>
+              <div>
+                <strong>Auditoria Imutável de Consentimento</strong>
+                <span>Registro cronológico de termos aceitos com versionamento</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="endpoint-chip">100% Livre de Rastreamento Comercial</div>
+        <div class="endpoint-chip" style="color: #34d399; border-color: rgba(52, 211, 153, 0.35);">
+          <span>100% Livre de Rastreamento Comercial</span>
+          <span style="font-size: 11px;">Ética por Design</span>
+        </div>
       </div>
     </div>
 
@@ -1987,10 +2352,31 @@
       function updateSlide(index) {
         if (index < 0) index = 0;
         if (index >= slides.length) index = slides.length - 1;
-        slides[currentIndex].classList.remove('active');
-        currentIndex = index;
-        slides[currentIndex].classList.add('active');
-        indicator.textContent = String(currentIndex + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+        if (index === currentIndex) return;
+
+        const isForward = index > currentIndex;
+        document.documentElement.setAttribute('data-direction', isForward ? 'forward' : 'backward');
+
+        const doTransition = () => {
+          slides.forEach((s, idx) => {
+            s.classList.remove('active', 'prev-slide', 'next-slide');
+            if (idx === index) {
+              s.classList.add('active');
+            } else if (idx < index) {
+              s.classList.add('prev-slide');
+            } else {
+              s.classList.add('next-slide');
+            }
+          });
+          currentIndex = index;
+          indicator.textContent = String(currentIndex + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+        };
+
+        if (document.startViewTransition) {
+          document.startViewTransition(doTransition);
+        } else {
+          doTransition();
+        }
       }
 
       window.showSlide = (num) => updateSlide(num - 1);
