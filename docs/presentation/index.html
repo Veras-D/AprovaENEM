@@ -3,1436 +3,1775 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AprovaENEM — Pitch Deck Executivo</title>
+  <title>AprovaENEM — Apresentação Executiva</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg: #0B0F19;
-      --card-bg: rgba(18, 24, 38, 0.85);
-      --card-border: rgba(255, 255, 255, 0.08);
-      --card-border-glow: rgba(56, 189, 248, 0.3);
-      --text: #F8FAFC;
-      --text-muted: #94A3B8;
-      --brand: #0284C7;
-      --brand-light: #38BDF8;
-      --emerald: #10B981;
-      --emerald-light: #34D399;
-      --amber: #F59E0B;
-      --amber-light: #FBBF24;
-      --purple: #8B5CF6;
-      --purple-light: #C084FC;
-      --rose: #F43F5E;
-      --rose-light: #FB7185;
-      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      --mono: "JetBrains Mono", Menlo, Consolas, "Courier New", monospace;
-    }
-
-    * {
+    /* -------------------------------------------------------------
+       RESET & BASE TOKENS
+       ------------------------------------------------------------- */
+    *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font);
-      overflow-x: hidden;
-      line-height: 1.5;
+    :root {
+      /* Dark Blueprint Tokens (Slides 1, 8, 9, 10) - matching architecture_minimalist.png */
+      --dark-bg: #070a10;
+      --dark-surface: #0d121d;
+      --dark-surface-elevated: #111726;
+      --dark-border: rgba(255, 255, 255, 0.08);
+      --dark-border-subtle: rgba(255, 255, 255, 0.04);
+      --dark-text-primary: #f8fafc;
+      --dark-text-secondary: #94a3b8;
+      --dark-text-muted: #64748b;
+
+      /* Light Paper Tokens (Slides 2, 3, 4, 5, 6, 7) - Apple / Stripe / Notion Keynote */
+      --light-bg: #f8fafc;
+      --light-surface: #ffffff;
+      --light-surface-subtle: #f1f5f9;
+      --light-border: #e2e8f0;
+      --light-border-subtle: #edf2f7;
+      --light-text-primary: #0f172a;
+      --light-text-secondary: #475569;
+      --light-text-muted: #64748b;
+
+      /* Shared Accent Palette */
+      --brand-blue: #2563eb;
+      --brand-blue-light: #38bdf8;
+      --brand-emerald: #10b981;
+      --brand-emerald-light: #34d399;
+      --brand-purple: #8b5cf6;
+      --brand-purple-light: #a855f7;
+      --brand-amber: #f59e0b;
+      --brand-rose: #f43f5e;
+    }
+
+    html, body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #000000;
+      color: var(--dark-text-primary);
       -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
     }
 
-    /* Technical Grid Texture */
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      background-image: 
-        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-      background-size: 48px 48px;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .deck-container {
-      position: relative;
-      z-index: 1;
-      width: 100vw;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-
-    /* 16:9 Presentation Canvas */
-    .slide {
-      width: 1920px;
-      height: 1080px;
-      padding: 60px 80px;
-      display: none;
-      flex-direction: column;
-      justify-content: space-between;
-      position: relative;
-      background: radial-gradient(circle at 85% 15%, rgba(2, 132, 199, 0.10), transparent 50%),
-                  radial-gradient(circle at 15% 85%, rgba(139, 92, 246, 0.08), transparent 45%),
-                  #0B0F19;
-      box-shadow: 0 30px 100px rgba(0, 0, 0, 0.8);
-    }
-
-    .slide.active {
-      display: flex;
-    }
-
-    /* Navigation Overlay Controls */
-    .deck-nav {
-      position: fixed;
-      bottom: 24px;
-      right: 32px;
-      z-index: 999;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: rgba(11, 15, 25, 0.90);
-      backdrop-filter: blur(16px);
-      border: 1px solid var(--card-border);
-      padding: 8px 18px;
-      border-radius: 9999px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-    }
-
-    .nav-btn {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid var(--card-border);
-      color: #FFFFFF;
-      font-size: 14px;
-      font-weight: 700;
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .nav-btn:hover {
-      background: var(--brand);
-      border-color: var(--brand);
-    }
-
-    .nav-indicator {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text-muted);
-      min-width: 65px;
-      text-align: center;
-      font-family: var(--mono);
-    }
-
-    /* Common Slide Header */
-    .slide-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 28px;
-    }
-
-    .header-main {
-      max-width: 1550px;
-    }
-
-    .slide-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      padding: 5px 14px;
-      border-radius: 9999px;
-      margin-bottom: 12px;
-    }
-
-    .slide-badge.brand { color: var(--brand-light); background: rgba(2, 132, 199, 0.15); border: 1px solid rgba(2, 132, 199, 0.35); }
-    .slide-badge.emerald { color: var(--emerald-light); background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); }
-    .slide-badge.amber { color: var(--amber-light); background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); }
-    .slide-badge.purple { color: var(--purple-light); background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.35); }
-    .slide-badge.rose { color: var(--rose-light); background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.35); }
-
-    .slide-title {
-      font-size: 48px;
-      font-weight: 900;
-      letter-spacing: -0.8px;
-      color: #FFFFFF;
-      line-height: 1.15;
-    }
-
-    .slide-title span.highlight { color: var(--brand-light); }
-    .slide-title span.emerald-highlight { color: var(--emerald-light); }
-    .slide-title span.amber-highlight { color: var(--amber-light); }
-
-    .slide-subtitle {
-      font-size: 21px;
-      color: var(--text-muted);
-      margin-top: 8px;
-      line-height: 1.4;
-    }
-
-    .slide-counter {
-      font-family: var(--mono);
-      font-size: 16px;
-      font-weight: 800;
-      color: var(--text-muted);
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--card-border);
-      padding: 8px 16px;
-      border-radius: 12px;
-      letter-spacing: 2px;
-      white-space: nowrap;
-    }
-
-    /* Common Slide Footer */
-    .slide-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-top: 20px;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      font-size: 14px;
-      color: var(--text-muted);
-    }
-
-    .footer-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .footer-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--brand-light);
-    }
-
-    .footer-right {
-      font-family: var(--mono);
-      font-size: 13px;
-      letter-spacing: 0.5px;
-    }
-
-    /* Reusable Card Styles */
-    .pitch-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 20px;
-      padding: 28px;
-      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
-      transition: all 0.3s ease;
-    }
-
-    .pitch-card.glow-brand { border-color: rgba(56, 189, 248, 0.35); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(2, 132, 199, 0.15); }
-    .pitch-card.glow-emerald { border-color: rgba(16, 185, 129, 0.35); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(16, 185, 129, 0.15); }
-    .pitch-card.glow-amber { border-color: rgba(245, 158, 11, 0.35); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(245, 158, 11, 0.15); }
-
-    .pitch-card-title {
-      font-size: 22px;
-      font-weight: 800;
-      color: #FFFFFF;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .pitch-card-desc {
-      font-size: 16px;
-      color: var(--text-muted);
-      line-height: 1.5;
-    }
-
-    /* Stat Big Number */
-    .stat-number {
-      font-size: 72px;
-      font-weight: 900;
-      line-height: 1;
-      letter-spacing: -2px;
-      margin-bottom: 12px;
-    }
-
-    .stat-label {
-      font-size: 20px;
-      font-weight: 800;
-      color: #FFFFFF;
-      margin-bottom: 6px;
-    }
-
-    .stat-desc {
-      font-size: 15px;
-      color: var(--text-muted);
-      line-height: 1.45;
-    }
-
-    /* ========================================================= */
-    /* SLIDE 1: THE HOOK & PURPOSE                               */
-    /* ========================================================= */
-    .hook-grid {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 1.15fr;
-      gap: 48px;
-      align-items: center;
-      margin: 10px 0;
-    }
-
-    .hook-left {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-
-    .hook-headline {
-      font-size: 58px;
-      font-weight: 900;
-      line-height: 1.08;
-      letter-spacing: -1.5px;
-      color: #FFFFFF;
-    }
-
-    .hook-desc {
-      font-size: 20px;
-      color: #CBD5E1;
-      line-height: 1.6;
-    }
-
-    .hook-pill-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-top: 12px;
-    }
-
-    .hook-pill {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 14px;
-      padding: 16px 20px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .hook-pill-icon {
-      font-size: 26px;
-      flex-shrink: 0;
-    }
-
-    .hook-pill-title {
-      font-size: 15px;
-      font-weight: 800;
-      color: #FFFFFF;
-    }
-
-    .hook-pill-sub {
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    .hook-mock-frame {
-      background: var(--card-bg);
-      border: 1px solid rgba(56, 189, 248, 0.35);
-      border-radius: 24px;
-      padding: 14px;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7), 0 0 60px rgba(2, 132, 199, 0.18);
-    }
-
-    .hook-mock-frame img {
-      width: 100%;
-      height: auto;
-      border-radius: 14px;
-      display: block;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    /* ========================================================= */
-    /* SLIDE 2: THE PAIN (THE BOTTLENECK)                        */
-    /* ========================================================= */
-    .pain-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 36px;
-      margin: 10px 0;
-    }
-
-    .pain-stats-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 28px;
-    }
-
-    .pain-stat-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 20px;
-      padding: 36px 32px;
-      text-align: center;
-      position: relative;
-    }
-
-    .pain-contrast-box {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-    }
-
-    .contrast-card {
-      border-radius: 18px;
-      padding: 26px 32px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .contrast-card.bad {
-      background: rgba(244, 63, 94, 0.08);
-      border: 1px solid rgba(244, 63, 94, 0.3);
-    }
-
-    .contrast-card.good {
-      background: rgba(16, 185, 129, 0.08);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-    }
-
-    /* ========================================================= */
-    /* SLIDES 3, 4, 5, 6: SPLIT LAYOUTS (STORY + LIVE DEMO MOCK) */
-    /* ========================================================= */
-    .split-layout {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 1.25fr;
-      gap: 48px;
-      align-items: center;
-      margin: 10px 0;
-    }
-
-    .split-info-col {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .feature-point {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 18px;
-      padding: 22px 26px;
-      display: flex;
-      gap: 18px;
-      align-items: flex-start;
-      transition: all 0.2s ease;
-    }
-
-    .feature-point:hover {
-      border-color: rgba(56, 189, 248, 0.4);
-      transform: translateX(4px);
-    }
-
-    .feature-icon-box {
-      width: 48px;
-      height: 48px;
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      flex-shrink: 0;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .split-media-frame {
-      background: var(--card-bg);
-      border: 1px solid rgba(56, 189, 248, 0.35);
-      border-radius: 24px;
-      padding: 14px;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7), 0 0 50px rgba(2, 132, 199, 0.15);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .split-media-frame img {
-      width: 100%;
-      height: auto;
-      max-height: 680px;
-      object-fit: contain;
-      border-radius: 14px;
-      display: block;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    /* ========================================================= */
-    /* SLIDE 7: DUAL AUDIENCE ENGINE (B2C & B2B)                 */
-    /* ========================================================= */
-    .dual-engine-grid {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 36px;
-      margin: 10px 0;
-    }
-
-    .engine-card {
-      background: var(--card-bg);
-      border-radius: 24px;
-      padding: 36px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-    }
-
-    .engine-card.b2c {
-      border: 1px solid rgba(56, 189, 248, 0.35);
-      background: radial-gradient(circle at 10% 10%, rgba(2, 132, 199, 0.12), transparent 60%), var(--card-bg);
-    }
-
-    .engine-card.b2b {
-      border: 1px solid rgba(16, 185, 129, 0.35);
-      background: radial-gradient(circle at 90% 10%, rgba(16, 185, 129, 0.12), transparent 60%), var(--card-bg);
-    }
-
-    .engine-tag {
-      display: inline-block;
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      padding: 6px 14px;
-      border-radius: 9999px;
-      margin-bottom: 14px;
-    }
-
-    .engine-tag.b2c { color: var(--brand-light); background: rgba(2, 132, 199, 0.2); }
-    .engine-tag.b2b { color: var(--emerald-light); background: rgba(16, 185, 129, 0.2); }
-
-    .engine-title {
-      font-size: 32px;
-      font-weight: 900;
-      color: #FFFFFF;
-      margin-bottom: 8px;
-    }
-
-    .engine-desc {
-      font-size: 17px;
-      color: var(--text-muted);
-      margin-bottom: 24px;
-      line-height: 1.5;
-    }
-
-    .engine-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .engine-list li {
-      font-size: 16px;
-      color: #CBD5E1;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .engine-list li strong {
-      color: #FFFFFF;
-    }
-
-    /* ========================================================= */
-    /* SLIDE 8: MISSION-CRITICAL ARCHITECTURE                    */
-    /* ========================================================= */
-    .arch-tiers-grid {
-      flex: 1;
-      display: grid;
-      grid-template-rows: repeat(3, auto);
-      gap: 20px;
-      margin: 10px 0;
-    }
-
-    .arch-tier-block {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 20px;
-      padding: 22px 28px;
-    }
-
-    .arch-tier-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 14px;
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-    }
-
-    .arch-boxes-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 16px;
-    }
-
-    .arch-box {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 14px;
-      padding: 16px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .arch-box-title {
-      font-size: 16px;
-      font-weight: 800;
-      color: #FFFFFF;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .arch-box-desc {
-      font-size: 13px;
-      color: var(--text-muted);
-      line-height: 1.4;
-    }
-
-    .arch-box-tag {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--brand-light);
-      margin-top: 4px;
-    }
-
-    /* ========================================================= */
-    /* SLIDE 9: PRIVACY-BY-DESIGN & LGPD                         */
-    /* ========================================================= */
-    .lgpd-grid {
-      flex: 1;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 32px;
-      margin: 10px 0;
-      align-items: stretch;
-    }
-
-    .lgpd-card {
-      background: var(--card-bg);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      border-radius: 22px;
-      padding: 36px 30px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 18px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
-    }
-
-    .lgpd-endpoint-badge {
-      font-family: var(--mono);
-      font-size: 13px;
-      background: rgba(0, 0, 0, 0.5);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 10px 14px;
-      border-radius: 10px;
-      color: var(--emerald-light);
-      word-break: break-all;
-    }
-
-    /* ========================================================= */
-    /* SLIDE 10: TRACTION, METRICS & VISION                      */
-    /* ========================================================= */
-    .traction-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 36px;
-      margin: 10px 0;
-    }
-
-    .kpi-row {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 24px;
-    }
-
-    .kpi-box {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 22px;
-      padding: 36px 24px;
-      text-align: center;
-    }
-
-    .kpi-box.highlight {
-      border-color: rgba(56, 189, 248, 0.4);
-      background: radial-gradient(circle at 50% 0%, rgba(2, 132, 199, 0.2), transparent 70%), var(--card-bg);
-    }
-
-    .cta-banner {
-      background: linear-gradient(90deg, rgba(2, 132, 199, 0.2), rgba(139, 92, 246, 0.2));
-      border: 1px solid rgba(56, 189, 248, 0.4);
-      border-radius: 20px;
-      padding: 28px 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .cta-title {
-      font-size: 24px;
-      font-weight: 900;
-      color: #FFFFFF;
-    }
-
-    .cta-subtitle {
-      font-size: 16px;
-      color: var(--text-muted);
-      margin-top: 4px;
-    }
-
-    .cta-button-badge {
-      background: var(--brand);
-      color: #FFFFFF;
-      font-weight: 800;
-      font-size: 15px;
-      padding: 12px 28px;
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(2, 132, 199, 0.4);
-      white-space: nowrap;
-    }
-
-    /* Print / PDF Export Overrides */
+    /* Print & Slide Container (Exact 16:9 - 1920x1080) */
     @page {
       size: 1920px 1080px;
       margin: 0;
     }
 
+    .slide {
+      width: 1920px;
+      height: 1080px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 64px 80px;
+      overflow: hidden;
+      page-break-after: always;
+      page-break-inside: avoid;
+    }
+
+    /* -------------------------------------------------------------
+       THEME VARIANTS (DARK BLUEPRINT vs LIGHT PAPER)
+       ------------------------------------------------------------- */
+    /* Dark Blueprint Theme (Matching architecture_minimalist.png) */
+    .slide-dark {
+      background-color: var(--dark-bg);
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      background-size: 32px 32px;
+      color: var(--dark-text-primary);
+    }
+
+    /* Light Paper Theme (Clean Apple / Stripe / Notion Keynote) */
+    .slide-light {
+      background-color: var(--light-bg);
+      background-image: 
+        radial-gradient(circle at top right, rgba(37, 99, 235, 0.04), transparent 600px),
+        radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.03), transparent 600px);
+      color: var(--light-text-primary);
+    }
+
+    /* -------------------------------------------------------------
+       HEADER & FOOTER INFRASTRUCTURE
+       ------------------------------------------------------------- */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-title {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .slide-dark .brand-title {
+      color: #ffffff;
+    }
+
+    .slide-light .brand-title {
+      color: #0f172a;
+    }
+
+    .pill-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .slide-dark .pill-badge {
+      background: rgba(56, 189, 248, 0.1);
+      color: var(--brand-blue-light);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+    }
+
+    .slide-light .pill-badge {
+      background: rgba(37, 99, 235, 0.08);
+      color: var(--brand-blue);
+      border: 1px solid rgba(37, 99, 235, 0.2);
+    }
+
+    .pill-badge.emerald {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--brand-emerald-light);
+      border-color: rgba(16, 185, 129, 0.25);
+    }
+
+    .slide-light .pill-badge.emerald {
+      background: rgba(16, 185, 129, 0.08);
+      color: var(--brand-emerald);
+      border-color: rgba(16, 185, 129, 0.2);
+    }
+
+    .pill-badge.amber {
+      background: rgba(245, 158, 11, 0.1);
+      color: #fbbf24;
+      border-color: rgba(245, 158, 11, 0.25);
+    }
+
+    .header-tags {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+
+    .tag-item {
+      padding: 6px 14px;
+      border-radius: 6px;
+    }
+
+    .slide-dark .tag-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--dark-border);
+      color: var(--dark-text-secondary);
+    }
+
+    .slide-light .tag-item {
+      background: #ffffff;
+      border: 1px solid var(--light-border);
+      color: var(--light-text-secondary);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    }
+
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+
+    .slide-dark .slide-footer {
+      border-top: 1px solid var(--dark-border-subtle);
+      color: var(--dark-text-muted);
+    }
+
+    .slide-light .slide-footer {
+      border-top: 1px solid var(--light-border);
+      color: var(--light-text-muted);
+    }
+
+    /* -------------------------------------------------------------
+       TYPOGRAPHY
+       ------------------------------------------------------------- */
+    .title-headline {
+      font-size: 50px;
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      line-height: 1.1;
+      margin-bottom: 12px;
+    }
+
+    .subtitle-lead {
+      font-size: 19px;
+      line-height: 1.5;
+      font-weight: 400;
+      max-width: 950px;
+      margin-bottom: 32px;
+    }
+
+    .slide-dark .subtitle-lead {
+      color: var(--dark-text-secondary);
+    }
+
+    .slide-light .subtitle-lead {
+      color: var(--light-text-secondary);
+    }
+
+    .accent-cyan { color: #38bdf8 !important; }
+    .accent-blue { color: #2563eb !important; }
+    .accent-emerald { color: #10b981 !important; }
+    .accent-amber { color: #f59e0b !important; }
+    .accent-purple { color: #a855f7 !important; }
+
+    /* -------------------------------------------------------------
+       BROWSER WINDOW MOCKUP CONTAINER
+       ------------------------------------------------------------- */
+    .browser-frame {
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.12);
+    }
+
+    .slide-dark .browser-frame {
+      background: var(--dark-surface);
+      border: 1px solid var(--dark-border);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .slide-light .browser-frame {
+      background: #ffffff;
+      border: 1px solid var(--light-border);
+    }
+
+    .browser-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+    }
+
+    .slide-dark .browser-toolbar {
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--dark-border);
+    }
+
+    .slide-light .browser-toolbar {
+      background: #f1f5f9;
+      border-bottom: 1px solid var(--light-border);
+    }
+
+    .traffic-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .dot.red { background: #ef4444; }
+    .dot.yellow { background: #f59e0b; }
+    .dot.green { background: #10b981; }
+
+    .browser-address {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 3px 12px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      max-width: 320px;
+    }
+
+    .slide-dark .browser-address {
+      background: rgba(0, 0, 0, 0.3);
+      color: #94a3b8;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .slide-light .browser-address {
+      background: #ffffff;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+
+    .browser-frame img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* -------------------------------------------------------------
+       SLIDE 1: HERO / COVER (DARK BLUEPRINT)
+       ------------------------------------------------------------- */
+    .hero-split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.05fr;
+      gap: 60px;
+      align-items: center;
+      flex: 1;
+    }
+
+    .hero-badges-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .hero-stat-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 36px;
+    }
+
+    .hero-stat-card {
+      padding: 16px 20px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--dark-border);
+      border-radius: 8px;
+    }
+
+    .hero-stat-card .val {
+      font-size: 24px;
+      font-weight: 700;
+      color: #ffffff;
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 4px;
+    }
+
+    .hero-stat-card .lbl {
+      font-size: 12px;
+      color: var(--dark-text-muted);
+    }
+
+    /* -------------------------------------------------------------
+       SLIDE 2: THE PROBLEM (LIGHT PAPER)
+       ------------------------------------------------------------- */
+    .problem-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 56px;
+      align-items: center;
+      flex: 1;
+    }
+
+    .big-stat-box {
+      background: #ffffff;
+      border: 1px solid var(--light-border);
+      border-radius: 16px;
+      padding: 48px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    }
+
+    .massive-number {
+      font-size: 76px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: #dc2626;
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+
+    .stat-caption {
+      font-size: 22px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 16px;
+    }
+
+    .stat-desc {
+      font-size: 16px;
+      color: #475569;
+      line-height: 1.6;
+    }
+
+    .problem-cards-column {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .contrast-card {
+      background: #ffffff;
+      border: 1px solid var(--light-border);
+      border-left: 4px solid #ef4444;
+      border-radius: 12px;
+      padding: 24px 28px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+    }
+
+    .contrast-card h4 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+
+    .contrast-card p {
+      font-size: 14px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    /* -------------------------------------------------------------
+       SLIDE 3: SOLUTION (LIGHT PAPER)
+       ------------------------------------------------------------- */
+    .solution-grid {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 56px;
+      align-items: center;
+      flex: 1;
+    }
+
+    .feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .feature-item {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .feature-idx {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--brand-blue);
+      background: rgba(37, 99, 235, 0.08);
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(37, 99, 235, 0.2);
+    }
+
+    .feature-content h4 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 6px;
+    }
+
+    .feature-content p {
+      font-size: 14px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    /* -------------------------------------------------------------
+       SLIDE 4: SOCRATIC AI CHAT (LIGHT PAPER)
+       ------------------------------------------------------------- */
+    .socratic-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.1fr;
+      gap: 56px;
+      align-items: center;
+      flex: 1;
+    }
+
+    .chat-dialog-card {
+      background: #ffffff;
+      border: 1px solid var(--light-border);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .chat-bubble {
+      padding: 16px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .chat-bubble.student {
+      background: #f1f5f9;
+      color: #334155;
+      align-self: flex-start;
+      border: 1px solid #e2e8f0;
+      border-bottom-left-radius: 4px;
+    }
+
+    .chat-bubble.tutor {
+      background: #eff6ff;
+      color: #1e40af;
+      align-self: flex-end;
+      border: 1px solid #bfdbfe;
+      border-bottom-right-radius: 4px;
+    }
+
+    .bubble-sender {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .principles-box {
+      margin-top: 24px;
+      padding: 20px;
+      background: #f8fafc;
+      border-radius: 10px;
+      border: 1px dashed #cbd5e1;
+    }
+
+    .principles-box strong {
+      color: #0f172a;
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+
+    .principles-box p {
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    /* -------------------------------------------------------------
+       SLIDE 5: TRI PSYCHOMETRICS (LIGHT PAPER)
+       ------------------------------------------------------------- */
+    .tri-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 56px;
+      align-items: center;
+      flex: 1;
+    }
+
+    .tri-cards-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .tri-item-card {
+      background: #ffffff;
+      border: 1px solid var(--light-border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+
+    .tri-item-card h4 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .tri-item-card p {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    /* -------------------------------------------------------------
+       SLIDE 6: ACCESSIBILITY (LIGHT PAPER)
+       ------------------------------------------------------------- */
+    .a11y-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 56px;
+      align-items: center;
+      flex: 1;
+    }
+
+    .a11y-pillars-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .a11y-pillar-card {
+      background: #ffffff;
+      border: 1px solid var(--light-border);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+
+    .a11y-pillar-card .icon-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--brand-emerald);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .a11y-pillar-card h4 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 6px;
+    }
+
+    .a11y-pillar-card p {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.4;
+    }
+
+    /* -------------------------------------------------------------
+       SLIDE 7: DUAL-AUDIENCE SCALE (LIGHT PAPER)
+       ------------------------------------------------------------- */
+    .dual-scale-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: stretch;
+      flex: 1;
+    }
+
+    .scale-card {
+      background: #ffffff;
+      border: 1px solid var(--light-border);
+      border-radius: 16px;
+      padding: 36px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .scale-card.primary {
+      border-top: 4px solid var(--brand-blue);
+    }
+
+    .scale-card.secondary {
+      border-top: 4px solid var(--brand-purple);
+    }
+
+    .scale-header {
+      margin-bottom: 24px;
+    }
+
+    .scale-badge {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .scale-card.primary .scale-badge {
+      background: #eff6ff;
+      color: #2563eb;
+    }
+
+    .scale-card.secondary .scale-badge {
+      background: #faf5ff;
+      color: #7c3aed;
+    }
+
+    .scale-header h3 {
+      font-size: 24px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 6px;
+    }
+
+    .scale-header p {
+      font-size: 14px;
+      color: #64748b;
+    }
+
+    .scale-bullets {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .scale-bullets li {
+      font-size: 14px;
+      color: #334155;
+      line-height: 1.5;
+      display: flex;
+      gap: 10px;
+    }
+
+    .scale-bullets li span.check {
+      color: var(--brand-emerald);
+      font-weight: 700;
+    }
+
+    /* -------------------------------------------------------------
+       SLIDE 8: ARCHITECTURE TOPOLOGY (DARK BLUEPRINT - MATCHING IMAGE)
+       ------------------------------------------------------------- */
+    .arch-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .arch-tier-row {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .tier-sidebar {
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border-left: 2px solid #38bdf8;
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    .tier-sidebar.emerald { border-left-color: #34d399; }
+    .tier-sidebar.purple { border-left-color: #a855f7; }
+
+    .tier-sidebar .t-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 4px;
+    }
+
+    .tier-sidebar .t-desc {
+      font-size: 11px;
+      color: var(--dark-text-muted);
+    }
+
+    .tier-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .arch-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--dark-border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .arch-box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .arch-box-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .arch-box-title .dot-indicator {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+
+    .dot-cyan { background: #38bdf8; }
+    .dot-emerald { background: #34d399; }
+    .dot-purple { background: #a855f7; }
+    .dot-amber { background: #f59e0b; }
+
+    .arch-port-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--dark-text-muted);
+    }
+
+    .arch-box-desc {
+      font-size: 12px;
+      color: var(--dark-text-secondary);
+      line-height: 1.4;
+    }
+
+    /* -------------------------------------------------------------
+       SLIDE 9: PRIVACY & LGPD (DARK BLUEPRINT)
+       ------------------------------------------------------------- */
+    .lgpd-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+      align-items: stretch;
+      flex: 1;
+    }
+
+    .lgpd-pillar-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--dark-border);
+      border-radius: 12px;
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .lgpd-law-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #38bdf8;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .lgpd-pillar-card h3 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 12px;
+    }
+
+    .lgpd-pillar-card p {
+      font-size: 14px;
+      color: var(--dark-text-secondary);
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .endpoint-chip {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--dark-border);
+      padding: 10px 14px;
+      border-radius: 6px;
+      color: #38bdf8;
+    }
+
+    /* -------------------------------------------------------------
+       SLIDE 10: METRICS & TRACTION (DARK BLUEPRINT)
+       ------------------------------------------------------------- */
+    .traction-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .metric-hero-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--dark-border);
+      border-radius: 12px;
+      padding: 36px 28px;
+      text-align: center;
+    }
+
+    .metric-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 56px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 12px;
+      color: #ffffff;
+    }
+
+    .metric-lbl {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 6px;
+    }
+
+    .metric-sub {
+      font-size: 12px;
+      color: var(--dark-text-muted);
+      line-height: 1.4;
+    }
+
+    .repo-banner {
+      background: rgba(37, 99, 235, 0.08);
+      border: 1px solid rgba(37, 99, 235, 0.25);
+      border-radius: 12px;
+      padding: 24px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .repo-info h4 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+
+    .repo-info p {
+      font-size: 13px;
+      color: var(--dark-text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .repo-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      background: #2563eb;
+      color: #ffffff;
+      padding: 12px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* -------------------------------------------------------------
+       INTERACTIVE DECK CONTROLLER (FOR SCREEN VIEWING ONLY)
+       ------------------------------------------------------------- */
+    .deck-nav {
+      position: fixed;
+      bottom: 24px;
+      right: 32px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 9999px;
+      padding: 8px 18px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      z-index: 9999;
+      color: #ffffff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .deck-nav button {
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background 0.15s ease;
+    }
+
+    .deck-nav button:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
     @media print {
-      body {
-        background: #0B0F19 !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-      .deck-nav {
-        display: none !important;
-      }
-      .slide {
-        display: flex !important;
-        width: 1920px !important;
-        height: 1080px !important;
-        page-break-after: always !important;
-        break-after: page !important;
-        margin: 0 !important;
-      }
-      .slide-title span.highlight,
-      .slide-title span.emerald-highlight,
-      .slide-title span.amber-highlight {
-        background: none !important;
-        -webkit-background-clip: initial !important;
-        -webkit-text-fill-color: initial !important;
-      }
+      .deck-nav { display: none !important; }
     }
   </style>
 </head>
 <body>
 
-  <div class="deck-container">
-
-    <!-- ========================================================= -->
-    <!-- SLIDE 1: THE HOOK / COMPANY PURPOSE (Sequoia Slide 1)     -->
-    <!-- ========================================================= -->
-    <div class="slide active" id="slide-1">
-      <div class="slide-header">
-        <div class="header-main">
-          <div class="slide-badge brand">🚀 Plataforma Educacional Enterprise • Open Source</div>
-          <h1 class="slide-title">AprovaENEM — <span class="highlight">Democratizando o Acesso</span> ao Ensino Superior</h1>
-          <p class="slide-subtitle">Solução tecnológica aberta de alto impacto social para preparação gratuita ao ENEM e SISU.</p>
-        </div>
-        <div class="slide-counter">01 / 10</div>
+  <!-- =============================================================
+       SLIDE 1: HERO / COVER (DARK BLUEPRINT THEME)
+       ============================================================= -->
+  <section class="slide slide-dark" id="slide-1">
+    <header class="slide-header">
+      <div class="brand-group">
+        <span class="brand-title">AprovaENEM</span>
+        <span class="pill-badge">EdTech Open Source</span>
       </div>
+      <div class="header-tags">
+        <span class="tag-item">Java 21 LTS / React 18</span>
+        <span class="tag-item">Licença MIT</span>
+        <span class="tag-item">01 / 10</span>
+      </div>
+    </header>
 
-      <div class="hook-grid">
-        <div class="hook-left">
-          <h2 class="hook-headline">
-            Tecnologia de Ponta a Serviço da <span style="color: var(--brand-light);">Justiça Educacional</span>
-          </h2>
-          <p class="hook-desc">
-            Eliminamos as barreiras financeiras de acesso aos cursinhos preparatórios de elite com microserviços Java 21, tutoria socrática por IA, algoritmos de Teoria de Resposta ao Item (TRI) e modelo white-label para redes públicas.
-          </p>
-          <div class="hook-pill-row">
-            <div class="hook-pill">
-              <span class="hook-pill-icon">⚡</span>
-              <div>
-                <div class="hook-pill-title">Microserviços Java 21</div>
-                <div class="hook-pill-sub">Arquitetura Hexagonal & RabbitMQ</div>
-              </div>
-            </div>
-            <div class="hook-pill">
-              <span class="hook-pill-icon">🧠</span>
-              <div>
-                <div class="hook-pill-title">Tutor Socrático por IA</div>
-                <div class="hook-pill-sub">Gemini com salvaguardas pedagógicas</div>
-              </div>
-            </div>
-            <div class="hook-pill">
-              <span class="hook-pill-icon">♿</span>
-              <div>
-                <div class="hook-pill-title">Acessibilidade Universal</div>
-                <div class="hook-pill-sub">WCAG 2.1 AA, VLibras & OpenDyslexic</div>
-              </div>
-            </div>
-            <div class="hook-pill">
-              <span class="hook-pill-icon">🏢</span>
-              <div>
-                <div class="hook-pill-title">White-Label Multi-Tenant</div>
-                <div class="hook-pill-sub">Pronto para escolas e cursinhos</div>
-              </div>
-            </div>
+    <div class="hero-split-grid">
+      <div class="hero-text-col">
+        <div class="hero-badges-row">
+          <span class="pill-badge emerald">Impacto Social Direto</span>
+          <span class="pill-badge">Recode Pro 2026</span>
+        </div>
+        <h1 class="title-headline">
+          Democratizando o Acesso ao <span class="accent-cyan">Ensino Superior</span>
+        </h1>
+        <p class="subtitle-lead">
+          Preparatório inteligente, socrático e 100% gratuito para o ENEM. Rigor arquitetural corporativo a serviço da justiça educacional no Brasil.
+        </p>
+
+        <div class="hero-stat-row">
+          <div class="hero-stat-card">
+            <div class="val">100%</div>
+            <div class="lbl">Acesso Gratuito e Livre</div>
+          </div>
+          <div class="hero-stat-card">
+            <div class="val">TRI Real</div>
+            <div class="lbl">Psicometria INEP Calibrada</div>
+          </div>
+          <div class="hero-stat-card">
+            <div class="val">IA Socrática</div>
+            <div class="lbl">Pedagogia sem Atalhos</div>
           </div>
         </div>
-
-        <div class="hook-mock-frame">
-          <img src="../images/frontend-hero-banner.png" alt="AprovaENEM Portal do Aluno">
-        </div>
       </div>
 
-      <div class="slide-footer">
-        <div class="footer-left">
-          <span class="footer-dot"></span>
-          <span>AprovaENEM — Parceria Recode Pro & Impacto Social</span>
+      <div class="hero-mockup-col">
+        <div class="browser-frame">
+          <div class="browser-toolbar">
+            <div class="traffic-dots">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+            </div>
+            <div class="browser-address">aprovaenem.org.br</div>
+          </div>
+          <img src="../images/frontend-hero-banner.png" alt="AprovaENEM Plataforma">
         </div>
-        <div class="footer-right">STACK: TEMURIN 21 • REACT 18 • VITE 5 • TAILWIND • LICENÇA MIT</div>
       </div>
     </div>
 
-    <!-- ========================================================= -->
-    <!-- SLIDE 2: THE PAIN (THE BOTTLENECK) (Sequoia Slide 2)      -->
-    <!-- ========================================================= -->
-    <div class="slide" id="slide-2">
-      <div class="slide-header">
-        <div class="header-main">
-          <div class="slide-badge rose">⚠️ O Desafio da Educação Pública</div>
-          <h1 class="slide-title">A Barreira Invisível da <span class="highlight">Universidade Pública</span></h1>
-          <p class="slide-subtitle">O ENEM é a porta de entrada para o ensino superior, mas a assimetria socioeconômica dita quem tem chance de aprovação.</p>
-        </div>
-        <div class="slide-counter">02 / 10</div>
+    <footer class="slide-footer">
+      <span>AprovaENEM — Plataforma Aberta para Democratização do SISU</span>
+      <span>github.com/Veras-D/AprovaENEM</span>
+    </footer>
+  </section>
+
+  <!-- =============================================================
+       SLIDE 2: THE PROBLEM (LIGHT PAPER THEME)
+       ============================================================= -->
+  <section class="slide slide-light" id="slide-2">
+    <header class="slide-header">
+      <div class="brand-group">
+        <span class="brand-title">AprovaENEM</span>
+        <span class="pill-badge">O Desafio Social</span>
+      </div>
+      <div class="header-tags">
+        <span class="tag-item">Realidade Brasileira</span>
+        <span class="tag-item">02 / 10</span>
+      </div>
+    </header>
+
+    <div>
+      <h2 class="title-headline">
+        O Abismo na Preparação para o <span class="accent-blue">Ensino Superior</span>
+      </h2>
+      <p class="subtitle-lead">
+        O ENEM define o futuro de milhões de jovens, mas a preparação de elite virou um privilégio restrito àqueles que podem pagar mensalidades proibitivas.
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="big-stat-box">
+        <div class="massive-number">R$ 1.200</div>
+        <div class="stat-caption">Mensalidade Média de Cursinhos de Elite</div>
+        <p class="stat-desc">
+          Um valor inacessível para mais de 85% das famílias brasileiras. Alunos de escolas públicas chegam ao exame sem simulados calibrados, sem diagnóstico de deficiências e sem acompanhamento individualizado.
+        </p>
       </div>
 
-      <div class="pain-container">
-        <div class="pain-stats-row">
-          <div class="pain-stat-card">
-            <div class="stat-number" style="color: var(--brand-light);">3.9M+</div>
-            <div class="stat-label">Candidatos Anuais</div>
-            <div class="stat-desc">O segundo maior vestibular do planeta, definindo o futuro acadêmico de milhões de jovens em todo o Brasil.</div>
-          </div>
-          <div class="pain-stat-card">
-            <div class="stat-number" style="color: var(--amber-light);">85%</div>
-            <div class="stat-label">Estudantes da Rede Pública</div>
-            <div class="stat-desc">Mais de 8 em cada 10 candidatos não possuem condições financeiras de custear preparação privada de ponta.</div>
-          </div>
-          <div class="pain-stat-card">
-            <div class="stat-number" style="color: var(--rose-light);">R$ 1.200</div>
-            <div class="stat-label">Custo Médio Mensal</div>
-            <div class="stat-desc">Valor que consome quase um salário mínimo por mês, segregando vagas de ponta em Medicina e Engenharias.</div>
-          </div>
+      <div class="problem-cards-column">
+        <div class="contrast-card">
+          <h4>3,9 Milhões de Estudantes Inscritos</h4>
+          <p>A imensa maioria concorre a vagas disputadas no SISU e ProUni partindo de uma base desigual, sem ferramentas modernas de estudo.</p>
         </div>
 
-        <div class="pain-contrast-box">
-          <div class="contrast-card bad">
-            <div style="font-size: 18px; font-weight: 800; color: var(--rose-light);">❌ O Cenário Excludente Tradicional</div>
-            <p style="font-size: 15px; color: #CBD5E1; line-height: 1.5;">
-              Plataformas fechadas com paywalls agressivos, sem acessibilidade para pessoas com deficiência ou neurodivergentes, focadas em memorização passiva e gabaritos estáticos que geram ansiedade e abandono dos estudos.
-            </p>
-          </div>
-          <div class="contrast-card good">
-            <div style="font-size: 18px; font-weight: 800; color: var(--emerald-light);">✅ A Resposta Inclusiva do AprovaENEM</div>
-            <p style="font-size: 15px; color: #CBD5E1; line-height: 1.5;">
-              100% gratuito e open-source, algoritmo TRI em tempo real, tutor com Inteligência Artificial Socrática, tradução em Libras 3D e métricas diagnósticas transparentes alinhadas aos Objetivos de Desenvolvimento Sustentável da ONU (ODS 4 & 10).
-            </p>
-          </div>
+        <div class="contrast-card">
+          <h4>Falta de Diagnóstico Psicométrico Real</h4>
+          <p>O ENEM utiliza a Teoria de Resposta ao Item (TRI). A maioria dos cursinhos gratuitos calcula apenas médias simples, iludindo o estudante quanto à sua nota real.</p>
         </div>
-      </div>
 
-      <div class="slide-footer">
-        <div class="footer-left">
-          <span class="footer-dot"></span>
-          <span>AprovaENEM — Democratizando o Acesso ao Ensino Superior Público</span>
+        <div class="contrast-card">
+          <h4>Barreiras de Acessibilidade Digital</h4>
+          <p>Estudantes surdos, cegos ou com dislexia enfrentam plataformas sem suporte a VLibras, com tipografia inadequada e incompatíveis com leitores de tela.</p>
         </div>
-        <div class="footer-right">DIAGNÓSTICO: CENSO DA EDUCAÇÃO SUPERIOR & INEP 2023-2024</div>
       </div>
     </div>
 
-    <!-- ========================================================= -->
-    <!-- SLIDE 3: THE SOLUTION (PRODUCT IN ACTION) (Sequoia 3)     -->
-    <!-- ========================================================= -->
-    <div class="slide" id="slide-3">
-      <div class="slide-header">
-        <div class="header-main">
-          <div class="slide-badge brand">💡 A Solução em Produção</div>
-          <h1 class="slide-title">Preparação <span class="highlight">Inteligente, Deliberada e Acessível</span></h1>
-          <p class="slide-subtitle">Experiência focada na autonomia do aluno com questões reais do INEP e resoluções completas.</p>
+    <footer class="slide-footer">
+      <span>Diagnóstico da Desigualdade Educacional no Brasil</span>
+      <span>Censo Escolar e Dados Abertos INEP</span>
+    </footer>
+  </section>
+
+  <!-- =============================================================
+       SLIDE 3: THE SOLUTION (LIGHT PAPER THEME)
+       ============================================================= -->
+  <section class="slide slide-light" id="slide-3">
+    <header class="slide-header">
+      <div class="brand-group">
+        <span class="brand-title">AprovaENEM</span>
+        <span class="pill-badge emerald">A Solução</span>
+      </div>
+      <div class="header-tags">
+        <span class="tag-item">Ecossistema Aberto</span>
+        <span class="tag-item">03 / 10</span>
+      </div>
+    </header>
+
+    <div>
+      <h2 class="title-headline">
+        Preparação Completa, Inteligente e <span class="accent-blue">Sem Barreiras</span>
+      </h2>
+      <p class="subtitle-lead">
+        Uma plataforma moderna que entrega simulados oficiais comentados, inteligência artificial pedagógica e conformidade de acessibilidade para todo o Brasil.
+      </p>
+    </div>
+
+    <div class="solution-grid">
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-idx">01</div>
+          <div class="feature-content">
+            <h4>Banco Calibrado com Resolução Oficial</h4>
+            <p>Questões oficiais do INEP com gabarito comentado, identificação de conceitos-chave e fundamentação pedagógica passo a passo.</p>
+          </div>
         </div>
-        <div class="slide-counter">03 / 10</div>
+
+        <div class="feature-item">
+          <div class="feature-idx">02</div>
+          <div class="feature-content">
+            <h4>Tutoria Socrática Guiada por IA</h4>
+            <p>O tutor não dá a resposta direta. Ele faz perguntas norteadoras para estimular o raciocínio crítico e consolidar a aprendizagem autônoma.</p>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-idx">03</div>
+          <div class="feature-content">
+            <h4>Acessibilidade Universal Nativa</h4>
+            <p>Integração com VLibras 3D, fontes para dislexia (OpenDyslexic e Atkinson) e conformidade integral com WCAG 2.1 nível AA.</p>
+          </div>
+        </div>
       </div>
 
-      <div class="split-layout">
-        <div class="split-info-col">
-          <div class="feature-point">
-            <div class="feature-icon-box">🎯</div>
-            <div>
-              <div class="pitch-card-title">Treino Diário Personalizado</div>
-              <div class="pitch-card-desc">Metas diárias calibradas no estilo Duolingo, estimulando a prática constante e consistente sem sobrecarga cognitiva.</div>
-            </div>
+      <div class="browser-frame">
+        <div class="browser-toolbar">
+          <div class="traffic-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
           </div>
-
-          <div class="feature-point">
-            <div class="feature-icon-box">📖</div>
-            <div>
-              <div class="pitch-card-title">Resoluções Passo a Passo com KaTeX</div>
-              <div class="pitch-card-desc">Fórmulas matemáticas e reações químicas renderizadas com perfeição tipográfica, além de análise detalhada de distratores.</div>
-            </div>
-          </div>
-
-          <div class="feature-point">
-            <div class="feature-icon-box">⏱️</div>
-            <div>
-              <div class="pitch-card-title">Simulado Cronometrado Oficial</div>
-              <div class="pitch-card-desc">Simulação realista do tempo de prova do ENEM, com suporte a acomodação regulamentar de tempo estendido (+60 min).</div>
-            </div>
-          </div>
+          <div class="browser-address">aprovaenem.org.br/?section=practice</div>
         </div>
-
-        <div class="split-media-frame">
-          <img src="../images/frontend-practice-card.png" alt="Card de Resolução Oficial AprovaENEM">
-        </div>
-      </div>
-
-      <div class="slide-footer">
-        <div class="footer-left">
-          <span class="footer-dot"></span>
-          <span>AprovaENEM — Prática Deliberada com Validação Psicométrica</span>
-        </div>
-        <div class="footer-right">BANCO INEP • KATEX MATH • TIMER REGULAMENTAR</div>
+        <img src="../images/frontend-practice-card.png" alt="Card de Prática com Resolução">
       </div>
     </div>
 
-    <!-- ========================================================= -->
-    <!-- SLIDE 4: SECRET SAUCE 1: SOCRATIC AI TUTOR (Sequoia 4)    -->
-    <!-- ========================================================= -->
-    <div class="slide" id="slide-4">
-      <div class="slide-header">
-        <div class="header-main">
-          <div class="slide-badge purple">🧠 Inteligência Artificial Pedagógica</div>
-          <h1 class="slide-title">Tutor Socrático por IA: <span class="highlight">Ensinando a Raciocinar</span></h1>
-          <p class="slide-subtitle">Diferente de IAs que entregam a resposta pronta, o AprovaENEM guia a dedução do aluno com salvaguardas éticas rígidas.</p>
+    <footer class="slide-footer">
+      <span>Prática Guiada • Resoluções Comentadas do INEP • Sem Paywalls</span>
+      <span>aprovaenem.org.br</span>
+    </footer>
+  </section>
+
+  <!-- =============================================================
+       SLIDE 4: SOCRATIC AI TUTOR (LIGHT PAPER THEME)
+       ============================================================= -->
+  <section class="slide slide-light" id="slide-4">
+    <header class="slide-header">
+      <div class="brand-group">
+        <span class="brand-title">AprovaENEM</span>
+        <span class="pill-badge">Pedagogia com IA</span>
+      </div>
+      <div class="header-tags">
+        <span class="tag-item">Gemini 1.5 Flash</span>
+        <span class="tag-item">04 / 10</span>
+      </div>
+    </header>
+
+    <div>
+      <h2 class="title-headline">
+        Tutor Socrático: <span class="accent-blue">Ensinar a Pensar</span>, Não Dar Respostas
+      </h2>
+      <p class="subtitle-lead">
+        Enquanto modelos convencionais entregam o gabarito pronto incentivando atalhos, nosso tutor socrático atua como um professor particular paciente.
+      </p>
+    </div>
+
+    <div class="socratic-grid">
+      <div class="chat-dialog-card">
+        <div class="chat-bubble student">
+          <div class="bubble-sender">Estudante</div>
+          Não entendi essa questão de circuitos elétricos. Qual é a resposta certa?
         </div>
-        <div class="slide-counter">04 / 10</div>
+
+        <div class="chat-bubble tutor">
+          <div class="bubble-sender">Tutor Socrático</div>
+          Vamos analisar juntos! O que acontece com a resistência equivalente quando associamos dois resistores idênticos em paralelo? Ela aumenta ou diminui?
+        </div>
+
+        <div class="chat-bubble student">
+          <div class="bubble-sender">Estudante</div>
+          Ela cai pela metade! A corrente total deve dobrar.
+        </div>
+
+        <div class="chat-bubble tutor">
+          <div class="bubble-sender">Tutor Socrático</div>
+          Excelente raciocínio! Agora aplique a Lei de Ohm (U = R · i) mantendo a voltagem constante. Qual das alternativas reflete essa consequência?
+        </div>
+
+        <div class="principles-box">
+          <strong>Salvaguardas Pedagógicas Rígidas:</strong>
+          <p>O prompt de sistema bloqueia atalhos, recusa entregar a letra correta diretamente e valida se o aluno compreendeu o princípio físico ou conceitual.</p>
+        </div>
       </div>
 
-      <div class="split-layout">
-        <div class="split-info-col">
-          <div class="feature-point">
-            <div class="feature-icon-box">🛡️</div>
-            <div>
-              <div class="pitch-card-title">Salvaguarda Anti-Gabarito Rígida</div>
-              <div class="pitch-card-desc">Instruções de sistema proíbem terminantemente fornecer a resposta direta ou a letra correta, combatendo a terceirização cognitiva.</div>
-            </div>
+      <div class="browser-frame">
+        <div class="browser-toolbar">
+          <div class="traffic-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
           </div>
-
-          <div class="feature-point">
-            <div class="feature-icon-box">🔍</div>
-            <div>
-              <div class="pitch-card-title">Injeção Dinâmica de Contexto TRI</div>
-              <div class="pitch-card-desc">O backend injeta a matriz de habilidades do INEP, parâmetros TRI e mapeamento de distratores no prompt da IA.</div>
-            </div>
-          </div>
-
-          <div class="feature-point">
-            <div class="feature-icon-box">💬</div>
-            <div>
-              <div class="pitch-card-title">Perguntas Indutivas Passo a Passo</div>
-              <div class="pitch-card-desc">A IA quebra enunciados complexos em etapas heurísticas simples, permitindo ao estudante chegar à conclusão por mérito próprio.</div>
-            </div>
-          </div>
+          <div class="browser-address">aprovaenem.org.br • Drawer do Tutor</div>
         </div>
-
-        <div class="split-media-frame">
-          <img src="../images/socratic-ai-tutor-drawer.png" alt="Tutor Socrático AprovaENEM com Gemini 1.5 Flash">
-        </div>
-      </div>
-
-      <div class="slide-footer">
-        <div class="footer-left">
-          <span class="footer-dot"></span>
-          <span>AprovaENEM — Tutoria com Salvaguardas Éticas & Pedagógicas</span>
-        </div>
-        <div class="footer-right">MODELO: GOOGLE GEMINI 1.5 FLASH • RAG CONTEXT-AWARE</div>
+        <img src="../images/socratic-ai-tutor-drawer.png" alt="Drawer do Tutor Socrático">
       </div>
     </div>
 
-    <!-- ========================================================= -->
-    <!-- SLIDE 5: SECRET SAUCE 2: TRI & SKILL RADAR                -->
-    <!-- ========================================================= -->
-    <div class="slide" id="slide-5">
-      <div class="slide-header">
-        <div class="header-main">
-          <div class="slide-badge emerald">📊 Psicometria & Inteligência de Dados</div>
-          <h1 class="slide-title">Calibração TRI e <span class="emerald-highlight">Raio-X de Proficiência Individual</span></h1>
-          <p class="slide-subtitle">Algoritmo fiel à Teoria de Resposta ao Item que avalia a coerência pedagógica das respostas e penaliza o chute.</p>
+    <footer class="slide-footer">
+      <span>Arquitetura Pedagógica com Salvaguardas Cognitivas</span>
+      <span>Orquestração via exam-service</span>
+    </footer>
+  </section>
+
+  <!-- =============================================================
+       SLIDE 5: TRI PSYCHOMETRICS & DIAGNOSTICS (LIGHT PAPER THEME)
+       ============================================================= -->
+  <section class="slide slide-light" id="slide-5">
+    <header class="slide-header">
+      <div class="brand-group">
+        <span class="brand-title">AprovaENEM</span>
+        <span class="pill-badge emerald">Psicometria Real</span>
+      </div>
+      <div class="header-tags">
+        <span class="tag-item">Teoria de Resposta ao Item</span>
+        <span class="tag-item">05 / 10</span>
+      </div>
+    </header>
+
+    <div>
+      <h2 class="title-headline">
+        Raio-X de Habilidades: <span class="accent-blue">Diagnóstico Preciso</span> por Área
+      </h2>
+      <p class="subtitle-lead">
+        Mapeamento de proficiência pelas 4 áreas do conhecimento do ENEM com identificação imediata de tópicos fracos para direcionar o tempo de estudo.
+      </p>
+    </div>
+
+    <div class="tri-grid">
+      <div class="browser-frame">
+        <div class="browser-toolbar">
+          <div class="traffic-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <div class="browser-address">aprovaenem.org.br/?section=diagnostics</div>
         </div>
-        <div class="slide-counter">05 / 10</div>
+        <img src="../images/diagnostic-radar-heatmaps.png" alt="Diagnóstico e Radar de Habilidades">
       </div>
 
-      <div class="split-layout">
-        <div class="split-info-col">
-          <div class="feature-point">
-            <div class="feature-icon-box">📐</div>
-            <div>
-              <div class="pitch-card-title">Modelo Logístico 3 Parâmetros (3PL)</div>
-              <div class="pitch-card-desc">Calibra a discriminação (a), dificuldade (b) e casualidade (c) de cada questão para gerar notas consistentes com a escala oficial INEP.</div>
-            </div>
-          </div>
-
-          <div class="feature-point">
-            <div class="feature-icon-box">🎯</div>
-            <div>
-              <div class="pitch-card-title">Radar das 4 Áreas do ENEM</div>
-              <div class="pitch-card-desc">Mapeia instantaneamente o aproveitamento em Matemática, Natureza, Humanas e Linguagens com recomendações direcionadas.</div>
-            </div>
-          </div>
-
-          <div class="feature-point">
-            <div class="feature-icon-box">🏛️</div>
-            <div>
-              <div class="pitch-card-title">Benchmark de Corte SISU em Tempo Real</div>
-              <div class="pitch-card-desc">Compara a proficiência do aluno com as notas de corte reais do SISU para os cursos mais concorridos do Brasil.</div>
-            </div>
-          </div>
+      <div class="tri-cards-stack">
+        <div class="tri-item-card">
+          <h4>Calibração Oficial TRI</h4>
+          <p>Diferencia acertos consistentes de chutes através da curva de discriminação do item (parâmetros a, b e c do INEP).</p>
         </div>
 
-        <div class="split-media-frame">
-          <img src="../images/diagnostic-radar-heatmaps.png" alt="Radar de Habilidades e Diagnóstico TRI AprovaENEM">
+        <div class="tri-item-card">
+          <h4>Radar Multidisciplinar</h4>
+          <p>Visualização gráfica comparando proficiências em Matemática, Ciências da Natureza, Ciências Humanas e Linguagens.</p>
         </div>
-      </div>
 
-      <div class="slide-footer">
-        <div class="footer-left">
-          <span class="footer-dot"></span>
-          <span>AprovaENEM — Algoritmo TRI & Recomendações Baseadas em Evidências</span>
+        <div class="tri-item-card">
+          <h4>Recomendações Automatizadas</h4>
+          <p>O algoritmo sugere listas de exercícios focadas exatamente nas microcompetências em que o estudante teve menor domínio.</p>
         </div>
-        <div class="footer-right">ESCALA INEP (0-1000) • BENCHMARKS SISU • RECHARTS RADAR</div>
       </div>
     </div>
 
-    <!-- ========================================================= -->
-    <!-- SLIDE 6: SECRET SAUCE 3: RADICAL ACCESSIBILITY            -->
-    <!-- ========================================================= -->
-    <div class="slide" id="slide-6">
-      <div class="slide-header">
-        <div class="header-main">
-          <div class="slide-badge brand">♿ Inclusão Radical & WCAG 2.1 AA</div>
-          <h1 class="slide-title">Acessibilidade Universal: <span class="highlight">Educação Sem Exceções</span></h1>
-          <p class="slide-subtitle">Desenvolvido desde a arquitetura de software para acolher pessoas com deficiência e neurodivergentes.</p>
+    <footer class="slide-footer">
+      <span>Matriz de Referência do ENEM • Análise Psicométrica Automatizada</span>
+      <span>TriPsychometrics.java</span>
+    </footer>
+  </section>
+
+  <!-- =============================================================
+       SLIDE 6: ACCESSIBILITY (LIGHT PAPER THEME)
+       ============================================================= -->
+  <section class="slide slide-light" id="slide-6">
+    <header class="slide-header">
+      <div class="brand-group">
+        <span class="brand-title">AprovaENEM</span>
+        <span class="pill-badge">Acessibilidade Total</span>
+      </div>
+      <div class="header-tags">
+        <span class="tag-item">WCAG 2.1 Nível AA</span>
+        <span class="tag-item">06 / 10</span>
+      </div>
+    </header>
+
+    <div>
+      <h2 class="title-headline">
+        Inclusão Digital como <span class="accent-emerald">Requisito de Arquitetura</span>
+      </h2>
+      <p class="subtitle-lead">
+        Acessibilidade não é opcional nem adaptação tardia. Construído para garantir autonomia completa a estudantes com deficiência visual, auditiva ou motora.
+      </p>
+    </div>
+
+    <div class="a11y-grid">
+      <div class="browser-frame">
+        <div class="browser-toolbar">
+          <div class="traffic-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <div class="browser-address">aprovaenem.org.br • Painel de Acessibilidade</div>
         </div>
-        <div class="slide-counter">06 / 10</div>
+        <img src="../images/accessibility-features.png" alt="Ferramentas de Acessibilidade">
       </div>
 
-      <div class="split-layout">
-        <div class="split-info-col">
-          <div class="feature-point">
-            <div class="feature-icon-box">🤟</div>
-            <div>
-              <div class="pitch-card-title">Avatar 3D VLibras Integrado</div>
-              <div class="pitch-card-desc">Tradução automática de enunciados, alternativas e resoluções para a Língua Brasileira de Sinais (LIBRAS).</div>
-            </div>
-          </div>
-
-          <div class="feature-point">
-            <div class="feature-icon-box">👁️</div>
-            <div>
-              <div class="pitch-card-title">Tipografia Inclusiva & Alto Contraste</div>
-              <div class="pitch-card-desc">Fontes OpenDyslexic e Atkinson Hyperlegible com zoom de até 200% e filtros específicos para daltonismo.</div>
-            </div>
-          </div>
-
-          <div class="feature-point">
-            <div class="feature-icon-box">⌨️</div>
-            <div>
-              <div class="pitch-card-title">Navegação 100% por Teclado e Voz</div>
-              <div class="pitch-card-desc">Atalhos universais (Alt + A), leitor de voz sintetizada integrado e zero violações críticas no Lighthouse (100/100).</div>
-            </div>
-          </div>
+      <div class="a11y-pillars-grid">
+        <div class="a11y-pillar-card">
+          <div class="icon-label">Comunicação em Sinais</div>
+          <h4>VLibras 3D Integrado</h4>
+          <p>Avatar digital para tradução instantânea de textos e enunciados para a Língua Brasileira de Sinais.</p>
         </div>
 
-        <div class="split-media-frame">
-          <img src="../images/accessibility-features.png" alt="Barra de Acessibilidade Digital AprovaENEM">
+        <div class="a11y-pillar-card">
+          <div class="icon-label">Neurodiversidade</div>
+          <h4>Fontes para Dislexia</h4>
+          <p>Suporte a Atkinson Hyperlegible e OpenDyslexic com espaçamento reforçado e pesos visuais calibrados.</p>
         </div>
-      </div>
 
-      <div class="slide-footer">
-        <div class="footer-left">
-          <span class="footer-dot"></span>
-          <span>AprovaENEM — Lei Brasileira de Inclusão (Lei nº 13.146/2015) & e-MAG</span>
+        <div class="a11y-pillar-card">
+          <div class="icon-label">Baixa Visão</div>
+          <h4>Contraste e Zoom Sem Quebra</h4>
+          <p>Temas de alto contraste, ampliação de texto de até 150% e escala fluida sem sobreposição de elementos.</p>
         </div>
-        <div class="footer-right">WCAG 2.1 LEVEL AA • VLIBRAS 3D • LIGHTHOUSE 100/100</div>
+
+        <div class="a11y-pillar-card">
+          <div class="icon-label">Automação no CI</div>
+          <h4>Auditado via Axe-Core</h4>
+          <p>Regras @axe-core e cypress-axe integradas aos testes contínuos: zero violações e Lighthouse >= 95/100.</p>
+        </div>
       </div>
     </div>
 
-    <!-- ========================================================= -->
-    <!-- SLIDE 7: DUAL-AUDIENCE ENGINE (B2C & B2B) (Sequoia 5)     -->
-    <!-- ========================================================= -->
-    <div class="slide" id="slide-7">
-      <div class="slide-header">
-        <div class="header-main">
-          <div class="slide-badge emerald">🏢 Estratégia de Duplo Impacto</div>
-          <h1 class="slide-title">Escala Dupla: <span class="emerald-highlight">Aluno Autônomo & Redes Públicas</span></h1>
-          <p class="slide-subtitle">Solução que atende diretamente o estudante e capacita cursinhos populares e secretarias de educação.</p>
+    <footer class="slide-footer">
+      <span>Conformidade com o Modelo de Acessibilidade em Governo Eletrônico (e-MAG)</span>
+      <span>WCAG 2.1 AA</span>
+    </footer>
+  </section>
+
+  <!-- =============================================================
+       SLIDE 7: DUAL-AUDIENCE SCALE (LIGHT PAPER THEME)
+       ============================================================= -->
+  <section class="slide slide-light" id="slide-7">
+    <header class="slide-header">
+      <div class="brand-group">
+        <span class="brand-title">AprovaENEM</span>
+        <span class="pill-badge emerald">Escala e Sustentabilidade</span>
+      </div>
+      <div class="header-tags">
+        <span class="tag-item">B2C Social & B2B Gov</span>
+        <span class="tag-item">07 / 10</span>
+      </div>
+    </header>
+
+    <div>
+      <h2 class="title-headline">
+        Do Estudante Autônomo às <span class="accent-blue">Redes Públicas de Ensino</span>
+      </h2>
+      <p class="subtitle-lead">
+        Um modelo arquitetural dual: gratuidade irrestrita para alunos individuais e infraestrutura multi-inquilino para escolas e secretarias de educação.
+      </p>
+    </div>
+
+    <div class="dual-scale-grid">
+      <div class="scale-card primary">
+        <div class="scale-header">
+          <span class="scale-badge">Para Estudantes (B2C)</span>
+          <h3>Acesso Aberto e Imediato</h3>
+          <p>Experiência fluida sem fricção ou captura predatória de dados.</p>
         </div>
-        <div class="slide-counter">07 / 10</div>
+
+        <ul class="scale-bullets">
+          <li><span class="check">✓</span> <strong>Simulado sem Cadastro:</strong> Comece a responder imediatamente sem burocracia.</li>
+          <li><span class="check">✓</span> <strong>Gamificação Saudável:</strong> Ligas semanais (Bronze a Diamante) e ofensivas diárias sem táticas de retenção abusiva.</li>
+          <li><span class="check">✓</span> <strong>Portabilidade de Progresso:</strong> Migração transparente do histórico de visitante ao criar uma conta gratuita.</li>
+        </ul>
+
+        <div class="browser-frame" style="max-height: 220px; overflow: hidden;">
+          <img src="../images/gamification-leaderboard.png" alt="Ranking de Gamificação">
+        </div>
       </div>
 
-      <div class="dual-engine-grid">
-        <div class="engine-card b2c">
-          <div>
-            <span class="engine-tag b2c">B2C • Portal do Aluno (100% Gratuito)</span>
-            <h3 class="engine-title">Estudante Autônomo</h3>
-            <p class="engine-desc">Experiência mobile-first focada no engajamento individual diário e superação de lacunas de aprendizagem.</p>
-            <ul class="engine-list">
-              <li>⚡ <strong>Acesso Imediato:</strong> Diagnóstico sem necessidade de cadastro prévio.</li>
-              <li>🏆 <strong>Ligas Semanais:</strong> Divisões Bronze a Diamante com progressão ética.</li>
-              <li>🔥 <strong>Ofensiva & Streaks:</strong> Criação de hábitos de estudo diários sustentáveis.</li>
-              <li>📱 <strong>Mobile-First PWA:</strong> Otimizado para smartphones de entrada com dados limitados.</li>
-            </ul>
-          </div>
-          <div style="margin-top:24px; padding:14px 20px; border-radius:12px; background:rgba(2, 132, 199, 0.15); border:1px solid rgba(2, 132, 199, 0.3); font-size:14px; font-weight:700; color:var(--brand-light);">
-            🚀 Democratização radical com zero barreiras de entrada
-          </div>
+      <div class="scale-card secondary">
+        <div class="scale-header">
+          <span class="scale-badge">Para Redes de Ensino (B2B / Gov)</span>
+          <h3>White-Label & Gestão Pedagógica</h3>
+          <p>Potencializando cursinhos populares, prefeituras e governos estaduais.</p>
         </div>
 
-        <div class="engine-card b2b">
-          <div>
-            <span class="engine-tag b2b">B2B SaaS • Gestão Institucional Multi-Tenant</span>
-            <h3 class="engine-title">Escolas & Cursinhos Populares</h3>
-            <p class="engine-desc">Cockpit analítico para professores e coordenadores pedagógicos acompanharem turmas inteiras em tempo real.</p>
-            <ul class="engine-list">
-              <li>🎨 <strong>White-Label Dinâmico:</strong> Domínio próprio, logotipo e cores institucionais.</li>
-              <li>📊 <strong>Heatmaps por Turma:</strong> Identificação precoce de competências deficitárias.</li>
-              <li>⚠️ <strong>Radar de Distratores:</strong> Mapeamento coletivo das principais pegadinhas do ENEM.</li>
-              <li>🛡️ <strong>Isolamento Multi-Inquilino:</strong> Segregação lógica rígida de dados via Spring Security.</li>
-            </ul>
-          </div>
-          <div style="margin-top:24px; padding:14px 20px; border-radius:12px; background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16, 185, 129, 0.3); font-size:14px; font-weight:700; color:var(--emerald-light);">
-            🏛️ Infraestrutura pronta para adoção em secretarias de educação
-          </div>
-        </div>
-      </div>
+        <ul class="scale-bullets">
+          <li><span class="check">✓</span> <strong>Painel do Coordenador:</strong> Relatórios agregados por turma identificando tópicos críticos coletivos.</li>
+          <li><span class="check">✓</span> <strong>Personalização Visual White-Label:</strong> Aplicação instantânea de identidade visual e cores institucionais via CSS tokens.</li>
+          <li><span class="check">✓</span> <strong>Privacidade Total de Alunos:</strong> Isolamento por tenant com garantia de conformidade com a LGPD.</li>
+        </ul>
 
-      <div class="slide-footer">
-        <div class="footer-left">
-          <span class="footer-dot"></span>
-          <span>AprovaENEM — Plataforma Dual de Educação Aberta & Gestão Pública</span>
+        <div class="browser-frame" style="max-height: 220px; overflow: hidden;">
+          <img src="../images/swagger-ui-portal.png" alt="API Gateway Multi-Tenant">
         </div>
-        <div class="footer-right">MULTI-TENANT SAAS • HOT-SWAP TOKENS • COCKPIT PEDAGÓGICO</div>
       </div>
     </div>
 
-    <!-- ========================================================= -->
-    <!-- SLIDE 8: UNFAIR ADVANTAGE: ARCHITECTURE (Sequoia 6)       -->
-    <!-- ========================================================= -->
-    <div class="slide" id="slide-8">
-      <div class="slide-header">
-        <div class="header-main">
-          <div class="slide-badge brand">⚙️ Arquitetura Corporativa Hexagonal</div>
-          <h1 class="slide-title">Engenharia de Missão Crítica: <span class="highlight">Escalabilidade & Resiliência</span></h1>
-          <p class="slide-subtitle">Topologia distribuída desacoplada orientada a eventos para suportar picos de tráfego nacional.</p>
-        </div>
-        <div class="slide-counter">08 / 10</div>
+    <footer class="slide-footer">
+      <span>Arquitetura Multi-Tenant com Isolamento de Dados</span>
+      <span>Suporte a Cursinhos Populares e Secretarias</span>
+    </footer>
+  </section>
+
+  <!-- =============================================================
+       SLIDE 8: ARCHITECTURE TOPOLOGY (DARK BLUEPRINT - EXACT CLEAN MATCH)
+       ============================================================= -->
+  <section class="slide slide-dark" id="slide-8">
+    <header class="slide-header">
+      <div class="brand-group">
+        <span class="brand-title">AprovaENEM</span>
+        <span class="pill-badge">Backend Architecture</span>
       </div>
+      <div class="header-tags">
+        <span class="tag-item">Java 21 / Spring Boot 3</span>
+        <span class="tag-item">Docker Compose</span>
+        <span class="tag-item">08 / 10</span>
+      </div>
+    </header>
 
-      <div class="arch-tiers-grid">
-        <div class="arch-tier-block">
-          <div class="arch-tier-header" style="color: var(--brand-light);">
-            <span>🌐 Camada de Borda, Proxy Reverso & Ingress Gateway</span>
-            <span style="font-family: var(--mono); font-size: 11px;">Edge Perimeter Security</span>
-          </div>
-          <div class="arch-boxes-row">
-            <div class="arch-box">
-              <div class="arch-box-title">🛡️ Nginx L7 Reverse Proxy</div>
-              <div class="arch-box-desc">Terminação TLS/SSL, caching estático SPA, roteamento reverso e proteção contra ataques.</div>
-              <div class="arch-box-tag">Portas 80 / 443 Públicas</div>
-            </div>
-            <div class="arch-box">
-              <div class="arch-box-title">🚪 Spring Cloud Gateway BFF</div>
-              <div class="arch-box-desc">Rate limiting por Token Bucket (Redis), filtro RBAC de autorização JWT e documentação OpenAPI Swagger.</div>
-              <div class="arch-box-tag">Porta 8080 • Ingress Cluster</div>
-            </div>
-          </div>
+    <div>
+      <h2 class="title-headline">
+        Engenharia de Software: <span class="accent-cyan">Desacoplamento e Resiliência</span>
+      </h2>
+      <p class="subtitle-lead">
+        Topologia de microsserviços hexagonais orientada a eventos para garantir alta disponibilidade mesmo sob picos nacionais de tráfego.
+      </p>
+    </div>
+
+    <div class="arch-container">
+      <!-- Tier 1: Ingress -->
+      <div class="arch-tier-row">
+        <div class="tier-sidebar">
+          <div class="t-name">Edge Ingress</div>
+          <div class="t-desc">Perimeter isolation</div>
         </div>
-
-        <div class="arch-tier-block">
-          <div class="arch-tier-header" style="color: var(--emerald-light);">
-            <span>⚙️ Camada de Microserviços de Negócio (Hexagonal / Ports & Adapters)</span>
-            <span style="font-family: var(--mono); font-size: 11px;">Java 21 LTS Temurin • Zero Framework Leakage</span>
+        <div class="tier-cards-grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="arch-box">
+            <div class="arch-box-header">
+              <span class="arch-box-title"><span class="dot-indicator dot-cyan"></span> Nginx Reverse Proxy</span>
+              <span class="arch-port-tag">Port 80 / 443</span>
+            </div>
+            <p class="arch-box-desc">Único ponto de entrada público. Terminação TLS/SSL, caching de assets estáticos SPA e headers de segurança HTTP.</p>
           </div>
-          <div class="arch-boxes-row">
-            <div class="arch-box">
-              <div class="arch-box-title">🔐 Auth-Service</div>
-              <div class="arch-box-desc">Autenticação JWT, RBAC, direitos LGPD Art. 18, motor de gamificação e ligas.</div>
-              <div class="arch-box-tag">Porta 8081 • Microserviço</div>
+          <div class="arch-box">
+            <div class="arch-box-header">
+              <span class="arch-box-title"><span class="dot-indicator dot-cyan"></span> Spring Cloud Gateway (BFF)</span>
+              <span class="arch-port-tag">Internal :8080</span>
             </div>
-            <div class="arch-box">
-              <div class="arch-box-title">📚 Exam-Service</div>
-              <div class="arch-box-desc">Banco de questões INEP, algoritmo psicométrico TRI e orquestração Socrática com Gemini Flash.</div>
-              <div class="arch-box-tag">Porta 8082 • Microserviço</div>
-            </div>
-            <div class="arch-box">
-              <div class="arch-box-title">🔔 Notification-Service</div>
-              <div class="arch-box-desc">Consumidor de mensageria assíncrona AMQP, e-mails transacionais e notificações push.</div>
-              <div class="arch-box-tag">Porta 8083 • Microserviço</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="arch-tier-block">
-          <div class="arch-tier-header" style="color: var(--amber-light);">
-            <span>💾 Armazenamento Distribuído, Mensageria & Observabilidade APM</span>
-            <span style="font-family: var(--mono); font-size: 11px;">Infraestrutura Isolada em Containers</span>
-          </div>
-          <div class="arch-boxes-row">
-            <div class="arch-box">
-              <div class="arch-box-title">🐘 PostgreSQL 16 + pgvector</div>
-              <div class="arch-box-desc">Extensão vetorial para busca semântica, migrações Flyway e isolamento por tenant.</div>
-              <div class="arch-box-tag">Porta 5432 • DB</div>
-            </div>
-            <div class="arch-box">
-              <div class="arch-box-title">⚡ Redis 7 In-Memory</div>
-              <div class="arch-box-desc">Estrutura ZSET para rankings semanais em O(log N) e controle de Token Bucket.</div>
-              <div class="arch-box-tag">Porta 6379 • Cache</div>
-            </div>
-            <div class="arch-box">
-              <div class="arch-box-title">🐇 RabbitMQ 3.13</div>
-              <div class="arch-box-desc">Topologia de mensageria assíncrona com Dead Letter Queues (DLQ).</div>
-              <div class="arch-box-tag">Porta 5672 • AMQP</div>
-            </div>
-            <div class="arch-box">
-              <div class="arch-box-title">📈 Prometheus & Grafana</div>
-              <div class="arch-box-desc">Métricas Micrometer, dashboards APM e telemetria de produção em tempo real.</div>
-              <div class="arch-box-tag">Portas 9090 / 3000</div>
-            </div>
+            <p class="arch-box-desc">Rate limiting por Token Bucket (Redis), autenticação de tokens JWT stateless e sanitização de requisições.</p>
           </div>
         </div>
       </div>
 
-      <div class="slide-footer">
-        <div class="footer-left">
-          <span class="footer-dot"></span>
-          <span>AprovaENEM — Engenharia de Software Enterprise com Padrões Hexagonais</span>
+      <!-- Tier 2: Core Services -->
+      <div class="arch-tier-row">
+        <div class="tier-sidebar emerald">
+          <div class="t-name">Core Services</div>
+          <div class="t-desc">Hexagonal (Ports & Adapters)</div>
         </div>
-        <div class="footer-right">14 CONTAINERS ORQUESTRADOS • REDE PRIVADA DOCKER</div>
+        <div class="tier-cards-grid">
+          <div class="arch-box">
+            <div class="arch-box-header">
+              <span class="arch-box-title"><span class="dot-indicator dot-emerald"></span> Auth & Gamification</span>
+              <span class="arch-port-tag">:8081</span>
+            </div>
+            <p class="arch-box-desc">RBAC, ciclo de vida de usuários, motor de XP, ligas semanais, ofensivas de estudo e direitos LGPD Art. 18.</p>
+          </div>
+          <div class="arch-box">
+            <div class="arch-box-header">
+              <span class="arch-box-title"><span class="dot-indicator dot-emerald"></span> Exam & Socratic AI</span>
+              <span class="arch-port-tag">:8082</span>
+            </div>
+            <p class="arch-box-desc">Banco de questões INEP 2019-2023, cálculo psicométrico TRI e orquestração da tutoria socrática via Gemini.</p>
+          </div>
+          <div class="arch-box">
+            <div class="arch-box-header">
+              <span class="arch-box-title"><span class="dot-indicator dot-emerald"></span> Notification Service</span>
+              <span class="arch-port-tag">:8083</span>
+            </div>
+            <p class="arch-box-desc">Consumo assíncrono via RabbitMQ, emails transacionais (recuperação de senha e alertas de estudo) e push.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tier 3: Data Backbone -->
+      <div class="arch-tier-row">
+        <div class="tier-sidebar purple">
+          <div class="t-name">Data Backbone</div>
+          <div class="t-desc">State & event messaging</div>
+        </div>
+        <div class="tier-cards-grid">
+          <div class="arch-box">
+            <div class="arch-box-header">
+              <span class="arch-box-title"><span class="dot-indicator dot-purple"></span> PostgreSQL 16 + pgvector</span>
+              <span class="arch-port-tag">3 Isolated DBs</span>
+            </div>
+            <p class="arch-box-desc">Persistência relacional sem exposição de portas públicas. Migrações Flyway e busca vetorial.</p>
+          </div>
+          <div class="arch-box">
+            <div class="arch-box-header">
+              <span class="arch-box-title"><span class="dot-indicator dot-purple"></span> Redis 7 In-Memory Cache</span>
+              <span class="arch-port-tag">In-Memory Cache</span>
+            </div>
+            <p class="arch-box-desc">Estruturas ZSET para classificação semanal em O(log N), blacklisting de tokens e rate limiting.</p>
+          </div>
+          <div class="arch-box">
+            <div class="arch-box-header">
+              <span class="arch-box-title"><span class="dot-indicator dot-amber"></span> RabbitMQ 3.13</span>
+              <span class="arch-port-tag">AMQP Message Bus</span>
+            </div>
+            <p class="arch-box-desc">Mensageria desacoplada com tópicos e Dead Letter Queues (DLQ) para alta confiabilidade transacional.</p>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- ========================================================= -->
-    <!-- SLIDE 9: PRIVACY-BY-DESIGN & LGPD (Sequoia 7)             -->
-    <!-- ========================================================= -->
-    <div class="slide" id="slide-9">
-      <div class="slide-header">
-        <div class="header-main">
-          <div class="slide-badge emerald">🔒 Soberania Digital & LGPD</div>
-          <h1 class="slide-title">Privacidade por Design: <span class="emerald-highlight">Conformidade com a Lei 13.709/2018</span></h1>
-          <p class="slide-subtitle">Garantia integral dos direitos fundamentais do titular e transparência radical no tratamento de dados.</p>
+    <footer class="slide-footer">
+      <span>✓ 42 Rotas Contratuais Newman (100% Green) &nbsp;•&nbsp; ✓ Zero Framework Leakage no Domínio &nbsp;•&nbsp; ✓ Sub-40ms P95 Latency</span>
+      <span>14 Containers Isolados</span>
+    </footer>
+  </section>
+
+  <!-- =============================================================
+       SLIDE 9: PRIVACY & LGPD (DARK BLUEPRINT THEME)
+       ============================================================= -->
+  <section class="slide slide-dark" id="slide-9">
+    <header class="slide-header">
+      <div class="brand-group">
+        <span class="brand-title">AprovaENEM</span>
+        <span class="pill-badge emerald">Soberania Digital</span>
+      </div>
+      <div class="header-tags">
+        <span class="tag-item">Lei nº 13.709/2018</span>
+        <span class="tag-item">09 / 10</span>
+      </div>
+    </header>
+
+    <div>
+      <h2 class="title-headline">
+        Privacidade por Design: <span class="accent-cyan">Conformidade Real com a LGPD</span>
+      </h2>
+      <p class="subtitle-lead">
+        Em uma era de vigilância de dados educacionais, garantimos transparência radical e controle integral nas mãos do estudante.
+      </p>
+    </div>
+
+    <div class="lgpd-grid">
+      <div class="lgpd-pillar-card">
+        <div>
+          <div class="lgpd-law-badge">Artigo 18, Inciso V</div>
+          <h3>Portabilidade Total dos Dados</h3>
+          <p>O estudante pode exportar a qualquer momento todo o seu histórico em formato JSON estruturado aberto: simulados, notas TRI, histórico e badges.</p>
         </div>
-        <div class="slide-counter">09 / 10</div>
+        <div class="endpoint-chip">GET /api/v1/auth/export</div>
       </div>
 
-      <div class="lgpd-grid">
-        <div class="lgpd-card">
-          <div>
-            <div style="font-size: 13px; font-weight: 800; color: var(--brand-light); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">
-              LGPD Artigo 18, Inciso V
-            </div>
-            <h3 style="font-size: 26px; font-weight: 900; color: #FFFFFF; margin-bottom: 12px;">
-              Portabilidade Total dos Dados
-            </h3>
-            <p style="font-size: 16px; color: var(--text-muted); line-height: 1.55;">
-              O estudante pode exportar a qualquer momento todo o seu histórico em arquivo estruturado JSON aberto: simulados realizados, diagnósticos TRI, respostas fornecidas e notas estimadas, sem travas proprietárias.
-            </p>
-          </div>
-          <div class="lgpd-endpoint-badge">
-            <span style="color: var(--brand-light); font-weight: 800;">GET</span> /api/v1/auth/export
-          </div>
+      <div class="lgpd-pillar-card">
+        <div>
+          <div class="lgpd-law-badge">Artigo 18, Inciso VI</div>
+          <h3>Direito ao Esquecimento Definitivo</h3>
+          <p>Exclusão irreversível e anonimização de todos os registros de conta em cascata, através de transações atômicas seguras no banco de dados.</p>
         </div>
-
-        <div class="lgpd-card">
-          <div>
-            <div style="font-size: 13px; font-weight: 800; color: var(--rose-light); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">
-              LGPD Artigo 18, Inciso VI
-            </div>
-            <h3 style="font-size: 26px; font-weight: 900; color: #FFFFFF; margin-bottom: 12px;">
-              Direito ao Esquecimento Permanente
-            </h3>
-            <p style="font-size: 16px; color: var(--text-muted); line-height: 1.55;">
-              Exclusão definitiva e anonimização criptográfica irreversível da conta. Todas as tentativas, logs e dados sensíveis são purgados em cascata através de transações atômicas seguras no banco de dados.
-            </p>
-          </div>
-          <div class="lgpd-endpoint-badge">
-            <span style="color: var(--rose-light); font-weight: 800;">DELETE</span> /api/v1/auth/me
-          </div>
-        </div>
-
-        <div class="lgpd-card">
-          <div>
-            <div style="font-size: 13px; font-weight: 800; color: var(--purple-light); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">
-              LGPD Artigo 6º (Princípios)
-            </div>
-            <h3 style="font-size: 26px; font-weight: 900; color: #FFFFFF; margin-bottom: 12px;">
-              Zero Rastreadores & Sem Publicidade
-            </h3>
-            <p style="font-size: 16px; color: var(--text-muted); line-height: 1.55;">
-              A plataforma não utiliza cookies invasivos de terceiros, trackers de anúncios nem comercializa perfis educacionais. Senhas com hash criptográfico BCrypt (fator de custo 12) e cabeçalhos de segurança rígidos.
-            </p>
-          </div>
-          <div class="lgpd-endpoint-badge">
-            <span style="color: var(--purple-light); font-weight: 800;">🛡️ ZERO ADS</span> 100% Livre de Rastreamento
-          </div>
-        </div>
+        <div class="endpoint-chip">DELETE /api/v1/auth/me</div>
       </div>
 
-      <div class="slide-footer">
-        <div class="footer-left">
-          <span class="footer-dot"></span>
-          <span>AprovaENEM — Proteção de Dados & Direitos Digitais Assegurados</span>
+      <div class="lgpd-pillar-card">
+        <div>
+          <div class="lgpd-law-badge">Artigo 6º (Princípios)</div>
+          <h3>Zero Rastreadores & Sem Publicidade</h3>
+          <p>Sem cookies invasivos de terceiros, sem venda de comportamento e senhas protegidas com BCrypt (fator de custo 12).</p>
         </div>
-        <div class="footer-right">LEI GERAL DE PROTEÇÃO DE DADOS (LEI Nº 13.709/2018) • ANPD</div>
+        <div class="endpoint-chip">100% Livre de Rastreamento Comercial</div>
       </div>
     </div>
 
-    <!-- ========================================================= -->
-    <!-- SLIDE 10: TRACTION, METRICS & VISION (Sequoia 8)          -->
-    <!-- ========================================================= -->
-    <div class="slide" id="slide-10">
-      <div class="slide-header">
-        <div class="header-main">
-          <div class="slide-badge amber">🏆 Rigor Técnico & Impacto Global</div>
-          <h1 class="slide-title">Excelência em Engenharia & <span class="amber-highlight">Objetivos da ONU (ODS)</span></h1>
-          <p class="slide-subtitle">Métricas finais de entrega, reprodutibilidade em um comando e compromisso com o futuro da educação pública.</p>
-        </div>
-        <div class="slide-counter">10 / 10</div>
+    <footer class="slide-footer">
+      <span>Garantia de Direitos Fundamentais do Titular de Dados</span>
+      <span>ANPD / Lei Geral de Proteção de Dados</span>
+    </footer>
+  </section>
+
+  <!-- =============================================================
+       SLIDE 10: TRACTION & CONCLUSION (DARK BLUEPRINT THEME)
+       ============================================================= -->
+  <section class="slide slide-dark" id="slide-10">
+    <header class="slide-header">
+      <div class="brand-group">
+        <span class="brand-title">AprovaENEM</span>
+        <span class="pill-badge amber">Impacto e Entrega</span>
+      </div>
+      <div class="header-tags">
+        <span class="tag-item">Recode Pro 2026</span>
+        <span class="tag-item">10 / 10</span>
+      </div>
+    </header>
+
+    <div>
+      <h2 class="title-headline">
+        Pronto para Produção: <span class="accent-cyan">Impacto Social Escalável</span>
+      </h2>
+      <p class="subtitle-lead">
+        Engenharia moderna, código aberto auditável e compromisso inequívoco com a democratização da educação no Brasil.
+      </p>
+    </div>
+
+    <div class="traction-grid">
+      <div class="metric-hero-card">
+        <div class="metric-val" style="color: #38bdf8;">100%</div>
+        <div class="metric-lbl">Testes Verdes</div>
+        <div class="metric-sub">Maven Docker Temurin 21, Vitest, Cypress e Playwright</div>
       </div>
 
-      <div class="traction-container">
-        <div class="kpi-row">
-          <div class="kpi-box highlight">
-            <div class="stat-number" style="color: var(--brand-light);">100%</div>
-            <div class="stat-label">Testes Automatizados</div>
-            <div class="stat-desc">Maven Docker Temurin 21 + Vitest, Cypress e Playwright 100% verdes.</div>
-          </div>
-
-          <div class="kpi-box">
-            <div class="stat-number" style="color: var(--emerald-light);">14</div>
-            <div class="stat-label">Containers Docker</div>
-            <div class="stat-desc">Perímetro completo sobe via Docker Compose em menos de 2 minutos.</div>
-          </div>
-
-          <div class="kpi-box">
-            <div class="stat-number" style="color: var(--purple-light);">0</div>
-            <div class="stat-label">Warnings & Gambiarras</div>
-            <div class="stat-desc">Zero gambiarras, TypeScript estrito, sem supressão de linters ou lógicas hacky.</div>
-          </div>
-
-          <div class="kpi-box">
-            <div class="stat-number" style="color: var(--amber-light);">ODS 4&10</div>
-            <div class="stat-label">Impacto Social Direto</div>
-            <div class="stat-desc">Alinhado à Educação de Qualidade e Redução das Desigualdades da ONU.</div>
-          </div>
-        </div>
-
-        <div class="cta-banner">
-          <div>
-            <div class="cta-title">Reprodutibilidade Total em Um Comando</div>
-            <div class="cta-subtitle">Toda a infraestrutura empresarial sobe com paridade absoluta de ambiente: <code style="font-family: var(--mono); color: var(--brand-light);">$ docker compose up -d</code></div>
-          </div>
-          <div class="cta-button-badge">
-            🚀 Projeto Pronto para Produção & Impacto
-          </div>
-        </div>
+      <div class="metric-hero-card">
+        <div class="metric-val" style="color: #34d399;">14</div>
+        <div class="metric-lbl">Containers Docker</div>
+        <div class="metric-sub">Perímetro completo orquestrado em menos de 2 minutos</div>
       </div>
 
-      <div class="slide-footer">
-        <div class="footer-left">
-          <span class="footer-dot"></span>
-          <span>AprovaENEM — Democratizando o Acesso ao Ensino Superior Público</span>
-        </div>
-        <div class="footer-right">RECONECTARECODE • RECODE PRO • OPEN-SOURCE MIT 2026</div>
+      <div class="metric-hero-card">
+        <div class="metric-val" style="color: #a855f7;">0</div>
+        <div class="metric-lbl">Warnings ou Gambiarras</div>
+        <div class="metric-sub">TypeScript estrito, zero supressões de linters ou 'any'</div>
+      </div>
+
+      <div class="metric-hero-card">
+        <div class="metric-val" style="color: #f59e0b;">ODS 4&10</div>
+        <div class="metric-lbl">Metas Globais da ONU</div>
+        <div class="metric-sub">Educação de Qualidade e Redução das Desigualdades</div>
       </div>
     </div>
 
-  </div>
+    <div class="repo-banner">
+      <div class="repo-info">
+        <h4>Repositório Aberto e Documentação Técnica Completa</h4>
+        <p>docker compose up -d &nbsp;|&nbsp; Licença MIT &nbsp;|&nbsp; github.com/Veras-D/AprovaENEM</p>
+      </div>
+      <a href="https://github.com/Veras-D/AprovaENEM" class="repo-btn">
+        Acessar Código-Fonte →
+      </a>
+    </div>
 
-  <!-- Interactive Slide Navigation Controls -->
-  <div class="deck-nav">
-    <button class="nav-btn" onclick="prevSlide()" aria-label="Slide anterior">◀ Anterior</button>
-    <div class="nav-indicator" id="slide-num">01 / 10</div>
-    <button class="nav-btn" onclick="nextSlide()" aria-label="Próximo slide">Próximo ▶</button>
-  </div>
+    <footer class="slide-footer">
+      <span>AprovaENEM — Parceria Recode Pro & Impacto Social</span>
+      <span>Tecnologia Aberta para a Educação Pública Brasileira</span>
+    </footer>
+  </section>
+
+  <!-- Interactive Slide Controller for screen viewing -->
+  <nav class="deck-nav" aria-label="Navegação da Apresentação">
+    <button id="prevBtn" title="Slide Anterior (←)">←</button>
+    <span id="slideIndicator">01 / 10</span>
+    <button id="nextBtn" title="Próximo Slide (→)">→</button>
+  </nav>
 
   <script>
-    let currentSlide = 1;
-    const totalSlides = 10;
+    (function() {
+      const slides = document.querySelectorAll('.slide');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const indicator = document.getElementById('slideIndicator');
+      let currentIndex = 0;
 
-    function showSlide(index) {
-      if (index < 1) index = 1;
-      if (index > totalSlides) index = totalSlides;
-      currentSlide = index;
+      function updateSlide(index) {
+        if (index < 0) index = 0;
+        if (index >= slides.length) index = slides.length - 1;
+        currentIndex = index;
+        slides[currentIndex].scrollIntoView({ behavior: 'smooth' });
+        indicator.textContent = String(currentIndex + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+      }
 
-      document.querySelectorAll('.slide').forEach((el, i) => {
-        el.classList.toggle('active', i + 1 === currentSlide);
+      window.showSlide = (num) => updateSlide(num - 1);
+
+      prevBtn.addEventListener('click', () => updateSlide(currentIndex - 1));
+      nextBtn.addEventListener('click', () => updateSlide(currentIndex + 1));
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+          e.preventDefault();
+          updateSlide(currentIndex + 1);
+        } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+          e.preventDefault();
+          updateSlide(currentIndex - 1);
+        } else if (e.key === 'Home') {
+          e.preventDefault();
+          updateSlide(0);
+        } else if (e.key === 'End') {
+          e.preventDefault();
+          updateSlide(slides.length - 1);
+        }
       });
-
-      const formatted = String(currentSlide).padStart(2, '0') + ' / ' + String(totalSlides).padStart(2, '0');
-      document.getElementById('slide-num').textContent = formatted;
-    }
-
-    function nextSlide() {
-      if (currentSlide < totalSlides) {
-        showSlide(currentSlide + 1);
-      }
-    }
-
-    function prevSlide() {
-      if (currentSlide > 1) {
-        showSlide(currentSlide - 1);
-      }
-    }
-
-    // Keyboard controls (Arrow keys & Spacebar)
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
-        nextSlide();
-      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
-        prevSlide();
-      }
-    });
-
-    window.showSlide = showSlide;
+    })();
   </script>
 </body>
 </html>
