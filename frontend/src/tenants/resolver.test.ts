@@ -198,5 +198,70 @@ describe('resolver.ts — Hierarchical Tenant Resolution Engine', () => {
 
       expect(config).toEqual(DEFAULT_TENANT);
     });
+
+    it('should call defaultRemoteTenantFetcher and map remote branding correctly', async () => {
+      const { tenantService } = await import('@/api/services/tenant.service');
+      const spy = vi.spyOn(tenantService, 'getTenantBranding').mockResolvedValueOnce({
+        tenantId: 'tenant-seduc-rj',
+        slug: 'seduc-rj',
+        name: 'Secretaria de Educação RJ',
+        shortName: 'SEDUC RJ',
+        tagline: 'Educação Pública de Qualidade',
+        logoUrl: 'https://cdn.aprovaenem.org/seduc-rj.png',
+        faviconUrl: 'https://cdn.aprovaenem.org/favicon-rj.ico',
+        theme: {
+          palette: {
+            brandPrimary: '#0284c7',
+            brandSecondary: '#0369a1',
+            brandAccent: '#38bdf8',
+            brandBackground: '#f8fafc',
+            brandSurface: '#ffffff',
+            textPrimary: '#0f172a',
+            textSecondary: '#475569',
+            borderSubtle: '#e2e8f0',
+          },
+        },
+        features: {
+          gamificationEnabled: true,
+          socraticTutorEnabled: true,
+          triDiagnosticsEnabled: true,
+          publicRegistrationAllowed: false,
+          customDomainEnabled: true,
+        },
+      });
+
+      const config = await resolveTenantConfig('seduc-rj');
+      expect(spy).toHaveBeenCalledWith('seduc-rj');
+      expect(config.slug).toBe('seduc-rj');
+      expect(config.name).toBe('Secretaria de Educação RJ');
+      expect(config.supportEmail).toBe('suporte@aprovaenem.org');
+    });
+
+    it('should handle corrupt localStorage JSON gracefully during cache inspection', async () => {
+      localStorage.setItem(`${TENANT_CACHE_PREFIX}corrupt-tenant`, 'invalid-json{{{');
+      const mockFetcher = vi.fn().mockResolvedValueOnce({
+        ...DEFAULT_TENANT,
+        slug: 'corrupt-tenant',
+      });
+
+      const config = await resolveTenantConfig('corrupt-tenant', mockFetcher);
+      expect(config.slug).toBe('corrupt-tenant');
+      expect(mockFetcher).toHaveBeenCalledWith('corrupt-tenant');
+    });
+
+    it('should handle localStorage.setItem throwing quota error gracefully', async () => {
+      const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+        throw new Error('QuotaExceededError');
+      });
+
+      const mockFetcher = vi.fn().mockResolvedValueOnce({
+        ...DEFAULT_TENANT,
+        slug: 'quota-tenant',
+      });
+
+      const config = await resolveTenantConfig('quota-tenant', mockFetcher);
+      expect(config.slug).toBe('quota-tenant');
+      setItemSpy.mockRestore();
+    });
   });
 });

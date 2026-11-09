@@ -203,6 +203,41 @@ describe('useQuestionReader', () => {
     expect(result.current.rate).toBe(1.0);
   });
 
+  it('restarts speech at new rate when setRate is invoked while speaking', () => {
+    const { result } = renderHook(() => useQuestionReader({ question: mockQuestion }));
+
+    act(() => {
+      result.current.speak();
+    });
+    const utterance = mockSpeak.mock.calls[0]![0];
+    act(() => {
+      utterance.onstart?.();
+    });
+
+    expect(result.current.isSpeaking).toBe(true);
+
+    act(() => {
+      result.current.setRate(1.25);
+    });
+
+    expect(result.current.rate).toBe(1.25);
+    expect(mockSpeak).toHaveBeenCalledTimes(2);
+  });
+
+  it('handles speech synthesis exception gracefully during speak', () => {
+    mockSpeak.mockImplementationOnce(() => {
+      throw new Error('Speech synthesis error');
+    });
+
+    const { result } = renderHook(() => useQuestionReader({ question: mockQuestion }));
+
+    act(() => {
+      result.current.speak();
+    });
+
+    expect(result.current.isSpeaking).toBe(false);
+  });
+
   it('automatically cancels speech when question changes', () => {
     let question = mockQuestion;
     const { rerender } = renderHook(() => useQuestionReader({ question }));

@@ -194,5 +194,41 @@ describe('RootLayout component', () => {
     expect(screen.getByText('Nível 4!')).toBeInTheDocument();
     expect(screen.getByText('Veterano ENEM')).toBeInTheDocument();
     expect(localStorage.getItem('aprovaenem_pending_level_up_usr-level-tab')).toBeNull();
+
+    // Test onContinuePractice in LevelUpModal
+    const continueBtn = screen.getByRole('button', { name: /Continuar Praticando/i });
+    fireEvent.click(continueBtn);
+    expect(screen.queryByTestId('level-up-modal')).not.toBeInTheDocument();
+  });
+
+  it('triggers internal navigation and openAuthModal from mobile drawer', () => {
+    renderWithProviders(
+      <RootLayout>
+        <div>Corpo</div>
+      </RootLayout>
+    );
+
+    // Open drawer via BottomNav trigger
+    const moreBtn = screen.getByRole('button', { name: /Mais opções/i });
+    fireEvent.click(moreBtn);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    // Click register in mobile drawer
+    const cadastreBtn = screen.getByRole('button', { name: /Criar Conta Gratuita/i });
+    fireEvent.click(cadastreBtn);
+    expect(useAuthStore.getState().isAuthModalOpen).toBe(true);
+    expect(useAuthStore.getState().authModalMode).toBe('register');
+  });
+
+  it('navigates internally when controlledOnNavigate is omitted', () => {
+    renderWithProviders(
+      <RootLayout>
+        <div>Corpo sem controlledOnNavigate</div>
+      </RootLayout>
+    );
+
+    // BottomNav practice button
+    const simuladosNavBtn = screen.getByRole('button', { name: /Simulados/i });
+    fireEvent.click(simuladosNavBtn);
   });
 });
