@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RootLayout } from './RootLayout';
 import { useTenantStore } from '@/stores/useTenantStore';
@@ -34,6 +34,8 @@ describe('RootLayout component', () => {
     useAuthStore.setState({
       user: null,
       isAuthenticated: false,
+      isAuthModalOpen: false,
+      authModalMode: 'login',
     });
     useSessionStore.setState({
       anonymousSessionId: 'anon-test-1234567890',
@@ -196,7 +198,7 @@ describe('RootLayout component', () => {
     expect(localStorage.getItem('aprovaenem_pending_level_up_usr-level-tab')).toBeNull();
 
     // Test onContinuePractice in LevelUpModal
-    const continueBtn = screen.getByRole('button', { name: /Continuar Praticando/i });
+    const continueBtn = screen.getByRole('button', { name: /Continuar Estudando/i });
     fireEvent.click(continueBtn);
     expect(screen.queryByTestId('level-up-modal')).not.toBeInTheDocument();
   });
@@ -208,14 +210,14 @@ describe('RootLayout component', () => {
       </RootLayout>
     );
 
-    // Open drawer via BottomNav trigger
-    const moreBtn = screen.getByRole('button', { name: /Mais opções/i });
-    fireEvent.click(moreBtn);
+    // Open drawer via Header hamburger trigger
+    const openDrawerBtn = screen.getByRole('button', { name: /Abrir menu de navegação/i });
+    fireEvent.click(openDrawerBtn);
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 
     // Click register in mobile drawer
-    const cadastreBtn = screen.getByRole('button', { name: /Criar Conta Gratuita/i });
-    fireEvent.click(cadastreBtn);
+    const authBtn = screen.getByRole('button', { name: /Criar Conta ou Entrar/i });
+    fireEvent.click(authBtn);
     expect(useAuthStore.getState().isAuthModalOpen).toBe(true);
     expect(useAuthStore.getState().authModalMode).toBe('register');
   });
@@ -228,7 +230,8 @@ describe('RootLayout component', () => {
     );
 
     // BottomNav practice button
-    const simuladosNavBtn = screen.getByRole('button', { name: /Simulados/i });
-    fireEvent.click(simuladosNavBtn);
+    const bottomNav = screen.getByRole('navigation', { name: /Navegação móvel inferior/i });
+    const practiceBtn = within(bottomNav).getByRole('button', { name: /Praticar/i });
+    fireEvent.click(practiceBtn);
   });
 });
