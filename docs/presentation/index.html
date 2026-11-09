@@ -143,65 +143,96 @@
     }
 
     /* -------------------------------------------------------------
-       APPLE KEYNOTE STAGGERED CONTENT BUILD-IN
+       APPLE KEYNOTE STAGGERED CONTENT BUILD-IN (UNIVERSAL ALL SLIDES)
        ------------------------------------------------------------- */
     .slide.active .title-headline {
-      animation: keynote-fade-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
+      animation: keynote-fade-up 0.52s cubic-bezier(0.16, 1, 0.3, 1) 0.04s both;
     }
 
     .slide.active .subtitle-lead {
-      animation: keynote-fade-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+      animation: keynote-fade-up 0.52s cubic-bezier(0.16, 1, 0.3, 1) 0.10s both;
     }
 
     .slide.active .metric-hero-card,
     .slide.active .lgpd-pillar-card,
     .slide.active .hero-qr-card,
-    .slide.active .a11y-quadrant-card,
-    .slide.active .model-pillar-card,
-    .slide.active .stat-callout-card,
-    .slide.active .quote-callout-card,
-    .slide.active .solution-pillar-card,
+    .slide.active .a11y-pillar-card,
+    .slide.active .scale-card,
+    .slide.active .arch-box,
+    .slide.active .tri-item-card,
+    .slide.active .contrast-card,
+    .slide.active .big-stat-box,
+    .slide.active .chat-dialog-card,
+    .slide.active .feature-item,
+    .slide.active .hero-text-col,
+    .slide.active .hero-mockup-col,
     .slide.active .browser-frame,
-    .slide.active .hero-preview-frame,
-    .slide.active .practice-preview-frame,
-    .slide.active .socratic-chat-frame,
-    .slide.active .tri-radar-frame,
-    .slide.active .arch-blueprint-frame,
-    .slide.active .repo-banner {
-      animation: keynote-card-up 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+    .slide.active .repo-banner,
+    .slide.active .hero-qr-meta-bar,
+    .slide.active .arch-top-bar {
+      animation: keynote-card-up 0.62s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
 
+    /* Staggered Delay Slot 1: Primaries & First Cards (0.14s) */
     .slide.active .metric-hero-card:nth-child(1),
     .slide.active .lgpd-pillar-card:nth-child(1),
     .slide.active .hero-qr-card:nth-child(1),
-    .slide.active .a11y-quadrant-card:nth-child(1),
-    .slide.active .model-pillar-card:nth-child(1) {
-      animation-delay: 0.15s;
+    .slide.active .a11y-pillar-card:nth-child(1),
+    .slide.active .scale-card:nth-child(1),
+    .slide.active .arch-box:nth-child(1),
+    .slide.active .tri-item-card:nth-child(1),
+    .slide.active .contrast-card:nth-child(1),
+    .slide.active .feature-item:nth-child(1),
+    .slide.active .big-stat-box,
+    .slide.active .hero-text-col,
+    .slide.active .chat-dialog-card,
+    .slide.active .arch-top-bar {
+      animation-delay: 0.14s;
     }
 
+    /* Staggered Delay Slot 2: Second Cards & Main Mockups (0.22s) */
     .slide.active .metric-hero-card:nth-child(2),
     .slide.active .lgpd-pillar-card:nth-child(2),
     .slide.active .hero-qr-card:nth-child(2),
-    .slide.active .a11y-quadrant-card:nth-child(2),
-    .slide.active .model-pillar-card:nth-child(2) {
+    .slide.active .a11y-pillar-card:nth-child(2),
+    .slide.active .scale-card:nth-child(2),
+    .slide.active .arch-box:nth-child(2),
+    .slide.active .tri-item-card:nth-child(2),
+    .slide.active .contrast-card:nth-child(2),
+    .slide.active .feature-item:nth-child(2),
+    .slide.active .hero-mockup-col,
+    .slide.active .tri-grid .browser-frame,
+    .slide.active .socratic-grid .browser-frame,
+    .slide.active .solution-grid .browser-frame,
+    .slide.active .a11y-grid .browser-frame,
+    .slide.active .dual-scale-grid .browser-frame {
       animation-delay: 0.22s;
     }
 
+    /* Staggered Delay Slot 3: Third Cards (0.29s) */
     .slide.active .metric-hero-card:nth-child(3),
     .slide.active .lgpd-pillar-card:nth-child(3),
     .slide.active .hero-qr-card:nth-child(3),
-    .slide.active .a11y-quadrant-card:nth-child(3) {
+    .slide.active .a11y-pillar-card:nth-child(3),
+    .slide.active .arch-box:nth-child(3),
+    .slide.active .tri-item-card:nth-child(3),
+    .slide.active .contrast-card:nth-child(3),
+    .slide.active .feature-item:nth-child(3) {
       animation-delay: 0.29s;
     }
 
+    /* Staggered Delay Slot 4: Fourth Cards & Floating Badges (0.36s) */
     .slide.active .metric-hero-card:nth-child(4),
-    .slide.active .a11y-quadrant-card:nth-child(4) {
+    .slide.active .a11y-pillar-card:nth-child(4),
+    .slide.active .feature-item:nth-child(4),
+    .slide.active .hero-stat-card {
       animation-delay: 0.36s;
     }
 
+    /* Staggered Delay Slot 5: Meta Banners & Footnotes (0.39s) */
     .slide.active .hero-qr-meta-bar,
     .slide.active .repo-banner {
-      animation-delay: 0.36s;
+      animation-delay: 0.39s;
     }
 
     @keyframes keynote-fade-up {
